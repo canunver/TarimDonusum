@@ -66,83 +66,8 @@
                     <ul id="homeMenu"
                         class="nav nav-pills nav-sidebar flex-column"
                         data-widget="treeview"
+                        role="menu"
                         data-accordion="false">
-
-                        <li class="nav-item">
-                            <a href="/Home/Index" class="nav-link active">
-                                <i class="nav-icon fas fa-sign-in-alt"></i>
-                                <p>Giriş</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="/Home/YeniKullanici" class="nav-link">
-                                <i class="nav-icon fas fa-user-plus"></i>
-                                <p>Yeni Kullanıcı</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="/Home/SifremiUnuttum" class="nav-link">
-                                <i class="nav-icon fas fa-key"></i>
-                                <p>Şifremi Unuttum</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon far fa-question-circle"></i>
-                                <p>
-                                    Sık Sorulan Sorular
-                                    <i class="right fas fa-angle-left"></i>
-                                </p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="/Home/SSS?konu=kayit" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Nasıl Kayıt Olurum?</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/Home/SSS?konu=sifre" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Şifremi Unuttum</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/Home/SSS?konu=basvuru" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Nasıl Başvuru Yaparım?</p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon far fa-file-pdf"></i>
-                                <p>
-                                    İlgili Dokümanlar
-                                    <i class="right fas fa-angle-left"></i>
-                                </p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                <li class="nav-item">
-                                    <a href="/dokumanlar/2027-basvuru-rehberi.pdf" target="_blank" class="nav-link">
-                                        <i class="far fa-file-pdf nav-icon"></i>
-                                        <p>2027 Başvuru Rehberi</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="/dokumanlar/basvuru-formu.pdf" target="_blank" class="nav-link">
-                                        <i class="far fa-file-pdf nav-icon"></i>
-                                        <p>Başvuru Formu</p>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
                     </ul>
                 </nav>
             </div>
@@ -168,6 +93,13 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script type="text/javascript">
+        $(function () {
+            HomeMenuYukle();
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

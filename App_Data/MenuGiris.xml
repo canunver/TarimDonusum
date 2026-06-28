@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Menu>
+  <Item type="Url" id="giris" text="Giriş" url="/Home/Index" icon="fas fa-sign-in-alt" />
+
+  <Item type="Url" id="yeniKullanici" text="Yeni Kullanıcı" url="/Home/YeniKullanici" icon="fas fa-user-plus" />
+
+  <Item type="Url" id="sifremiUnuttum" text="Şifremi Unuttum" url="/Home/SifremiUnuttum" icon="fas fa-key" />
+
+  <Item type="Menu" id="sss" text="Sık Sorulan Sorular" icon="far fa-question-circle">
+    <Item type="Html" id="sssKayit" text="Nasıl Kayıt Olurum?" url="/Home/SSS?menuId=sssKayit" icon="far fa-circle">
+      <Data>
+        <![CDATA[
+<h3>Nasıl Kayıt Olurum?</h3>
+
+<p>
+Öncelikle <b>Yeni Kullanıcı</b> menüsüne giriniz...
+</p>
+
+<ul>
+    <li>Kimlik bilgilerinizi giriniz.</li>
+    <li>E-posta doğrulaması yapınız.</li>
+    <li>Şifrenizi oluşturunuz.</li>
+</ul>
+            ]]>
+      </Data>
+    </Item>
+    <Item type="Html" id="sssSifre" text="Şifremi Unuttum" url="/Home/SSS?menuId=sssSifre" icon="far fa-circle" />
+    <Item type="Html" id="sssBasvuru" text="Nasıl Başvuru Yaparım?" url="/Home/SSS?menuId=sssBasvuru" icon="far fa-circle" />
+  </Item>
+
+  <Item type="Menu" id="dokumanlar" text="İlgili Dokümanlar" icon="far fa-file-pdf">
+    <Item type="Link" id="basvuruRehberi2027" text="2027 Başvuru Rehberi" url="/dokumanlar/2027-basvuru-rehberi.pdf" icon="far fa-file-pdf" target="_blank" />
+    <Item type="Link" id="basvuruFormu" text="Başvuru Formu" url="/dokumanlar/basvuru-formu.pdf" icon="far fa-file-pdf" target="_blank" />
+  </Item>
+</Menu>

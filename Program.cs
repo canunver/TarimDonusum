@@ -2,6 +2,7 @@ using Serilog;
 using Serilog.Events;
 using TarimDonusum.FrameWork.Captcha;
 using TarimDonusum.FrameWork.Logging;
+using TarimDonusum.FrameWork.Menu;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +69,6 @@ app.Lifetime.ApplicationStopping.Register(() =>
 
     Log.CloseAndFlush();
 });
-
+MenuManager.Initialize(builder.Environment.ContentRootPath);
 
 app.Run();
