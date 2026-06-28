@@ -1,9 +1,52 @@
-﻿using System.Xml.Linq;
+﻿using Microsoft.Extensions.Localization;
+using System.Xml.Linq;
 
 namespace TarimDonusum.FrameWork.Menu
 {
     public static class MenuManager
     {
+
+        private static MenuItem CloneItem(MenuItem item)
+        {
+            return new MenuItem
+            {
+                Id = item.Id,
+                Text = item.Text,
+                Url = item.Url,
+                Icon = item.Icon,
+                Type = item.Type,
+                Data = item.Data,
+                Children = item.Children
+                    .Select(CloneItem)
+                    .ToList()
+            };
+        }
+
+        private static List<MenuItem> CloneMenu(List<MenuItem> source)
+        {
+            return source.Select(CloneItem).ToList();
+        }
+
+
+        private static void MenuLocalize(string menuOnEk, List<MenuItem> items, IStringLocalizer<SharedResource> L)
+        {
+            foreach (var item in items)
+            {
+                item.Text = L[$"{menuOnEk}.{item.Id}"];
+
+                if (item.Children?.Count > 0)
+                    MenuLocalize(menuOnEk, item.Children, L);
+            }
+        }
+
+
+        public static List<MenuItem> GetMenuGiris(IStringLocalizer<SharedResource> L)
+        {
+            var menu = CloneMenu(_menuGiris.Value);
+            MenuLocalize("MenuGiris", menu, L);
+            return menu;
+        }
+
         private static readonly Lazy<List<MenuItem>> _menuGiris =
             new(() => Load());
 
@@ -25,10 +68,12 @@ namespace TarimDonusum.FrameWork.Menu
 
             var doc = XDocument.Load(fileName);
 
-            return doc.Root!
+            List<MenuItem> menuList = doc.Root!
                       .Elements("Item")
                       .Select(ReadItem)
                       .ToList();
+
+            return menuList;
         }
 
         private static MenuItem ReadItem(XElement e)
@@ -36,7 +81,6 @@ namespace TarimDonusum.FrameWork.Menu
             return new MenuItem
             {
                 Id = (string?)e.Attribute("id") ?? "",
-                Text = (string?)e.Attribute("text") ?? "",
                 Url = (string?)e.Attribute("url"),
                 Icon = (string?)e.Attribute("icon"),
                 Type = ReadType(e),
@@ -46,6 +90,7 @@ namespace TarimDonusum.FrameWork.Menu
                             .ToList()
             };
         }
+
 
         private static MenuItemType ReadType(XElement e)
         {

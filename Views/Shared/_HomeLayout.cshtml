@@ -1,5 +1,8 @@
-﻿@{
+﻿@using System.Globalization
+@{
     var title = ViewData["Title"] ?? "Başvuru Portalı";
+    var culture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
 }
 
 <!DOCTYPE html>
@@ -17,6 +20,20 @@
             background-repeat: no-repeat;
             background-position: center center;
             background-size: 100% auto;
+        }
+
+        .flag {
+            width: 24px;
+            height: 18px;
+            border: 1px solid #ced4da;
+            border-radius: 2px;
+        }
+
+        .flag-active {
+            width: 24px;
+            height: 18px;
+            border: 2px solid #007bff;
+            border-radius: 2px;
         }
     </style>
 </head>
@@ -36,13 +53,36 @@
             <span class="navbar-brand mb-0 h1">
                 TKDK Başvuru Portalı
             </span>
+            <ul class="navbar-nav ml-auto align-items-center">
 
-            <ul class="navbar-nav ml-auto">
+                <li class="nav-item mr-2">
+                    <a class="nav-link p-1 flag-link"
+                       asp-controller="Dil"
+                       asp-action="Degistir"
+                       asp-route-culture="tr"
+                       asp-route-returnUrl="@returnUrl"
+                       title="Türkçe">
+                        <img src="~/img/flags/tr.svg" class="@(culture == "tr" ? "flag-active" : "flag")" />
+                    </a>
+                </li>
+
+                <li class="nav-item mr-3">
+                    <a class="nav-link p-1 flag-link"
+                       asp-controller="Dil"
+                       asp-action="Degistir"
+                       asp-route-culture="en"
+                       asp-route-returnUrl="@returnUrl"
+                       title="English">
+                        <img src="~/img/flags/gb.svg" class="@(culture == "en" ? "flag-active" : "flag")" />
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <span class="nav-link text-muted">
                         Geri Ödemeli Destek Başvuru Sistemi
                     </span>
                 </li>
+
             </ul>
         </nav>
 

@@ -25,7 +25,7 @@
       </Data>
     </Item>
     <Item type="Html" id="sssSifre" text="Şifremi Unuttum" url="/Home/SSS?menuId=sssSifre" icon="far fa-circle" />
-    <Item type="Html" id="sssBasvuru" text="Nasıl Başvuru Yaparım?" url="/Home/SSS?menuId=sssBasvuru" icon="far fa-circle" />
+    <Item type="Html" id="sssKulOl" text="Nasıl Kullanıcı Olurum?" url="/Home/SSS?menuId=sssKulOl" icon="far fa-circle" />
   </Item>
 
   <Item type="Menu" id="dokumanlar" text="İlgili Dokümanlar" icon="far fa-file-pdf">

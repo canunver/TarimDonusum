@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using TarimDonusum.Framework;
+using Microsoft.Extensions.Localization;
+using TarimDonusum.FrameWork;
 using TarimDonusum.Models;
 
 namespace TarimDonusum.Controllers
@@ -20,8 +21,8 @@ namespace TarimDonusum.Controllers
             return "/img/home/" + Path.GetFileName(secilen);
         }
 
-        public HomeController(ILoggerFactory loggerFactory)
-       : base(loggerFactory)
+        public HomeController(ILoggerFactory loggerFactory, IStringLocalizer<SharedResource> localizer)
+       : base(loggerFactory, localizer)
         {
         }
 

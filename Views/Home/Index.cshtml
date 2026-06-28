@@ -1,6 +1,11 @@
-﻿@{
+﻿
+
+@{
+    @using Microsoft.Extensions.Localization
+    @inject IStringLocalizer<TarimDonusum.SharedResource> L
+
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
-    ViewData["Title"] = "Giriş";
+    ViewData["Title"] = L["Home.Giris"];
 }
 <style>
     .login-card {
@@ -25,22 +30,22 @@
 
         <div class="card card-primary login-card">
             <div class="card-header">
-                <h3 class="card-title">Sisteme Giriş</h3>
+                <h3 class="card-title">@L["Home.CardTitle"]</h3>
             </div>
 
             <div class="card-body">
                 <div class="form-group">
-                    <label>Kullanıcı Kodu</label>
+                    <label>@L["Home.KulKod"]</label>
                     <input type="text" class="form-control" />
                 </div>
 
                 <div class="form-group">
-                    <label>Şifre</label>
+                    <label>@L["Home.Sifre"]</label>
                     <input type="password" class="form-control" />
                 </div>
 
                 <div class="form-group">
-                    <label>Güvenlik Kodu</label>
+                    <label>@L["Home.Captcha"]</label>
 
                     <div class="input-group">
                         <div class="input-group-prepend">
@@ -48,7 +53,7 @@
                                 <img id="captchaImg"
                                      src="/Captcha/Resim?t=@DateTime.Now.Ticks"
                                      style="height:38px; width:120px; cursor:pointer;"
-                                     title="Yenilemek için tıklayın" />
+                                     title="@L["Home.CaptchaRefresh"]" />
                             </span>
                         </div>
 
@@ -58,7 +63,7 @@
                             <button type="button"
                                     id="btnCaptchaYenile"
                                     class="btn btn-outline-secondary"
-                                    title="Güvenlik kodunu yenile">
+                                    title="@L["Home.CaptchaRefresh"]">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
@@ -68,7 +73,7 @@
 
             <div class="card-footer">
                 <button class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt"></i> Giriş
+                    <i class="fas fa-sign-in-alt"></i> @L["Home.Button.Giris"]
                 </button>
             </div>
         </div>

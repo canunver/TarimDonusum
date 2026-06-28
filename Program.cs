@@ -3,8 +3,12 @@ using Serilog.Events;
 using TarimDonusum.FrameWork.Captcha;
 using TarimDonusum.FrameWork.Logging;
 using TarimDonusum.FrameWork.Menu;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
 
 builder.Host.UseSerilog((context, services, configuration) =>
 {
@@ -23,16 +27,23 @@ builder.Host.UseSerilog((context, services, configuration) =>
 });
 
 
-
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews().AddViewLocalization().AddDataAnnotationsLocalization(); ;
 builder.Services.AddSingleton<CaptchaGenerator>();
 builder.Services.AddDistributedMemoryCache();
+builder.Services.AddLocalization(options =>
+{
+    options.ResourcesPath = "Resources";
+});
+
+
+
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(50);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
 
 var app = builder.Build();
 
@@ -70,5 +81,21 @@ app.Lifetime.ApplicationStopping.Register(() =>
     Log.CloseAndFlush();
 });
 MenuManager.Initialize(builder.Environment.ContentRootPath);
+
+var supportedCultures = new[]
+{
+    new CultureInfo("tr"),
+    new CultureInfo("en")
+};
+
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("tr"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+};
+
+localizationOptions.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider());
+app.UseRequestLocalization(localizationOptions);
 
 app.Run();

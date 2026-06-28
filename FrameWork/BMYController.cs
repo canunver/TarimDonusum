@@ -1,16 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using TarimDonusum.FrameWork.Logging;
 
-namespace TarimDonusum.Framework
+namespace TarimDonusum.FrameWork
 {
     public abstract class BMYController : Controller
     {
         protected ILogger Logger { get; }
+        protected IStringLocalizer<SharedResource> L { get; }
 
-        protected BMYController(ILoggerFactory loggerFactory)
+        protected BMYController(ILoggerFactory loggerFactory, IStringLocalizer<SharedResource> localizer)
         {
             Logger = loggerFactory.CreateLogger(GetType());
+            L = localizer;
         }
 
         #region Log

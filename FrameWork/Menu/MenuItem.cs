@@ -14,7 +14,7 @@ namespace TarimDonusum.FrameWork.Menu
     {
         public string Id { get; set; } = "";
         public string Text { get; set; } = "";
-        public string? Url { get; set; }
+        public string? Url { get; set; } = null;
         public string? Icon { get; set; }
         public MenuItemType? Type { get; set; }
         [JsonIgnore] public string? Data { get; set; }
