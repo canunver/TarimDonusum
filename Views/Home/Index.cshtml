@@ -1,10 +1,11 @@
-﻿@{
+@{
     @using Microsoft.Extensions.Localization
     @inject IStringLocalizer<TarimDonusum.SharedResource> L
 
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
     ViewData["Title"] = L["Home.Giris"];
 }
+
 <style>
     .login-card {
         background: rgba(255,255,255,.55) !important;
@@ -28,47 +29,47 @@
         display: flex;
         align-items: center;
     }
-</style>
 
+    .verification-timer-box {
+        min-width: 58px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+    }
+</style>
 <div class="row justify-content-center login-center">
     <div class="col-12 col-sm-10 col-md-6 col-lg-5">
-
         <div class="card card-primary login-card">
             <div class="card-header">
                 <h3 class="card-title">@L["Home.CardTitle"]</h3>
             </div>
 
-            <div class="card-body">
+
+            <div id="divLogin" class="card-body">
                 <div class="form-group">
                     <label>@L["Home.KulKod"]</label>
-                    <input type="text" class="form-control" />
+                    <input type="text" id="KulKod" class="form-control" />
                 </div>
 
                 <div class="form-group">
                     <label>@L["Home.Sifre"]</label>
-                    <input type="password" class="form-control" />
+                    <input type="password" id="Sifre" class="form-control" />
                 </div>
 
                 <div class="form-group">
                     <label>@L["Home.Captcha"]</label>
-
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text p-0">
                                 <img id="captchaImg"
                                      src="/Captcha/Resim?t=@DateTime.Now.Ticks"
-                                     style="height:38px; width:120px; cursor:pointer;"
-                                     title="@L["Home.CaptchaRefresh"]" />
+                                     style="height:38px; width:120px; cursor:pointer;" />
                             </span>
                         </div>
 
-                        <input type="text" name="GuvenlikKodu" class="form-control" autocomplete="off" />
+                        <input type="text" id="Captcha" class="form-control" autocomplete="off" />
 
                         <div class="input-group-append">
-                            <button type="button"
-                                    id="btnCaptchaYenile"
-                                    class="btn btn-outline-secondary"
-                                    title="@L["Home.CaptchaRefresh"]">
+                            <button type="button" id="btnCaptchaYenile" class="btn btn-outline-secondary">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
@@ -76,24 +77,183 @@
                 </div>
             </div>
 
+            <div id="divDogrulama" class="card-body" style="display:none;">
+                <div class="alert alert-info">
+                    E-posta adresinize gönderilen doğrulama kodunu giriniz.
+                </div>
+
+                <div class="form-group">
+                    <label>Doğrulama Kodu</label>
+
+                    <div class="input-group">
+                        <input type="text"
+                               id="DogrulamaKodu"
+                               class="form-control"
+                               autocomplete="off" />
+
+                        <div class="input-group-append">
+                            <button type="button"
+                                    id="btnKodYenile"
+                                    class="btn btn-outline-primary">
+                                <i class="fas fa-sync-alt"></i> Kodu Yenile
+                            </button>
+
+                            <span id="loginKodSayac"
+                                  class="input-group-text verification-timer-box text-muted"
+                                  data-kalan-saniye="0"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card-footer">
-                <button class="btn btn-primary">
+                <button type="button" id="btnLogin1" class="btn btn-primary">
                     <i class="fas fa-sign-in-alt"></i> @L["Home.Button.Giris"]
+                </button>
+
+                <button type="button" id="btnLogin2" class="btn btn-success" style="display:none;">
+                    <i class="fas fa-check"></i> Doğrula ve Giriş Yap
                 </button>
             </div>
         </div>
-
     </div>
 </div>
 
 @section Scripts {
     <script>
+        let loginKodTimer = null;
+        const txtKodSuresiBitti = "Süre doldu";
+
         function captchaYenile() {
             $("#captchaImg").attr("src", "/Captcha/Resim?t=" + new Date().getTime());
         }
 
-        $("#btnCaptchaYenile").on("click", captchaYenile);
+        function sureMetni(saniye) {
+            var dakika = Math.floor(saniye / 60);
+            var kalanSaniye = saniye % 60;
 
+            return dakika.toString().padStart(2, "0") + ":" +
+                   kalanSaniye.toString().padStart(2, "0");
+        }
+
+        function loginSayaciBaslat(kalanSaniye) {
+            if (loginKodTimer) {
+                window.clearTimeout(loginKodTimer);
+                loginKodTimer = null;
+            }
+
+            $("#loginKodSayac")
+                .removeClass("text-danger")
+                .addClass("text-muted")
+                .text("");
+
+            $("#DogrulamaKodu")
+                .val("")
+                .prop("readonly", false);
+
+            $("#btnLogin2").prop("disabled", false);
+            $("#btnKodYenile").prop("disabled", false);
+
+            function guncelle() {
+                if (kalanSaniye <= 0) {
+                    $("#loginKodSayac")
+                        .removeClass("text-muted")
+                        .addClass("text-danger")
+                        .text(txtKodSuresiBitti);
+
+                    $("#DogrulamaKodu").prop("readonly", true);
+                    $("#btnLogin2").prop("disabled", true);
+                    $("#btnKodYenile").prop("disabled", false);
+
+                    return;
+                }
+
+                $("#loginKodSayac")
+                    .removeClass("text-danger")
+                    .addClass("text-muted")
+                    .text(sureMetni(kalanSaniye));
+
+                kalanSaniye--;
+                loginKodTimer = window.setTimeout(guncelle, 1000);
+            }
+
+            guncelle();
+        }
+        function loginData() {
+            return {
+                kulKod: $("#KulKod").val(),
+                sifre: $("#Sifre").val(),
+                captcha: $("#Captcha").val()
+            };
+        }
+
+        function dogrulamaKoduGonder() {
+            $.ajax({
+                url: "/Home/Login1",
+                type: "POST",
+                data: loginData(),
+                dataType: "json"
+            })
+            .done(function (cevap) {
+                PopupMesajGoster(cevap.mesaj, cevap.basarili);
+
+                if (!cevap.basarili) {
+                    captchaYenile();
+                    return;
+                }
+
+                $("#divLogin").hide();
+                $("#btnLogin1").hide();
+
+                $("#divDogrulama").show();
+                $("#btnLogin2").show();
+
+                $("#DogrulamaKodu")
+                    .val("")
+                    .prop("readonly", false)
+                    .focus();
+
+                loginSayaciBaslat(cevap.kalanSaniye || 180);
+            })
+            .fail(function () {
+                PopupMesajGoster("İşlem sırasında hata oluştu.", false);
+            });
+        }
+
+        $("#btnLogin1").on("click", dogrulamaKoduGonder);
+
+        $("#btnKodYenile").on("click", function () {
+            dogrulamaKoduGonder();
+        });
+
+        $("#btnLogin2").on("click", function () {
+            var data = loginData();
+            data.dogrulamaKodu = $("#DogrulamaKodu").val();
+
+            $.ajax({
+                url: "/Home/Login2",
+                type: "POST",
+                data: data,
+                dataType: "json"
+            })
+            .done(function (cevap) {
+                PopupMesajGoster(cevap.mesaj, cevap.basarili);
+
+                if (!cevap.basarili)
+                    return;
+
+                window.location.href = cevap.redirectUrl;
+            })
+            .fail(function () {
+                PopupMesajGoster("İşlem sırasında hata oluştu.", false);
+            });
+        });
+
+        $("#btnCaptchaYenile").on("click", captchaYenile);
         $("#captchaImg").on("click", captchaYenile);
+
+        $(function () {
+            PopupMesajIlklendir();
+        });
     </script>
 }

@@ -76,8 +76,8 @@ namespace TarimDonusum.Servisler
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Mail gönderilemedi. Kime: {Kime}, Konu: {Konu}", kime, konu);
-                return "Mail gönderilemedi: " + ex.Message;
+                _logger.LogError(ex, "Mail gönderilemedi. Kime: {Kime}, Konu: {Konu}, hata:{hata}, iç Hata:{icHata}", kime, konu, ex.Message, ex.InnerException?.Message);
+                return "Mail gönderilemedi";
             }
         }
 

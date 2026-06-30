@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Folder Include="IsKurallari\" />
+    <Folder Include="Logs\" />
     <Folder Include="wwwroot\img\" />
   </ItemGroup>
 
