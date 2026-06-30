@@ -10,7 +10,8 @@ using Microsoft.AspNetCore.Localization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-
+builder.Configuration
+    .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 
 builder.Host.UseSerilog((context, services, configuration) =>
 {
