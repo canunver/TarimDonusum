@@ -1,0 +1,559 @@
+﻿@model TarimDonusum.ViewModels.Home.YeniKullaniciViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<TarimDonusum.SharedResource> L
+
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = L["YeniKullanici.Title"];
+    bool epostaDogrulandi = ViewData["EpostaDogrulandi"] is bool epostaDogrulandiDegeri && epostaDogrulandiDegeri;
+    bool telefonDogrulandi = ViewData["TelefonDogrulandi"] is bool telefonDogrulandiDegeri && telefonDogrulandiDegeri;
+    int epostaKodKalanSaniye = ViewData["EpostaKodKalanSaniye"] is int epostaKalan ? epostaKalan : 0;
+    int telefonKodKalanSaniye = ViewData["TelefonKodKalanSaniye"] is int telefonKalan ? telefonKalan : 0;
+}
+
+<style>
+    .register-card {
+        background: rgba(255,255,255,.72) !important;
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    .password-meter {
+        height: 6px;
+        border-radius: 4px;
+        background: #e9ecef;
+        overflow: hidden;
+    }
+
+    .password-meter-bar {
+        height: 100%;
+        width: 0;
+        transition: width .2s ease, background-color .2s ease;
+    }
+
+    .verification-timer-box {
+        min-width: 58px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+    }
+
+</style>
+
+<div id="ajaxMesaj"
+     class="alert alert-info alert-dismissible floating-message mb-0"
+     role="alert"
+     style="display:@(TempData["Mesaj"] != null ? "block" : "none")">
+    <span id="ajaxMesajMetin">@TempData["Mesaj"]</span>
+    <button type="button" class="close" id="ajaxMesajKapat" aria-label="Kapat">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+        <div class="card card-primary register-card">
+            <div class="card-header">
+                <h3 class="card-title">@L["YeniKullanici.CardTitle"]</h3>
+            </div>
+
+            <form asp-controller="Home" asp-action="YeniKullanici" method="post" id="frmYeniKullanici">
+                @Html.AntiForgeryToken()
+
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group row">
+                        <label asp-for="Kullanici.TCKN" class="col-md-2 col-form-label">
+                            @L["YeniKullanici.TCKN"]
+                        </label>
+
+                        <div class="col-md-4">
+                            <input asp-for="Kullanici.TCKN"
+                                   class="form-control"
+                                   maxlength="11"
+                                   autocomplete="off" />
+                            <span asp-validation-for="Kullanici.TCKN" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label asp-for="Kullanici.Ad">@L["YeniKullanici.Ad"]</label>
+                                <input asp-for="Kullanici.Ad" class="form-control" />
+                                <span asp-validation-for="Kullanici.Ad" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Kullanici.Soyad">@L["YeniKullanici.Soyad"]</label>
+                                <input asp-for="Kullanici.Soyad" class="form-control" />
+                                <span asp-validation-for="Kullanici.Soyad" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="Kullanici.DogumTarihi">@L["YeniKullanici.DogumTarihi"]</label>
+                                <input asp-for="Kullanici.DogumTarihi"
+                                       type="date"
+                                       class="form-control" />
+                                <span asp-validation-for="Kullanici.DogumTarihi" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Kullanici.Cinsiyet">@L["YeniKullanici.Cinsiyet"]</label>
+                                <select asp-for="Kullanici.Cinsiyet" class="form-control">
+                                    <option value="">@L["YeniKullanici.Seciniz"]</option>
+                                    <option value="K">@L["YeniKullanici.Cinsiyet.Kadin"]</option>
+                                    <option value="E">@L["YeniKullanici.Cinsiyet.Erkek"]</option>
+                                </select>
+                                <span asp-validation-for="Kullanici.Cinsiyet" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label asp-for="GuvenlikKodu" class="col-md-2 col-form-label">
+                            @L["YeniKullanici.Captcha"]
+                        </label>
+
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text p-0">
+                                        <img id="captchaImg"
+                                             src="/Captcha/Resim"
+                                             style="height:38px; width:120px;" />
+                                    </span>
+                                </div>
+
+                                <input asp-for="GuvenlikKodu" class="form-control" autocomplete="off" />
+
+                            </div>
+
+                            <span asp-validation-for="GuvenlikKodu" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Kullanici.Eposta">@L["YeniKullanici.Eposta"]</label>
+                            <div class="input-group">
+                                <input asp-for="Kullanici.Eposta"
+                                       class="form-control"
+                                       autocomplete="email"
+                                       readonly="@(epostaDogrulandi ? "readonly" : null)" />
+                                <div class="input-group-append">
+                                    <button type="button"
+                                            id="btnEpostaKoduGonder"
+                                            data-url="/Home/EpostaKoduGonder"
+                                            class="btn btn-outline-primary"
+                                            disabled="@(epostaDogrulandi ? "disabled" : null)">
+                                        @L["YeniKullanici.EpostaDogrula"]
+                                    </button>
+                                </div>
+                            </div>
+                            <span asp-validation-for="Kullanici.Eposta" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label for="epostaDogrulamaKodu">@L["YeniKullanici.EpostaDogrulamaKodu"]</label>
+                            <div class="input-group">
+                                <input id="epostaDogrulamaKodu"
+                                       name="epostaDogrulamaKodu"
+                                       class="form-control"
+                                       autocomplete="off"
+                                       readonly="@(epostaDogrulandi ? "readonly" : null)" />
+                                <div class="input-group-append">
+                                    <button type="button"
+                                            id="btnEpostaDogrula"
+                                            data-url="/Home/EpostaDogrula"
+                                            class="btn btn-outline-success"
+                                            disabled="@((epostaDogrulandi || epostaKodKalanSaniye <= 0) ? "disabled" : null)">
+                                        @L["YeniKullanici.KoduOnayla"]
+                                    </button>
+                                    <span id="epostaKodSayac"
+                                          class="input-group-text verification-timer-box text-muted"
+                                          data-kalan-saniye="@(epostaDogrulandi ? 0 : epostaKodKalanSaniye)"
+                                          data-hedef="#epostaDogrulamaKodu"
+                                          data-onay-buton="#btnEpostaDogrula"></span>
+                                </div>
+                            </div>
+                            @Html.ValidationMessage("epostaDogrulamaKodu", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Kullanici.Telefon">@L["YeniKullanici.Telefon"]</label>
+                            <div class="input-group">
+                                <input asp-for="Kullanici.Telefon"
+                                       class="form-control"
+                                       autocomplete="tel"
+                                       readonly="@(telefonDogrulandi ? "readonly" : null)" />
+                                <div class="input-group-append">
+                                    <button type="button"
+                                            id="btnTelefonKoduGonder"
+                                            data-url="/Home/TelefonKoduGonder"
+                                            class="btn btn-outline-primary"
+                                            disabled="@((telefonDogrulandi || !epostaDogrulandi) ? "disabled" : null)">
+                                        @L["YeniKullanici.TelefonDogrula"]
+                                    </button>
+                                </div>
+                            </div>
+                            <span asp-validation-for="Kullanici.Telefon" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label for="telefonDogrulamaKodu">@L["YeniKullanici.TelefonDogrulamaKodu"]</label>
+                            <div class="input-group">
+                                <input id="telefonDogrulamaKodu"
+                                       name="telefonDogrulamaKodu"
+                                       class="form-control"
+                                       autocomplete="off"
+                                       readonly="@(telefonDogrulandi ? "readonly" : null)" />
+                                <div class="input-group-append">
+                                    <button type="button"
+                                            id="btnTelefonDogrula"
+                                            data-url="/Home/TelefonDogrula"
+                                            class="btn btn-outline-success"
+                                            disabled="@((telefonDogrulandi || !epostaDogrulandi || telefonKodKalanSaniye <= 0) ? "disabled" : null)">
+                                        @L["YeniKullanici.KoduOnayla"]
+                                    </button>
+                                    <span id="telefonKodSayac"
+                                          class="input-group-text verification-timer-box text-muted"
+                                          data-kalan-saniye="@(telefonDogrulandi ? 0 : telefonKodKalanSaniye)"
+                                          data-hedef="#telefonDogrulamaKodu"
+                                          data-onay-buton="#btnTelefonDogrula"></span>
+                                </div>
+                            </div>
+                            @Html.ValidationMessage("telefonDogrulamaKodu", "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Kullanici.Parola">@L["YeniKullanici.Parola"]</label>
+                            <input asp-for="Kullanici.Parola"
+                                   type="password"
+                                   class="form-control"
+                                   id="parola"
+                                   autocomplete="new-password" />
+
+                            <div class="password-meter mt-2">
+                                <div class="password-meter-bar" id="parolaSeviye"></div>
+                            </div>
+
+                            <small id="parolaSeviyeText" class="form-text text-muted">
+                                @L["YeniKullanici.ParolaGuvenlikSeviyesi"]
+                            </small>
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label asp-for="ParolaTekrar">@L["YeniKullanici.ParolaTekrar"]</label>
+                            <input asp-for="ParolaTekrar"
+                                   type="password"
+                                   class="form-control"
+                                   id="parolaTekrar"
+                                   autocomplete="new-password" />
+                            <small id="parolaEslesmeText" class="form-text text-muted"></small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-12 form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input asp-for="SozlesmeKabulEdildi"
+                                       class="custom-control-input"
+                                       id="sozlesme" />
+
+                                <label class="custom-control-label" for="sozlesme">
+                                    @L["YeniKullanici.SozlesmeMetni"]
+                                </label>
+                            </div>
+                            <span asp-validation-for="SozlesmeKabulEdildi" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-footer py-1">
+                    <div class="row align-items-center">
+                        <div class="col-md-8 mb-2 mb-md-0">
+                            <span class="text-muted mr-2">@L["YeniKullanici.DogrulamaDurumu"]</span>
+
+                            <span id="badgeEpostaDogrulama" class="badge @(epostaDogrulandi ? "badge-success" : "badge-secondary")">
+                                @(epostaDogrulandi
+                                    ? L["YeniKullanici.EpostaDogrulandi"]
+                                    : L["YeniKullanici.EpostaBekliyor"])
+                            </span>
+
+                            <span id="badgeTelefonDogrulama" class="badge @(telefonDogrulandi ? "badge-success" : "badge-secondary") ml-2">
+                                @(telefonDogrulandi
+                                    ? L["YeniKullanici.TelefonDogrulandi"]
+                                    : L["YeniKullanici.TelefonBekliyor"])
+                            </span>
+                        </div>
+
+                        <div class="col-md-4 text-md-right">
+                            <button type="submit" id="btnKaydet" class="btn btn-primary px-4">
+                                <i class="fas fa-save"></i> @L["YeniKullanici.Kaydet"]
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const txtParolaGuvenlikSeviyesi = "@L["YeniKullanici.ParolaGuvenlikSeviyesi"]";
+        const txtZayif = "@L["YeniKullanici.ParolaZayif"]";
+        const txtOrta = "@L["YeniKullanici.ParolaOrta"]";
+        const txtGuclu = "@L["YeniKullanici.ParolaGuclu"]";
+        const txtParolalarEslesiyor = "@L["YeniKullanici.ParolalarEslesiyor"]";
+        const txtParolalarEslesmiyor = "@L["YeniKullanici.ParolalarEslesmiyor"]";
+        const txtEpostaDogrulandi = "@L["YeniKullanici.EpostaDogrulandi"]";
+        const txtEpostaBekliyor = "@L["YeniKullanici.EpostaBekliyor"]";
+        const txtTelefonDogrulandi = "@L["YeniKullanici.TelefonDogrulandi"]";
+        const txtTelefonBekliyor = "@L["YeniKullanici.TelefonBekliyor"]";
+        let epostaDogrulandi = @epostaDogrulandi.ToString().ToLowerInvariant();
+        let telefonDogrulandi = @telefonDogrulandi.ToString().ToLowerInvariant();
+        const txtKodSuresiBitti = "Süre doldu";
+        const dogrulamaSayaclari = {};
+
+        function sureMetni(saniye) {
+            var dakika = Math.floor(saniye / 60);
+            var kalanSaniye = saniye % 60;
+
+            return dakika.toString().padStart(2, "0") + ":" + kalanSaniye.toString().padStart(2, "0");
+        }
+
+        function dogrulamaSayaciBaslat(secici) {
+            var sayac = $(secici);
+            var kalanSaniye = parseInt(sayac.data("kalan-saniye"), 10);
+            var hedef = $(sayac.data("hedef"));
+            var onayButon = $(sayac.data("onay-buton"));
+
+            if (dogrulamaSayaclari[secici]) {
+                window.clearTimeout(dogrulamaSayaclari[secici]);
+                dogrulamaSayaclari[secici] = null;
+            }
+
+            if (!kalanSaniye || kalanSaniye <= 0) {
+                sayac.text("");
+                return;
+            }
+
+            function sayacGuncelle() {
+                if (kalanSaniye <= 0) {
+                    sayac
+                        .removeClass("text-muted")
+                        .addClass("text-danger")
+                        .text(txtKodSuresiBitti);
+
+                    hedef.prop("readonly", true);
+                    onayButon.prop("disabled", true);
+                    return;
+                }
+
+                sayac
+                    .removeClass("text-danger")
+                    .addClass("text-muted")
+                    .text(sureMetni(kalanSaniye));
+
+                kalanSaniye--;
+                dogrulamaSayaclari[secici] = window.setTimeout(sayacGuncelle, 1000);
+            }
+
+            sayacGuncelle();
+        }
+
+        function dogrulamaSayaciDurdur(secici) {
+            if (dogrulamaSayaclari[secici]) {
+                window.clearTimeout(dogrulamaSayaclari[secici]);
+                dogrulamaSayaclari[secici] = null;
+            }
+
+            $(secici)
+                .removeClass("text-danger")
+                .addClass("text-muted")
+                .text("");
+        }
+
+        function validationTemizle() {
+            $("[data-valmsg-for]").text("");
+        }
+
+        function validationYaz(alan, mesaj) {
+            if (!alan) return;
+
+            $("[data-valmsg-for='" + alan + "']").text(mesaj);
+        }
+
+        function dogrulamaAjax(url, basariliIslem) {
+            validationTemizle();
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: $("#frmYeniKullanici").serialize(),
+                success: function (cevap) {
+                    PopupMesajGoster(cevap.mesaj, cevap.basarili);
+
+                    if (!cevap.basarili) {
+                        validationYaz(cevap.alan, cevap.mesaj);
+                        return;
+                    }
+
+                    basariliIslem(cevap);
+                    formDurumuGuncelle();
+                },
+                error: function () {
+                    PopupMesajGoster("İşlem sırasında hata oluştu.", false);
+                }
+            });
+        }
+
+        function epostaKoduGonderildi(cevap) {
+            if (cevap.eposta) {
+                $("#Kullanici_Eposta").val(cevap.eposta);
+            }
+
+            $("#epostaDogrulamaKodu").prop("readonly", false);
+            $("#btnEpostaDogrula").prop("disabled", false);
+            $("#epostaKodSayac").data("kalan-saniye", cevap.kalanSaniye);
+            dogrulamaSayaciBaslat("#epostaKodSayac");
+        }
+
+        function epostaDogrulandiIsle(cevap) {
+            epostaDogrulandi = true;
+
+            if (cevap.eposta) {
+                $("#Kullanici_Eposta").val(cevap.eposta);
+            }
+
+            $("#Kullanici_Eposta").prop("readonly", true);
+            $("#epostaDogrulamaKodu").prop("readonly", true);
+            $("#btnEpostaKoduGonder").prop("disabled", true);
+            $("#btnEpostaDogrula").prop("disabled", true);
+            dogrulamaSayaciDurdur("#epostaKodSayac");
+
+            $("#badgeEpostaDogrulama")
+                .removeClass("badge-secondary")
+                .addClass("badge-success")
+                .text(txtEpostaDogrulandi);
+
+            if (!telefonDogrulandi) {
+                $("#btnTelefonKoduGonder").prop("disabled", false);
+            }
+        }
+
+        function telefonKoduGonderildi(cevap) {
+            if (cevap.telefon) {
+                $("#Kullanici_Telefon").val(cevap.telefon);
+            }
+
+            $("#telefonDogrulamaKodu").prop("readonly", false);
+            $("#btnTelefonDogrula").prop("disabled", false);
+            $("#telefonKodSayac").data("kalan-saniye", cevap.kalanSaniye);
+            dogrulamaSayaciBaslat("#telefonKodSayac");
+        }
+
+        function telefonDogrulandiIsle(cevap) {
+            telefonDogrulandi = true;
+
+            if (cevap.telefon) {
+                $("#Kullanici_Telefon").val(cevap.telefon);
+            }
+
+            $("#Kullanici_Telefon").prop("readonly", true);
+            $("#telefonDogrulamaKodu").prop("readonly", true);
+            $("#btnTelefonKoduGonder").prop("disabled", true);
+            $("#btnTelefonDogrula").prop("disabled", true);
+            dogrulamaSayaciDurdur("#telefonKodSayac");
+
+            $("#badgeTelefonDogrulama")
+                .removeClass("badge-secondary")
+                .addClass("badge-success")
+                .text(txtTelefonDogrulandi);
+        }
+
+        function parolaSkoru(parola) {
+            var skor = 0;
+
+            if (parola.length >= 8) skor++;
+            if (/[A-ZÇĞİÖŞÜ]/.test(parola)) skor++;
+            if (/[a-zçğıöşü]/.test(parola)) skor++;
+            if (/[0-9]/.test(parola)) skor++;
+            if (/[^A-Za-z0-9ÇĞİÖŞÜçğıöşü]/.test(parola)) skor++;
+
+            return skor;
+        }
+
+        function formDurumuGuncelle() {
+            var parola = $("#parola").val();
+            var parolaTekrar = $("#parolaTekrar").val();
+            var skor = parolaSkoru(parola);
+
+            var yuzde = skor * 20;
+            var renk = "#dc3545";
+            var metin = txtZayif;
+
+            if (skor >= 4) {
+                renk = "#28a745";
+                metin = txtGuclu;
+            } else if (skor >= 3) {
+                renk = "#ffc107";
+                metin = txtOrta;
+            }
+
+            $("#parolaSeviye")
+                .css("width", yuzde + "%")
+                .css("background-color", renk);
+
+            $("#parolaSeviyeText").text(txtParolaGuvenlikSeviyesi + ": " + metin);
+
+            var parolalarEsit = parola.length > 0 && parola === parolaTekrar;
+
+            $("#parolaEslesmeText")
+                .text(parolalarEsit ? txtParolalarEslesiyor : txtParolalarEslesmiyor)
+                .toggleClass("text-success", parolalarEsit)
+                .toggleClass("text-danger", !parolalarEsit);
+
+            var sozlesme = $("#sozlesme").is(":checked");
+            var captchaGirildi = $("#GuvenlikKodu").val().trim().length > 0;
+
+            $("#btnKaydet").prop(
+                "disabled",
+                !(epostaDogrulandi && telefonDogrulandi && sozlesme && parolalarEsit && captchaGirildi)
+            );
+        }
+
+        $("#btnEpostaKoduGonder").on("click", function () {
+            dogrulamaAjax($(this).data("url"), epostaKoduGonderildi);
+        });
+
+        $("#btnEpostaDogrula").on("click", function () {
+            dogrulamaAjax($(this).data("url"), epostaDogrulandiIsle);
+        });
+
+        $("#btnTelefonKoduGonder").on("click", function () {
+            dogrulamaAjax($(this).data("url"), telefonKoduGonderildi);
+        });
+
+        $("#btnTelefonDogrula").on("click", function () {
+            dogrulamaAjax($(this).data("url"), telefonDogrulandiIsle);
+        });
+
+        $("#parola, #parolaTekrar, #sozlesme, #GuvenlikKodu").on("input change", formDurumuGuncelle);
+
+        $(function () {
+            PopupMesajIlklendir();
+            formDurumuGuncelle();
+            dogrulamaSayaciBaslat("#epostaKodSayac");
+            dogrulamaSayaciBaslat("#telefonKodSayac");
+        });
+    </script>
+}

@@ -7,6 +7,7 @@ namespace TarimDonusum.FrameWork.Captcha
     public class CaptchaGenerator
     {
         public const string SessionKey = "guvenlikKodu";
+        private const string SessionImageKey = "guvenlikKoduResim";
 
         private static char KarakterBul(int charNo)
         {
@@ -18,6 +19,10 @@ namespace TarimDonusum.FrameWork.Captcha
 
         public byte[] Create(HttpContext httpContext)
         {
+            byte[]? mevcutResim = httpContext.Session.Get(SessionImageKey);
+            if (mevcutResim != null && mevcutResim.Length > 0)
+                return mevcutResim;
+
             int width = 150;
             int height = 50;
 
@@ -80,7 +85,16 @@ namespace TarimDonusum.FrameWork.Captcha
             using var image = SKImage.FromBitmap(bitmap);
             using var data = image.Encode(SKEncodedImageFormat.Png, 100);
 
-            return data.ToArray();
+            byte[] resim = data.ToArray();
+            httpContext.Session.Set(SessionImageKey, resim);
+
+            return resim;
+        }
+
+        public void Yenile(HttpContext httpContext)
+        {
+            httpContext.Session.Remove(SessionKey);
+            httpContext.Session.Remove(SessionImageKey);
         }
 
         public bool Validate(HttpContext httpContext, string? girilenKod)

@@ -3,10 +3,12 @@ using Serilog.Events;
 using TarimDonusum.FrameWork.Captcha;
 using TarimDonusum.FrameWork.Logging;
 using TarimDonusum.FrameWork.Menu;
+using TarimDonusum.IsKurallari;
+using TarimDonusum.Servisler;
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 
 
@@ -19,7 +21,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
         .MinimumLevel.Override("System", LogEventLevel.Warning)
         .MinimumLevel.Override("TarimDonusum", LogEventLevel.Information)
 
-        // Tüm loglar dosyaya
+        // TÃ¼m loglar dosyaya
         .WriteTo.File(
             "Logs/log-.txt",
             rollingInterval: RollingInterval.Day,
@@ -29,6 +31,8 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
 builder.Services.AddControllersWithViews().AddViewLocalization().AddDataAnnotationsLocalization(); ;
 builder.Services.AddSingleton<CaptchaGenerator>();
+builder.Services.AddScoped<KullaniciIsKurallari>();
+builder.Services.AddScoped<IMailServisi, MailServisi>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddLocalization(options =>
 {
@@ -45,7 +49,9 @@ builder.Services.AddSession(options =>
 });
 
 
-var app = builder.Build();
+WebApplication app = builder.Build();
+
+await VTGuncelle.GuncelleAsync(app.Configuration, app.Logger);
 
 if (!app.Environment.IsDevelopment())
 {
@@ -60,13 +66,9 @@ app.UseRouting();
 app.UseSession(); 
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
 app.Lifetime.ApplicationStarted.Register(() =>
 {
-    BMYLog.Log(app.Logger, LogLevel.Information, BMYEventID.UygulamaBasladi, null, "TarimDonusum uygulamasý baþladý.");
+    BMYLog.Log(app.Logger, LogLevel.Information, BMYEventID.UygulamaBasladi, null, "TarimDonusum uygulamasÄ± baÅŸladÄ±.");
 });
 
 
@@ -76,19 +78,19 @@ app.Lifetime.ApplicationStopping.Register(() =>
         LogLevel.Information,
         BMYEventID.UygulamaSonlandi,
         null,
-        "Uygulama sonlanýyor.");
+        "Uygulama sonlanÄ±yor.");
 
     Log.CloseAndFlush();
 });
 MenuManager.Initialize(builder.Environment.ContentRootPath);
 
-var supportedCultures = new[]
+CultureInfo[] supportedCultures = new[]
 {
     new CultureInfo("tr"),
     new CultureInfo("en")
 };
 
-var localizationOptions = new RequestLocalizationOptions
+RequestLocalizationOptions localizationOptions = new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture("tr"),
     SupportedCultures = supportedCultures,
@@ -97,5 +99,9 @@ var localizationOptions = new RequestLocalizationOptions
 
 localizationOptions.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider());
 app.UseRequestLocalization(localizationOptions);
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

@@ -1,6 +1,4 @@
-﻿
-
-@{
+﻿@{
     @using Microsoft.Extensions.Localization
     @inject IStringLocalizer<TarimDonusum.SharedResource> L
 
@@ -23,10 +21,17 @@
         .login-card .card-body,
         .login-card .card-footer {
             background: rgba(255,255,255,.35) !important;
-        }</style>
+        }
 
-<div class="row justify-content-center" style="margin-top:140px;">
-    <div class="col-md-5">
+    .login-center {
+        min-height: calc(100vh - 170px);
+        display: flex;
+        align-items: center;
+    }
+</style>
+
+<div class="row justify-content-center login-center">
+    <div class="col-12 col-sm-10 col-md-6 col-lg-5">
 
         <div class="card card-primary login-card">
             <div class="card-header">

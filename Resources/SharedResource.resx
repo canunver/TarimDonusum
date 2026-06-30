@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,55 +117,211 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Home..Giris" xml:space="preserve">
-    <value />
+  <data name="Home.Giris" xml:space="preserve">
+    <value>Giriş</value>
   </data>
   <data name="Home.Button.Giris" xml:space="preserve">
-    <value />
+    <value>Giriş</value>
   </data>
   <data name="Home.Captcha" xml:space="preserve">
-    <value />
+    <value>Güvenlik Kodu</value>
   </data>
   <data name="Home.CaptchaRefresh" xml:space="preserve">
-    <value />
+    <value>Yenilemek için tıklayın</value>
   </data>
   <data name="Home.CardTitle" xml:space="preserve">
-    <value>&#x8;</value>
+    <value>Sisteme Giriş</value>
   </data>
   <data name="Home.KulKod" xml:space="preserve">
-    <value />
+    <value>Kullanıcı Kodu</value>
   </data>
   <data name="Home.Sifre" xml:space="preserve">
-    <value />
+    <value>Parola</value>
   </data>
   <data name="MenuGiris.basvuruFormu" xml:space="preserve">
-    <value />
+    <value>Başvuru Formu</value>
   </data>
   <data name="MenuGiris.basvuruRehberi2027" xml:space="preserve">
-    <value />
+    <value>2027 Başvuru Rehberi</value>
   </data>
   <data name="MenuGiris.dokumanlar" xml:space="preserve">
-    <value />
+    <value>İlgili Dokümanlar</value>
   </data>
-  <data name="MenuGiris.Giris" xml:space="preserve">
-    <value />
+  <data name="MenuGiris.giris" xml:space="preserve">
+    <value>Giriş</value>
   </data>
   <data name="MenuGiris.sifremiUnuttum" xml:space="preserve">
-    <value />
+    <value>Şifremi Unuttum</value>
   </data>
   <data name="MenuGiris.sss" xml:space="preserve">
-    <value />
+    <value>Sık Sorulan Sorular</value>
   </data>
   <data name="MenuGiris.sssKayit" xml:space="preserve">
-    <value />
+    <value>Nasıl Kayıt Olurum?</value>
   </data>
   <data name="MenuGiris.sssKulOl" xml:space="preserve">
-    <value />
+    <value>Nasıl Kullanıcı Olurum?</value>
   </data>
   <data name="MenuGiris.sssSifre" xml:space="preserve">
-    <value />
+    <value>Şifremi Unuttum</value>
   </data>
   <data name="MenuGiris.yeniKullanici" xml:space="preserve">
-    <value />
+    <value>Yeni Kullanıcı</value>
+  </data>
+  <data name="Layout.DefaultTitle" xml:space="preserve">
+  <value>TKDK Başvuru Portalı</value>
+</data>
+  <data name="Layout.ApplicationPortal" xml:space="preserve">
+  <value>TKDK Başvuru Portalı</value>
+</data>
+  <data name="Layout.SupportApplicationSystem" xml:space="preserve">
+  <value>Geri Ödemeli Destek Başvuru Sistemi</value>
+</data>
+  <data name="Layout.InstitutionName" xml:space="preserve">
+  <value>TKDK - Tarım ve Kırsal Kalkınmayı Destekleme Kurumu</value>
+</data>
+  <data name="YeniKullanici.Title" xml:space="preserve">
+  <value>Yeni Kullanıcı</value>
+</data>
+  <data name="YeniKullanici.CardTitle" xml:space="preserve">
+  <value>Yeni Kullanıcı Kaydı</value>
+</data>
+  <data name="YeniKullanici.TCKN" xml:space="preserve">
+  <value>TCKN</value>
+</data>
+  <data name="YeniKullanici.Ad" xml:space="preserve">
+  <value>Ad</value>
+</data>
+  <data name="YeniKullanici.Soyad" xml:space="preserve">
+  <value>Soyad</value>
+</data>
+  <data name="YeniKullanici.DogumTarihi" xml:space="preserve">
+  <value>Doğum Tarihi</value>
+</data>
+  <data name="YeniKullanici.Cinsiyet" xml:space="preserve">
+  <value>Cinsiyet</value>
+</data>
+  <data name="YeniKullanici.Cinsiyet.Kadin" xml:space="preserve">
+  <value>Kadın</value>
+</data>
+  <data name="YeniKullanici.Cinsiyet.Erkek" xml:space="preserve">
+  <value>Erkek</value>
+</data>
+  <data name="YeniKullanici.Seciniz" xml:space="preserve">
+  <value>Seçiniz</value>
+</data>
+  <data name="YeniKullanici.Eposta" xml:space="preserve">
+  <value>E-posta Adresi</value>
+</data>
+  <data name="YeniKullanici.Telefon" xml:space="preserve">
+  <value>Telefon Numarası</value>
+</data>
+  <data name="YeniKullanici.EpostaDogrula" xml:space="preserve">
+  <value>E-posta Doğrula</value>
+</data>
+  <data name="YeniKullanici.TelefonDogrula" xml:space="preserve">
+  <value>Telefon Doğrula</value>
+</data>
+  <data name="YeniKullanici.EpostaDogrulamaKodu" xml:space="preserve">
+  <value>E-posta Doğrulama Kodu</value>
+</data>
+  <data name="YeniKullanici.TelefonDogrulamaKodu" xml:space="preserve">
+  <value>Telefon Doğrulama Kodu</value>
+</data>
+  <data name="YeniKullanici.KoduOnayla" xml:space="preserve">
+  <value>Kodu Onayla</value>
+</data>
+  <data name="YeniKullanici.DogrulamaDurumu" xml:space="preserve">
+  <value>Doğrulama Durumu</value>
+</data>
+  <data name="YeniKullanici.EpostaDogrulandi" xml:space="preserve">
+  <value>E-posta Doğrulandı</value>
+</data>
+  <data name="YeniKullanici.EpostaBekliyor" xml:space="preserve">
+  <value>E-posta Bekliyor</value>
+</data>
+  <data name="YeniKullanici.TelefonDogrulandi" xml:space="preserve">
+  <value>Telefon Doğrulandı</value>
+</data>
+  <data name="YeniKullanici.TelefonBekliyor" xml:space="preserve">
+  <value>Telefon Bekliyor</value>
+</data>
+  <data name="YeniKullanici.Parola" xml:space="preserve">
+  <value>Parola</value>
+</data>
+  <data name="YeniKullanici.ParolaTekrar" xml:space="preserve">
+  <value>Parola Tekrar</value>
+</data>
+  <data name="YeniKullanici.ParolaGuvenlikSeviyesi" xml:space="preserve">
+  <value>Parola güvenlik seviyesi</value>
+</data>
+  <data name="YeniKullanici.ParolaZayif" xml:space="preserve">
+  <value>Zayıf</value>
+</data>
+  <data name="YeniKullanici.ParolaOrta" xml:space="preserve">
+  <value>Orta</value>
+</data>
+  <data name="YeniKullanici.ParolaGuclu" xml:space="preserve">
+  <value>Güçlü</value>
+</data>
+  <data name="YeniKullanici.ParolalarEslesiyor" xml:space="preserve">
+  <value>Parolalar eşleşiyor.</value>
+</data>
+  <data name="YeniKullanici.ParolalarEslesmiyor" xml:space="preserve">
+  <value>Parolalar eşleşmiyor.</value>
+</data>
+  <data name="YeniKullanici.Captcha" xml:space="preserve">
+  <value>Captcha</value>
+</data>
+  <data name="YeniKullanici.CaptchaRefresh" xml:space="preserve">
+  <value>Yenilemek için tıklayın</value>
+</data>
+  <data name="YeniKullanici.SozlesmeMetni" xml:space="preserve">
+  <value>Girdiğim verilerin sistemde tutulmasını ve başvuru süreçlerinde kullanılmasını kabul ediyorum.</value>
+</data>
+  <data name="YeniKullanici.Kaydet" xml:space="preserve">
+  <value>Kaydet</value>
+</data>
+  <data name="YeniKullanici.Hata.TelefonDogrulanmalidir" xml:space="preserve">
+    <value>Telefon doğrulanmalıdır.</value>
+  </data>
+  <data name="YeniKullanici.Bilgi.EpostaDogrulandi" xml:space="preserve">
+    <value>E-posta doğrulandı.</value>
+  </data>
+  <data name="YeniKullanici.Hata.EpostaDogrulanmalidir" xml:space="preserve">
+    <value>E-posta doğrulanmalıdır.</value>
+  </data>
+  <data name="YeniKullanici.Hata.SozlesmeKabulEdilmelidir" xml:space="preserve">
+    <value>Sözleşme kabul edilmelidir.</value>
+  </data>
+  <data name="YeniKullanici.Hata.EpostaGirilmelidir" xml:space="preserve">
+    <value>E-posta adresi girilmelidir.</value>
+  </data>
+  <data name="YeniKullanici.Hata.ParolalarEslesmiyor" xml:space="preserve">
+    <value>Parolalar eşleşmiyor.</value>
+  </data>
+  <data name="YeniKullanici.Hata.TelefonGirilmelidir" xml:space="preserve">
+    <value>Telefon numarası girilmelidir.</value>
+  </data>
+  <data name="YeniKullanici.Bilgi.TelefonDogrulandi" xml:space="preserve">
+    <value>Telefon doğrulandı.</value>
+  </data>
+  <data name="YeniKullanici.Bilgi.EpostaKoduOlusturuldu" xml:space="preserve">
+    <value>E-posta doğrulama kodu gönderildi.</value>
+  </data>
+  <data name="YeniKullanici.Bilgi.KayitBasarili" xml:space="preserve">
+    <value>Kullanıcı kaydı başarıyla alındı.</value>
+  </data>
+  <data name="YeniKullanici.Bilgi.TelefonKoduOlusturuldu" xml:space="preserve">
+    <value>Telefon doğrulama kodu gönderildi.</value>
+  </data>
+  <data name="YeniKullanici.Hata.TelefonDogrulamaKoduHatali" xml:space="preserve">
+    <value>Telefon doğrulama kodu hatalı.</value>
+  </data>
+  <data name="YeniKullanici.Hata.EpostaDogrulamaKoduHatali" xml:space="preserve">
+    <value>E-posta doğrulama kodu hatalı.</value>
+  </data>
+  <data name="YeniKullanici.Hata.GuvenlikKoduHatali" xml:space="preserve">
+    <value>Güvenlik kodu hatalı.</value>
   </data>
 </root>

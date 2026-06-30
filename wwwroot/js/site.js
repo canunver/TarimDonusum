@@ -2,6 +2,47 @@
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
+var popupMesajTimer = null;
+
+function PopupMesajGoster(mesaj, basarili) {
+    if (!mesaj) return;
+
+    if (popupMesajTimer) {
+        window.clearTimeout(popupMesajTimer);
+        popupMesajTimer = null;
+    }
+
+    $("#ajaxMesajMetin").text(mesaj);
+    $("#ajaxMesaj")
+        .removeClass("alert-info alert-danger alert-success")
+        .addClass(basarili ? "alert-info" : "alert-danger")
+        .fadeIn(120);
+
+    popupMesajTimer = window.setTimeout(function () {
+        $("#ajaxMesaj").fadeOut(180);
+        popupMesajTimer = null;
+    }, 10000);
+}
+
+function PopupMesajKapat() {
+    if (popupMesajTimer) {
+        window.clearTimeout(popupMesajTimer);
+        popupMesajTimer = null;
+    }
+
+    $("#ajaxMesaj").fadeOut(120);
+}
+
+function PopupMesajIlklendir() {
+    $("#ajaxMesajKapat").on("click", PopupMesajKapat);
+
+    if ($("#ajaxMesaj").is(":visible")) {
+        popupMesajTimer = window.setTimeout(function () {
+            $("#ajaxMesaj").fadeOut(180);
+            popupMesajTimer = null;
+        }, 10000);
+    }
+}
 
 function AjaxGet(url, data, success) {
     $.ajax({
@@ -63,7 +104,7 @@ function MenuRenderItem(item, aktifUrl, acikMenuler) {
             active = child.active;
             var open = active || acikMenuler.indexOf(item.id) >= 0;
 
-            html = `<li class="nav-item ${open ? "menu-open" : ""}" data-menu-id="${item.id}">
+            html = `<li class="nav-item menu-folder ${open ? "menu-open" : ""}" data-menu-id="${item.id}">
     <a href="#" class="nav-link ${active ? "active" : ""}">
         <i class="nav-icon ${icon}"></i>
         <p>
@@ -142,23 +183,19 @@ function HomeMenuYukle() {
     );
 }
 
+function HomeMenuCookieKaydet() {
 
-// Aktif sayfayı işaretle
-function HomeMenuActive() {
+    var aciklar = [];
 
+    $("#homeMenu .menu-folder.menu-open").each(function () {
+        aciklar.push($(this).data("menu-id"));
+    });
+
+    CookieYaz("HomeMenuAcik", JSON.stringify(aciklar), 30);
 }
 
-// Açık menüleri geri aç
-function HomeMenuCookieYukle() {
-
-}
-
-// Tıklamaları bağla
-function HomeMenuEvents()
-{
-
-}
-
-
-
-
+$(document).on("expanded.lte.treeview collapsed.lte.treeview",
+    "#homeMenu .menu-folder",
+    function () {
+        HomeMenuCookieKaydet();
+    });
