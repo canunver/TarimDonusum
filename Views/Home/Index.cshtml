@@ -1,7 +1,8 @@
-@{
-    @using Microsoft.Extensions.Localization
-    @inject IStringLocalizer<TarimDonusum.SharedResource> L
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<TarimDonusum.SharedResource> L
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
 
+@{
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
     ViewData["Title"] = L["Home.Giris"];
 }
@@ -35,7 +36,52 @@
         text-align: center;
         font-variant-numeric: tabular-nums;
     }
+
+    .captcha-group .form-control,
+    .captcha-group .input-group-text,
+    .captcha-group .btn {
+        height: 44px;
+        background: #eef3ff;
+    }
+
+    .captcha-group .form-control {
+        min-height: 44px;
+        border-color: #ced4da;
+        box-shadow: none;
+    }
+
+    .captcha-group .input-group-text {
+        border-color: #ced4da;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .captcha-group .captcha-image {
+        width: 142px;
+        height: 42px;
+        object-fit: contain;
+        cursor: pointer;
+        background: #fff;
+    }
+
+    .captcha-group .btn {
+        width: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #4f5b66;
+        border-color: #ced4da;
+    }
 </style>
+<div id="ajaxMesaj"
+     class="alert alert-info alert-dismissible floating-message"
+     style="display:@(TempData["Mesaj"] != null ? "block" : "none")">
+    <span id="ajaxMesajMetin">@TempData["Mesaj"]</span>
+    <button type="button" id="ajaxMesajKapat" class="close" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
 <div class="row justify-content-center login-center">
     <div class="col-12 col-sm-10 col-md-6 col-lg-5">
         <div class="card card-primary login-card">
@@ -57,12 +103,12 @@
 
                 <div class="form-group">
                     <label>@L["Home.Captcha"]</label>
-                    <div class="input-group">
+                    <div class="input-group captcha-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text p-0">
                                 <img id="captchaImg"
                                      src="/Captcha/Resim?t=@DateTime.Now.Ticks"
-                                     style="height:38px; width:120px; cursor:pointer;" />
+                                     class="captcha-image" />
                             </span>
                         </div>
 
@@ -79,11 +125,11 @@
 
             <div id="divDogrulama" class="card-body" style="display:none;">
                 <div class="alert alert-info">
-                    E-posta adresinize gönderilen doğrulama kodunu giriniz.
+                    @L["Home.DogrulamaBilgi"]
                 </div>
 
                 <div class="form-group">
-                    <label>Doğrulama Kodu</label>
+                    <label>@L["Home.DogrulamaKodu"]</label>
 
                     <div class="input-group">
                         <input type="text"
@@ -95,7 +141,7 @@
                             <button type="button"
                                     id="btnKodYenile"
                                     class="btn btn-outline-primary">
-                                <i class="fas fa-sync-alt"></i> Kodu Yenile
+                                <i class="fas fa-sync-alt"></i> @L["Home.Button.KoduYenile"]
                             </button>
 
                             <span id="loginKodSayac"
@@ -112,8 +158,15 @@
                 </button>
 
                 <button type="button" id="btnLogin2" class="btn btn-success" style="display:none;">
-                    <i class="fas fa-check"></i> Doğrula ve Giriş Yap
+                    <i class="fas fa-check"></i> @L["Home.Button.DogrulaGirisYap"]
                 </button>
+
+                @if (Env.IsDevelopment())
+                {
+                    <a class="btn btn-outline-info float-right" asp-controller="Home" asp-action="TestBasvuru">
+                        <i class="fas fa-vial"></i> Test Başvuruya Geç
+                    </a>
+                }
             </div>
         </div>
     </div>
@@ -122,7 +175,8 @@
 @section Scripts {
     <script>
         let loginKodTimer = null;
-        const txtKodSuresiBitti = "Süre doldu";
+        const txtKodSuresiBitti = "@L["Home.KodSuresiBitti"]";
+        const txtIslemHatasi = "@L["Home.Hata.IslemSirasindaHata"]";
 
         function captchaYenile() {
             $("#captchaImg").attr("src", "/Captcha/Resim?t=" + new Date().getTime());
@@ -216,7 +270,7 @@
                 loginSayaciBaslat(cevap.kalanSaniye || 180);
             })
             .fail(function () {
-                PopupMesajGoster("İşlem sırasında hata oluştu.", false);
+                PopupMesajGoster(txtIslemHatasi, false);
             });
         }
 
@@ -245,7 +299,7 @@
                 window.location.href = cevap.redirectUrl;
             })
             .fail(function () {
-                PopupMesajGoster("İşlem sırasında hata oluştu.", false);
+                PopupMesajGoster(txtIslemHatasi, false);
             });
         });
 

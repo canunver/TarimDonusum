@@ -2,45 +2,82 @@
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
-var popupMesajTimer = null;
+var popupMesajSayac = 0;
 
 function PopupMesajGoster(mesaj, basarili) {
     if (!mesaj) return;
 
-    if (popupMesajTimer) {
-        window.clearTimeout(popupMesajTimer);
-        popupMesajTimer = null;
-    }
+    var $container = PopupMesajContainer();
+    var id = "popupMesaj_" + (++popupMesajSayac);
+    var $mesaj = $('<div/>', {
+        id: id,
+        class: "alert alert-dismissible floating-message-item " + (basarili ? "alert-info" : "alert-danger"),
+        style: "display:none"
+    });
 
-    $("#ajaxMesajMetin").text(mesaj);
-    $("#ajaxMesaj")
-        .removeClass("alert-info alert-danger alert-success")
-        .addClass(basarili ? "alert-info" : "alert-danger")
-        .fadeIn(120);
+    $mesaj.append($('<span/>').text(mesaj));
+    $mesaj.append(
+        $('<button/>', {
+            type: "button",
+            class: "close popup-mesaj-kapat",
+            "aria-label": "Close"
+        }).append($('<span/>', { "aria-hidden": "true" }).html("&times;"))
+    );
 
-    popupMesajTimer = window.setTimeout(function () {
-        $("#ajaxMesaj").fadeOut(180);
-        popupMesajTimer = null;
-    }, 10000);
+    $container.append($mesaj);
+    $mesaj.fadeIn(120);
+    PopupMesajTimerBaslat($mesaj);
 }
 
-function PopupMesajKapat() {
-    if (popupMesajTimer) {
-        window.clearTimeout(popupMesajTimer);
-        popupMesajTimer = null;
-    }
+function PopupMesajContainer() {
+    var $container = $("#popupMesajContainer");
+    if ($container.length)
+        return $container;
 
-    $("#ajaxMesaj").fadeOut(120);
+    $container = $('<div/>', { id: "popupMesajContainer", class: "floating-message-stack" });
+    $("body").append($container);
+    return $container;
+}
+
+function PopupMesajTimerBaslat($mesaj) {
+    var timer = window.setTimeout(function () {
+        PopupMesajKapat($mesaj);
+    }, 10000);
+
+    $mesaj.data("popupTimer", timer);
+}
+
+function PopupMesajKapat(mesaj) {
+    var $mesaj = mesaj && mesaj.jquery ? mesaj : $(mesaj).closest(".floating-message-item");
+    if (!$mesaj.length)
+        $mesaj = $("#ajaxMesaj");
+
+    var timer = $mesaj.data("popupTimer");
+    if (timer)
+        window.clearTimeout(timer);
+
+    $mesaj.fadeOut(120, function () {
+        $(this).remove();
+    });
 }
 
 function PopupMesajIlklendir() {
-    $("#ajaxMesajKapat").on("click", PopupMesajKapat);
+    $(document)
+        .off("click.popupMesaj", "#ajaxMesajKapat, .popup-mesaj-kapat")
+        .on("click.popupMesaj", "#ajaxMesajKapat, .popup-mesaj-kapat", function () {
+            PopupMesajKapat(this);
+        });
 
-    if ($("#ajaxMesaj").is(":visible")) {
-        popupMesajTimer = window.setTimeout(function () {
-            $("#ajaxMesaj").fadeOut(180);
-            popupMesajTimer = null;
-        }, 10000);
+    var $eskiMesaj = $("#ajaxMesaj");
+    var ilkMesaj = $("#ajaxMesajMetin").text().trim();
+    if (ilkMesaj && !$eskiMesaj.data("popupInitialized")) {
+        PopupMesajContainer().append($eskiMesaj);
+        $eskiMesaj
+            .removeClass("floating-message")
+            .addClass("floating-message-item")
+            .show();
+        $eskiMesaj.data("popupInitialized", true);
+        PopupMesajTimerBaslat($eskiMesaj);
     }
 }
 
@@ -168,7 +205,8 @@ function MenuRender(menu) {
 
     var aktifUrl = NormalizeUrl(window.location.pathname + window.location.search);
     var acikMenuler = [];
-    var c = CookieOku("HomeMenuAcik");
+    var cookieAdi = window.aktifMenuCookieAdi || "HomeMenuAcik";
+    var c = CookieOku(cookieAdi);
     if (c)
         acikMenuler = JSON.parse(c);
 
@@ -184,18 +222,42 @@ function HomeMenuYukle() {
 }
 
 function HomeMenuCookieKaydet() {
+    MenuCookieKaydet("#homeMenu", "HomeMenuAcik");
+}
+
+function BasvuruMenuYukle() {
+    AjaxGet("/Menu/Basvuru", null,
+        function (menu) {
+            window.aktifMenuCookieAdi = "BasvuruMenuAcik";
+            $("#basvuruMenu").html(MenuRender(menu));
+            window.aktifMenuCookieAdi = null;
+        }
+    );
+}
+
+function BasvuruMenuCookieKaydet() {
+    MenuCookieKaydet("#basvuruMenu", "BasvuruMenuAcik");
+}
+
+function MenuCookieKaydet(menuSecici, cookieAdi) {
 
     var aciklar = [];
 
-    $("#homeMenu .menu-folder.menu-open").each(function () {
+    $(menuSecici + " .menu-folder.menu-open").each(function () {
         aciklar.push($(this).data("menu-id"));
     });
 
-    CookieYaz("HomeMenuAcik", JSON.stringify(aciklar), 30);
+    CookieYaz(cookieAdi, JSON.stringify(aciklar), 30);
 }
 
 $(document).on("expanded.lte.treeview collapsed.lte.treeview",
     "#homeMenu .menu-folder",
     function () {
         HomeMenuCookieKaydet();
+    });
+
+$(document).on("expanded.lte.treeview collapsed.lte.treeview",
+    "#basvuruMenu .menu-folder",
+    function () {
+        BasvuruMenuCookieKaydet();
     });

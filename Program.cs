@@ -33,6 +33,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 builder.Services.AddControllersWithViews().AddViewLocalization().AddDataAnnotationsLocalization(); ;
 builder.Services.AddSingleton<CaptchaGenerator>();
 builder.Services.AddScoped<KullaniciIsKurallari>();
+builder.Services.AddScoped<BasvuruIsKurallari>();
 builder.Services.AddScoped<IMailServisi, MailServisi>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddLocalization(options =>
@@ -54,9 +55,10 @@ WebApplication app = builder.Build();
 
 await VTGuncelle.GuncelleAsync(app.Configuration, app.Logger);
 
+app.UseExceptionHandler("/Home/Error");
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 

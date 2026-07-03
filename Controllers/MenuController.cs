@@ -19,5 +19,11 @@ namespace TarimDonusum.Controllers
         {
             return Json(MenuManager.GetMenuGiris(L));
         }
+
+        [HttpGet]
+        public IActionResult Basvuru()
+        {
+            return Json(MenuManager.GetMenuBasvuru(L));
+        }
     }
 }

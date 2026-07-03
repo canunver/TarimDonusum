@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using TarimDonusum.Araclar;
@@ -31,6 +33,7 @@ namespace TarimDonusum.Controllers
         private readonly KullaniciIsKurallari _kullaniciIsKurallari;
         private readonly IMailServisi _mailServisi;
         private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _environment;
 
         public HomeController(
             ILoggerFactory loggerFactory,
@@ -38,13 +41,15 @@ namespace TarimDonusum.Controllers
             CaptchaGenerator captcha,
             KullaniciIsKurallari kullaniciIsKurallari,
             IMailServisi mailServisi,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IWebHostEnvironment environment)
             : base(loggerFactory, localizer)
         {
             _captcha = captcha;
             _kullaniciIsKurallari = kullaniciIsKurallari;
             _mailServisi = mailServisi;
             _configuration = configuration;
+            _environment = environment;
         }
 
         public static string RastgeleResim()
@@ -76,6 +81,32 @@ namespace TarimDonusum.Controllers
         {
             Log(LogLevel.Information, BMYEventID.Yok, null, "Ana sayfa açıldı.");
             return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TestBasvuru()
+        {
+            if (!_environment.IsDevelopment())
+                return NotFound();
+
+            Sonuc<Kullanici> kullaniciSonuc = await _kullaniciIsKurallari.IlkAktifKullaniciyiOkuAsync();
+            if (!kullaniciSonuc.Basarili || kullaniciSonuc.Nesne == null)
+            {
+                TempData["Mesaj"] = string.Join(" ", kullaniciSonuc.Hatalar);
+                return RedirectToAction(nameof(Index));
+            }
+
+            HttpContext.Session.SetString("KULLANICI_ID", kullaniciSonuc.Nesne.Id.ToString());
+            HttpContext.Session.SetString("KULLANICI_ADSOYAD", $"{kullaniciSonuc.Nesne.Ad} {kullaniciSonuc.Nesne.Soyad}");
+
+            Log(
+                LogLevel.Information,
+                BMYEventID.Yok,
+                null,
+                "Development test girişi yapıldı. KullaniciId: {KullaniciId}",
+                kullaniciSonuc.Nesne.Id);
+
+            return RedirectToAction("Index", "Basvuru");
         }
 
         [HttpGet]
@@ -135,7 +166,7 @@ namespace TarimDonusum.Controllers
                 return View(model);
             }
 
-            Sonuc sonuc = await _kullaniciIsKurallari.YeniBasvuruKullanicisiAsync(model.Kullanici);
+            Sonuc<int> sonuc = await _kullaniciIsKurallari.YeniBasvuruKullanicisiAsync(model.Kullanici);
 
             if (!sonuc.Basarili)
             {
@@ -157,6 +188,7 @@ namespace TarimDonusum.Controllers
                 model.Kullanici.Eposta);
 
             YeniKullaniciSessionTemizle();
+            TempData["Mesaj"] = L["YeniKullanici.Bilgi.KayitBasarili"].ToString();
 
             return RedirectToAction(nameof(Index));
         }
@@ -194,8 +226,8 @@ namespace TarimDonusum.Controllers
             string mailHatasi = await _mailServisi.MailAtAsync(
                 "",
                 model.Kullanici.Eposta,
-                "E-posta doğrulama kodu",
-                "E-posta doğrulama kodunuz: " + kod,
+                L["YeniKullanici.Mail.EpostaDogrulamaKoduKonu"].ToString(),
+                string.Format(L["YeniKullanici.Mail.EpostaDogrulamaKoduGovde"].ToString(), kod),
                 false,
                 false);
 
@@ -379,6 +411,17 @@ namespace TarimDonusum.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
+            IExceptionHandlerPathFeature? exceptionFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+            if (exceptionFeature?.Error != null)
+            {
+                Log(
+                    LogLevel.Error,
+                    BMYEventID.Yok,
+                    exceptionFeature.Error,
+                    "Beklenmeyen uygulama hatası. Path: {Path}",
+                    exceptionFeature.Path);
+            }
+
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
@@ -562,12 +605,13 @@ namespace TarimDonusum.Controllers
         public async Task<IActionResult> Login1(string kulKod, string sifre, string captcha)
         {
             if (!CaptchaGecerliMi(captcha))
-                return Json(new { success = false, message = "Güvenlik kodu hatalı." });
+                return Json(LoginCevabi(false, L["Home.Hata.GuvenlikKoduHatali"].ToString()));
 
-            Kullanici kullanici = KullaniciKontrolEt(kulKod, sifre);
+            Sonuc<Kullanici> kullaniciSonuc = await KullaniciOku(kulKod, sifre);
+            Kullanici? kullanici = kullaniciSonuc.Nesne;
 
-            if (kullanici == null)
-                return Json(new { success = false, message = "Kullanıcı kodu veya şifre hatalı." });
+            if (!kullaniciSonuc.Basarili || kullanici == null)
+                return Json(LoginCevabi(false, L["Home.Hata.KullaniciKodSifreHatali"].ToString()));
 
             var kod = Random.Shared.Next(100000, 999999).ToString();
 
@@ -576,65 +620,72 @@ namespace TarimDonusum.Controllers
             HttpContext.Session.SetString("LOGIN_VERIFY_EXPIRE", DateTime.Now.AddMinutes(5).ToString("O"));
 
 
-            string mailHatasi = await _mailServisi.MailAtAsync("", kullanici.Eposta, "E-posta doğrulama kodu", "E-posta doğrulama kodunuz: " + kod, false, false);
+            string mailHatasi = await _mailServisi.MailAtAsync(
+                "",
+                kullanici.Eposta,
+                L["Home.Mail.DogrulamaKoduKonu"].ToString(),
+                string.Format(L["Home.Mail.DogrulamaKoduGovde"].ToString(), kod),
+                false,
+                false);
 
             if (!string.IsNullOrWhiteSpace(mailHatasi))
             {
                 return Json(DogrulamaCevabi(false, mailHatasi, null, null, "Kullanici.Eposta"));
             }
 
-            //MailGonder(kullanici.Email, "Doğrulama Kodu", $"Doğrulama kodunuz: {kod}");
-
             HttpContext.Session.SetString("LOGIN_VERIFY_EXPIRE", DateTime.Now.AddMinutes(3).ToString("O"));
-            return Json(new
-            {
-                basarili = true,
-                mesaj = "Doğrulama kodu e-posta adresinize gönderildi.",
-                kalanSaniye = 180
-            });
+            return Json(LoginCevabi(true, L["Home.Bilgi.DogrulamaKoduGonderildi"].ToString(), kalanSaniye: 180));
         }
 
-        private Kullanici KullaniciKontrolEt(string kulKod, string sifre)
+        private async Task<Sonuc<Kullanici>> KullaniciOku(string kulKod, string sifre)
         {
-            return new Kullanici() { Eposta = "canunver@bmyyazilim.com.tr" };
+            return await _kullaniciIsKurallari.KullaniciOkuAsync(0, kulKod, sifre);
         }
 
         [HttpPost]
         public async Task<IActionResult> Login2(string kulKod, string sifre, string captcha, string dogrulamaKodu)
         {
             if (!CaptchaGecerliMi(captcha))
-                return Json(new { success = false, message = "Güvenlik kodu hatalı." });
+                return Json(LoginCevabi(false, L["Home.Hata.GuvenlikKoduHatali"].ToString()));
 
-            var kullanici = KullaniciKontrolEt(kulKod, sifre);
+            Sonuc<Kullanici> kullaniciSonuc = await KullaniciOku(kulKod, sifre);
 
-            if (kullanici == null)
-                return Json(new { success = false, message = "Kullanıcı kodu veya şifre hatalı." });
+            if (!kullaniciSonuc.Basarili || kullaniciSonuc.Nesne == null)
+                return Json(LoginCevabi(false, L["Home.Hata.KullaniciKodSifreHatali"].ToString()));
 
             var sessionKulKod = HttpContext.Session.GetString("LOGIN_KULKOD");
             var sessionKod = HttpContext.Session.GetString("LOGIN_VERIFY_CODE");
             var expireText = HttpContext.Session.GetString("LOGIN_VERIFY_EXPIRE");
 
             if (sessionKulKod != kulKod)
-                return Json(new { success = false, message = "Oturum doğrulaması geçersiz." });
+                return Json(LoginCevabi(false, L["Home.Hata.OturumDogrulamasiGecersiz"].ToString()));
 
             if (!DateTime.TryParse(expireText, out var expire) || DateTime.Now > expire)
-                return Json(new { success = false, message = "Doğrulama kodunun süresi dolmuş." });
+                return Json(LoginCevabi(false, L["Home.Hata.DogrulamaKoduSuresiDoldu"].ToString()));
 
             if (sessionKod != dogrulamaKodu)
-                return Json(new { success = false, message = "Doğrulama kodu hatalı." });
+                return Json(LoginCevabi(false, L["Home.Hata.DogrulamaKoduHatali"].ToString()));
 
             HttpContext.Session.Remove("LOGIN_VERIFY_CODE");
             HttpContext.Session.Remove("LOGIN_VERIFY_EXPIRE");
+            HttpContext.Session.SetString("KULLANICI_ID", kullaniciSonuc.Nesne.Id.ToString());
+            HttpContext.Session.SetString("KULLANICI_ADSOYAD", $"{kullaniciSonuc.Nesne.Ad} {kullaniciSonuc.Nesne.Soyad}");
 
             // Burada gerçek login cookie işlemi yapılacak
             // await HttpContext.SignInAsync(...);
 
-            return Json(new
+            return Json(LoginCevabi(true, L["Home.Bilgi.GirisBasarili"].ToString(), Url.Action("Index", "Basvuru")));
+        }
+
+        private static object LoginCevabi(bool basarili, string mesaj, string? redirectUrl = null, int kalanSaniye = 0)
+        {
+            return new
             {
-                basarili = true,
-                mesaj = "Giriş başarılı.",
-                redirectUrl = Url.Action("Index", "Basvuru")
-            });
+                basarili,
+                mesaj,
+                redirectUrl,
+                kalanSaniye
+            };
         }
 
     }

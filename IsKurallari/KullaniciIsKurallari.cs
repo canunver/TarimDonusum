@@ -16,33 +16,118 @@ namespace TarimDonusum.IsKurallari
         public KullaniciIsKurallari(IConfiguration configuration, ILogger<KullaniciIsKurallari> logger)
         {
             _logger = logger;
-
-            string? connectionString = configuration.GetConnectionString("DefaultConnection");
-            if (string.IsNullOrWhiteSpace(connectionString))
-                throw new InvalidOperationException("ConnectionStrings:DefaultConnection tanımlı değil.");
-
-            _connectionString = connectionString;
+            _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
         }
 
-        public async Task<Sonuc> YeniBasvuruKullanicisiAsync(Kullanici kullanici)
+        public async Task<Sonuc<int>> YeniBasvuruKullanicisiAsync(Kullanici kullanici)
         {
-            KullaniciNormalizeEt(kullanici);
+            Sonuc<int> sonuc = new Sonuc<int>();
 
-            Sonuc sonuc = kullanici.Dogrula(new Sonuc());
-            if (!sonuc.Basarili)
-                return sonuc;
+            try
+            {
+                if (!ConnectionStringKontrolEt(sonuc))
+                    return sonuc;
 
-            await using SqlConnection connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync();
+                KullaniciNormalizeEt(kullanici);
 
-            await BenzerKayitKontrolEtAsync(connection, kullanici, sonuc);
+                Sonuc dogrulamaSonucu = kullanici.Dogrula(new Sonuc());
+                SonucHatalariniAktar(dogrulamaSonucu, sonuc);
 
-            if (!sonuc.Basarili)
-                return sonuc;
+                if (!sonuc.Basarili)
+                    return sonuc;
 
-            await YeniBasvuruKullanicisiKaydetAsync(connection, kullanici, sonuc);
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                await BenzerKayitKontrolEtAsync(connection, kullanici, sonuc);
+
+                if (!sonuc.Basarili)
+                    return sonuc;
+
+                sonuc.Nesne = await YeniBasvuruKullanicisiKaydetAsync(connection, kullanici, sonuc);
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Yeni başvuru kullanıcısı oluşturma işlemi tamamlanamadı.", "Kullanıcı kaydı oluşturulamadı.");
+            }
 
             return sonuc;
+        }
+
+        public async Task<Sonuc<Kullanici>> KullaniciOkuAsync(int kullaniciId, string kulKod = "", string sifre = "")
+        {
+            Sonuc<Kullanici> sonuc = new Sonuc<Kullanici>();
+
+            try
+            {
+                if (!ConnectionStringKontrolEt(sonuc))
+                    return sonuc;
+
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                TABKullanici tabKullanici = new TABKullanici(connection);
+                TABKullaniciYetki tabKullaniciYetki = new TABKullaniciYetki(connection);
+
+                Kullanici? kullanici = await tabKullanici.OkuAsync(kullaniciId, kulKod, sifre);
+                if (kullanici == null)
+                {
+                    if (sonuc.Basarili)
+                        sonuc.HataEkle(kullaniciId > 0 ? "Kullanıcı bulunamadı." : "Kullanıcı kodu veya şifre hatalı.");
+
+                    return sonuc;
+                }
+
+                await KullaniciYetkileriniYukleAsync(tabKullaniciYetki, kullanici);
+
+                sonuc.Nesne = kullanici;
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Kullanıcı okunamadı. KullaniciId: {KullaniciId}", "Kullanıcı bilgileri okunamadı.", kullaniciId);
+            }
+
+            return sonuc;
+        }
+
+        public async Task<Sonuc<Kullanici>> IlkAktifKullaniciyiOkuAsync()
+        {
+            Sonuc<Kullanici> sonuc = new Sonuc<Kullanici>();
+
+            try
+            {
+                if (!ConnectionStringKontrolEt(sonuc))
+                    return sonuc;
+
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                TABKullanici tabKullanici = new TABKullanici(connection);
+                Kullanici? kullanici = await tabKullanici.IlkAktifKullaniciyiOkuAsync();
+                if (kullanici == null)
+                {
+                    sonuc.HataEkle("Test girişi için aktif kullanıcı bulunamadı.");
+                    return sonuc;
+                }
+
+                TABKullaniciYetki tabKullaniciYetki = new TABKullaniciYetki(connection);
+                await KullaniciYetkileriniYukleAsync(tabKullaniciYetki, kullanici);
+
+                sonuc.Nesne = kullanici;
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "İlk aktif kullanıcı okunamadı.", "Test girişi için kullanıcı okunamadı.");
+            }
+
+            return sonuc;
+        }
+
+        private static async Task KullaniciYetkileriniYukleAsync(
+            TABKullaniciYetki tabKullaniciYetki,
+            Kullanici kullanici)
+        {
+            kullanici.Yetkiler = await tabKullaniciYetki.KullaniciYetkileriniListeleAsync(kullanici.Id);
         }
 
         private static async Task BenzerKayitKontrolEtAsync(
@@ -56,7 +141,7 @@ namespace TarimDonusum.IsKurallari
                 sonuc.HataEkle("Benzer bir kullanıcı kaydı bulunduğu için kayıt yapılamaz.");
         }
 
-        private async Task YeniBasvuruKullanicisiKaydetAsync(
+        private async Task<int> YeniBasvuruKullanicisiKaydetAsync(
             SqlConnection connection,
             Kullanici kullanici,
             Sonuc sonuc)
@@ -75,6 +160,8 @@ namespace TarimDonusum.IsKurallari
                     "Yeni başvuru kullanıcısı oluşturuldu. KullaniciId: {KullaniciId}, TCKN: {TCKN}",
                     kullaniciId,
                     kullanici.TCKN);
+
+                return kullaniciId;
             }
             catch (Exception ex)
             {
@@ -82,7 +169,32 @@ namespace TarimDonusum.IsKurallari
 
                 _logger.LogError(ex, "Yeni başvuru kullanıcısı oluşturulamadı. TCKN: {TCKN}", kullanici.TCKN);
                 sonuc.HataEkle("Kullanıcı kaydı oluşturulamadı.");
+                return 0;
             }
+        }
+
+        private static void SonucHatalariniAktar(Sonuc kaynak, Sonuc hedef)
+        {
+            foreach (string hata in kaynak.Hatalar)
+            {
+                hedef.HataEkle(hata);
+            }
+        }
+
+        private bool ConnectionStringKontrolEt(Sonuc sonuc)
+        {
+            if (!string.IsNullOrWhiteSpace(_connectionString))
+                return true;
+
+            _logger.LogError("ConnectionStrings:DefaultConnection tanımlı değil.");
+            sonuc.HataEkle("Veritabanı bağlantı ayarı bulunamadı.");
+            return false;
+        }
+
+        private void BeklenmeyenHata(Sonuc sonuc, Exception ex, string logMesaji, string kullaniciMesaji, params object[] logParametreleri)
+        {
+            _logger.LogError(ex, logMesaji, logParametreleri);
+            sonuc.HataEkle(kullaniciMesaji);
         }
 
         private static async Task<int> KullaniciEkleAsync(

@@ -168,160 +168,755 @@
   <data name="MenuGiris.yeniKullanici" xml:space="preserve">
     <value>New User</value>
   </data>
+  <data name="MenuBasvuru.kayitlar" xml:space="preserve">
+    <value>Application Records</value>
+  </data>
+  <data name="MenuBasvuru.yeniOnBasvuru" xml:space="preserve">
+    <value>New Pre-application</value>
+  </data>
+  <data name="MenuBasvuru.denetleme" xml:space="preserve">
+    <value>Inspection</value>
+  </data>
+  <data name="MenuBasvuru.denetlemeKayitlari" xml:space="preserve">
+    <value>Inspection Records</value>
+  </data>
   <data name="Layout.DefaultTitle" xml:space="preserve">
-  <value>TKDK Application Portal</value>
-</data>
-<data name="Layout.ApplicationPortal" xml:space="preserve">
-  <value>TKDK Application Portal</value>
-</data>
-<data name="Layout.SupportApplicationSystem" xml:space="preserve">
-  <value>Repayable Support Application System</value>
-</data>
-<data name="Layout.InstitutionName" xml:space="preserve">
-  <value>TKDK - Agriculture and Rural Development Support Institution</value>
-</data>
-<data name="YeniKullanici.Title" xml:space="preserve">
-  <value>New User</value>
-</data>
-<data name="YeniKullanici.CardTitle" xml:space="preserve">
-  <value>New User Registration</value>
-</data>
-<data name="YeniKullanici.TCKN" xml:space="preserve">
-  <value>National ID Number</value>
-</data>
-<data name="YeniKullanici.Ad" xml:space="preserve">
-  <value>First Name</value>
-</data>
-<data name="YeniKullanici.Soyad" xml:space="preserve">
-  <value>Last Name</value>
-</data>
-<data name="YeniKullanici.DogumTarihi" xml:space="preserve">
-  <value>Date of Birth</value>
-</data>
-<data name="YeniKullanici.Cinsiyet" xml:space="preserve">
-  <value>Gender</value>
-</data>
-<data name="YeniKullanici.Cinsiyet.Kadin" xml:space="preserve">
-  <value>Female</value>
-</data>
-<data name="YeniKullanici.Cinsiyet.Erkek" xml:space="preserve">
-  <value>Male</value>
-</data>
-<data name="YeniKullanici.Seciniz" xml:space="preserve">
-  <value>Select</value>
-</data>
-<data name="YeniKullanici.Eposta" xml:space="preserve">
-  <value>Email Address</value>
-</data>
-<data name="YeniKullanici.Telefon" xml:space="preserve">
-  <value>Phone Number</value>
-</data>
-<data name="YeniKullanici.EpostaDogrula" xml:space="preserve">
-  <value>Verify Email</value>
-</data>
-<data name="YeniKullanici.TelefonDogrula" xml:space="preserve">
-  <value>Verify Phone</value>
-</data>
-<data name="YeniKullanici.EpostaDogrulamaKodu" xml:space="preserve">
-  <value>Email Verification Code</value>
-</data>
-<data name="YeniKullanici.TelefonDogrulamaKodu" xml:space="preserve">
-  <value>Phone Verification Code</value>
-</data>
-<data name="YeniKullanici.KoduOnayla" xml:space="preserve">
-  <value>Confirm Code</value>
-</data>
-<data name="YeniKullanici.DogrulamaDurumu" xml:space="preserve">
-  <value>Verification Status</value>
-</data>
-<data name="YeniKullanici.EpostaDogrulandi" xml:space="preserve">
-  <value>Email Verified</value>
-</data>
-<data name="YeniKullanici.EpostaBekliyor" xml:space="preserve">
-  <value>Email Pending</value>
-</data>
-<data name="YeniKullanici.TelefonDogrulandi" xml:space="preserve">
-  <value>Phone Verified</value>
-</data>
-<data name="YeniKullanici.TelefonBekliyor" xml:space="preserve">
-  <value>Phone Pending</value>
-</data>
-<data name="YeniKullanici.Parola" xml:space="preserve">
-  <value>Password</value>
-</data>
-<data name="YeniKullanici.ParolaTekrar" xml:space="preserve">
-  <value>Confirm Password</value>
-</data>
-<data name="YeniKullanici.ParolaGuvenlikSeviyesi" xml:space="preserve">
-  <value>Password strength</value>
-</data>
-<data name="YeniKullanici.ParolaZayif" xml:space="preserve">
-  <value>Weak</value>
-</data>
-<data name="YeniKullanici.ParolaOrta" xml:space="preserve">
-  <value>Medium</value>
-</data>
-<data name="YeniKullanici.ParolaGuclu" xml:space="preserve">
-  <value>Strong</value>
-</data>
-<data name="YeniKullanici.ParolalarEslesiyor" xml:space="preserve">
-  <value>Passwords match.</value>
-</data>
-<data name="YeniKullanici.ParolalarEslesmiyor" xml:space="preserve">
-  <value>Passwords do not match.</value>
-</data>
-<data name="YeniKullanici.Captcha" xml:space="preserve">
-  <value>Captcha</value>
-</data>
-<data name="YeniKullanici.CaptchaRefresh" xml:space="preserve">
-  <value>Click to refresh</value>
-</data>
-<data name="YeniKullanici.SozlesmeMetni" xml:space="preserve">
-  <value>I accept that the information I entered will be stored in the system and used during application processes.</value>
-</data>
-<data name="YeniKullanici.Kaydet" xml:space="preserve">
-  <value>Save</value>
-</data>
-<data name="YeniKullanici.Hata.GuvenlikKoduHatali" xml:space="preserve">
-  <value>Security code is incorrect.</value>
-</data>
-<data name="YeniKullanici.Hata.EpostaDogrulanmalidir" xml:space="preserve">
-  <value>Email must be verified.</value>
-</data>
-<data name="YeniKullanici.Hata.TelefonDogrulanmalidir" xml:space="preserve">
-  <value>Phone must be verified.</value>
-</data>
-<data name="YeniKullanici.Hata.SozlesmeKabulEdilmelidir" xml:space="preserve">
-  <value>The agreement must be accepted.</value>
-</data>
-<data name="YeniKullanici.Hata.ParolalarEslesmiyor" xml:space="preserve">
-  <value>Passwords do not match.</value>
-</data>
-<data name="YeniKullanici.Bilgi.KayitBasarili" xml:space="preserve">
-  <value>User registration was received successfully.</value>
-</data>
-<data name="YeniKullanici.Hata.EpostaGirilmelidir" xml:space="preserve">
-  <value>Email address is required.</value>
-</data>
-<data name="YeniKullanici.Bilgi.EpostaKoduOlusturuldu" xml:space="preserve">
-  <value>Email verification code was sent.</value>
-</data>
-<data name="YeniKullanici.Hata.EpostaDogrulamaKoduHatali" xml:space="preserve">
-  <value>Email verification code is incorrect.</value>
-</data>
-<data name="YeniKullanici.Bilgi.EpostaDogrulandi" xml:space="preserve">
-  <value>Email verified.</value>
-</data>
-<data name="YeniKullanici.Hata.TelefonGirilmelidir" xml:space="preserve">
-  <value>Phone number is required.</value>
-</data>
-<data name="YeniKullanici.Bilgi.TelefonKoduOlusturuldu" xml:space="preserve">
-  <value>Phone verification code was sent.</value>
-</data>
-<data name="YeniKullanici.Hata.TelefonDogrulamaKoduHatali" xml:space="preserve">
-  <value>Phone verification code is incorrect.</value>
-</data>
-<data name="YeniKullanici.Bilgi.TelefonDogrulandi" xml:space="preserve">
-  <value>Phone verified.</value>
-</data>
+    <value>TKDK Application Portal</value>
+  </data>
+  <data name="Layout.ApplicationPortal" xml:space="preserve">
+    <value>TKDK Application Portal</value>
+  </data>
+  <data name="Layout.SupportApplicationSystem" xml:space="preserve">
+    <value>Repayable Support Application System</value>
+  </data>
+  <data name="Layout.InstitutionName" xml:space="preserve">
+    <value>TKDK - Agriculture and Rural Development Support Institution</value>
+  </data>
+  <data name="YeniKullanici.Title" xml:space="preserve">
+    <value>New User</value>
+  </data>
+  <data name="YeniKullanici.CardTitle" xml:space="preserve">
+    <value>New User Registration</value>
+  </data>
+  <data name="YeniKullanici.TCKN" xml:space="preserve">
+    <value>National ID Number</value>
+  </data>
+  <data name="YeniKullanici.Ad" xml:space="preserve">
+    <value>First Name</value>
+  </data>
+  <data name="YeniKullanici.Soyad" xml:space="preserve">
+    <value>Last Name</value>
+  </data>
+  <data name="YeniKullanici.DogumTarihi" xml:space="preserve">
+    <value>Date of Birth</value>
+  </data>
+  <data name="YeniKullanici.Cinsiyet" xml:space="preserve">
+    <value>Gender</value>
+  </data>
+  <data name="YeniKullanici.Cinsiyet.Kadin" xml:space="preserve">
+    <value>Female</value>
+  </data>
+  <data name="YeniKullanici.Cinsiyet.Erkek" xml:space="preserve">
+    <value>Male</value>
+  </data>
+  <data name="YeniKullanici.Seciniz" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="YeniKullanici.Eposta" xml:space="preserve">
+    <value>Email Address</value>
+  </data>
+  <data name="YeniKullanici.Telefon" xml:space="preserve">
+    <value>Phone Number</value>
+  </data>
+  <data name="YeniKullanici.EpostaDogrula" xml:space="preserve">
+    <value>Verify Email</value>
+  </data>
+  <data name="YeniKullanici.TelefonDogrula" xml:space="preserve">
+    <value>Verify Phone</value>
+  </data>
+  <data name="YeniKullanici.EpostaDogrulamaKodu" xml:space="preserve">
+    <value>Email Verification Code</value>
+  </data>
+  <data name="YeniKullanici.TelefonDogrulamaKodu" xml:space="preserve">
+    <value>Phone Verification Code</value>
+  </data>
+  <data name="YeniKullanici.KoduOnayla" xml:space="preserve">
+    <value>Confirm Code</value>
+  </data>
+  <data name="YeniKullanici.DogrulamaDurumu" xml:space="preserve">
+    <value>Verification Status</value>
+  </data>
+  <data name="YeniKullanici.EpostaDogrulandi" xml:space="preserve">
+    <value>Email Verified</value>
+  </data>
+  <data name="YeniKullanici.EpostaBekliyor" xml:space="preserve">
+    <value>Email Pending</value>
+  </data>
+  <data name="YeniKullanici.TelefonDogrulandi" xml:space="preserve">
+    <value>Phone Verified</value>
+  </data>
+  <data name="YeniKullanici.TelefonBekliyor" xml:space="preserve">
+    <value>Phone Pending</value>
+  </data>
+  <data name="YeniKullanici.Parola" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="YeniKullanici.ParolaTekrar" xml:space="preserve">
+    <value>Confirm Password</value>
+  </data>
+  <data name="YeniKullanici.ParolaGuvenlikSeviyesi" xml:space="preserve">
+    <value>Password strength</value>
+  </data>
+  <data name="YeniKullanici.ParolaZayif" xml:space="preserve">
+    <value>Weak</value>
+  </data>
+  <data name="YeniKullanici.ParolaOrta" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="YeniKullanici.ParolaGuclu" xml:space="preserve">
+    <value>Strong</value>
+  </data>
+  <data name="YeniKullanici.ParolalarEslesiyor" xml:space="preserve">
+    <value>Passwords match.</value>
+  </data>
+  <data name="YeniKullanici.ParolalarEslesmiyor" xml:space="preserve">
+    <value>Passwords do not match.</value>
+  </data>
+  <data name="YeniKullanici.Captcha" xml:space="preserve">
+    <value>Captcha</value>
+  </data>
+  <data name="YeniKullanici.CaptchaRefresh" xml:space="preserve">
+    <value>Click to refresh</value>
+  </data>
+  <data name="YeniKullanici.SozlesmeMetni" xml:space="preserve">
+    <value>I accept that the information I entered will be stored in the system and used during application processes.</value>
+  </data>
+  <data name="YeniKullanici.Kaydet" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="YeniKullanici.Hata.TelefonDogrulanmalidir" xml:space="preserve">
+    <value>Phone must be verified.</value>
+  </data>
+  <data name="YeniKullanici.Bilgi.EpostaDogrulandi" xml:space="preserve">
+    <value>Email verified.</value>
+  </data>
+  <data name="YeniKullanici.Hata.EpostaDogrulanmalidir" xml:space="preserve">
+    <value>Email must be verified.</value>
+  </data>
+  <data name="YeniKullanici.Hata.SozlesmeKabulEdilmelidir" xml:space="preserve">
+    <value>The agreement must be accepted.</value>
+  </data>
+  <data name="YeniKullanici.Hata.EpostaGirilmelidir" xml:space="preserve">
+    <value>Email address is required.</value>
+  </data>
+  <data name="YeniKullanici.Hata.ParolalarEslesmiyor" xml:space="preserve">
+    <value>Passwords do not match.</value>
+  </data>
+  <data name="YeniKullanici.Hata.TelefonGirilmelidir" xml:space="preserve">
+    <value>Phone number is required.</value>
+  </data>
+  <data name="YeniKullanici.Bilgi.TelefonDogrulandi" xml:space="preserve">
+    <value>Phone verified.</value>
+  </data>
+  <data name="YeniKullanici.Bilgi.EpostaKoduOlusturuldu" xml:space="preserve">
+    <value>Email verification code was sent.</value>
+  </data>
+  <data name="YeniKullanici.Bilgi.KayitBasarili" xml:space="preserve">
+    <value>User registration was received successfully.</value>
+  </data>
+  <data name="YeniKullanici.Bilgi.TelefonKoduOlusturuldu" xml:space="preserve">
+    <value>Phone verification code was sent.</value>
+  </data>
+  <data name="YeniKullanici.Hata.TelefonDogrulamaKoduHatali" xml:space="preserve">
+    <value>Phone verification code is incorrect.</value>
+  </data>
+  <data name="YeniKullanici.Hata.EpostaDogrulamaKoduHatali" xml:space="preserve">
+    <value>Email verification code is incorrect.</value>
+  </data>
+  <data name="YeniKullanici.Hata.GuvenlikKoduHatali" xml:space="preserve">
+    <value>Security code is incorrect.</value>
+  </data>
+  <data name="YeniKullanici.Mail.EpostaDogrulamaKoduKonu" xml:space="preserve">
+    <value>Email verification code</value>
+  </data>
+  <data name="YeniKullanici.Mail.EpostaDogrulamaKoduGovde" xml:space="preserve">
+    <value>Your email verification code: {0}</value>
+  </data>
+  <data name="Home.DogrulamaBilgi" xml:space="preserve">
+    <value>Enter the verification code sent to your email address.</value>
+  </data>
+  <data name="Home.DogrulamaKodu" xml:space="preserve">
+    <value>Verification Code</value>
+  </data>
+  <data name="Home.Button.KoduYenile" xml:space="preserve">
+    <value>Resend Code</value>
+  </data>
+  <data name="Home.Button.DogrulaGirisYap" xml:space="preserve">
+    <value>Verify and Sign In</value>
+  </data>
+  <data name="Home.KodSuresiBitti" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Home.Hata.IslemSirasindaHata" xml:space="preserve">
+    <value>An error occurred during the operation.</value>
+  </data>
+  <data name="Home.Hata.GuvenlikKoduHatali" xml:space="preserve">
+    <value>Security code is incorrect.</value>
+  </data>
+  <data name="Home.Hata.KullaniciKodSifreHatali" xml:space="preserve">
+    <value>User ID or password is incorrect.</value>
+  </data>
+  <data name="Home.Hata.OturumDogrulamasiGecersiz" xml:space="preserve">
+    <value>Session verification is invalid.</value>
+  </data>
+  <data name="Home.Hata.DogrulamaKoduSuresiDoldu" xml:space="preserve">
+    <value>The verification code has expired.</value>
+  </data>
+  <data name="Home.Hata.DogrulamaKoduHatali" xml:space="preserve">
+    <value>Verification code is incorrect.</value>
+  </data>
+  <data name="Home.Bilgi.DogrulamaKoduGonderildi" xml:space="preserve">
+    <value>The verification code has been sent to your email address.</value>
+  </data>
+  <data name="Home.Bilgi.GirisBasarili" xml:space="preserve">
+    <value>Login successful.</value>
+  </data>
+  <data name="Home.Mail.DogrulamaKoduKonu" xml:space="preserve">
+    <value>Email verification code</value>
+  </data>
+  <data name="Home.Mail.DogrulamaKoduGovde" xml:space="preserve">
+    <value>Your email verification code: {0}</value>
+  </data>
+  <data name="Basvuru.Index.Title" xml:space="preserve">
+    <value>Application Records</value>
+  </data>
+  <data name="Basvuru.Index.Heading" xml:space="preserve">
+    <value>Application Records</value>
+  </data>
+  <data name="Basvuru.Index.Description" xml:space="preserve">
+    <value>You can track pre-applications, applications and finalized application records on this screen.</value>
+  </data>
+  <data name="Basvuru.Index.New" xml:space="preserve">
+    <value>New Pre-application</value>
+  </data>
+  <data name="Basvuru.Index.Empty" xml:space="preserve">
+    <value>No pre-application record yet.</value>
+  </data>
+  <data name="Denetleme.Index.Title" xml:space="preserve">
+    <value>Pre-application Reviews</value>
+  </data>
+  <data name="Denetleme.Index.Heading" xml:space="preserve">
+    <value>Pre-application Reviews</value>
+  </data>
+  <data name="Denetleme.Index.Description" xml:space="preserve">
+    <value>Review pre-application records in auditor view.</value>
+  </data>
+  <data name="Denetleme.Field.Kullanici" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="Basvuru.Common.No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Basvuru.Common.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Basvuru.Common.View" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Basvuru.Common.List" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="Basvuru.Common.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Basvuru.Common.Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="Basvuru.Common.Steps" xml:space="preserve">
+    <value>Steps</value>
+  </data>
+  <data name="Basvuru.Common.Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="Basvuru.Common.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Basvuru.Common.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Basvuru.Common.Application" xml:space="preserve">
+    <value>Pre-application</value>
+  </data>
+  <data name="Basvuru.Common.Eligible" xml:space="preserve">
+    <value>Eligible</value>
+  </data>
+  <data name="Basvuru.Common.NeedsReview" xml:space="preserve">
+    <value>Needs review</value>
+  </data>
+  <data name="Basvuru.Form.NewTitle" xml:space="preserve">
+    <value>New Pre-application</value>
+  </data>
+  <data name="Basvuru.Form.EditTitle" xml:space="preserve">
+    <value>Edit Pre-application</value>
+  </data>
+  <data name="Basvuru.Form.AuditTitle" xml:space="preserve">
+    <value>Pre-application Review</value>
+  </data>
+  <data name="Basvuru.Form.ApplicationNo" xml:space="preserve">
+    <value>Pre-application No: {0}</value>
+  </data>
+  <data name="Basvuru.Form.ApplicationNoPending" xml:space="preserve">
+    <value>Created after the first section is saved</value>
+  </data>
+  <data name="Basvuru.Warning.FirstSectionRequired" xml:space="preserve">
+    <value>Other sections remain disabled until the first section is saved and a pre-application ID is created.</value>
+  </data>
+  <data name="Basvuru.Warning.FinancialRange" xml:space="preserve">
+    <value>At least one of the latest year net sales revenue or total assets must be between TRY 100 million and TRY 4 billion.</value>
+  </data>
+  <data name="Basvuru.Js.LockedMessage" xml:space="preserve">
+    <value>Other sections cannot be opened before the first section is saved and a pre-application ID is received.</value>
+  </data>
+  <data name="Basvuru.Js.UnsavedMessage" xml:space="preserve">
+    <value>There are unsaved changes. Continue?</value>
+  </data>
+  <data name="Basvuru.Step.1" xml:space="preserve">
+    <value>1. Pre-applicant</value>
+  </data>
+  <data name="Basvuru.Step.2" xml:space="preserve">
+    <value>2. Contact</value>
+  </data>
+  <data name="Basvuru.Step.3" xml:space="preserve">
+    <value>3. Investment</value>
+  </data>
+  <data name="Basvuru.Step.4" xml:space="preserve">
+    <value>4. Investment Address</value>
+  </data>
+  <data name="Basvuru.Step.5" xml:space="preserve">
+    <value>5. Investment and Finance</value>
+  </data>
+  <data name="Basvuru.Step.6" xml:space="preserve">
+    <value>6. Financial Data</value>
+  </data>
+  <data name="Basvuru.Section1.Title" xml:space="preserve">
+    <value>1. Pre-application Information</value>
+  </data>
+  <data name="Basvuru.Section1.Description" xml:space="preserve">
+    <value>Application period, application subject, company and application-specific contact information.</value>
+  </data>
+  <data name="Basvuru.Section2.Title" xml:space="preserve">
+    <value>2. Contact Information</value>
+  </data>
+  <data name="Basvuru.Section2.PartnershipTitle" xml:space="preserve">
+    <value>Partnership and Authorization Information</value>
+  </data>
+  <data name="Basvuru.Section3.Title" xml:space="preserve">
+    <value>3. Investment, Value Chain Stages and Expense Types</value>
+  </data>
+  <data name="Basvuru.Section4.Title" xml:space="preserve">
+    <value>4. Investment Implementation Address</value>
+  </data>
+  <data name="Basvuru.Section5.Title" xml:space="preserve">
+    <value>5. Investment and Finance Information</value>
+  </data>
+  <data name="Basvuru.Section6.Title" xml:space="preserve">
+    <value>6. Financial Data for the Last 2 Years</value>
+  </data>
+  <data name="Basvuru.Field.TicaretUnvani" xml:space="preserve">
+    <value>Trade title</value>
+  </data>
+  <data name="Basvuru.Field.TicaretSicilNo" xml:space="preserve">
+    <value>Trade registry no</value>
+  </data>
+  <data name="Basvuru.Field.KurulusTarihi" xml:space="preserve">
+    <value>Establishment date</value>
+  </data>
+  <data name="Basvuru.Field.VergiKimlikNo" xml:space="preserve">
+    <value>Tax identification no</value>
+  </data>
+  <data name="Basvuru.Field.MersisNo" xml:space="preserve">
+    <value>MERSIS no</value>
+  </data>
+  <data name="Basvuru.Field.NaceKodu" xml:space="preserve">
+    <value>NACE code</value>
+  </data>
+  <data name="Basvuru.Field.SonIkiYildirFaalMi" xml:space="preserve">
+    <value>Active for the last 2 years?</value>
+  </data>
+  <data name="Basvuru.Field.BasvuruSahibiTuru" xml:space="preserve">
+    <value>Pre-applicant type</value>
+  </data>
+  <data name="Basvuru.Field.WebSitesi" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="Basvuru.Field.Telefon" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="Basvuru.Field.KepAdresi" xml:space="preserve">
+    <value>KEP address</value>
+  </data>
+  <data name="Basvuru.Field.Eposta" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Basvuru.Field.IrtibatKisisi" xml:space="preserve">
+    <value>Contact person</value>
+  </data>
+  <data name="Basvuru.Field.IrtibatUnvani" xml:space="preserve">
+    <value>Contact title</value>
+  </data>
+  <data name="Basvuru.Field.IrtibatTelefonEposta" xml:space="preserve">
+    <value>Contact phone/e-mail</value>
+  </data>
+  <data name="Basvuru.Field.FaaliyetKonusu" xml:space="preserve">
+    <value>Registered field of activity</value>
+  </data>
+  <data name="Basvuru.Field.IletisimAdresi" xml:space="preserve">
+    <value>Contact address</value>
+  </data>
+  <data name="Basvuru.Field.YetkiliKisiler" xml:space="preserve">
+    <value>Authorized representative(s)</value>
+  </data>
+  <data name="Basvuru.Field.OzelSektorPayi" xml:space="preserve">
+    <value>Private sector share (%)</value>
+  </data>
+  <data name="Basvuru.Field.BagliOrtakIsletmeVarMi" xml:space="preserve">
+    <value>Related/partner enterprise relationship?</value>
+  </data>
+  <data name="Basvuru.Field.BagliOrtakAciklama" xml:space="preserve">
+    <value>Related/partner enterprise explanation</value>
+  </data>
+  <data name="Basvuru.Field.YatirimAdi" xml:space="preserve">
+    <value>Investment name</value>
+  </data>
+  <data name="Basvuru.Field.YatirimTuru" xml:space="preserve">
+    <value>Investment type</value>
+  </data>
+  <data name="Basvuru.Field.YatirimAdresSayisi" xml:space="preserve">
+    <value>Number of investment addresses</value>
+  </data>
+  <data name="Basvuru.Field.YatirimAdresiNo" xml:space="preserve">
+    <value>Investment implementation address {0}</value>
+  </data>
+  <data name="Basvuru.Field.Il" xml:space="preserve">
+    <value>Province</value>
+  </data>
+  <data name="Basvuru.Field.Ilce" xml:space="preserve">
+    <value>District</value>
+  </data>
+  <data name="Basvuru.Field.AcikAdres" xml:space="preserve">
+    <value>Full address</value>
+  </data>
+  <data name="Basvuru.Field.YatirimYeriStatusu" xml:space="preserve">
+    <value>Investment site status</value>
+  </data>
+  <data name="Basvuru.Field.KiraTahsisBitis" xml:space="preserve">
+    <value>Lease/allocation period or end date</value>
+  </data>
+  <data name="Basvuru.Field.YapiRuhsatiDurumu" xml:space="preserve">
+    <value>Building permit status</value>
+  </data>
+  <data name="Basvuru.Field.DegerZinciri" xml:space="preserve">
+    <value>Value chain</value>
+  </data>
+  <data name="Basvuru.Field.DegerZinciriAsamalari" xml:space="preserve">
+    <value>Value chain stages</value>
+  </data>
+  <data name="Basvuru.Field.HarcamaTurleri" xml:space="preserve">
+    <value>Requested expense types</value>
+  </data>
+  <data name="Basvuru.Field.ToplamYatirimTutari" xml:space="preserve">
+    <value>Total investment amount (USD)</value>
+  </data>
+  <data name="Basvuru.Field.UygunHarcamaTutari" xml:space="preserve">
+    <value>Eligible expense amount (USD)</value>
+  </data>
+  <data name="Basvuru.Field.TalepEdilenDestekTutari" xml:space="preserve">
+    <value>Requested support amount (USD)</value>
+  </data>
+  <data name="Basvuru.Field.BasvuruSahibiKatkisi" xml:space="preserve">
+    <value>Pre-applicant contribution (USD)</value>
+  </data>
+  <data name="Basvuru.Field.DestekOrani" xml:space="preserve">
+    <value>Support rate (%)</value>
+  </data>
+  <data name="Basvuru.Field.YatiriminAmaci" xml:space="preserve">
+    <value>Investment purpose, activities and outputs</value>
+  </data>
+  <data name="Basvuru.Field.OncekiYilNetSatis" xml:space="preserve">
+    <value>Previous year net sales revenue (TRY)</value>
+  </data>
+  <data name="Basvuru.Field.SonYilNetSatis" xml:space="preserve">
+    <value>Latest year net sales revenue (TRY)</value>
+  </data>
+  <data name="Basvuru.Field.OncekiYilAktifToplami" xml:space="preserve">
+    <value>Previous year total assets (TRY)</value>
+  </data>
+  <data name="Basvuru.Field.SonYilAktifToplami" xml:space="preserve">
+    <value>Latest year total assets (TRY)</value>
+  </data>
+  <data name="Basvuru.Field.BelgePaketiDosyaAdi" xml:space="preserve">
+    <value>Required document package file name</value>
+  </data>
+  <data name="Basvuru.Field.TaahhutDosyaAdi" xml:space="preserve">
+    <value>Commitment/declaration file name</value>
+  </data>
+  <data name="Basvuru.Field.BelgeBeyani" xml:space="preserve">
+    <value>Document declaration</value>
+  </data>
+  <data name="Basvuru.Field.BelgeGruplari" xml:space="preserve">
+    <value>Required document groups in the document package</value>
+  </data>
+  <data name="Basvuru.Field.BelgeGruplariShort" xml:space="preserve">
+    <value>Document group</value>
+  </data>
+  <data name="Basvuru.Field.MaliKontrol" xml:space="preserve">
+    <value>Financial control</value>
+  </data>
+  <data name="Basvuru.Field.DenetciNotu" xml:space="preserve">
+    <value>Auditor note</value>
+  </data>
+  <data name="Basvuru.Field.DenetimSonucu" xml:space="preserve">
+    <value>Audit result</value>
+  </data>
+  <data name="Basvuru.Field.Durum" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Basvuru.Field.Guncelleme" xml:space="preserve">
+    <value>Updated</value>
+  </data>
+  <data name="Basvuru.Options.ApplicantTypes" xml:space="preserve">
+    <value>Enterprise|Producer organization|Cooperative|Union|Other</value>
+  </data>
+  <data name="Basvuru.Options.YesNo" xml:space="preserve">
+    <value>Yes|No</value>
+  </data>
+  <data name="Basvuru.Options.InvestmentTypes" xml:space="preserve">
+    <value>New|Modernization</value>
+  </data>
+  <data name="Basvuru.Options.Provinces" xml:space="preserve">
+    <value>Adana|Ankara|Bursa|Istanbul|Izmir|Konya|Samsun|Sanliurfa</value>
+  </data>
+  <data name="Basvuru.Options.ValueChains" xml:space="preserve">
+    <value>Fruit-vegetable|Milk and dairy products|Meat and meat products|Aquaculture|Medicinal aromatic plants</value>
+  </data>
+  <data name="Basvuru.Options.ValueChainStages" xml:space="preserve">
+    <value>Primary production|Processing|Packaging|Storage|Logistics|Marketing</value>
+  </data>
+  <data name="Basvuru.Options.ExpenseTypes" xml:space="preserve">
+    <value>Construction works|Machinery-equipment|Service procurement|Visibility|Software/hardware</value>
+  </data>
+  <data name="Basvuru.Options.DocumentGroups" xml:space="preserve">
+    <value>Trade registry and activity documents|Financial statements|Signature circular|Investment site documents|Project/technical documents</value>
+  </data>
+  <data name="Basvuru.Message.Saved" xml:space="preserve">
+    <value>Pre-application saved.</value>
+  </data>
+  <data name="Basvuru.Message.NotFound" xml:space="preserve">
+    <value>Pre-application record could not be found.</value>
+  </data>
+  <data name="Basvuru.Status.PreApplication" xml:space="preserve">
+    <value>Pre-application</value>
+  </data>
+  <data name="Basvuru.Flow.Note" xml:space="preserve">
+    <value>This record is received as a pre-application and can be converted into an application after review.</value>
+  </data>
+  <data name="Basvuru.Status.Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Basvuru.Status.Application" xml:space="preserve">
+    <value>Application</value>
+  </data>
+  <data name="Basvuru.Status.Accepted" xml:space="preserve">
+    <value>Accepted</value>
+  </data>
+  <data name="Basvuru.Options.Statuses" xml:space="preserve">
+    <value>Pre-application|Cancelled|Application|Accepted</value>
+  </data>
+  <data name="Basvuru.Step.7" xml:space="preserve">
+    <value>7. Documents</value>
+  </data>
+  <data name="Basvuru.Section7.Title" xml:space="preserve">
+    <value>7. Required Documents</value>
+  </data>
+  <data name="Basvuru.Step.8" xml:space="preserve">
+    <value>8. Control</value>
+  </data>
+  <data name="Basvuru.Section8.Title" xml:space="preserve">
+    <value>8. Control and Report</value>
+  </data>
+  <data name="Basvuru.Field.BasvuruDonemi" xml:space="preserve">
+    <value>Application period</value>
+  </data>
+  <data name="Basvuru.Field.BasvuruKonusu" xml:space="preserve">
+    <value>Application subject</value>
+  </data>
+  <data name="Basvuru.Field.FirmaAdi" xml:space="preserve">
+    <value>Company name</value>
+  </data>
+  <data name="Basvuru.Field.FirmaAdresi" xml:space="preserve">
+    <value>Company address</value>
+  </data>
+  <data name="Basvuru.Field.IrtibatTelefon" xml:space="preserve">
+    <value>Contact phone</value>
+  </data>
+  <data name="Basvuru.Field.IrtibatEposta" xml:space="preserve">
+    <value>Contact e-mail</value>
+  </data>
+  <data name="Basvuru.Firma.Query" xml:space="preserve">
+    <value>Query Company</value>
+  </data>
+  <data name="Basvuru.Firma.NotFound" xml:space="preserve">
+    <value>Company not found. Would you like to add a new company?</value>
+  </data>
+  <data name="Basvuru.Firma.CreateQuestion" xml:space="preserve">
+    <value>Company not found. Would you like to add a new company?</value>
+  </data>
+  <data name="Basvuru.Firma.ModalTitle" xml:space="preserve">
+    <value>New Company</value>
+  </data>
+  <data name="Basvuru.Firma.ModalInfo" xml:space="preserve">
+    <value>Company details are stored on the company record; application contact details remain application-specific.</value>
+  </data>
+  <data name="Basvuru.Firma.TaxRequired" xml:space="preserve">
+    <value>Tax identification no is required.</value>
+  </data>
+  <data name="Basvuru.Firma.QueryFailed" xml:space="preserve">
+    <value>Company query failed.</value>
+  </data>
+  <data name="Basvuru.Firma.SaveFailed" xml:space="preserve">
+    <value>Company could not be saved.</value>
+  </data>
+  <data name="Basvuru.Firma.Saved" xml:space="preserve">
+    <value>Company added.</value>
+  </data>
+  <data name="Basvuru.Firma.Updated" xml:space="preserve">
+    <value>Company updated.</value>
+  </data>
+  <data name="Basvuru.Firma.SelectFirst" xml:space="preserve">
+    <value>Please query and select a company first.</value>
+  </data>
+  <data name="Basvuru.Common.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Basvuru.Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Basvuru.Field.BasvuruTipi" xml:space="preserve">
+    <value>Application Type</value>
+  </data>
+  <data name="Basvuru.ContactInformation" xml:space="preserve">
+    <value>Contact Information</value>
+  </data>
+  <data name="Basvuru.Donem.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Basvuru.Donem.Closed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="Basvuru.Message.PartnershipSaved" xml:space="preserve">
+    <value>Partnership saved.</value>
+  </data>
+  <data name="Basvuru.Field.DegerZinciriAsamasi" xml:space="preserve">
+    <value>Value chain stage</value>
+  </data>
+  <data name="Basvuru.Field.KisaAciklama" xml:space="preserve">
+    <value>Short description</value>
+  </data>
+  <data name="Basvuru.Address.New" xml:space="preserve">
+    <value>New address</value>
+  </data>
+  <data name="Basvuru.Address.ModalTitle" xml:space="preserve">
+    <value>Investment implementation address</value>
+  </data>
+  <data name="Basvuru.Address.Empty" xml:space="preserve">
+    <value>No address has been added.</value>
+  </data>
+  <data name="Basvuru.Address.DeleteConfirm" xml:space="preserve">
+    <value>Delete this address?</value>
+  </data>
+  <data name="Basvuru.Common.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Basvuru.Field.SiraNo" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Basvuru.Field.TamAdres" xml:space="preserve">
+    <value>Full address</value>
+  </data>
+  <data name="Basvuru.Field.KiraTahsis" xml:space="preserve">
+    <value>Lease/allocation</value>
+  </data>
+  <data name="Basvuru.Field.KiraTahsisDurumu" xml:space="preserve">
+    <value>Lease/allocation</value>
+  </data>
+  <data name="Basvuru.Field.KiraVeyaTahsisSuresi" xml:space="preserve">
+    <value>Lease/Allocation Period (Year)</value>
+  </data>
+  <data name="Basvuru.Field.KiraTahsisBitisTarihi" xml:space="preserve">
+    <value>End date</value>
+  </data>
+  <data name="Basvuru.Options.SiteStatuses" xml:space="preserve">
+    <value>Ownership|Lease|Allocation|Easement right|Organized industrial / specialized zone allocation|Other</value>
+  </data>
+  <data name="Basvuru.Options.BuildingPermitStatuses" xml:space="preserve">
+    <value>Building permit available|Building permit application submitted|Letter stating no permit is required is available|Not yet obtained|No construction work</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Home.Login" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Home.LoginButton" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Home.SecurityCode" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Home.RefreshCaptcha" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Home.SignIn" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Home.UserId" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Home.ApplicationForm" xml:space="preserve">
+    <value>Application Form</value>
+  </data>
+  <data name="Home.ApplicationGuide" xml:space="preserve">
+    <value>2027 Application Guide</value>
+  </data>
+  <data name="Home.Documents" xml:space="preserve">
+    <value>Related Docs.</value>
+  </data>
+  <data name="Home.ForgotPassword" xml:space="preserve">
+    <value>Forgot Password</value>
+  </data>
+  <data name="Home.Faq" xml:space="preserve">
+    <value>FAQ</value>
+  </data>
+  <data name="Home.HowRegister" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Home.HowUser" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Home.NewUser" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Layout.Title" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Layout.AppName" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Layout.Subtitle" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Layout.Footer" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="Basvuru.Common.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
 </root>

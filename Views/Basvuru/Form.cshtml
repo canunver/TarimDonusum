@@ -1,0 +1,15 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    ViewData["Title"] = Model.Basvuru.Id > 0 ? L["Basvuru.Form.EditTitle"] : L["Basvuru.Form.NewTitle"];
+}
+
+<form asp-controller="Basvuru" asp-action="Kaydet" method="post" id="basvuruForm">
+    @Html.AntiForgeryToken()
+    <input asp-for="Basvuru.Id" type="hidden" />
+    <input asp-for="Basvuru.KullaniciId" type="hidden" />
+    <input asp-for="Basvuru.KayitTarihi" type="hidden" />
+    <input asp-for="AktifBolum" type="hidden" id="aktifBolum" />
+    <partial name="_FormContent" model="Model" />
+</form>

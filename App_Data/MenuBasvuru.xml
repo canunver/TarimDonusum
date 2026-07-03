@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Menu>
+  <Item type="Url" id="kayitlar" text="Basvuru Kayitlari" url="/Basvuru" icon="fas fa-list" />
+  <Item type="Url" id="yeniOnBasvuru" text="Yeni On Basvuru" url="/Basvuru/Yeni" icon="fas fa-plus-circle" />
+  <Item type="Menu" id="denetleme" text="Denetleme" icon="fas fa-clipboard-check">
+    <Item type="Url" id="denetlemeKayitlari" text="Denetleme Kayitlari" url="/Denetleme" icon="far fa-circle" />
+  </Item>
+</Menu>

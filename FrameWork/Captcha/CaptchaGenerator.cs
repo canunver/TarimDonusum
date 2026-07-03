@@ -9,12 +9,11 @@ namespace TarimDonusum.FrameWork.Captcha
         public const string SessionKey = "guvenlikKodu";
         private const string SessionImageKey = "guvenlikKoduResim";
 
+        private static readonly char[] Karakterler = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ".ToCharArray();
+
         private static char KarakterBul(int charNo)
         {
-            if (charNo < 9)
-                return (char)('1' + charNo);
-
-            return (char)('A' + (charNo - 9));
+            return Karakterler[charNo % Karakterler.Length];
         }
 
         public byte[] Create(HttpContext httpContext)
@@ -23,12 +22,12 @@ namespace TarimDonusum.FrameWork.Captcha
             if (mevcutResim != null && mevcutResim.Length > 0)
                 return mevcutResim;
 
-            int width = 150;
-            int height = 50;
+            int width = 180;
+            int height = 58;
 
             using var bitmap = new SKBitmap(width, height);
             using var canvas = new SKCanvas(bitmap);
-            canvas.Clear(SKColors.Beige);
+            canvas.Clear(SKColors.White);
 
             var rnd = Random.Shared;
 
@@ -38,7 +37,7 @@ namespace TarimDonusum.FrameWork.Captcha
                 SKFontStyleWidth.Normal,
                 SKFontStyleSlant.Upright);
 
-            using var font = new SKFont(typeface, 24);
+            using var font = new SKFont(typeface, 30);
 
             using var paint = new SKPaint
             {
@@ -50,15 +49,15 @@ namespace TarimDonusum.FrameWork.Captcha
 
             for (int i = 0; i < 4; i++)
             {
-                char karakter = KarakterBul(rnd.Next(0, 35));
+                char karakter = KarakterBul(rnd.Next(0, Karakterler.Length));
                 guvenlikKodu += karakter;
 
-                float x = 18 + i * 32;
-                float y = 34 + rnd.Next(-5, 5);
+                float x = 22 + i * 38;
+                float y = 40 + rnd.Next(-4, 4);
 
                 canvas.Save();
                 canvas.Translate(x, y);
-                canvas.RotateDegrees(rnd.Next(-25, 25));
+                canvas.RotateDegrees(rnd.Next(-14, 14));
                 canvas.DrawText(karakter.ToString(), 0f, 0f, SKTextAlign.Left, font, paint);
                 canvas.Restore();
             }

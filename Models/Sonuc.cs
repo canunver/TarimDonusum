@@ -18,4 +18,9 @@ namespace TarimDonusum.Models
                 Hatalar.Add(hata);
         }
     }
+
+    public class Sonuc<T> : Sonuc
+    {
+        public T? Nesne { get; set; }
+    }
 }

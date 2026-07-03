@@ -20,4 +20,8 @@
     <Folder Include="wwwroot\img\" />
   </ItemGroup>
 
+  <Target Name="CheckResourceEncoding" BeforeTargets="BeforeBuild">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Araclar\CheckResourceEncoding.ps1&quot;" />
+  </Target>
+
 </Project>

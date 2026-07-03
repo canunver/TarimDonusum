@@ -1,0 +1,8 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    ViewData["Title"] = L["Basvuru.Form.AuditTitle"];
+}
+
+<partial name="~/Views/Basvuru/_FormContent.cshtml" model="Model" />

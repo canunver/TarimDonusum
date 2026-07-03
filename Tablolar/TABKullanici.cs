@@ -54,7 +54,7 @@ namespace TarimDonusum.Tablolar
             return id;
         }
 
-        public async Task<Kullanici?> GetirAsync(int id)
+        public async Task<Kullanici?> OkuAsync(int kullaniciId, string kulKod = "", string parola = "")
         {
             const string sql = @"
                 SELECT
@@ -67,18 +67,43 @@ namespace TarimDonusum.Tablolar
                     Eposta,
                     Telefon,
                     KayitTarihi,
-                    Aktif
+                    Aktif,
+                    ParolaHash
                 FROM dbo.Kullanici
-                WHERE Id = @Id;";
+                WHERE
+                    (
+                        @KullaniciId > 0
+                        AND Id = @KullaniciId
+                    )
+                    OR
+                    (
+                        @KullaniciId <= 0
+                        AND (TCKN = @KulKod OR Eposta = @KulKod)
+                        AND Aktif = 1
+                    );";
 
             await using SqlCommand command = KomutOlustur(sql);
-            command.Parameters.AddWithValue("@Id", id);
+            command.Parameters.AddWithValue("@KullaniciId", kullaniciId);
+            command.Parameters.AddWithValue("@KulKod", kulKod?.Trim() ?? "");
 
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
                 return null;
 
-            return Oku(reader);
+            Kullanici kullanici = Oku(reader);
+            string parolaHash = reader.GetString(10);
+            reader.Close();
+
+            if (kullaniciId > 0)
+                return kullanici;
+
+            PasswordHasher<Kullanici> passwordHasher = new PasswordHasher<Kullanici>();
+            PasswordVerificationResult sonuc = passwordHasher.VerifyHashedPassword(kullanici, parolaHash, parola ?? "");
+
+            if (sonuc == PasswordVerificationResult.Failed)
+                return null;
+
+            return kullanici;
         }
 
         public async Task<List<Kullanici>> ListeleAsync()
@@ -108,6 +133,33 @@ namespace TarimDonusum.Tablolar
             }
 
             return liste;
+        }
+
+        public async Task<Kullanici?> IlkAktifKullaniciyiOkuAsync()
+        {
+            const string sql = @"
+                SELECT TOP 1
+                    Id,
+                    TCKN,
+                    Ad,
+                    Soyad,
+                    DogumTarihi,
+                    Cinsiyet,
+                    Eposta,
+                    Telefon,
+                    KayitTarihi,
+                    Aktif
+                FROM dbo.Kullanici
+                WHERE Aktif = 1
+                ORDER BY Id;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                return null;
+
+            return Oku(reader);
         }
 
         public async Task<bool> GuncelleAsync(Kullanici kullanici)

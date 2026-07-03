@@ -1,0 +1,64 @@
+@model List<TarimDonusum.Models.Basvuru>
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    ViewData["Title"] = L["Denetleme.Index.Title"];
+}
+
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div>
+            <h1>@L["Denetleme.Index.Heading"]</h1>
+            <p>@L["Denetleme.Index.Description"]</p>
+        </div>
+    </div>
+
+    <div id="ajaxMesaj"
+         class="alert alert-info alert-dismissible floating-message"
+         style="display:@(TempData["Mesaj"] != null ? "block" : "none")">
+        <span id="ajaxMesajMetin">@TempData["Mesaj"]</span>
+        <button type="button" id="ajaxMesajKapat" class="close" aria-label="@L["Basvuru.Common.Close"]">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>@L["Basvuru.Common.No"]</th>
+                    <th>@L["Denetleme.Field.Kullanici"]</th>
+                    <th>@L["Basvuru.Field.TicaretUnvani"]</th>
+                    <th>@L["Basvuru.Field.YatirimAdi"]</th>
+                    <th>@L["Basvuru.Field.Durum"]</th>
+                    <th>@L["Basvuru.Field.Guncelleme"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.KullaniciId</td>
+                        <td>@item.TicaretUnvani</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.YatirimAdi) ? "-" : item.YatirimAdi)</td>
+                        <td><span class="badge bg-secondary">@item.Durum</span></td>
+                        <td>@item.GuncellemeTarihi.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" asp-controller="Denetleme" asp-action="Basvuru" asp-route-id="@item.Id">@L["Basvuru.Common.View"]</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        if (typeof PopupMesajIlklendir === 'function') {
+            PopupMesajIlklendir();
+        }
+    });
+</script>

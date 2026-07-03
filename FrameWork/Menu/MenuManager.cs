@@ -14,6 +14,7 @@ namespace TarimDonusum.FrameWork.Menu
                 Text = item.Text,
                 Url = item.Url,
                 Icon = item.Icon,
+                Target = item.Target,
                 Type = item.Type,
                 Data = item.Data,
                 Children = item.Children
@@ -47,8 +48,18 @@ namespace TarimDonusum.FrameWork.Menu
             return menu;
         }
 
+        public static List<MenuItem> GetMenuBasvuru(IStringLocalizer<SharedResource> L)
+        {
+            var menu = CloneMenu(_menuBasvuru.Value);
+            MenuLocalize("MenuBasvuru", menu, L);
+            return menu;
+        }
+
         private static readonly Lazy<List<MenuItem>> _menuGiris =
-            new(() => Load());
+            new(() => Load("MenuGiris.xml"));
+
+        private static readonly Lazy<List<MenuItem>> _menuBasvuru =
+            new(() => Load("MenuBasvuru.xml"));
 
         public static List<MenuItem> MenuGiris => _menuGiris.Value;
 
@@ -59,12 +70,12 @@ namespace TarimDonusum.FrameWork.Menu
             ContentRootPath = contentRootPath;
         }
 
-        private static List<MenuItem> Load()
+        private static List<MenuItem> Load(string xmlFileName)
         {
             string fileName = Path.Combine(
                 ContentRootPath,
                 "App_Data",
-                "MenuGiris.xml");
+                xmlFileName);
 
             var doc = XDocument.Load(fileName);
 
@@ -83,6 +94,7 @@ namespace TarimDonusum.FrameWork.Menu
                 Id = (string?)e.Attribute("id") ?? "",
                 Url = (string?)e.Attribute("url"),
                 Icon = (string?)e.Attribute("icon"),
+                Target = (string?)e.Attribute("target"),
                 Type = ReadType(e),
                 Data = e.Element("Data")?.Value,
                 Children = e.Elements("Item")
