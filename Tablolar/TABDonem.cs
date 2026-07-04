@@ -46,6 +46,7 @@ namespace TarimDonusum.Tablolar
             const string sql = @"
                 SELECT
                     Id,
+                    Yil,
                     Ad,
                     BasvuruyaAcikMi,
                     BasvuruBaslangicTarihi,
@@ -55,11 +56,9 @@ namespace TarimDonusum.Tablolar
                     MaksimumYatirimTutari,
                     MaksimumDestekTutari,
                     DestekOrani,
-                    Aciklama,
-                    KayitTarihi,
-                    GuncellemeTarihi
+                    Aciklama
                 FROM dbo.Donem
-                ORDER BY BasvuruyaAcikMi DESC, BasvuruBitisTarihi DESC, Id DESC;";
+                ORDER BY BasvuruyaAcikMi DESC, Yil DESC, Id DESC;";
 
             await using SqlCommand command = KomutOlustur(sql);
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
@@ -75,22 +74,21 @@ namespace TarimDonusum.Tablolar
 
         private static Donem Oku(SqlDataReader reader)
         {
-            return new Donem
-            {
-                Id = reader.GetInt32(0),
-                Ad = reader.GetString(1),
-                BasvuruyaAcikMi = OrtakFonksiyonlar.Int32Yap(reader.GetValue(2)) == 1,
-                BasvuruBaslangicTarihi = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
-                BasvuruBitisTarihi = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
-                OnBasvuruBitisTarihi = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
-                MinimumYatirimTutari = reader.IsDBNull(6) ? null : reader.GetDecimal(6),
-                MaksimumYatirimTutari = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
-                MaksimumDestekTutari = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
-                DestekOrani = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
-                Aciklama = reader.GetString(10),
-                KayitTarihi = reader.GetDateTime(11),
-                GuncellemeTarihi = reader.GetDateTime(12)
-            };
+            Donem d = new Donem();
+            int kol = 0;
+            d.Id = reader.GetInt32(kol++);
+            d.Yil = NullDuzeltInt(reader, kol++);
+            d.Ad = reader.GetString(kol++);
+            d.BasvuruyaAcikMi = BoolYap(NullDuzeltInt(reader, kol++));
+            d.BasvuruBaslangicTarihi = reader.GetDateTime(kol++);
+            d.BasvuruBitisTarihi = reader.GetDateTime(kol++);
+            d.OnBasvuruBitisTarihi = reader.GetDateTime(kol++);
+            d.MinimumYatirimTutari = reader.GetDecimal(kol++);
+            d.MaksimumYatirimTutari = reader.GetDecimal(kol++);
+            d.MaksimumDestekTutari = reader.GetDecimal(kol++);
+            d.DestekOrani = reader.GetDecimal(kol++);
+            d.Aciklama = reader.GetString(kol++);
+            return d;
         }
     }
 }

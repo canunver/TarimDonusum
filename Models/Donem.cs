@@ -2,7 +2,8 @@ namespace TarimDonusum.Models
 {
     public class Donem
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
+        public int Yil { get; set; } = 0;
         public string Ad { get; set; } = "";
         public bool BasvuruyaAcikMi { get; set; }
         public DateTime? BasvuruBaslangicTarihi { get; set; }
@@ -13,8 +14,6 @@ namespace TarimDonusum.Models
         public decimal? MaksimumDestekTutari { get; set; }
         public decimal? DestekOrani { get; set; }
         public string Aciklama { get; set; } = "";
-        public DateTime KayitTarihi { get; set; } = DateTime.Now;
-        public DateTime GuncellemeTarihi { get; set; } = DateTime.Now;
 
         public bool SecilebilirMi()
         {

@@ -919,4 +919,58 @@
   <data name="Basvuru.Common.Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
+  <data name="enumBasvuruSahibiTuru_0" xml:space="preserve">
+    <value>Please Select</value>
+  </data>
+  <data name="enumBasvuruSahibiTuru_1" xml:space="preserve">
+    <value>Enterprise</value>
+  </data>
+  <data name="enumBasvuruSahibiTuru_2" xml:space="preserve">
+    <value>Producer organization</value>
+  </data>
+  <data name="enumBasvuruSahibiTuru_3" xml:space="preserve">
+    <value>Cooperative</value>
+  </data>
+  <data name="enumBasvuruSahibiTuru_4" xml:space="preserve">
+    <value>Association</value>
+  </data>
+  <data name="enumBasvuruSahibiTuru_5" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="kayitBasarili" xml:space="preserve">
+    <value>Operation successfull</value>
+  </data>
+  <data name="enumHarcamaTuru_0" xml:space="preserve">
+    <value>Please Select</value>
+  </data>
+  <data name="enumHarcamaTuru_1" xml:space="preserve">
+    <value>Construction works</value>
+  </data>
+  <data name="enumHarcamaTuru_2" xml:space="preserve">
+    <value>Machinery-equipment</value>
+  </data>
+  <data name="enumHarcamaTuru_3" xml:space="preserve">
+    <value>Service procurement</value>
+  </data>
+  <data name="enumHarcamaTuru_4" xml:space="preserve">
+    <value>Visibility</value>
+  </data>
+  <data name="enumHarcamaTuru_5" xml:space="preserve">
+    <value>Software/hardware</value>
+  </data>
+  <data name="enumYatirimTuru_0" xml:space="preserve">
+    <value>Please Select</value>
+  </data>
+  <data name="enumYatirimTuru_1" xml:space="preserve">
+    <value>New Investment</value>
+  </data>
+  <data name="enumYatirimTuru_2" xml:space="preserve">
+    <value>Capacity Enhancement</value>
+  </data>
+  <data name="enumYatirimTuru_3" xml:space="preserve">
+    <value>Modernization</value>
+  </data>
+  <data name="enumYatirimTuru_4" xml:space="preserve">
+    <value>Technology Renewal</value>
+  </data>
 </root>

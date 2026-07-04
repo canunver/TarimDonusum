@@ -32,7 +32,6 @@
                     <th>@L["Basvuru.Field.VergiKimlikNo"]</th>
                     <th>@L["Basvuru.Field.YatirimAdi"]</th>
                     <th>@L["Basvuru.Field.Durum"]</th>
-                    <th>@L["Basvuru.Field.Guncelleme"]</th>
                     <th></th>
                 </tr>
             </thead>
@@ -47,11 +46,10 @@
                 {
                     <tr>
                         <td>@item.Id</td>
-                        <td>@item.TicaretUnvani</td>
-                        <td>@item.VergiKimlikNo</td>
-                        <td>@(string.IsNullOrWhiteSpace(item.YatirimAdi) ? "-" : item.YatirimAdi)</td>
-                        <td><span class="badge bg-secondary">@item.Durum</span></td>
-                        <td>@item.GuncellemeTarihi.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>@item.basvuruFirma.firma.ticaretUnvani</td>
+                        <td>@item.basvuruFirma.firma.vergiKimlikNo</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.yatirim.yatirimAdi) ? "-" : item.yatirim.yatirimAdi)</td>
+                        <td><span class="badge bg-secondary">@item.durum</span></td>
                         <td class="text-end">
                             <a class="btn btn-sm btn-outline-primary" asp-controller="Basvuru" asp-action="Duzenle" asp-route-id="@item.Id">@L["Basvuru.Common.Edit"]</a>
                         </td>

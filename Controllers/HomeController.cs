@@ -90,21 +90,21 @@ namespace TarimDonusum.Controllers
                 return NotFound();
 
             Sonuc<Kullanici> kullaniciSonuc = await _kullaniciIsKurallari.IlkAktifKullaniciyiOkuAsync();
-            if (!kullaniciSonuc.Basarili || kullaniciSonuc.Nesne == null)
+            if (!kullaniciSonuc.basarili || kullaniciSonuc.nesne == null)
             {
-                TempData["Mesaj"] = string.Join(" ", kullaniciSonuc.Hatalar);
+                TempData["Mesaj"] = string.Join(" ", kullaniciSonuc.hatalar);
                 return RedirectToAction(nameof(Index));
             }
 
-            HttpContext.Session.SetString("KULLANICI_ID", kullaniciSonuc.Nesne.Id.ToString());
-            HttpContext.Session.SetString("KULLANICI_ADSOYAD", $"{kullaniciSonuc.Nesne.Ad} {kullaniciSonuc.Nesne.Soyad}");
+            HttpContext.Session.SetString("KULLANICI_ID", kullaniciSonuc.nesne.Id.ToString());
+            HttpContext.Session.SetString("KULLANICI_ADSOYAD", $"{kullaniciSonuc.nesne.Ad} {kullaniciSonuc.nesne.Soyad}");
 
             Log(
                 LogLevel.Information,
                 BMYEventID.Yok,
                 null,
                 "Development test girişi yapıldı. KullaniciId: {KullaniciId}",
-                kullaniciSonuc.Nesne.Id);
+                kullaniciSonuc.nesne.Id);
 
             return RedirectToAction("Index", "Basvuru");
         }
@@ -168,9 +168,9 @@ namespace TarimDonusum.Controllers
 
             Sonuc<int> sonuc = await _kullaniciIsKurallari.YeniBasvuruKullanicisiAsync(model.Kullanici);
 
-            if (!sonuc.Basarili)
+            if (!sonuc.basarili)
             {
-                foreach (string hata in sonuc.Hatalar)
+                foreach (string hata in sonuc.hatalar)
                 {
                     ModelState.AddModelError("", hata);
                 }
@@ -608,9 +608,9 @@ namespace TarimDonusum.Controllers
                 return Json(LoginCevabi(false, L["Home.Hata.GuvenlikKoduHatali"].ToString()));
 
             Sonuc<Kullanici> kullaniciSonuc = await KullaniciOku(kulKod, sifre);
-            Kullanici? kullanici = kullaniciSonuc.Nesne;
+            Kullanici? kullanici = kullaniciSonuc.nesne;
 
-            if (!kullaniciSonuc.Basarili || kullanici == null)
+            if (!kullaniciSonuc.basarili || kullanici == null)
                 return Json(LoginCevabi(false, L["Home.Hata.KullaniciKodSifreHatali"].ToString()));
 
             var kod = Random.Shared.Next(100000, 999999).ToString();
@@ -650,7 +650,7 @@ namespace TarimDonusum.Controllers
 
             Sonuc<Kullanici> kullaniciSonuc = await KullaniciOku(kulKod, sifre);
 
-            if (!kullaniciSonuc.Basarili || kullaniciSonuc.Nesne == null)
+            if (!kullaniciSonuc.basarili || kullaniciSonuc.nesne == null)
                 return Json(LoginCevabi(false, L["Home.Hata.KullaniciKodSifreHatali"].ToString()));
 
             var sessionKulKod = HttpContext.Session.GetString("LOGIN_KULKOD");
@@ -668,8 +668,8 @@ namespace TarimDonusum.Controllers
 
             HttpContext.Session.Remove("LOGIN_VERIFY_CODE");
             HttpContext.Session.Remove("LOGIN_VERIFY_EXPIRE");
-            HttpContext.Session.SetString("KULLANICI_ID", kullaniciSonuc.Nesne.Id.ToString());
-            HttpContext.Session.SetString("KULLANICI_ADSOYAD", $"{kullaniciSonuc.Nesne.Ad} {kullaniciSonuc.Nesne.Soyad}");
+            HttpContext.Session.SetString("KULLANICI_ID", kullaniciSonuc.nesne.Id.ToString());
+            HttpContext.Session.SetString("KULLANICI_ADSOYAD", $"{kullaniciSonuc.nesne.Ad} {kullaniciSonuc.nesne.Soyad}");
 
             // Burada gerçek login cookie işlemi yapılacak
             // await HttpContext.SignInAsync(...);

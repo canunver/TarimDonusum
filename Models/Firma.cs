@@ -4,43 +4,42 @@ namespace TarimDonusum.Models
 {
     public class Firma
     {
-        public int Id { get; set; }
-        public int KullaniciId { get; set; }
+        public int? Id { get; set; }
 
         [Required]
         [StringLength(20)]
-        public string VergiKimlikNo { get; set; } = "";
+        public string vergiKimlikNo { get; set; } = "";
 
         [Required]
         [StringLength(250)]
-        public string TicaretUnvani { get; set; } = "";
+        public string ticaretUnvani { get; set; } = "";
 
         [StringLength(100)]
-        public string TicaretSicilNo { get; set; } = "";
+        public string ticaretSicilNo { get; set; } = "";
 
-        public DateTime? KurulusTarihi { get; set; }
-
-        [StringLength(50)]
-        public string MersisNo { get; set; } = "";
+        public DateTime? kurulusTarihi { get; set; }
 
         [StringLength(50)]
-        public string NaceKodu { get; set; } = "";
+        public string mersisNo { get; set; } = "";
+
+        [StringLength(50)]
+        public string naceKodu { get; set; } = "";
 
         [StringLength(250)]
-        public string WebSitesi { get; set; } = "";
+        public string webSitesi { get; set; } = "";
 
         [StringLength(30)]
-        public string Telefon { get; set; } = "";
+        public string telefon { get; set; } = "";
 
         [StringLength(250)]
-        public string KepAdresi { get; set; } = "";
+        public string kepAdresi { get; set; } = "";
 
         [EmailAddress]
         [StringLength(256)]
-        public string Eposta { get; set; } = "";
+        public string eposta { get; set; } = "";
 
-        public string FaaliyetKonusu { get; set; } = "";
-        public string Adres { get; set; } = "";
-        public List<FirmaBasvuran> Basvuranlar { get; set; } = new();
+        public string faaliyetKonusu { get; set; } = "";
+        public string adres { get; set; } = "";
+        public List<FirmaBasvuran> basvuranlar { get; set; } = new();
     }
 }

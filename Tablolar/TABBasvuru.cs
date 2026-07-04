@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
 using Microsoft.Data.SqlClient;
+using Microsoft.IdentityModel.Tokens;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
 
@@ -7,67 +7,99 @@ namespace TarimDonusum.Tablolar
 {
     public class TABBasvuru : TABTablo
     {
-        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
         public TABBasvuru(SqlConnection connection, SqlTransaction? transaction = null)
             : base(connection, transaction)
         {
         }
 
-        public async Task<int> KaydetAsync(Basvuru basvuru)
+        //public async Task<int> KaydetAsync(Basvuru basvuru)
+        //{
+        //    if (basvuru.Id <= 0)
+        //    {
+        //        await EkleAsync(basvuru);
+        //        await DetaylariKaydetAsync(basvuru);
+        //        return basvuru.Id;
+        //    }
+
+        //    await GuncelleAsync(basvuru);
+        //    await DetaylariKaydetAsync(basvuru);
+        //    return basvuru.Id;
+        //}
+
+        public async Task<int> BasvuruFirmaKaydetAsync(BasvuruFirma basvuru)
         {
             if (basvuru.Id <= 0)
-            {
-                await EkleAsync(basvuru);
-                await DetaylariKaydetAsync(basvuru);
-                return basvuru.Id;
-            }
+                return await BasvuruFirmaEkleAsync(basvuru);
 
-            await GuncelleAsync(basvuru);
-            await DetaylariKaydetAsync(basvuru);
+            await BasvuruFirmaGuncelleAsync(basvuru);
             return basvuru.Id;
         }
 
-        public async Task<int> KaydetAsama1Async(Basvuru basvuru)
+        private string BasvuruSelectSql()
         {
-            if (basvuru.Id <= 0)
-                return await EkleAsama1Async(basvuru);
+            return @"SELECT
+                    B.Id,
+                    B.Durum,
+                    B.OzelSektorPayi,
+                    B.BagliOrtakIsletmeVarMi,
+                    B.BagliOrtakAciklama,
+                    B.FirmaId,
+                    B.DonemId,
+                    B.IlId,
+                    B.BasvuruKonusu,
+                    B.BasvuruSahibiTuru,
+                    B.SonIkiYildirFaalMi,
+                    B.YatirimAdi,
+                    B.YatirimTuru,
+                    B.ToplamYatirimTutari,
+                    B.UygunHarcamaTutari,
+                    B.TalepEdilenDestekTutari,
+                    B.BasvuruSahibiKatkisi,
+                    B.DestekOrani,
+                    B.YatiriminAmaci,
+                    B.IrtibatKisi,
+                    B.IrtibatUnvan,
+                    B.IrtibatTelefon,
+                    B.IrtibatePosta,
+                    B.IrtibatAdres,
+                    B.IrtibatYetkiliKisiler,
 
-            await GuncelleAsama1Async(basvuru);
-            return basvuru.Id;
+                    D.Yil,
+                    D.Ad,
+                    D.BasvuruyaAcikMi,
+                    D.BasvuruBaslangicTarihi,
+                    D.BasvuruBitisTarihi,
+                    D.OnBasvuruBitisTarihi,
+                    D.MinimumYatirimTutari,
+                    D.MaksimumYatirimTutari,
+                    D.MaksimumDestekTutari,
+                    D.DestekOrani,
+                    D.Aciklama,
+
+                    I.Kod,
+                    I.Ad,
+                    I.Aktif,
+                    F.VergiKimlikNo,
+                    F.TicaretUnvani,
+                    F.TicaretSicilNo,
+                    F.KurulusTarihi,
+                    F.MersisNo,
+                    F.NaceKodu,
+                    F.WebSitesi,
+                    F.Telefon,
+                    F.KepAdresi,
+                    F.Eposta,
+                    F.FaaliyetKonusu,
+                    F.Adres 
+                FROM dbo.Basvuru B 
+                INNER JOIN dbo.Donem D On D.Id = B.DonemId
+                INNER JOIN dbo.Il I On I.Id = B.IlId
+                INNER JOIN dbo.Firma F On F.Id = B.FirmaId ";
         }
 
         public async Task<Basvuru?> OkuAsync(int id)
         {
-            const string sql = @"
-                SELECT
-                    Id,
-                    KullaniciId,
-                    Durum,
-                    AktifBolum,
-                    KayitTarihi,
-                    GuncellemeTarihi,
-                    JsonText,
-                    OzelSektorPayi,
-                    BagliOrtakIsletmeVarMi,
-                    BagliOrtakAciklama,
-                    FirmaId,
-                    DonemId,
-                    IlId,
-                    BasvuruKonusu,
-                    YatirimAdi,
-                    YatirimTuru,
-                    ToplamYatirimTutari,
-                    UygunHarcamaTutari,
-                    TalepEdilenDestekTutari,
-                    BasvuruSahibiKatkisi,
-                    DestekOrani,
-                    YatiriminAmaci
-                FROM dbo.Basvuru
-                WHERE Id = @Id;";
+            string sql = BasvuruSelectSql() + " WHERE B.Id = @Id;";
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@Id", id);
@@ -85,35 +117,16 @@ namespace TarimDonusum.Tablolar
             return basvuru;
         }
 
-        public async Task<List<Basvuru>> KullaniciBasvurulariniListeleAsync(int kullaniciId)
+        public async Task<Sonuc<List<Basvuru>>> KullaniciBasvurulariniListeleAsync(int kullaniciId)
         {
-            const string sql = @"
-                SELECT
-                    Id,
-                    KullaniciId,
-                    Durum,
-                    AktifBolum,
-                    KayitTarihi,
-                    GuncellemeTarihi,
-                    JsonText,
-                    OzelSektorPayi,
-                    BagliOrtakIsletmeVarMi,
-                    BagliOrtakAciklama,
-                    FirmaId,
-                    DonemId,
-                    IlId,
-                    BasvuruKonusu,
-                    YatirimAdi,
-                    YatirimTuru,
-                    ToplamYatirimTutari,
-                    UygunHarcamaTutari,
-                    TalepEdilenDestekTutari,
-                    BasvuruSahibiKatkisi,
-                    DestekOrani,
-                    YatiriminAmaci
-                FROM dbo.Basvuru
-                WHERE KullaniciId = @KullaniciId
-                ORDER BY GuncellemeTarihi DESC, Id DESC;";
+            string sql = BasvuruSelectSql() + @" WHERE EXISTS (
+                    SELECT 1
+                    FROM dbo.FirmaKullanici fk
+                    WHERE fk.FirmaId = B.FirmaId
+                        AND fk.KullaniciId = @KullaniciId
+                        AND fk.Aktif = 1
+                )
+                ORDER BY D.Yil DESC, Id DESC;";
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@KullaniciId", kullaniciId);
@@ -121,137 +134,71 @@ namespace TarimDonusum.Tablolar
             return await ListeOkuAsync(command);
         }
 
-        public async Task<List<Basvuru>> TumunuListeleAsync()
+        public async Task<Sonuc<List<Basvuru>>> TumunuListeleAsync()
         {
-            const string sql = @"
-                SELECT
-                    Id,
-                    KullaniciId,
-                    Durum,
-                    AktifBolum,
-                    KayitTarihi,
-                    GuncellemeTarihi,
-                    JsonText,
-                    OzelSektorPayi,
-                    BagliOrtakIsletmeVarMi,
-                    BagliOrtakAciklama,
-                    FirmaId,
-                    DonemId,
-                    IlId,
-                    BasvuruKonusu,
-                    YatirimAdi,
-                    YatirimTuru,
-                    ToplamYatirimTutari,
-                    UygunHarcamaTutari,
-                    TalepEdilenDestekTutari,
-                    BasvuruSahibiKatkisi,
-                    DestekOrani,
-                    YatiriminAmaci
-                FROM dbo.Basvuru
-                ORDER BY GuncellemeTarihi DESC, Id DESC;";
+            string sql = BasvuruSelectSql() + " ORDER BY D.Yil DESC, Id DESC;";
 
             await using SqlCommand command = KomutOlustur(sql);
             return await ListeOkuAsync(command);
         }
 
-        private async Task<int> EkleAsync(Basvuru basvuru)
+        private async Task<int> BasvuruFirmaEkleAsync(BasvuruFirma basvuru)
         {
             const string sql = @"
                 INSERT INTO dbo.Basvuru
                 (
-                    KullaniciId, FirmaId, DonemId, IlId, BasvuruKonusu, YatirimAdi, YatirimTuru,
-                    ToplamYatirimTutari, UygunHarcamaTutari, TalepEdilenDestekTutari,
-                    BasvuruSahibiKatkisi, DestekOrani, YatiriminAmaci,
-                    OzelSektorPayi, BagliOrtakIsletmeVarMi, BagliOrtakAciklama,
-                    Durum, AktifBolum, KayitTarihi, GuncellemeTarihi, JsonText
-                )
-                OUTPUT INSERTED.Id
-                VALUES
-                (
-                    @KullaniciId, @FirmaId, @DonemId, @IlId, @BasvuruKonusu, @YatirimAdi, @YatirimTuru,
-                    @ToplamYatirimTutari, @UygunHarcamaTutari, @TalepEdilenDestekTutari,
-                    @BasvuruSahibiKatkisi, @DestekOrani, @YatiriminAmaci,
-                    @OzelSektorPayi, @BagliOrtakIsletmeVarMi, @BagliOrtakAciklama,
-                    @Durum, @AktifBolum, @KayitTarihi, @GuncellemeTarihi, @JsonText
-                );";
-
-            basvuru.KayitTarihi = DateTime.Now;
-            basvuru.GuncellemeTarihi = DateTime.Now;
-
-            await using SqlCommand command = KomutOlustur(sql);
-            ParametreleriEkle(command, basvuru);
-
-            int id = OrtakFonksiyonlar.Int32Yap(await command.ExecuteScalarAsync());
-            basvuru.Id = id;
-            return id;
-        }
-
-        private async Task<int> EkleAsama1Async(Basvuru basvuru)
-        {
-            const string sql = @"
-                INSERT INTO dbo.Basvuru
-                (
-                    KullaniciId, FirmaId, DonemId, IlId, BasvuruKonusu,
+                    FirmaId, DonemId, IlId, BasvuruKonusu,
                     YatirimAdi, YatirimTuru,
+                    BasvuruSahibiTuru, SonIkiYildirFaalMi,
                     OzelSektorPayi, BagliOrtakIsletmeVarMi, BagliOrtakAciklama,
-                    Durum, AktifBolum, KayitTarihi, GuncellemeTarihi, JsonText
+                    Durum, AktifBolum, GuncellemeTarihi
                 )
                 OUTPUT INSERTED.Id
                 VALUES
                 (
-                    @KullaniciId, @FirmaId, @DonemId, @IlId, @BasvuruKonusu,
+                    @FirmaId, @DonemId, @IlId, @BasvuruKonusu,
                     N'', N'',
+                    @BasvuruSahibiTuru, @SonIkiYildirFaalMi,
                     @OzelSektorPayi, @BagliOrtakIsletmeVarMi, @BagliOrtakAciklama,
-                    @Durum, @AktifBolum, @KayitTarihi, @GuncellemeTarihi, @JsonText
+                    @Durum, @AktifBolum, @GuncellemeTarihi
                 );";
 
-            basvuru.KayitTarihi = DateTime.Now;
-            basvuru.GuncellemeTarihi = DateTime.Now;
 
             await using SqlCommand command = KomutOlustur(sql);
-            Asama1ParametreleriEkle(command, basvuru, kayitTarihiEkle: true);
+            BasvuruFirmaParametreleriEkle(command, basvuru);
 
             int id = OrtakFonksiyonlar.Int32Yap(await command.ExecuteScalarAsync());
             basvuru.Id = id;
             return id;
         }
 
-        private async Task GuncelleAsync(Basvuru basvuru)
+        public async Task BasvuruIletisimGuncelleAsync(BasvuruIletisim iletisim)
         {
             const string sql = @"
                 UPDATE dbo.Basvuru
                 SET
-                    FirmaId = @FirmaId,
-                    DonemId = @DonemId,
-                    IlId = @IlId,
-                    BasvuruKonusu = @BasvuruKonusu,
-                    YatirimAdi = @YatirimAdi,
-                    YatirimTuru = @YatirimTuru,
-                    ToplamYatirimTutari = @ToplamYatirimTutari,
-                    UygunHarcamaTutari = @UygunHarcamaTutari,
-                    TalepEdilenDestekTutari = @TalepEdilenDestekTutari,
-                    BasvuruSahibiKatkisi = @BasvuruSahibiKatkisi,
-                    DestekOrani = @DestekOrani,
-                    YatiriminAmaci = @YatiriminAmaci,
-                    OzelSektorPayi = @OzelSektorPayi,
-                    BagliOrtakIsletmeVarMi = @BagliOrtakIsletmeVarMi,
-                    BagliOrtakAciklama = @BagliOrtakAciklama,
-                    Durum = @Durum,
-                    AktifBolum = @AktifBolum,
-                    GuncellemeTarihi = @GuncellemeTarihi,
-                    JsonText = @JsonText
+                    IrtibatKisi = @IrtibatKisi,
+                    IrtibatUnvan = @IrtibatUnvan,
+                    IrtibatTelefon = @IrtibatTelefon,
+                    IrtibatePosta =  @IrtibatePosta,
+                    IrtibatAdres =   @IrtibatAdres,
+                    IrtibatYetkiliKisiler = @IrtibatYetkiliKisiler
                 WHERE Id = @Id;";
 
-            basvuru.GuncellemeTarihi = DateTime.Now;
-
             await using SqlCommand command = KomutOlustur(sql);
-            command.Parameters.AddWithValue("@Id", basvuru.Id);
-            ParametreleriEkle(command, basvuru);
+
+            command.Parameters.AddWithValue("@IrtibatKisi", iletisim.kisi);
+            command.Parameters.AddWithValue("@IrtibatUnvan", iletisim.unvan);
+            command.Parameters.AddWithValue("@IrtibatTelefon", iletisim.telefon);
+            command.Parameters.AddWithValue("@IrtibatePosta", iletisim.ePosta);
+            command.Parameters.AddWithValue("@IrtibatAdres", iletisim.adres);
+            command.Parameters.AddWithValue("@IrtibatYetkiliKisiler", iletisim.yetkiliKisiler);
+            command.Parameters.AddWithValue("@Id", iletisim.BasvuruId);
 
             await command.ExecuteNonQueryAsync();
         }
 
-        private async Task GuncelleAsama1Async(Basvuru basvuru)
+        private async Task BasvuruFirmaGuncelleAsync(BasvuruFirma basvuru)
         {
             const string sql = @"
                 UPDATE dbo.Basvuru
@@ -260,20 +207,16 @@ namespace TarimDonusum.Tablolar
                     DonemId = @DonemId,
                     IlId = @IlId,
                     BasvuruKonusu = @BasvuruKonusu,
+                    BasvuruSahibiTuru = @BasvuruSahibiTuru,
+                    SonIkiYildirFaalMi = @SonIkiYildirFaalMi,
                     OzelSektorPayi = @OzelSektorPayi,
                     BagliOrtakIsletmeVarMi = @BagliOrtakIsletmeVarMi,
-                    BagliOrtakAciklama = @BagliOrtakAciklama,
-                    Durum = @Durum,
-                    AktifBolum = @AktifBolum,
-                    GuncellemeTarihi = @GuncellemeTarihi,
-                    JsonText = @JsonText
+                    BagliOrtakAciklama = @BagliOrtakAciklama
                 WHERE Id = @Id;";
-
-            basvuru.GuncellemeTarihi = DateTime.Now;
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@Id", basvuru.Id);
-            Asama1ParametreleriEkle(command, basvuru, kayitTarihiEkle: false);
+            BasvuruFirmaParametreleriEkle(command, basvuru);
 
             await command.ExecuteNonQueryAsync();
         }
@@ -286,109 +229,108 @@ namespace TarimDonusum.Tablolar
                     OzelSektorPayi = @OzelSektorPayi,
                     BagliOrtakIsletmeVarMi = @BagliOrtakIsletmeVarMi,
                     BagliOrtakAciklama = @BagliOrtakAciklama,
-                    AktifBolum = @AktifBolum,
-                    GuncellemeTarihi = @GuncellemeTarihi,
-                    JsonText = @JsonText
+                    
                 WHERE Id = @Id;";
-
-            basvuru.GuncellemeTarihi = DateTime.Now;
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@Id", basvuru.Id);
-            command.Parameters.AddWithValue("@OzelSektorPayi", (object?)basvuru.OzelSektorPayi ?? DBNull.Value);
-            command.Parameters.AddWithValue("@BagliOrtakIsletmeVarMi", string.IsNullOrWhiteSpace(basvuru.BagliOrtakIsletmeVarMi) ? DBNull.Value : basvuru.BagliOrtakIsletmeVarMi);
-            command.Parameters.AddWithValue("@BagliOrtakAciklama", string.IsNullOrWhiteSpace(basvuru.BagliOrtakAciklama) ? DBNull.Value : basvuru.BagliOrtakAciklama);
-            command.Parameters.AddWithValue("@AktifBolum", basvuru.AktifBolum);
-            command.Parameters.AddWithValue("@GuncellemeTarihi", basvuru.GuncellemeTarihi);
-            command.Parameters.AddWithValue("@JsonText", JsonSerializer.Serialize(basvuru, JsonOptions));
+            //command.Parameters.AddWithValue("@OzelSektorPayi", (object?)basvuru.OzelSektorPayi ?? DBNull.Value);
+            //command.Parameters.AddWithValue("@BagliOrtakIsletmeVarMi", basvuru.BagliOrtakIsletmeVarMi ? 1 : 0);
+            //command.Parameters.AddWithValue("@BagliOrtakAciklama", string.IsNullOrWhiteSpace(basvuru.BagliOrtakAciklama) ? DBNull.Value : basvuru.BagliOrtakAciklama);
 
             await command.ExecuteNonQueryAsync();
         }
 
-        private static void ParametreleriEkle(SqlCommand command, Basvuru basvuru)
+        private static void BasvuruFirmaParametreleriEkle(SqlCommand command, BasvuruFirma basvuru)
         {
-            command.Parameters.AddWithValue("@KullaniciId", basvuru.KullaniciId);
-            command.Parameters.AddWithValue("@FirmaId", (object?)basvuru.FirmaId ?? DBNull.Value);
-            command.Parameters.AddWithValue("@DonemId", (object?)basvuru.DonemId ?? DBNull.Value);
-            command.Parameters.AddWithValue("@IlId", (object?)basvuru.IlId ?? DBNull.Value);
+            command.Parameters.AddWithValue("@FirmaId", (object?)basvuru.firma.Id ?? DBNull.Value);
+            command.Parameters.AddWithValue("@DonemId", (object?)basvuru.donem.Id ?? DBNull.Value);
+            command.Parameters.AddWithValue("@IlId", (object?)basvuru.il.Id ?? DBNull.Value);
             command.Parameters.AddWithValue("@BasvuruKonusu", basvuru.BasvuruKonusu ?? "");
-            command.Parameters.AddWithValue("@YatirimAdi", basvuru.YatirimAdi ?? "");
-            command.Parameters.AddWithValue("@YatirimTuru", basvuru.YatirimTuru ?? "");
-            command.Parameters.AddWithValue("@ToplamYatirimTutari", (object?)basvuru.ToplamYatirimTutari ?? DBNull.Value);
-            command.Parameters.AddWithValue("@UygunHarcamaTutari", (object?)basvuru.UygunHarcamaTutari ?? DBNull.Value);
-            command.Parameters.AddWithValue("@TalepEdilenDestekTutari", (object?)basvuru.TalepEdilenDestekTutari ?? DBNull.Value);
-            command.Parameters.AddWithValue("@BasvuruSahibiKatkisi", (object?)basvuru.BasvuruSahibiKatkisi ?? DBNull.Value);
-            command.Parameters.AddWithValue("@DestekOrani", (object?)basvuru.DestekOrani ?? DBNull.Value);
-            command.Parameters.AddWithValue("@YatiriminAmaci", basvuru.YatiriminAmaci ?? "");
+            command.Parameters.AddWithValue("@BasvuruSahibiTuru", basvuru.BasvuruSahibiTuru.HasValue ? (int)basvuru.BasvuruSahibiTuru.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@SonIkiYildirFaalMi", basvuru.SonIkiYildirFaalMi ? 1 : 0);
             command.Parameters.AddWithValue("@OzelSektorPayi", (object?)basvuru.OzelSektorPayi ?? DBNull.Value);
-            command.Parameters.AddWithValue("@BagliOrtakIsletmeVarMi", string.IsNullOrWhiteSpace(basvuru.BagliOrtakIsletmeVarMi) ? DBNull.Value : basvuru.BagliOrtakIsletmeVarMi);
+            command.Parameters.AddWithValue("@BagliOrtakIsletmeVarMi", basvuru.BagliOrtakIsletmeVarMi ? 1 : 0);
             command.Parameters.AddWithValue("@BagliOrtakAciklama", string.IsNullOrWhiteSpace(basvuru.BagliOrtakAciklama) ? DBNull.Value : basvuru.BagliOrtakAciklama);
-            command.Parameters.AddWithValue("@Durum", basvuru.Durum ?? "Ön Başvuru");
-            command.Parameters.AddWithValue("@AktifBolum", basvuru.AktifBolum);
-            command.Parameters.AddWithValue("@KayitTarihi", basvuru.KayitTarihi);
-            command.Parameters.AddWithValue("@GuncellemeTarihi", basvuru.GuncellemeTarihi);
-            command.Parameters.AddWithValue("@JsonText", JsonSerializer.Serialize(basvuru, JsonOptions));
+            command.Parameters.AddWithValue("@Durum", 1);
         }
 
-        private static void Asama1ParametreleriEkle(SqlCommand command, Basvuru basvuru, bool kayitTarihiEkle)
+        private async Task<Sonuc<List<Basvuru>>> ListeOkuAsync(SqlCommand command)
         {
-            command.Parameters.AddWithValue("@KullaniciId", basvuru.KullaniciId);
-            command.Parameters.AddWithValue("@FirmaId", (object?)basvuru.FirmaId ?? DBNull.Value);
-            command.Parameters.AddWithValue("@DonemId", (object?)basvuru.DonemId ?? DBNull.Value);
-            command.Parameters.AddWithValue("@IlId", (object?)basvuru.IlId ?? DBNull.Value);
-            command.Parameters.AddWithValue("@BasvuruKonusu", basvuru.BasvuruKonusu ?? "");
-            command.Parameters.AddWithValue("@OzelSektorPayi", (object?)basvuru.OzelSektorPayi ?? DBNull.Value);
-            command.Parameters.AddWithValue("@BagliOrtakIsletmeVarMi", string.IsNullOrWhiteSpace(basvuru.BagliOrtakIsletmeVarMi) ? DBNull.Value : basvuru.BagliOrtakIsletmeVarMi);
-            command.Parameters.AddWithValue("@BagliOrtakAciklama", string.IsNullOrWhiteSpace(basvuru.BagliOrtakAciklama) ? DBNull.Value : basvuru.BagliOrtakAciklama);
-            command.Parameters.AddWithValue("@Durum", basvuru.Durum ?? "Ön Başvuru");
-            command.Parameters.AddWithValue("@AktifBolum", basvuru.AktifBolum);
-            command.Parameters.AddWithValue("@GuncellemeTarihi", basvuru.GuncellemeTarihi);
-            command.Parameters.AddWithValue("@JsonText", JsonSerializer.Serialize(basvuru, JsonOptions));
-
-            if (kayitTarihiEkle)
-                command.Parameters.AddWithValue("@KayitTarihi", basvuru.KayitTarihi);
-        }
-
-        private async Task<List<Basvuru>> ListeOkuAsync(SqlCommand command)
-        {
+            Sonuc<List<Basvuru>> liste = new Sonuc<List<Basvuru>>();
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
-
-            List<Basvuru> liste = new List<Basvuru>();
-            while (await reader.ReadAsync())
+            if (reader != null)
             {
-                liste.Add(Oku(reader));
+                while (await reader.ReadAsync())
+                {
+                    liste.nesne.Add(Oku(reader));
+                }
+                reader.Close();
             }
-
+            else
+                liste.HataEkle("Veri tabanından okuma yapılamadı!");
             return liste;
         }
 
         private static Basvuru Oku(SqlDataReader reader)
         {
-            string jsonText = reader.GetString(6);
-            Basvuru? basvuru = JsonSerializer.Deserialize<Basvuru>(jsonText, JsonOptions);
-            basvuru ??= new Basvuru();
+            Basvuru basvuru = new Basvuru();
+            int kol = 0;
+            basvuru.Id = reader.GetInt32(kol++);
+            basvuru.durum = (enumBasvuruDurum)reader.GetInt32(kol++);
+            basvuru.basvuruFirma.OzelSektorPayi = NullOkuDecimal(reader, kol++);
+            basvuru.basvuruFirma.BagliOrtakIsletmeVarMi = BoolYap(NullOkuInt(reader, kol++));
+            basvuru.basvuruFirma.BagliOrtakAciklama = NullOkuString(reader, kol++);
+            basvuru.FirmaId = reader.GetInt32(kol++);
+            basvuru.DonemId = reader.GetInt32(kol++);
+            basvuru.IlId = reader.GetInt32(kol++);
+            basvuru.basvuruFirma.BasvuruKonusu = reader.GetString(kol++);
+            basvuru.basvuruFirma.BasvuruSahibiTuru = (enumBasvuruSahibiTuru)NullDuzeltInt(reader, kol++);
+            basvuru.basvuruFirma.SonIkiYildirFaalMi = BoolYap(NullOkuInt(reader, kol++));
+            basvuru.yatirim.yatirimAdi = NullOkuString(reader, kol++);
+            basvuru.yatirim.yatirimTuru = (enumYatirimTuru)NullDuzeltInt(reader, kol++);
+            basvuru.ToplamYatirimTutari = NullOkuDecimal(reader, kol++);
+            basvuru.UygunHarcamaTutari = NullOkuDecimal(reader, kol++);
+            basvuru.TalepEdilenDestekTutari = NullOkuDecimal(reader, kol++);
+            basvuru.BasvuruSahibiKatkisi = NullOkuDecimal(reader, kol++);
+            basvuru.DestekOrani = NullOkuDecimal(reader, kol++);
+            basvuru.YatiriminAmaci = NullOkuString(reader, kol++);
 
-            basvuru.Id = reader.GetInt32(0);
-            basvuru.KullaniciId = reader.GetInt32(1);
-            basvuru.Durum = reader.GetString(2);
-            basvuru.AktifBolum = reader.GetInt32(3);
-            basvuru.KayitTarihi = reader.GetDateTime(4);
-            basvuru.GuncellemeTarihi = reader.GetDateTime(5);
-            basvuru.OzelSektorPayi = reader.IsDBNull(7) ? null : reader.GetDecimal(7);
-            basvuru.BagliOrtakIsletmeVarMi = reader.IsDBNull(8) ? "" : reader.GetString(8);
-            basvuru.BagliOrtakAciklama = reader.IsDBNull(9) ? "" : reader.GetString(9);
-            basvuru.FirmaId = reader.IsDBNull(10) ? null : reader.GetInt32(10);
-            basvuru.DonemId = reader.IsDBNull(11) ? null : reader.GetInt32(11);
-            basvuru.IlId = reader.IsDBNull(12) ? null : reader.GetInt32(12);
-            basvuru.BasvuruKonusu = reader.IsDBNull(13) ? basvuru.BasvuruKonusu : reader.GetString(13);
-            basvuru.YatirimAdi = reader.IsDBNull(14) ? basvuru.YatirimAdi : reader.GetString(14);
-            basvuru.YatirimTuru = reader.IsDBNull(15) ? basvuru.YatirimTuru : reader.GetString(15);
-            basvuru.ToplamYatirimTutari = reader.IsDBNull(16) ? null : reader.GetDecimal(16);
-            basvuru.UygunHarcamaTutari = reader.IsDBNull(17) ? null : reader.GetDecimal(17);
-            basvuru.TalepEdilenDestekTutari = reader.IsDBNull(18) ? null : reader.GetDecimal(18);
-            basvuru.BasvuruSahibiKatkisi = reader.IsDBNull(19) ? null : reader.GetDecimal(19);
-            basvuru.DestekOrani = reader.IsDBNull(20) ? null : reader.GetDecimal(20);
-            basvuru.YatiriminAmaci = reader.IsDBNull(21) ? "" : reader.GetString(21);
+            basvuru.irtibat.BasvuruId = basvuru.Id;
+            basvuru.irtibat.kisi = NullOkuString(reader, kol++);
+            basvuru.irtibat.unvan = NullOkuString(reader, kol++);
+            basvuru.irtibat.telefon = NullOkuString(reader, kol++);
+            basvuru.irtibat.ePosta = NullOkuString(reader, kol++);
+            basvuru.irtibat.adres = NullOkuString(reader, kol++);
+            basvuru.irtibat.yetkiliKisiler = NullOkuString(reader, kol++);
+
+            basvuru.donem.Yil = NullDuzeltInt(reader, kol++);
+            basvuru.donem.Ad = reader.GetString(kol++);
+            basvuru.donem.BasvuruyaAcikMi = BoolYap(NullOkuInt(reader, kol++));
+            basvuru.donem.BasvuruBaslangicTarihi = reader.GetDateTime(kol++);
+            basvuru.donem.BasvuruBitisTarihi = reader.GetDateTime(kol++);
+            basvuru.donem.OnBasvuruBitisTarihi = reader.GetDateTime(kol++);
+            basvuru.donem.MinimumYatirimTutari = NullOkuDecimal(reader, kol++);
+            basvuru.donem.MaksimumYatirimTutari = NullOkuDecimal(reader, kol++);
+            basvuru.donem.MaksimumDestekTutari = NullOkuDecimal(reader, kol++);
+            basvuru.donem.DestekOrani = NullOkuDecimal(reader, kol++);
+            basvuru.donem.Aciklama = reader.GetString(kol++);
+            basvuru.Il.Kod = NullDuzeltInt(reader, kol++);
+            basvuru.Il.Ad = reader.GetString(kol++);
+            basvuru.Il.Aktif = BoolYap(NullOkuInt(reader, kol++));
+
+            basvuru.basvuruFirma.firma.vergiKimlikNo = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.ticaretUnvani = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.ticaretSicilNo = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.kurulusTarihi = reader.GetDateTime(kol++);
+            basvuru.basvuruFirma.firma.mersisNo = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.naceKodu = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.webSitesi = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.telefon = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.kepAdresi = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.eposta = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.faaliyetKonusu = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.adres = reader.GetString(kol++);
 
             return basvuru;
         }
@@ -523,7 +465,7 @@ namespace TarimDonusum.Tablolar
                 INSERT INTO dbo.BasvuruHarcamaTuru(BasvuruId, HarcamaTuru)
                 VALUES (@BasvuruId, @HarcamaTuru);";
 
-            foreach (string harcamaTuru in basvuru.HarcamaTurleri.Select(x => x?.Trim() ?? "").Where(x => x.Length > 0).Distinct())
+            foreach (int harcamaTuru in basvuru.yatirim.harcamaTurleri)
             {
                 await using SqlCommand command = KomutOlustur(sql);
                 command.Parameters.AddWithValue("@BasvuruId", basvuru.Id);
@@ -535,21 +477,14 @@ namespace TarimDonusum.Tablolar
         private async Task DegerZinciriAsamalariEkleAsync(Basvuru basvuru)
         {
             const string sql = @"
-                INSERT INTO dbo.BasvuruDegerZinciriAsama(BasvuruId, DegerZinciriAsamaId, AsamaAdi)
-                SELECT @BasvuruId, (
-                    SELECT TOP 1 Id
-                    FROM dbo.DegerZinciriAsama
-                    WHERE Ad = @AsamaAdi
-                        AND (@DegerZinciriId IS NULL OR DegerZinciriId = @DegerZinciriId)
-                    ORDER BY Id
-                ), @AsamaAdi;";
+                INSERT INTO dbo.BasvuruDegerZinciriAsama(BasvuruId, DegerZinciriAsamaId)
+                Values(@BasvuruId, @DegerZinciriId);";
 
-            foreach (string asamaAdi in basvuru.DegerZinciriAsamalari.Select(x => x?.Trim() ?? "").Where(x => x.Length > 0).Distinct())
+            foreach (DegerZinciriAsama dza in basvuru.yatirim.degerZinciriAsamalari)
             {
                 await using SqlCommand command = KomutOlustur(sql);
                 command.Parameters.AddWithValue("@BasvuruId", basvuru.Id);
-                command.Parameters.AddWithValue("@DegerZinciriId", basvuru.DegerZinciriId.HasValue ? basvuru.DegerZinciriId.Value : DBNull.Value);
-                command.Parameters.AddWithValue("@AsamaAdi", asamaAdi);
+                command.Parameters.AddWithValue("@DegerZinciriId", basvuru.yatirim.degerZinciriId.HasValue ? basvuru.yatirim.degerZinciriId.Value : DBNull.Value);
                 await command.ExecuteNonQueryAsync();
             }
         }
@@ -582,11 +517,12 @@ namespace TarimDonusum.Tablolar
                 WHERE BasvuruId = @BasvuruId
                 ORDER BY HarcamaTuru;
 
-                SELECT bdza.AsamaAdi, dza.DegerZinciriId
+                SELECT dz.Id, dz.Ad, dz.Aciklama, dz.Aktif, dza.Id, dza.SiraNo, dza.Ad, dza.Aciklama, dza.Aktif  
                 FROM dbo.BasvuruDegerZinciriAsama bdza
                 LEFT JOIN dbo.DegerZinciriAsama dza ON dza.Id = bdza.DegerZinciriAsamaId
+                LEFT JOIN dbo.DegerZinciri dz ON dz.Id = dza.DegerZinciriId
                 WHERE bdza.BasvuruId = @BasvuruId
-                ORDER BY bdza.Id;";
+                ORDER BY dza.SiraNo;";
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@BasvuruId", basvuru.Id);
@@ -599,35 +535,40 @@ namespace TarimDonusum.Tablolar
             }
 
             await reader.NextResultAsync();
-            List<string> harcamaTurleri = new List<string>();
+            List<int> harcamaTurleri = new List<int>();
             while (await reader.ReadAsync())
             {
-                harcamaTurleri.Add(reader.GetString(0));
+                harcamaTurleri.Add(NullDuzeltInt(reader, 0));
             }
 
             await reader.NextResultAsync();
-            List<string> asamalar = new List<string>();
-            List<int> degerZinciriIdleri = new List<int>();
+            List<DegerZinciriAsama> asamalar = new List<DegerZinciriAsama>();
             while (await reader.ReadAsync())
             {
-                asamalar.Add(reader.GetString(0));
-                if (!reader.IsDBNull(1))
-                    degerZinciriIdleri.Add(reader.GetInt32(1));
+                int kolNo = 0;
+                DegerZinciriAsama dza = new DegerZinciriAsama();
+                dza.dz.id = NullDuzeltInt(reader, kolNo++);
+                dza.dz.ad = reader.GetString(kolNo++);
+                dza.dz.aciklama = reader.GetString(kolNo++);
+                dza.dz.aktif = BoolYap(NullDuzeltInt(reader, kolNo++));
+
+                dza.id = NullDuzeltInt(reader, kolNo++);
+                dza.siraNo = NullDuzeltInt(reader, kolNo++);
+                dza.ad = reader.GetString(kolNo++);
+                dza.aciklama = reader.GetString(kolNo++);
+                dza.aktif = BoolYap(NullDuzeltInt(reader, kolNo++));
+
+                asamalar.Add(dza);
             }
 
             basvuru.YatirimAdresleri = adresler;
-            basvuru.YatirimAdresSayisi = adresler.Count;
 
-            if (harcamaTurleri.Count > 0)
-                basvuru.HarcamaTurleri = harcamaTurleri;
+            basvuru.yatirim.harcamaTurleri = harcamaTurleri;
 
-            if (asamalar.Count > 0)
-            {
-                basvuru.DegerZinciriAsamalari = asamalar;
-                basvuru.DegerZinciriId = degerZinciriIdleri.Distinct().Count() == 1
-                    ? degerZinciriIdleri.First()
+            basvuru.yatirim.degerZinciriAsamalari = asamalar;
+            basvuru.yatirim.degerZinciriId = asamalar.Count >= 1
+                    ? asamalar.First().dz.id
                     : null;
-            }
         }
 
         private static BasvuruUygulamaAdresi UygulamaAdresiOku(SqlDataReader reader)
@@ -649,6 +590,30 @@ namespace TarimDonusum.Tablolar
                 YapiRuhsatiDurumu = reader.IsDBNull(12) ? null : (UygulamaAdresiYapiRuhsatiDurumu)reader.GetInt32(12)
             };
         }
+
+        internal async Task<int> DegerZinciriBul(int basvuruId)
+        {
+            string sql = @" SELECT MIN(dza.DegerZinciriId)
+        FROM dbo.BasvuruDegerZinciriAsama bdza
+        INNER JOIN DegerZinciriAsama dza ON dza.Id = bdza.DegerZinciriAsamaId
+        WHERE bdza.BasvuruId = @BasvuruId";
+
+            using (var command = new SqlCommand(sql, this.Connection))
+            {
+                command.Parameters.AddWithValue("@BasvuruId", basvuruId);
+
+                object? result = await command.ExecuteScalarAsync();
+
+                if (result != null && result != DBNull.Value)
+                {
+                    return Convert.ToInt32(result); // Değer varsa int'e çevirip dönüyoruz
+                }
+                else
+                    return -1;
+            }
+        }
     }
 }
+
+
 

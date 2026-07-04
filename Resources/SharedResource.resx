@@ -927,4 +927,58 @@
   <data name="Basvuru.Common.Delete" xml:space="preserve">
     <value>Sil</value>
   </data>
+  <data name="enumBasvuruSahibiTuru_0" xml:space="preserve">
+    <value>Lütfen Seçiniz</value>
+  </data>
+  <data name="enumBasvuruSahibiTuru_1" xml:space="preserve">
+    <value>İşletme</value>
+  </data>
+  <data name="enumBasvuruSahibiTuru_2" xml:space="preserve">
+    <value>Üretici örgütü</value>
+  </data>
+  <data name="enumBasvuruSahibiTuru_3" xml:space="preserve">
+    <value>Kooperatif</value>
+  </data>
+  <data name="enumBasvuruSahibiTuru_4" xml:space="preserve">
+    <value>Birlik</value>
+  </data>
+  <data name="enumBasvuruSahibiTuru_5" xml:space="preserve">
+    <value>Diğer</value>
+  </data>
+  <data name="kayitBasarili" xml:space="preserve">
+    <value>İşlem başarı ile tamamlandı</value>
+  </data>
+  <data name="enumHarcamaTuru_0" xml:space="preserve">
+    <value>Lütfen Seçiniz</value>
+  </data>
+  <data name="enumHarcamaTuru_1" xml:space="preserve">
+    <value>Yapım işleri</value>
+  </data>
+  <data name="enumHarcamaTuru_2" xml:space="preserve">
+    <value>Makine-ekipman</value>
+  </data>
+  <data name="enumHarcamaTuru_3" xml:space="preserve">
+    <value>Hizmet alımı</value>
+  </data>
+  <data name="enumHarcamaTuru_4" xml:space="preserve">
+    <value>Görünürlük</value>
+  </data>
+  <data name="enumHarcamaTuru_5" xml:space="preserve">
+    <value>Yazılım/donanım</value>
+  </data>
+  <data name="enumYatirimTuru_0" xml:space="preserve">
+    <value>Lütfen Seçiniz</value>
+  </data>
+  <data name="enumYatirimTuru_1" xml:space="preserve">
+    <value>Yeni yatırım</value>
+  </data>
+  <data name="enumYatirimTuru_2" xml:space="preserve">
+    <value>Kapasite Artırımı</value>
+  </data>
+  <data name="enumYatirimTuru_3" xml:space="preserve">
+    <value>Modernizasyon</value>
+  </data>
+  <data name="enumYatirimTuru_4" xml:space="preserve">
+    <value>Teknoloji Yenileme</value>
+  </data>
 </root>

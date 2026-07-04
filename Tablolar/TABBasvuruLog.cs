@@ -8,7 +8,7 @@ namespace TarimDonusum.Tablolar
     {
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            //PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
         public TABBasvuruLog(SqlConnection connection, SqlTransaction? transaction = null)
@@ -16,7 +16,7 @@ namespace TarimDonusum.Tablolar
         {
         }
 
-        public async Task EkleAsync(Basvuru basvuru, string islem, object? islemDetayi = null)
+        public async Task EkleAsync(int basvuruId, Kullanici kullanici, string islem, object? islemDetayi = null)
         {
             const string sql = @"
                 INSERT INTO dbo.BasvuruLog
@@ -37,13 +37,12 @@ namespace TarimDonusum.Tablolar
                 );";
 
             await using SqlCommand command = KomutOlustur(sql);
-            command.Parameters.AddWithValue("@BasvuruId", basvuru.Id);
-            command.Parameters.AddWithValue("@KullaniciId", basvuru.KullaniciId);
+            command.Parameters.AddWithValue("@BasvuruId", basvuruId);
+            command.Parameters.AddWithValue("@KullaniciId", kullanici.Id);
             command.Parameters.AddWithValue("@IslemTarihi", DateTime.Now);
             command.Parameters.AddWithValue("@Islem", islem);
             command.Parameters.AddWithValue("@JsonText", JsonSerializer.Serialize(new
             {
-                basvuru,
                 islemDetayi
             }, JsonOptions));
 

@@ -2,14 +2,12 @@ namespace TarimDonusum.Models
 {
     public class DegerZinciri
     {
-        public int Id { get; set; }
-        public string Kod { get; set; } = "";
-        public string Ad { get; set; } = "";
-        public string Aciklama { get; set; } = "";
-        public bool Aktif { get; set; } = true;
-        public DateTime KayitTarihi { get; set; } = DateTime.Now;
-        public DateTime GuncellemeTarihi { get; set; } = DateTime.Now;
-        public List<Il> Iller { get; set; } = new();
-        public List<DegerZinciriAsama> Asamalar { get; set; } = new();
+        public int id { get; set; }
+        public string ad { get; set; } = "";
+        public string aciklama { get; set; } = "";
+        public bool aktif { get; set; } = true;
+        public List<Il> iller { get; set; } = new();
+        public List<DegerZinciriAsama> asamalar { get; set; } = new();
+        public bool secili { get; set; } = false;
     }
 }

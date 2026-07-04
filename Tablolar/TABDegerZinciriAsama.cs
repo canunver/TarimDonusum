@@ -38,12 +38,12 @@ namespace TarimDonusum.Tablolar
         {
             return new DegerZinciriAsama
             {
-                Id = reader.GetInt32(0),
-                DegerZinciriId = reader.GetInt32(1),
-                SiraNo = reader.GetInt32(2),
-                Ad = reader.GetString(3),
-                Aciklama = reader.GetString(4),
-                Aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(5)) == 1
+                id = reader.GetInt32(0),
+                degerZinciriId = reader.GetInt32(1),
+                siraNo = reader.GetInt32(2),
+                ad = reader.GetString(3),
+                aciklama = reader.GetString(4),
+                aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(5)) == 1
             };
         }
     }

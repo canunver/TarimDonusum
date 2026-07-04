@@ -65,6 +65,7 @@ namespace TarimDonusum.IsKurallari
             new(4,
                 @"CREATE TABLE dbo.Donem(
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Donem PRIMARY KEY,
+                        Yil INT NOT NULL,
                         Ad NVARCHAR(150) NOT NULL,
                         BasvuruyaAcikMi INT NOT NULL CONSTRAINT DF_Donem_BasvuruyaAcikMi DEFAULT 0,
                         BasvuruBaslangicTarihi DATETIME NULL,
@@ -75,8 +76,6 @@ namespace TarimDonusum.IsKurallari
                         MaksimumDestekTutari DECIMAL(18,2) NULL,
                         DestekOrani DECIMAL(5,2) NULL,
                         Aciklama NVARCHAR(MAX) NOT NULL CONSTRAINT DF_Donem_Aciklama DEFAULT N'',
-                        KayitTarihi DATETIME NOT NULL CONSTRAINT DF_Donem_KayitTarihi DEFAULT GETDATE(),
-                        GuncellemeTarihi DATETIME NOT NULL CONSTRAINT DF_Donem_GuncellemeTarihi DEFAULT GETDATE()
                     );
 
                     CREATE UNIQUE INDEX UX_Donem_Ad ON dbo.Donem(Ad);
@@ -85,12 +84,11 @@ namespace TarimDonusum.IsKurallari
             new(5,
                 @"INSERT INTO dbo.Donem(Ad, BasvuruyaAcikMi, BasvuruBaslangicTarihi, BasvuruBitisTarihi,
                     OnBasvuruBitisTarihi, MinimumYatirimTutari, MaksimumYatirimTutari, MaksimumDestekTutari, DestekOrani, Aciklama)
-                    VALUES (N'2026 1. Dönem', 1, '2026-07-01', '2026-12-31', '2026-08-31', 100000, 5000000, 2500000, 80, N'Test dönemi');"),
+                    VALUES (N'2026 1. DÃ¶nem', 1, '2026-07-01', '2026-12-31', '2026-08-31', 100000, 5000000, 2500000, 80, N'Test dÃ¶nemi');"),
             new(6,
                 @"CREATE TABLE dbo.Firma
                     (
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Firma PRIMARY KEY,
-                        KullaniciId INT NOT NULL,
                         VergiKimlikNo NVARCHAR(20) NOT NULL,
                         TicaretUnvani NVARCHAR(250) NOT NULL,
                         TicaretSicilNo NVARCHAR(100) NOT NULL CONSTRAINT DF_Firma_TicaretSicilNo DEFAULT N'',
@@ -108,7 +106,6 @@ namespace TarimDonusum.IsKurallari
                     );
 
                     CREATE UNIQUE INDEX UX_Firma_VergiKimlikNo ON dbo.Firma(VergiKimlikNo);
-                    CREATE INDEX IX_Firma_KullaniciId ON dbo.Firma(KullaniciId);
                 "),
             new(
                 7,
@@ -132,7 +129,6 @@ namespace TarimDonusum.IsKurallari
                     CREATE INDEX IX_FirmaKullanici_KullaniciId ON dbo.FirmaKullanici(KullaniciId);
                     CREATE INDEX IX_FirmaKullanici_Aktif ON dbo.FirmaKullanici(Aktif);
                 "),
-
             new(8,
                 @"CREATE TABLE dbo.FirmaLog
                     (
@@ -152,7 +148,6 @@ namespace TarimDonusum.IsKurallari
                     CREATE INDEX IX_FirmaLog_KullaniciId ON dbo.FirmaLog(KullaniciId);
                     CREATE INDEX IX_FirmaLog_IslemTarihi ON dbo.FirmaLog(IslemTarihi);
                 "),
-
             new(9,
                 @"CREATE TABLE dbo.Il
                     (
@@ -166,38 +161,27 @@ namespace TarimDonusum.IsKurallari
                     CREATE UNIQUE INDEX UX_Il_Ad ON dbo.Il(Ad);
                     CREATE INDEX IX_Il_Aktif ON dbo.Il(Aktif);
                 "),
-            new (10,
-                @"INSERT INTO dbo.Il (Kod, Ad, Aktif)
-                    VALUES
-                    (N'06', N'Ankara', 1),
-                    (N'34', N'İstanbul', 1),
-                    (N'35', N'İzmir', 1);"),
-
-            new (11,
+            new(10,
                 @"CREATE TABLE dbo.Basvuru(
                     Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Basvuru PRIMARY KEY,
-                    KullaniciId INT NOT NULL,
                     FirmaId INT NOT NULL,
                     DonemId INT NOT NULL,
                     IlId INT NOT NULL,
                     BasvuruKonusu NVARCHAR(250) NOT NULL,
+                    BasvuruSahibiTuru INT NULL,
+                    SonIkiYildirFaalMi INT NOT NULL CONSTRAINT DF_Basvuru_SonIkiYildirFaalMi DEFAULT 0,
                     YatirimAdi NVARCHAR(250) NOT NULL CONSTRAINT DF_Basvuru_YatirimAdi DEFAULT N'',
                     ToplamYatirimTutari DECIMAL(18,2) NULL,
                     UygunHarcamaTutari DECIMAL(18,2) NULL,
                     TalepEdilenDestekTutari DECIMAL(18,2) NULL,
                     BasvuruSahibiKatkisi DECIMAL(18,2) NULL,
                     DestekOrani DECIMAL(5,2) NULL,
+                    YatirimTuru INT NULL,
                     YatiriminAmaci NVARCHAR(MAX) NOT NULL CONSTRAINT DF_Basvuru_YatiriminAmaci DEFAULT N'',
                     OzelSektorPayi DECIMAL(5,2) NULL,
                     BagliOrtakIsletmeVarMi NVARCHAR(10) NULL,
                     BagliOrtakAciklama NVARCHAR(MAX) NULL,
-                    Durum NVARCHAR(50) NOT NULL CONSTRAINT DF_Basvuru_Durum DEFAULT N'Ön Başvuru',
-                    AktifBolum INT NOT NULL CONSTRAINT DF_Basvuru_AktifBolum DEFAULT 1,
-                    KayitTarihi DATETIME NOT NULL CONSTRAINT DF_Basvuru_KayitTarihi DEFAULT GETDATE(),
-                    GuncellemeTarihi DATETIME NOT NULL CONSTRAINT DF_Basvuru_GuncellemeTarihi DEFAULT GETDATE(),
-                    JsonText NVARCHAR(MAX) NOT NULL,
-                    CONSTRAINT FK_Basvuru_Kullanici
-                        FOREIGN KEY (KullaniciId) REFERENCES dbo.Kullanici(Id),
+                    Durum INT NOT NULL CONSTRAINT DF_Basvuru_Durum DEFAULT 1,
                     CONSTRAINT FK_Basvuru_Firma
                         FOREIGN KEY (FirmaId) REFERENCES dbo.Firma(Id),
                     CONSTRAINT FK_Basvuru_Donem
@@ -206,13 +190,11 @@ namespace TarimDonusum.IsKurallari
                         FOREIGN KEY (IlId) REFERENCES dbo.Il(Id)
                 );
 
-                CREATE INDEX IX_Basvuru_KullaniciId ON dbo.Basvuru(KullaniciId);
                 CREATE INDEX IX_Basvuru_FirmaId ON dbo.Basvuru(FirmaId);
                 CREATE INDEX IX_Basvuru_DonemId ON dbo.Basvuru(DonemId);
                 CREATE INDEX IX_Basvuru_IlId ON dbo.Basvuru(IlId);
-                CREATE INDEX IX_Basvuru_GuncellemeTarihi ON dbo.Basvuru(GuncellemeTarihi);
                 "),
-            new(12,
+            new(11,
                 @"CREATE TABLE dbo.BasvuruLog
                     (
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruLog PRIMARY KEY,
@@ -231,16 +213,7 @@ namespace TarimDonusum.IsKurallari
                     CREATE INDEX IX_BasvuruLog_KullaniciId ON dbo.BasvuruLog(KullaniciId);
                     CREATE INDEX IX_BasvuruLog_IslemTarihi ON dbo.BasvuruLog(IslemTarihi);
                 "),
-            new(13,
-                @"IF COL_LENGTH(N'dbo.Basvuru', N'OzelSektorPayi') IS NULL
-                    ALTER TABLE dbo.Basvuru ADD OzelSektorPayi DECIMAL(5,2) NULL;
-
-                  IF COL_LENGTH(N'dbo.Basvuru', N'BagliOrtakIsletmeVarMi') IS NULL
-                    ALTER TABLE dbo.Basvuru ADD BagliOrtakIsletmeVarMi NVARCHAR(10) NULL;
-
-                  IF COL_LENGTH(N'dbo.Basvuru', N'BagliOrtakAciklama') IS NULL
-                    ALTER TABLE dbo.Basvuru ADD BagliOrtakAciklama NVARCHAR(MAX) NULL;"),
-            new(14,
+            new(12,
                 @"CREATE TABLE dbo.DegerZinciri
                     (
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_DegerZinciri PRIMARY KEY,
@@ -248,15 +221,13 @@ namespace TarimDonusum.IsKurallari
                         Ad NVARCHAR(250) NOT NULL,
                         Aciklama NVARCHAR(MAX) NOT NULL CONSTRAINT DF_DegerZinciri_Aciklama DEFAULT N'',
                         Aktif INT NOT NULL CONSTRAINT DF_DegerZinciri_Aktif DEFAULT 1,
-                        KayitTarihi DATETIME NOT NULL CONSTRAINT DF_DegerZinciri_KayitTarihi DEFAULT GETDATE(),
-                        GuncellemeTarihi DATETIME NOT NULL CONSTRAINT DF_DegerZinciri_GuncellemeTarihi DEFAULT GETDATE()
                     );
 
                     CREATE UNIQUE INDEX UX_DegerZinciri_Kod ON dbo.DegerZinciri(Kod);
                     CREATE UNIQUE INDEX UX_DegerZinciri_Ad ON dbo.DegerZinciri(Ad);
                     CREATE INDEX IX_DegerZinciri_Aktif ON dbo.DegerZinciri(Aktif);
                 "),
-            new(15,
+            new(13,
                 @"CREATE TABLE dbo.DegerZinciriIl
                     (
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_DegerZinciriIl PRIMARY KEY,
@@ -273,7 +244,7 @@ namespace TarimDonusum.IsKurallari
                     CREATE INDEX IX_DegerZinciriIl_IlId ON dbo.DegerZinciriIl(IlId);
                     CREATE INDEX IX_DegerZinciriIl_Aktif ON dbo.DegerZinciriIl(Aktif);
                 "),
-            new(16,
+            new(14,
                 @"CREATE TABLE dbo.DegerZinciriAsama
                     (
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_DegerZinciriAsama PRIMARY KEY,
@@ -290,80 +261,12 @@ namespace TarimDonusum.IsKurallari
                     CREATE INDEX IX_DegerZinciriAsama_DegerZinciriId ON dbo.DegerZinciriAsama(DegerZinciriId);
                     CREATE INDEX IX_DegerZinciriAsama_Aktif ON dbo.DegerZinciriAsama(Aktif);
                 "),
-            new(17,
-                @"DECLARE @DegerZinciri TABLE
-                  (
-                    Kod NVARCHAR(50) NOT NULL,
-                    Ad NVARCHAR(250) NOT NULL,
-                    Aciklama NVARCHAR(MAX) NOT NULL
-                  );
-
-                  INSERT INTO @DegerZinciri(Kod, Ad, Aciklama)
-                  VALUES
-                    (N'DZ001', N'Alternatif Tarım ve Gıda Ürünleri Değer Zinciri', N''),
-                    (N'DZ002', N'Arıcılık Ürünleri Değer Zinciri', N''),
-                    (N'DZ003', N'Baklagiller ve Bitkisel Protein Değer Zinciri', N''),
-                    (N'DZ004', N'Domates Değer Zinciri', N''),
-                    (N'DZ005', N'Kanatlı Sektörü Değer Zinciri', N''),
-                    (N'DZ006', N'Kırmızı Et Değer Zinciri', N''),
-                    (N'DZ007', N'Mantar Değer Zinciri', N''),
-                    (N'DZ008', N'Meyve ve Sebze Değer Zinciri', N''),
-                    (N'DZ009', N'Sert Kabuklu Meyveler Değer Zinciri', N''),
-                    (N'DZ010', N'Su Ürünleri Değer Zinciri', N''),
-                    (N'DZ011', N'Süt Değer Zinciri', N''),
-                    (N'DZ012', N'Tahıl Değer Zinciri', N''),
-                    (N'DZ013', N'Tıbbi ve Aromatik Bitkiler Değer Zinciri', N''),
-                    (N'DZ014', N'Yağlı Tohumlar Sektörü Değer Zinciri', N''),
-                    (N'DZ015', N'Yem Değer Zinciri', N''),
-                    (N'DZ016', N'Zeytin Değer Zinciri', N'');
-
-                  INSERT INTO dbo.DegerZinciri(Kod, Ad, Aciklama, Aktif)
-                  SELECT v.Kod, v.Ad, v.Aciklama, 1
-                  FROM @DegerZinciri v
-                  WHERE NOT EXISTS (
-                    SELECT 1 FROM dbo.DegerZinciri dz WHERE dz.Kod = v.Kod OR dz.Ad = v.Ad
-                  );
-
-                  DECLARE @Asama TABLE
-                  (
-                    SiraNo INT NOT NULL,
-                    Ad NVARCHAR(250) NOT NULL,
-                    Aciklama NVARCHAR(MAX) NOT NULL
-                  );
-
-                  INSERT INTO @Asama(SiraNo, Ad, Aciklama)
-                  VALUES
-                    (1, N'Birincil Üretim', N'Bitkisel, hayvansal veya su ürünleri üretiminde verim, kalite ve kapasiteyi artıran yatırımlar.'),
-                    (2, N'Depolama / Soğuk Zincir', N'Ürünlerin kalite kaybını azaltan depo, silo, soğuk hava, ön soğutma ve muhafaza yatırımları.'),
-                    (3, N'Lojistik', N'Ürünlerin toplama, taşıma, dağıtım ve sevkiyat süreçlerini iyileştiren yatırımlar.'),
-                    (4, N'İşleme', N'Tarımsal hammaddenin gıda ürünü veya ara ürüne dönüştürülmesine yönelik temel işleme yatırımları.'),
-                    (5, N'İleri İşleme', N'Ürüne daha yüksek katma değer kazandıran, ürün çeşitlendirme ve gelişmiş işleme yatırımları.'),
-                    (6, N'Tarımsal Bileşen Üretimi', N'Tarımsal hammaddelerden gıda bileşeni, katkı, protein, enzim, ekstrakt veya benzeri girdilerin üretilmesi.'),
-                    (7, N'Atık ve Yan Ürün Değerlendirme', N'Üretimden kaynaklanan atık, fire ve yan ürünlerin yeniden kullanımı, geri dönüşümü veya ekonomik değere dönüştürülmesi.');
-
-                  INSERT INTO dbo.DegerZinciriAsama(DegerZinciriId, SiraNo, Ad, Aciklama, Aktif)
-                  SELECT dz.Id, a.SiraNo, a.Ad, a.Aciklama, 1
-                  FROM dbo.DegerZinciri dz
-                  INNER JOIN @DegerZinciri v ON v.Ad = dz.Ad
-                  CROSS JOIN @Asama a
-                  WHERE NOT EXISTS (
-                    SELECT 1
-                    FROM dbo.DegerZinciriAsama dza
-                    WHERE dza.DegerZinciriId = dz.Id
-                      AND dza.SiraNo = a.SiraNo
-                  );
-                "),
-            new(18,
-                @"IF COL_LENGTH(N'dbo.Basvuru', N'YatirimTuru') IS NULL
-                    ALTER TABLE dbo.Basvuru ADD YatirimTuru NVARCHAR(100) NOT NULL CONSTRAINT DF_Basvuru_YatirimTuru DEFAULT N'';"),
-            new(19,
-                @"SELECT 1;"),
-            new(20,
+            new(15,
                 @"CREATE TABLE dbo.BasvuruHarcamaTuru
                     (
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruHarcamaTuru PRIMARY KEY,
                         BasvuruId INT NOT NULL,
-                        HarcamaTuru NVARCHAR(150) NOT NULL,
+                        HarcamaTuru INT NOT NULL,
                         CONSTRAINT FK_BasvuruHarcamaTuru_Basvuru
                             FOREIGN KEY (BasvuruId) REFERENCES dbo.Basvuru(Id)
                     );
@@ -371,24 +274,22 @@ namespace TarimDonusum.IsKurallari
                     CREATE UNIQUE INDEX UX_BasvuruHarcamaTuru_BasvuruHarcamaTuru ON dbo.BasvuruHarcamaTuru(BasvuruId, HarcamaTuru);
                     CREATE INDEX IX_BasvuruHarcamaTuru_BasvuruId ON dbo.BasvuruHarcamaTuru(BasvuruId);
                 "),
-            new(21,
+            new(16,
                 @"CREATE TABLE dbo.BasvuruDegerZinciriAsama
                     (
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruDegerZinciriAsama PRIMARY KEY,
                         BasvuruId INT NOT NULL,
                         DegerZinciriAsamaId INT NULL,
-                        AsamaAdi NVARCHAR(250) NOT NULL,
                         CONSTRAINT FK_BasvuruDegerZinciriAsama_Basvuru
                             FOREIGN KEY (BasvuruId) REFERENCES dbo.Basvuru(Id),
                         CONSTRAINT FK_BasvuruDegerZinciriAsama_DegerZinciriAsama
                             FOREIGN KEY (DegerZinciriAsamaId) REFERENCES dbo.DegerZinciriAsama(Id)
                     );
 
-                    CREATE UNIQUE INDEX UX_BasvuruDegerZinciriAsama_BasvuruAsama ON dbo.BasvuruDegerZinciriAsama(BasvuruId, AsamaAdi);
                     CREATE INDEX IX_BasvuruDegerZinciriAsama_BasvuruId ON dbo.BasvuruDegerZinciriAsama(BasvuruId);
                     CREATE INDEX IX_BasvuruDegerZinciriAsama_DegerZinciriAsamaId ON dbo.BasvuruDegerZinciriAsama(DegerZinciriAsamaId);
                 "),
-            new(22,
+            new(17,
                 @"CREATE TABLE dbo.Ilce
                     (
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Ilce PRIMARY KEY,
@@ -403,7 +304,7 @@ namespace TarimDonusum.IsKurallari
                     CREATE INDEX IX_Ilce_IlId ON dbo.Ilce(IlId);
                     CREATE INDEX IX_Ilce_Aktif ON dbo.Ilce(Aktif);
                 "),
-            new(23,
+            new(18,
                 @"CREATE TABLE dbo.BasvuruUygulamaAdresleri
                     (
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruUygulamaAdresleri PRIMARY KEY,
@@ -425,12 +326,15 @@ namespace TarimDonusum.IsKurallari
                     CREATE INDEX IX_BasvuruUygulamaAdresleri_BasvuruId ON dbo.BasvuruUygulamaAdresleri(BasvuruId);
                     CREATE INDEX IX_BasvuruUygulamaAdresleri_IlceId ON dbo.BasvuruUygulamaAdresleri(IlceId);
                 "),
-            new(24,
-                @"ALTER TABLE dbo.Basvuru ADD ToplamYatirimTutari DECIMAL(18,2) NULL, UygunHarcamaTutari DECIMAL(18,2) NULL, TalepEdilenDestekTutari DECIMAL(18,2) NULL, BasvuruSahibiKatkisi DECIMAL(18,2) NULL, DestekOrani DECIMAL(5,2) NULL, YatiriminAmaci NVARCHAR(MAX) NOT NULL
-                        CONSTRAINT DF_Basvuru_YatiriminAmaci DEFAULT N'';
-                 "),  
-
-                   
+            new(19,
+                @"ALTER TABLE Basvuru add 
+                    IrtibatKisi nvarchar(150) NULL,
+                    IrtibatUnvan nvarchar(100) NULL,
+                    IrtibatTelefon nvarchar(30) NULL,
+                    IrtibatePosta nvarchar(256) NULL,
+                    IrtibatAdres nvarchar(1000) NULL,
+                    IrtibatYetkiliKisiler nvarchar(1000) NULL
+                "),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)
@@ -590,3 +494,4 @@ namespace TarimDonusum.IsKurallari
         }
     }
 }
+

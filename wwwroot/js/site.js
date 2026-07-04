@@ -1,4 +1,4 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
+// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
@@ -81,6 +81,33 @@ function PopupMesajIlklendir() {
     }
 }
 
+window.AjaxPost = function (url, data, success) {
+    // Sayfadaki anti-forgery token'ı alan fonksiyonunu çağırıyoruz
+    // (Eğer fonksiyon adı farklıysa projenizdekine göre güncelleyin, örn: antiForgeryToken())
+    const token = typeof antiForgeryToken === "function" ? antiForgeryToken() : $('[name="__RequestVerificationToken"]').val();
+
+    $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json; charset=utf-8", // Verinin JSON olduğunu belirtiyoruz
+        dataType: "json",
+        data: JSON.stringify(data), // JavaScript nesnesini JSON string'ine çeviriyoruz
+        headers: {
+            // ASP.NET Core'un doğrulaması için token'ı header'a ekliyoruz
+            "RequestVerificationToken": token
+        },
+        cache: false
+    })
+        .done(function (result) {
+            if (success) {
+                success(result);
+            }
+        })
+        .fail(function (xhr, status, error) {
+            console.error("AjaxPost Hatası:", xhr);
+            alert("İşlem sırasında bir hata oluştu.");
+        });
+};
 function AjaxGet(url, data, success) {
     $.ajax({
         url: url,
@@ -103,6 +130,34 @@ function AjaxGet(url, data, success) {
 
         });
 }
+
+// Global String Alıcı
+window.degerStr = function (name) {
+    return $(`[name="${name}"]`).val()?.trim() ?? '';
+};
+
+// Global Integer Alıcı
+window.degerInt = function (name) {
+    const v = parseInt($(`[name="${name}"]`).val());
+    return isNaN(v) ? null : v;
+};
+
+// Global Decimal Alıcı
+window.degerDec = function (name) {
+    // Kullanıcı virgül girerse noktaya çevirip parseFloat yapıyoruz
+    const hamDeger = $(`[name="${name}"]`).val()?.toString().replace(',', '.');
+    const v = parseFloat(hamDeger);
+    return isNaN(v) ? 0.0 : v;
+};
+
+// Global Boolean Alıcı
+window.degerBool = function (name) {
+    const $el = $(`[name="${name}"]`);
+    if ($el.length === 0) return false;
+
+    // Eğer eleman checkbox ise seçili olma durumuna, değilse text/select değerine bakar
+    return $el.is(':checkbox') ? $el.is(':checked') : $el.val() === 'true';
+};
 
 function MenuRenderItems(items, aktifUrl, acikMenuler) {
 

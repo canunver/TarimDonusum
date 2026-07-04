@@ -158,19 +158,18 @@ namespace TarimDonusum.Tablolar
 
         private static void ParametreleriEkle(SqlCommand command, Firma firma)
         {
-            command.Parameters.AddWithValue("@KullaniciId", firma.KullaniciId);
-            command.Parameters.AddWithValue("@VergiKimlikNo", firma.VergiKimlikNo ?? "");
-            command.Parameters.AddWithValue("@TicaretUnvani", firma.TicaretUnvani ?? "");
-            command.Parameters.AddWithValue("@TicaretSicilNo", firma.TicaretSicilNo ?? "");
-            command.Parameters.AddWithValue("@KurulusTarihi", (object?)firma.KurulusTarihi ?? DBNull.Value);
-            command.Parameters.AddWithValue("@MersisNo", firma.MersisNo ?? "");
-            command.Parameters.AddWithValue("@NaceKodu", firma.NaceKodu ?? "");
-            command.Parameters.AddWithValue("@WebSitesi", firma.WebSitesi ?? "");
-            command.Parameters.AddWithValue("@Telefon", firma.Telefon ?? "");
-            command.Parameters.AddWithValue("@KepAdresi", firma.KepAdresi ?? "");
-            command.Parameters.AddWithValue("@Eposta", firma.Eposta ?? "");
-            command.Parameters.AddWithValue("@FaaliyetKonusu", firma.FaaliyetKonusu ?? "");
-            command.Parameters.AddWithValue("@Adres", firma.Adres ?? "");
+            command.Parameters.AddWithValue("@VergiKimlikNo", firma.vergiKimlikNo ?? "");
+            command.Parameters.AddWithValue("@TicaretUnvani", firma.ticaretUnvani ?? "");
+            command.Parameters.AddWithValue("@TicaretSicilNo", firma.ticaretSicilNo ?? "");
+            command.Parameters.AddWithValue("@KurulusTarihi", (object?)firma.kurulusTarihi ?? DBNull.Value);
+            command.Parameters.AddWithValue("@MersisNo", firma.mersisNo ?? "");
+            command.Parameters.AddWithValue("@NaceKodu", firma.naceKodu ?? "");
+            command.Parameters.AddWithValue("@WebSitesi", firma.webSitesi ?? "");
+            command.Parameters.AddWithValue("@Telefon", firma.telefon ?? "");
+            command.Parameters.AddWithValue("@KepAdresi", firma.kepAdresi ?? "");
+            command.Parameters.AddWithValue("@Eposta", firma.eposta ?? "");
+            command.Parameters.AddWithValue("@FaaliyetKonusu", firma.faaliyetKonusu ?? "");
+            command.Parameters.AddWithValue("@Adres", firma.adres ?? "");
         }
 
         private static Firma Oku(SqlDataReader reader)
@@ -178,20 +177,19 @@ namespace TarimDonusum.Tablolar
             return new Firma
             {
                 Id = reader.GetInt32(0),
-                KullaniciId = reader.GetInt32(1),
-                VergiKimlikNo = reader.GetString(2),
-                TicaretUnvani = reader.GetString(3),
-                TicaretSicilNo = reader.GetString(4),
-                KurulusTarihi = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
-                MersisNo = reader.GetString(6),
-                NaceKodu = reader.GetString(7),
-                WebSitesi = reader.GetString(8),
-                Telefon = reader.GetString(9),
-                KepAdresi = reader.GetString(10),
-                Eposta = reader.GetString(11),
-                FaaliyetKonusu = reader.GetString(12),
-                Adres = reader.GetString(13),
-                Basvuranlar = BasvuranlariOku(reader.GetString(14))
+                vergiKimlikNo = reader.GetString(2),
+                ticaretUnvani = reader.GetString(3),
+                ticaretSicilNo = reader.GetString(4),
+                kurulusTarihi = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                mersisNo = reader.GetString(6),
+                naceKodu = reader.GetString(7),
+                webSitesi = reader.GetString(8),
+                telefon = reader.GetString(9),
+                kepAdresi = reader.GetString(10),
+                eposta = reader.GetString(11),
+                faaliyetKonusu = reader.GetString(12),
+                adres = reader.GetString(13),
+                basvuranlar = BasvuranlariOku(reader.GetString(14))
             };
         }
 

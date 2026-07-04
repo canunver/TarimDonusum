@@ -33,7 +33,7 @@ namespace TarimDonusum.IsKurallari
                 Sonuc dogrulamaSonucu = kullanici.Dogrula(new Sonuc());
                 SonucHatalariniAktar(dogrulamaSonucu, sonuc);
 
-                if (!sonuc.Basarili)
+                if (!sonuc.basarili)
                     return sonuc;
 
                 await using SqlConnection connection = new SqlConnection(_connectionString);
@@ -41,10 +41,10 @@ namespace TarimDonusum.IsKurallari
 
                 await BenzerKayitKontrolEtAsync(connection, kullanici, sonuc);
 
-                if (!sonuc.Basarili)
+                if (!sonuc.basarili)
                     return sonuc;
 
-                sonuc.Nesne = await YeniBasvuruKullanicisiKaydetAsync(connection, kullanici, sonuc);
+                sonuc.nesne = await YeniBasvuruKullanicisiKaydetAsync(connection, kullanici, sonuc);
             }
             catch (Exception ex)
             {
@@ -72,7 +72,7 @@ namespace TarimDonusum.IsKurallari
                 Kullanici? kullanici = await tabKullanici.OkuAsync(kullaniciId, kulKod, sifre);
                 if (kullanici == null)
                 {
-                    if (sonuc.Basarili)
+                    if (sonuc.basarili)
                         sonuc.HataEkle(kullaniciId > 0 ? "Kullanıcı bulunamadı." : "Kullanıcı kodu veya şifre hatalı.");
 
                     return sonuc;
@@ -80,7 +80,7 @@ namespace TarimDonusum.IsKurallari
 
                 await KullaniciYetkileriniYukleAsync(tabKullaniciYetki, kullanici);
 
-                sonuc.Nesne = kullanici;
+                sonuc.nesne = kullanici;
             }
             catch (Exception ex)
             {
@@ -113,7 +113,7 @@ namespace TarimDonusum.IsKurallari
                 TABKullaniciYetki tabKullaniciYetki = new TABKullaniciYetki(connection);
                 await KullaniciYetkileriniYukleAsync(tabKullaniciYetki, kullanici);
 
-                sonuc.Nesne = kullanici;
+                sonuc.nesne = kullanici;
             }
             catch (Exception ex)
             {
@@ -175,7 +175,7 @@ namespace TarimDonusum.IsKurallari
 
         private static void SonucHatalariniAktar(Sonuc kaynak, Sonuc hedef)
         {
-            foreach (string hata in kaynak.Hatalar)
+            foreach (string hata in kaynak.hatalar)
             {
                 hedef.HataEkle(hata);
             }

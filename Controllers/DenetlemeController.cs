@@ -26,10 +26,10 @@ namespace TarimDonusum.Controllers
             try
             {
                 Sonuc<List<Basvuru>> sonuc = await _basvuruIsKurallari.TumunuListeleAsync();
-                if (!sonuc.Basarili)
+                if (!sonuc.basarili)
                     TempData["Mesaj"] = HataMesaji(sonuc, "Başvuru kayıtları listelenemedi.");
 
-                return View(sonuc.Nesne ?? new List<Basvuru>());
+                return View(sonuc.nesne ?? new List<Basvuru>());
             }
             catch (Exception ex)
             {
@@ -44,7 +44,7 @@ namespace TarimDonusum.Controllers
             try
             {
                 Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id);
-                if (!sonuc.Basarili || sonuc.Nesne == null)
+                if (!sonuc.basarili || sonuc.nesne == null)
                 {
                     TempData["Mesaj"] = HataMesaji(sonuc, "Başvuru kaydı okunamadı.");
                     return RedirectToAction(nameof(Index));
@@ -52,31 +52,31 @@ namespace TarimDonusum.Controllers
 
                 Sonuc<List<Donem>> donemSonuc = await _basvuruIsKurallari.DonemleriListeleAsync();
                 Sonuc<List<Il>> ilSonuc = await _basvuruIsKurallari.IlleriListeleAsync();
-                Sonuc<List<Ilce>> ilceSonuc = await _basvuruIsKurallari.IlceleriListeleAsync(sonuc.Nesne.IlId);
-                Sonuc<List<DegerZinciri>> degerZinciriSonuc = await _basvuruIsKurallari.DegerZincirleriListeleAsync(sonuc.Nesne.IlId, false);
-                List<DegerZinciri> degerZincirleri = degerZinciriSonuc.Nesne ?? new List<DegerZinciri>();
-                bool kayitliZincirGecerli = sonuc.Nesne.DegerZinciriId.HasValue &&
-                    degerZincirleri.Any(z => z.Id == sonuc.Nesne.DegerZinciriId.Value);
+                Sonuc<List<Ilce>> ilceSonuc = await _basvuruIsKurallari.IlceleriListeleAsync(sonuc.nesne.IlId);
+                Sonuc<List<DegerZinciri>> degerZinciriSonuc = await _basvuruIsKurallari.DegerZincirleriListeleAsync(sonuc.nesne.IlId.Value, 1);
+                List<DegerZinciri> degerZincirleri = degerZinciriSonuc.nesne ?? new List<DegerZinciri>();
+                bool kayitliZincirGecerli = sonuc.nesne.yatirim.degerZinciriId.HasValue &&
+                    degerZincirleri.Any(z => z.id == sonuc.nesne.yatirim.degerZinciriId.Value);
                 int? seciliDegerZinciriId = kayitliZincirGecerli
-                    ? sonuc.Nesne.DegerZinciriId
-                    : degerZincirleri.FirstOrDefault()?.Id;
+                    ? sonuc.nesne.yatirim.degerZinciriId
+                    : degerZincirleri.FirstOrDefault()?.id;
                 Sonuc<List<DegerZinciriAsama>> asamaSonuc = await _basvuruIsKurallari.DegerZinciriAsamalariListeleAsync(seciliDegerZinciriId.GetValueOrDefault());
 
                 if (!kayitliZincirGecerli)
-                    sonuc.Nesne.DegerZinciriAsamalari = new List<string>();
+                    sonuc.nesne.yatirim.degerZinciriAsamalari = new List<DegerZinciriAsama>();
 
                 return View(new BasvuruFormViewModel
                 {
-                    Basvuru = sonuc.Nesne,
+                    Basvuru = sonuc.nesne,
                     SaltOkunur = true,
                     DenetciGorunumu = true,
                     AktifBolum = Math.Clamp(bolum, 1, 8),
-                    Donemler = donemSonuc.Nesne ?? new List<Donem>(),
-                    Iller = ilSonuc.Nesne ?? new List<Il>(),
-                    Ilceler = ilceSonuc.Nesne ?? new List<Ilce>(),
+                    Donemler = donemSonuc.nesne ?? new List<Donem>(),
+                    Iller = ilSonuc.nesne ?? new List<Il>(),
+                    Ilceler = ilceSonuc.nesne ?? new List<Ilce>(),
                     DegerZincirleri = degerZincirleri,
                     SeciliDegerZinciriId = seciliDegerZinciriId,
-                    SeciliDegerZinciriAsamalari = asamaSonuc.Nesne ?? new List<DegerZinciriAsama>()
+                    SeciliDegerZinciriAsamalari = asamaSonuc.nesne ?? new List<DegerZinciriAsama>()
                 });
             }
             catch (Exception ex)
@@ -89,8 +89,8 @@ namespace TarimDonusum.Controllers
 
         private static string HataMesaji(Sonuc sonuc, string varsayilanMesaj)
         {
-            return sonuc.Hatalar.Count > 0
-                ? string.Join(" ", sonuc.Hatalar)
+            return sonuc.hatalar.Count > 0
+                ? string.Join(" ", sonuc.hatalar)
                 : varsayilanMesaj;
         }
     }
