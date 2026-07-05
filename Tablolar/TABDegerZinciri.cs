@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using System.Collections.Generic;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
 
@@ -72,7 +73,7 @@ namespace TarimDonusum.Tablolar
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                DegerZinciri dz = Oku(reader);
+                DegerZinciri dz = DegerZinciriOku(reader);
                 if (dz.id == seciliZincirId)
                     dz.secili = true;
                 liste.nesne.Add(dz);
@@ -80,7 +81,7 @@ namespace TarimDonusum.Tablolar
             return liste;
         }
 
-        private static DegerZinciri Oku(SqlDataReader reader)
+        private static DegerZinciri DegerZinciriOku(SqlDataReader reader)
         {
             return new DegerZinciri
             {
@@ -88,17 +89,6 @@ namespace TarimDonusum.Tablolar
                 ad = reader.GetString(1),
                 aciklama = reader.GetString(2),
                 aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(3)) == 1,
-            };
-        }
-
-        private static Il IlOku(SqlDataReader reader)
-        {
-            return new Il
-            {
-                Id = reader.GetInt32(2),
-                Kod = OrtakFonksiyonlar.Int32Yap(reader.GetValue(4)),
-                Ad = reader.GetString(5),
-                Aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(6)) == 1
             };
         }
 
@@ -112,6 +102,42 @@ namespace TarimDonusum.Tablolar
                 ad = reader.GetString(3),
                 aciklama = reader.GetString(4),
                 aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(5)) == 1
+            };
+        }
+
+        internal async Task<Sonuc<List<DegerZinciriAsama>>> AsamalariOku(int degerZinciriId, int basvuruId)
+        {
+            Sonuc<List<DegerZinciriAsama>> liste = new Sonuc<List<DegerZinciriAsama>>();
+            string sql = @"SELECT dza.Id, dza.DegerZinciriId, dza.SiraNo, dza.Ad, dza.Aciklama, dza.Aktif, bdza.Id
+                           FROM dbo.DegerZinciriAsama dza
+                           LEFT JOIN dbo.BasvuruDegerZinciriAsama bdza ON dza.Id = bdza.DegerZinciriAsamaId
+                                AND bdza.BasvuruId = @BasvuruId 
+                           WHERE dza.DegerZinciriId = @DegerZinciriId
+                           ORDER BY dza.SiraNo ASC";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@DegerZinciriId", degerZinciriId);
+            command.Parameters.AddWithValue("@BasvuruId", basvuruId);
+
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                DegerZinciriAsama dz = DegerZinciriAsamaOku(reader);
+                liste.nesne.Add(dz);
+            }
+            return liste;
+        }
+
+        private DegerZinciriAsama DegerZinciriAsamaOku(SqlDataReader reader)
+        {
+            return new DegerZinciriAsama
+            {
+                id = reader.GetInt32(0),
+                degerZinciriId = reader.GetInt32(1),
+                siraNo = reader.GetInt32(2),
+                ad = reader.GetString(3),
+                aciklama = reader.GetString(4),
+                aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(5)) == 1,
+                secili = BoolYap(NullDuzeltInt(reader, 6))
             };
         }
     }

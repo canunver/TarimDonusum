@@ -96,7 +96,7 @@ namespace TarimDonusum.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            HttpContext.Session.SetString("KULLANICI_ID", kullaniciSonuc.nesne.Id.ToString());
+            HttpContext.Session.SetInt32("KULLANICI_ID", kullaniciSonuc.nesne.Id);
             HttpContext.Session.SetString("KULLANICI_ADSOYAD", $"{kullaniciSonuc.nesne.Ad} {kullaniciSonuc.nesne.Soyad}");
 
             Log(
@@ -668,7 +668,7 @@ namespace TarimDonusum.Controllers
 
             HttpContext.Session.Remove("LOGIN_VERIFY_CODE");
             HttpContext.Session.Remove("LOGIN_VERIFY_EXPIRE");
-            HttpContext.Session.SetString("KULLANICI_ID", kullaniciSonuc.nesne.Id.ToString());
+            HttpContext.Session.SetInt32("KULLANICI_ID", kullaniciSonuc.nesne.Id);
             HttpContext.Session.SetString("KULLANICI_ADSOYAD", $"{kullaniciSonuc.nesne.Ad} {kullaniciSonuc.nesne.Soyad}");
 
             // Burada gerçek login cookie işlemi yapılacak

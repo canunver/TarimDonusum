@@ -210,7 +210,6 @@ namespace TarimDonusum.Models
 
     }
 
-
     public class BasvuruYatirim
     {
         public int basvuruId { get; set; }
@@ -220,9 +219,11 @@ namespace TarimDonusum.Models
         public List<DegerZinciriAsama> degerZinciriAsamalari { get; set; } = new();
         public List<int> harcamaTurleri { get; set; } = new();
 
-
-        private void Dogrula(Sonuc sonuc)
+        public void Dogrula(Sonuc sonuc)
         {
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru verilmelidir!");
+
             if (string.IsNullOrWhiteSpace(yatirimAdi))
                 sonuc.HataEkle("Yatırım adı girilmelidir.");
 
@@ -288,48 +289,24 @@ namespace TarimDonusum.Models
 
     public class BasvuruUygulamaAdresi
     {
-        public int Id { get; set; }
-        public int BasvuruId { get; set; }
-        public int SiraNo { get; set; }
-        public int? IlceId { get; set; }
-        public int? IlId { get; set; }
-        public int? IlKod { get; set; }
-        public string IlAdi { get; set; } = "";
-        public string IlceAdi { get; set; } = "";
-        public string Il
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public int siraNo { get; set; }
+        public int? ilceId { get; set; }
+        public int? ilId { get; set; }
+        public int? ilKod { get; set; }
+        public string ilAdi { get; set; } = "";
+        public string ilceAdi { get; set; } = "";
+        public string tamAdres { get; set; } = "";
+        public UygulamaAdresiYatirimYeriStatusu? yatirimYeriStatusu { get; set; }
+        public int? kiraVeyaTahsisSuresi { get; set; }
+        public DateTime? kiraTahsisBitisTarihi { get; set; }
+
+        public string kiraTahsisBitis
         {
-            get => IlAdi;
-            set => IlAdi = value ?? "";
+            get => string.Join(" / ", new[] { kiraVeyaTahsisSuresi.ToString(), kiraTahsisBitisTarihi?.ToString("yyyy-MM-dd") ?? "" }.Where(x => !string.IsNullOrWhiteSpace(x)));
         }
-        public string Ilce
-        {
-            get => IlceAdi;
-            set => IlceAdi = value ?? "";
-        }
-        public string TamAdres { get; set; } = "";
-        public string AcikAdres
-        {
-            get => TamAdres;
-            set => TamAdres = value ?? "";
-        }
-        public UygulamaAdresiYatirimYeriStatusu? YatirimYeriStatusu { get; set; }
-        public int? KiraVeyaTahsisSuresi { get; set; }
-        public DateTime? KiraTahsisBitisTarihi { get; set; }
-        public string KiraTahsisDurumu
-        {
-            get => KiraVeyaTahsisSuresi?.ToString() ?? "";
-            set => KiraVeyaTahsisSuresi = int.TryParse(value, out int sure) ? sure : null;
-        }
-        public string KiraTahsisBitis
-        {
-            get => string.Join(" / ", new[] { KiraTahsisDurumu, KiraTahsisBitisTarihi?.ToString("yyyy-MM-dd") ?? "" }.Where(x => !string.IsNullOrWhiteSpace(x)));
-            set
-            {
-                if (!string.IsNullOrWhiteSpace(value) && !KiraVeyaTahsisSuresi.HasValue)
-                    KiraTahsisDurumu = value;
-            }
-        }
-        public UygulamaAdresiYapiRuhsatiDurumu? YapiRuhsatiDurumu { get; set; }
+        public UygulamaAdresiYapiRuhsatiDurumu? yapiRuhsatiDurumu { get; set; }
     }
 
     public enum UygulamaAdresiYatirimYeriStatusu

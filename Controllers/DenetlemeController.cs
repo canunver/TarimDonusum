@@ -53,30 +53,25 @@ namespace TarimDonusum.Controllers
                 Sonuc<List<Donem>> donemSonuc = await _basvuruIsKurallari.DonemleriListeleAsync();
                 Sonuc<List<Il>> ilSonuc = await _basvuruIsKurallari.IlleriListeleAsync();
                 Sonuc<List<Ilce>> ilceSonuc = await _basvuruIsKurallari.IlceleriListeleAsync(sonuc.nesne.IlId);
-                Sonuc<List<DegerZinciri>> degerZinciriSonuc = await _basvuruIsKurallari.DegerZincirleriListeleAsync(sonuc.nesne.IlId.Value, 1);
-                List<DegerZinciri> degerZincirleri = degerZinciriSonuc.nesne ?? new List<DegerZinciri>();
-                bool kayitliZincirGecerli = sonuc.nesne.yatirim.degerZinciriId.HasValue &&
-                    degerZincirleri.Any(z => z.id == sonuc.nesne.yatirim.degerZinciriId.Value);
-                int? seciliDegerZinciriId = kayitliZincirGecerli
-                    ? sonuc.nesne.yatirim.degerZinciriId
-                    : degerZincirleri.FirstOrDefault()?.id;
-                Sonuc<List<DegerZinciriAsama>> asamaSonuc = await _basvuruIsKurallari.DegerZinciriAsamalariListeleAsync(seciliDegerZinciriId.GetValueOrDefault());
-
-                if (!kayitliZincirGecerli)
-                    sonuc.nesne.yatirim.degerZinciriAsamalari = new List<DegerZinciriAsama>();
+                //Sonuc<List<DegerZinciri>> degerZinciriSonuc = await _basvuruIsKurallari.DegerZincirleriListeleAsync(sonuc.nesne.IlId.Value, 1);
+                //List<DegerZinciri> degerZincirleri = degerZinciriSonuc.nesne ?? new List<DegerZinciri>();
+                //bool kayitliZincirGecerli = sonuc.nesne.yatirim.degerZinciriId.HasValue &&
+                    //degerZincirleri.Any(z => z.id == sonuc.nesne.yatirim.degerZinciriId.Value);
+                //int? seciliDegerZinciriId = kayitliZincirGecerli
+                //    ? sonuc.nesne.yatirim.degerZinciriId
+                //    : degerZincirleri.FirstOrDefault()?.id;
+                //Sonuc<List<DegerZinciriAsama>> asamaSonuc = await _basvuruIsKurallari.DegerZinciriAsamalariListeleAsync(seciliDegerZinciriId.GetValueOrDefault());
+                //if (!kayitliZincirGecerli)
+                //    sonuc.nesne.yatirim.degerZinciriAsamalari = new List<DegerZinciriAsama>();
 
                 return View(new BasvuruFormViewModel
                 {
                     Basvuru = sonuc.nesne,
                     SaltOkunur = true,
                     DenetciGorunumu = true,
-                    AktifBolum = Math.Clamp(bolum, 1, 8),
                     Donemler = donemSonuc.nesne ?? new List<Donem>(),
                     Iller = ilSonuc.nesne ?? new List<Il>(),
                     Ilceler = ilceSonuc.nesne ?? new List<Ilce>(),
-                    DegerZincirleri = degerZincirleri,
-                    SeciliDegerZinciriId = seciliDegerZinciriId,
-                    SeciliDegerZinciriAsamalari = asamaSonuc.nesne ?? new List<DegerZinciriAsama>()
                 });
             }
             catch (Exception ex)

@@ -23,42 +23,31 @@ namespace TarimDonusum.Controllers
             _basvuruIsKurallari = basvuruIsKurallari;
         }
 
+        [OturumKontrol]
         public async Task<IActionResult> Index()
         {
-            try
+            Sonuc<List<Basvuru>> sonuc;
+;            try
             {
-                Kullanici? kullanici = await OturumKullanicisiOkuAsync();
-                if (kullanici == null)
-                {
-                    if (AjaxIstegi())
-                        return Json(new { basarili = false, mesaj = "Oturum süresi doldu.", redirectUrl = Url.Action("Index", "Home") });
-
-                    return RedirectToAction("Index", "Home");
-                }
-
-                Sonuc<List<Basvuru>> sonuc = await _basvuruIsKurallari.KullaniciBasvurulariniListeleAsync(kullanici);
-                if (!sonuc.basarili)
-                    TempData["Mesaj"] = HataMesaji(sonuc, "Başvuru kayıtları listelenemedi.");
-
-                return View(sonuc.nesne ?? new List<Basvuru>());
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                sonuc = await _basvuruIsKurallari.KullaniciBasvurulariniListeleAsync(kullanici);
             }
             catch (Exception ex)
             {
+                sonuc = new Sonuc<List<Basvuru>>();
+                sonuc.HataEkle("Başvuru kayıtları listelenemedi.");
                 Log(LogLevel.Error, BMYEventID.Yok, ex, "Başvuru liste ekranı açılamadı.");
-                TempData["Mesaj"] = "Başvuru kayıtları listelenemedi.";
-                return View(new List<Basvuru>());
             }
+            return View(sonuc.nesne ?? new List<Basvuru>());
         }
 
+        [OturumKontrol]
         [HttpGet]
         public async Task<IActionResult> Yeni()
         {
             try
             {
-                if (OturumKullaniciId() <= 0)
-                    return RedirectToAction("Index", "Home");
-
-                return View("Form", await FormViewModelHazirlaAsync(YeniBasvuru(), 1));
+                return View("Form", await FormViewModelHazirlaAsync(YeniBasvuru()));
             }
             catch (Exception ex)
             {
@@ -67,12 +56,13 @@ namespace TarimDonusum.Controllers
             }
         }
 
+        [OturumKontrol]
         [HttpGet]
-        public async Task<IActionResult> Duzenle(int id, int bolum = 1)
+        public async Task<IActionResult> Duzenle(int id)
         {
             try
             {
-                Kullanici? kullanici = await OturumKullanicisiOkuAsync();
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
                 if (kullanici == null)
                     return RedirectToAction("Index", "Home");
 
@@ -86,7 +76,7 @@ namespace TarimDonusum.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                return View("Form", await FormViewModelHazirlaAsync(sonuc.nesne, Math.Clamp(bolum, 1, 7)));
+                return View("Form", await FormViewModelHazirlaAsync(sonuc.nesne));
             }
             catch (Exception ex)
             {
@@ -96,6 +86,7 @@ namespace TarimDonusum.Controllers
             }
         }
 
+        [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> KaydetFirmaBasvuru([FromBody] BasvuruFirma model)
@@ -103,7 +94,7 @@ namespace TarimDonusum.Controllers
             Sonuc<int> sonuc;
             try
             {
-                Kullanici? kullanici = await OturumKullanicisiOkuAsync();
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
                 if (kullanici == null)
                     return RedirectToAction("Index", "Home");
                 sonuc = await _basvuruIsKurallari.KaydetFirmaBasvuru(model, kullanici);
@@ -134,6 +125,7 @@ namespace TarimDonusum.Controllers
             return Json(sonuc);
         }
 
+        [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> KaydetIrtibat([FromBody] BasvuruIletisim model)
@@ -141,7 +133,7 @@ namespace TarimDonusum.Controllers
             Sonuc<int> sonuc;
             try
             {
-                Kullanici? kullanici = await OturumKullanicisiOkuAsync();
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
                 if (kullanici == null)
                     return RedirectToAction("Index", "Home");
                 sonuc = await _basvuruIsKurallari.KaydetIrtibatAsync(model, kullanici);
@@ -171,6 +163,29 @@ namespace TarimDonusum.Controllers
             return Json(sonuc);
         }
 
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetYatirim([FromBody] BasvuruYatirim model)
+        {
+            Sonuc<int> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                sonuc = await _basvuruIsKurallari.KaydetYatirimBilgisiAsync(model, kullanici);
+                if (sonuc.basarili)
+                    sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Başvuru kaydet action tamamlanamadı.");
+                sonuc = new Sonuc<int>();
+                sonuc.HataEkle("Başvuru kaydedilemedi.");
+                return Json(sonuc);
+            }
+
+            return Json(sonuc);
+        }
 
         private bool AjaxIstegi()
         {
@@ -178,56 +193,41 @@ namespace TarimDonusum.Controllers
                 Request.Headers["Accept"].Any(x => x?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true);
         }
 
+        [OturumKontrol]
         [HttpGet]
-        public async Task<IActionResult> DegerZinciriAsamalari(int degerZinciriId)
+        public async Task<IActionResult> UygulamaAdresiListele(int basvuruId)
         {
+            Sonuc<List<BasvuruUygulamaAdresi>> sonuc;
             try
             {
-                Sonuc<List<DegerZinciriAsama>> sonuc = await _basvuruIsKurallari.DegerZinciriAsamalariListeleAsync(degerZinciriId);
-                if (!sonuc.basarili)
-                    return Json(new { basarili = false, mesaj = string.Join(" ", sonuc.hatalar) });
-
-                return Json(new
-                {
-                    basarili = true,
-                    asamalar = (sonuc.nesne ?? new List<DegerZinciriAsama>())
-                        .OrderBy(a => a.siraNo)
-                        .ThenBy(a => a.ad)
-                        .Select(a => new
-                        {
-                            a.id,
-                            a.ad,
-                            a.aciklama
-                        })
-                });
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                sonuc = await _basvuruIsKurallari.UygulamaAdresiListeleAsync(basvuruId, kullanici);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Log(LogLevel.Error, BMYEventID.Yok, ex, "Değer zinciri aşamaları action tamamlanamadı. DegerZinciriId: {DegerZinciriId}", degerZinciriId);
-                return Json(new { basarili = false, mesaj = "Değer zinciri aşamaları listelenemedi." });
+                sonuc = new Sonuc<List<BasvuruUygulamaAdresi>>();
+                sonuc.HataEkle("Uygulama adresleri listelenemedi.");
             }
+            return Json(sonuc);
         }
 
+
+        [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UygulamaAdresiKaydet(BasvuruUygulamaAdresi adres)
         {
             try
             {
-                Kullanici? kullanici = await OturumKullanicisiOkuAsync();
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
                 if (kullanici == null)
                     return Json(new { basarili = false, mesaj = "Oturum süresi doldu." });
 
                 Sonuc<BasvuruUygulamaAdresi> sonuc = await _basvuruIsKurallari.UygulamaAdresiKaydetAsync(adres, kullanici);
                 if (!sonuc.basarili || sonuc.nesne == null)
-                    return Json(new { basarili = false, mesaj = HataMesaji(sonuc, "Uygulama adresi kaydedilemedi.") });
-
-                return Json(new
-                {
-                    basarili = true,
-                    mesaj = "Uygulama adresi kaydedildi.",
-                    adres = UygulamaAdresiJson(sonuc.nesne)
-                });
+                    return Json(sonuc);
+                sonuc.mesaj = "Uygulama adresi kaydedildi.";
+                return Json(sonuc);
             }
             catch (Exception ex)
             {
@@ -236,25 +236,20 @@ namespace TarimDonusum.Controllers
             }
         }
 
+        [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UygulamaAdresiSil(int basvuruId, int adresId)
         {
             try
             {
-                Kullanici? kullanici = await OturumKullanicisiOkuAsync();
-                if (kullanici == null)
-                    return Json(new { basarili = false, mesaj = "Oturum süresi doldu." });
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
 
                 Sonuc sonuc = await _basvuruIsKurallari.UygulamaAdresiSilAsync(basvuruId, adresId, kullanici);
                 if (!sonuc.basarili)
-                    return Json(new { basarili = false, mesaj = HataMesaji(sonuc, "Uygulama adresi silinemedi.") });
-
-                return Json(new
-                {
-                    basarili = true,
-                    mesaj = "Uygulama adresi silindi."
-                });
+                    return Json(sonuc);
+                sonuc.mesaj = "Uygulama adresi silindi.";
+                return Json(sonuc);
             }
             catch (Exception ex)
             {
@@ -263,16 +258,15 @@ namespace TarimDonusum.Controllers
             }
         }
 
+        [OturumKontrol]
         [HttpGet]
         public async Task<IActionResult> FirmaSorgula(string vergiKimlikNo)
         {
             try
             {
-                int kullaniciId = OturumKullaniciId();
-                if (kullaniciId <= 0)
-                    return Json(new { basarili = false, mesaj = "Oturum süresi doldu." });
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
 
-                Sonuc<Firma> sonuc = await _basvuruIsKurallari.FirmaVergiNoIleOkuAsync(vergiKimlikNo, kullaniciId);
+                Sonuc<Firma> sonuc = await _basvuruIsKurallari.FirmaVergiNoIleOkuAsync(vergiKimlikNo, kullanici);
                 if (!sonuc.basarili)
                     return Json(new { basarili = false, mesaj = string.Join(" ", sonuc.hatalar) });
 
@@ -294,17 +288,16 @@ namespace TarimDonusum.Controllers
             }
         }
 
+        [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> FirmaEkle(Firma firma)
         {
             try
             {
-                int kullaniciId = OturumKullaniciId();
-                if (kullaniciId <= 0)
-                    return Json(new { basarili = false, mesaj = "Oturum süresi doldu." });
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
 
-                Sonuc<int> sonuc = await _basvuruIsKurallari.FirmaEkleAsync(firma, kullaniciId);
+                Sonuc<int> sonuc = await _basvuruIsKurallari.FirmaEkleAsync(firma, kullanici);
                 if (!sonuc.basarili)
                     return Json(new { basarili = false, mesaj = string.Join(" ", sonuc.hatalar) });
 
@@ -323,17 +316,15 @@ namespace TarimDonusum.Controllers
             }
         }
 
+        [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> FirmaGuncelle(Firma firma)
         {
             try
             {
-                int kullaniciId = OturumKullaniciId();
-                if (kullaniciId <= 0)
-                    return Json(new { basarili = false, mesaj = "Oturum süresi doldu." });
-
-                Sonuc<Firma> sonuc = await _basvuruIsKurallari.FirmaGuncelleAsync(firma, kullaniciId);
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                Sonuc<Firma> sonuc = await _basvuruIsKurallari.FirmaGuncelleAsync(firma, kullanici);
                 if (!sonuc.basarili || sonuc.nesne == null)
                     return Json(new { basarili = false, mesaj = string.Join(" ", sonuc.hatalar) });
 
@@ -348,21 +339,6 @@ namespace TarimDonusum.Controllers
                 Log(LogLevel.Error, BMYEventID.Yok, ex, "Firma güncelle action tamamlanamadı.");
                 return Json(new { basarili = false, mesaj = "Firma güncellenemedi." });
             }
-        }
-
-        private int OturumKullaniciId()
-        {
-            return OrtakFonksiyonlar.Int32Yap(HttpContext.Session.GetString("KULLANICI_ID"));
-        }
-
-        private async Task<Kullanici?> OturumKullanicisiOkuAsync()
-        {
-            int kullaniciId = OturumKullaniciId();
-            if (kullaniciId <= 0)
-                return null;
-
-            Sonuc<Kullanici> sonuc = await _basvuruIsKurallari.KullaniciOkuAsync(kullaniciId);
-            return sonuc.basarili ? sonuc.nesne : null;
         }
 
         private static object FirmaJson(Firma firma)
@@ -398,28 +374,27 @@ namespace TarimDonusum.Controllers
         {
             return new
             {
-                adres.Id,
-                adres.BasvuruId,
-                adres.SiraNo,
-                adres.IlceId,
-                adres.IlId,
-                adres.IlKod,
-                adres.IlAdi,
-                adres.IlceAdi,
-                adres.TamAdres,
-                YatirimYeriStatusu = adres.YatirimYeriStatusu.HasValue ? (int)adres.YatirimYeriStatusu.Value : (int?)null,
-                adres.KiraVeyaTahsisSuresi,
-                KiraTahsisBitisTarihi = adres.KiraTahsisBitisTarihi?.ToString("yyyy-MM-dd"),
-                YapiRuhsatiDurumu = adres.YapiRuhsatiDurumu.HasValue ? (int)adres.YapiRuhsatiDurumu.Value : (int?)null
+                adres.id,
+                adres.basvuruId,
+                adres.siraNo,
+                adres.ilceId,
+                adres.ilId,
+                adres.ilKod,
+                adres.ilAdi,
+                adres.ilceAdi,
+                adres.tamAdres,
+                YatirimYeriStatusu = adres.yatirimYeriStatusu.HasValue ? (int)adres.yatirimYeriStatusu.Value : (int?)null,
+                adres.kiraVeyaTahsisSuresi,
+                KiraTahsisBitisTarihi = adres.kiraTahsisBitisTarihi?.ToString("yyyy-MM-dd"),
+                YapiRuhsatiDurumu = adres.yapiRuhsatiDurumu.HasValue ? (int)adres.yapiRuhsatiDurumu.Value : (int?)null
             };
         }
 
-        private async Task<BasvuruFormViewModel> FormViewModelHazirlaAsync(Basvuru basvuru, int aktifBolum)
+        private async Task<BasvuruFormViewModel> FormViewModelHazirlaAsync(Basvuru basvuru)
         {
             BasvuruFormViewModel model = new BasvuruFormViewModel
             {
                 Basvuru = basvuru,
-                AktifBolum = aktifBolum
             };
 
             await ReferansListeleriYukleAsync(model);
@@ -444,26 +419,22 @@ namespace TarimDonusum.Controllers
             return sonuc;
         }
 
-        private async Task<Sonuc<List<DegerZinciriAsama>>> DegerZinciriAsamalariniOkuAsync(int? degerZinciriId)
-        {
-            Sonuc<List<DegerZinciriAsama>> sonuc = await _basvuruIsKurallari.DegerZinciriAsamalariListeleAsync(degerZinciriId.GetValueOrDefault());
-            return sonuc;
-        }
-
+        [OturumKontrol]
         [HttpGet]
         public async Task<IActionResult> DegerZinciriAsamalariListele(int zincirId, int basvuruId)
         {
-            Sonuc<List<DegerZinciriAsama>> sonuc = new Sonuc<List<DegerZinciriAsama>>();
-            sonuc.nesne.Add(new DegerZinciriAsama() { id = 33, ad = "eee", aciklama = "zzzz1" });
-            sonuc.nesne.Add(new DegerZinciriAsama() { id = 34, ad = "fff", aciklama = "zzzz2", secili = true });
-            sonuc.nesne.Add(new DegerZinciriAsama() { id = 35, ad = "gggg", aciklama = "zzzz3" });
-            return Json(sonuc);
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            Sonuc<List<DegerZinciriAsama>> degerZinciriAsamalari = await _basvuruIsKurallari.DegerZinciriAsamalariListeleAsync(kullanici, zincirId, basvuruId);
+
+            return Json(degerZinciriAsamalari);
         }
 
+        [OturumKontrol]
         [HttpGet]
         public async Task<IActionResult> DegerZincirleriListele(int ilId, int basvuruId)
         {
-            var degerZincirleri = await _basvuruIsKurallari.DegerZincirleriListeleAsync(ilId, basvuruId);
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            var degerZincirleri = await _basvuruIsKurallari.DegerZincirleriListeleAsync(kullanici, ilId, basvuruId);
             return Json(degerZincirleri);
         }
 
@@ -472,25 +443,6 @@ namespace TarimDonusum.Controllers
             model.Donemler = (await DonemleriOkuAsync()).nesne;
             model.Iller = (await IlleriOkuAsync()).nesne;
             model.Ilceler = (await IlceleriOkuAsync(model.Basvuru.IlId)).nesne;
-
-            bool kayitliZincirGecerli = model.Basvuru.yatirim.degerZinciriId.HasValue &&
-                model.DegerZincirleri.Any(z => z.id == model.Basvuru.yatirim.degerZinciriId.Value);
-
-            model.SeciliDegerZinciriId = kayitliZincirGecerli
-                ? model.Basvuru.yatirim.degerZinciriId
-                : model.DegerZincirleri.FirstOrDefault()?.id;
-
-            if (!kayitliZincirGecerli)
-                model.Basvuru.yatirim.degerZinciriAsamalari = new List<DegerZinciriAsama>();
-
-            model.SeciliDegerZinciriAsamalari = (await DegerZinciriAsamalariniOkuAsync(model.SeciliDegerZinciriId)).nesne;
-        }
-
-        private static string HataMesaji(Sonuc sonuc, string varsayilanMesaj)
-        {
-            return sonuc.hatalar.Count > 0
-                ? string.Join(" ", sonuc.hatalar)
-                : varsayilanMesaj;
         }
 
         private static BasvuruFormViewModel HataModeli(Basvuru basvuru, int aktifBolum, string mesaj)
@@ -498,7 +450,6 @@ namespace TarimDonusum.Controllers
             return new BasvuruFormViewModel
             {
                 Basvuru = basvuru,
-                AktifBolum = aktifBolum,
                 Hatalar = new List<string> { mesaj }
             };
         }
@@ -572,35 +523,6 @@ Building permit available|Building permit application submitted|Letter stating n
 
 
 
-            <section class="basvuru-panel @Active(4)" data-panel="4">
-                <h2>@L["Basvuru.Section4.Title"]</h2>
-                <div class="adres-toolbar">
-                    @if (!ro)
-                    {
-                        <button type="button" class="btn btn-outline-primary" id="adresYeniBtn"><i class="fas fa-plus"></i> @L["Basvuru.Address.New"]</button>
-                    }
-                </div>
-                <div class="table-responsive uygulama-adres-wrap">
-                    <table class="table uygulama-adres-table">
-                        <thead>
-                            <tr>
-                                <th>@L["Basvuru.Field.SiraNo"]</th>
-                                <th>@L["Basvuru.Field.Il"]</th>
-                                <th>@L["Basvuru.Field.Ilce"]</th>
-                                <th>@L["Basvuru.Field.TamAdres"]</th>
-                                <th>@L["Basvuru.Field.YatirimYeriStatusu"]</th>
-                                <th>@L["Basvuru.Field.KiraTahsis"]</th>
-                                <th>@L["Basvuru.Field.YapiRuhsatiDurumu"]</th>
-                                @if (!ro)
-                                {
-                                    <th>@L["Basvuru.Common.Actions"]</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody id="uygulamaAdresListesi"></tbody>
-                    </table>
-                </div>
-            </section>
 
             <section class="basvuru-panel @Active(5)" data-panel="5">
                 <h2>@L["Basvuru.Section5.Title"]</h2>
@@ -716,13 +638,10 @@ Building permit available|Building permit application submitted|Letter stating n
         const degerZinciriSelect = document.getElementById('degerZinciriSelect');
         const degerZinciriAsamaListesi = document.getElementById('degerZinciriAsamaListesi');
         const uygulamaAdresListesi = document.getElementById('uygulamaAdresListesi');
-        const uygulamaAdresModalEl = document.getElementById('uygulamaAdresModal');
-        const uygulamaAdresModal = modalOlustur(uygulamaAdresModalEl);
         let basvuruId = @b.Id;
         const paraLocale = @Html.Raw(JsonSerializer.Serialize(CultureInfo.CurrentUICulture.Name));
         const paraFormatter = new Intl.NumberFormat(paraLocale || undefined, { maximumFractionDigits: 0 });
         const basvuruIlAdi = @Html.Raw(JsonSerializer.Serialize(basvuruIlAdi));
-        const adresBosMesaj = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Address.Empty")));
         const adresSilOnay = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Address.DeleteConfirm")));
         let uygulamaAdresleri = @Html.Raw(JsonSerializer.Serialize(b.YatirimAdresleri
         .Where(adres => adres.Id > 0)
@@ -924,15 +843,6 @@ Building permit available|Building permit application submitted|Letter stating n
             return firma[camel] || firma[alan] || '';
         }
 
-        function modalValue(id) {
-            return document.getElementById(id)?.value || '';
-        }
-
-        function modalSet(id, value) {
-            const el = document.getElementById(id);
-            if (el) el.value = value || '';
-        }
-
         function firmaModalDoldur(firma) {
             modalSet('modalVergiKimlikNo', firmaDeger(firma, 'VergiKimlikNo'));
             modalSet('modalTicaretUnvani', firmaDeger(firma, 'TicaretUnvani'));
@@ -1006,14 +916,6 @@ Building permit available|Building permit application submitted|Letter stating n
             if (degisti) dirty = true;
         }
 
-        function secilenDegerZinciriAsamalari() {
-            if (!degerZinciriAsamaListesi) return kayitliDegerZinciriAsamalari;
-
-            return Array
-                .from(degerZinciriAsamaListesi.querySelectorAll('input[name="Basvuru.DegerZinciriAsamalari"]:checked'))
-                .map(x => x.value);
-        }
-
         function degerZinciriAsamalariniYukle(seciliAsamalar, degisti) {
             if (!degerZinciriSelect || !degerZinciriAsamaListesi) return;
 
@@ -1046,44 +948,6 @@ Building permit available|Building permit application submitted|Letter stating n
             PopupMesajIlklendir();
         }
 
-        function modalOlustur(element) {
-            if (!element) return null;
-
-            if (window.jQuery && typeof window.jQuery(element).modal === 'function') {
-                return {
-                    show: () => window.jQuery(element).modal('show'),
-                    hide: () => window.jQuery(element).modal('hide')
-                };
-            }
-
-            return {
-                show: () => {
-                    element.style.display = 'block';
-                    element.classList.add('show');
-                    element.removeAttribute('aria-hidden');
-                },
-                    hide: () => {
-                        element.classList.remove('show');
-                        element.style.display = 'none';
-                        element.setAttribute('aria-hidden', 'true');
-                        document.body.classList.remove('modal-open');
-                        document.body.style.removeProperty('padding-right');
-                        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
-                    }
-                };
-            }
-
-        function adresDeger(adres, alan) {
-            if (!adres) return '';
-            const camel = alan.charAt(0).toLowerCase() + alan.slice(1);
-            return adres[camel] || adres[alan] || '';
-        }
-
-        function adresMetni(adres) {
-            const durum = adresDeger(adres, 'KiraVeyaTahsisSuresi');
-            const bitis = adresDeger(adres, 'KiraTahsisBitisTarihi');
-            return [durum, bitis].filter(Boolean).join(' / ');
-        }
 
         function enumLabel(labels, value) {
             const index = Number(value || 0) - 1;
@@ -1105,171 +969,13 @@ Building permit available|Building permit application submitted|Letter stating n
             return input;
         }
 
-        function renderUygulamaAdresleri(degisti = false) {
-            if (!uygulamaAdresListesi) return;
-
-            uygulamaAdresleri = (uygulamaAdresleri || []).map((adres, index) => ({
-                id: Number(adresDeger(adres, 'Id') || 0) || 0,
-                basvuruId: Number(adresDeger(adres, 'BasvuruId') || basvuruId || 0),
-                siraNo: Number(adresDeger(adres, 'SiraNo') || index + 1),
-                ilceId: Number(adresDeger(adres, 'IlceId') || 0) || null,
-                il: adresDeger(adres, 'Il') || basvuruIlAdi,
-                ilce: adresDeger(adres, 'IlceAdi') || adresDeger(adres, 'Ilce') || ilceAdiBul(adresDeger(adres, 'IlceId')),
-                tamAdres: adresDeger(adres, 'TamAdres') || adresDeger(adres, 'AcikAdres'),
-                yatirimYeriStatusu: Number(adresDeger(adres, 'YatirimYeriStatusu') || 0) || null,
-                kiraVeyaTahsisSuresi: Number(adresDeger(adres, 'KiraVeyaTahsisSuresi') || adresDeger(adres, 'KiraTahsisDurumu') || 0) || null,
-                kiraTahsisBitisTarihi: adresDeger(adres, 'KiraTahsisBitisTarihi'),
-                yapiRuhsatiDurumu: Number(adresDeger(adres, 'YapiRuhsatiDurumu') || 0) || null
-            })).sort((a, b) => (a.siraNo - b.siraNo) || (a.id - b.id));
-
-            uygulamaAdresListesi.innerHTML = '';
-
-            if (uygulamaAdresleri.length === 0) {
-                const tr = document.createElement('tr');
-                const td = document.createElement('td');
-                td.colSpan = @(ro ? "7" : "8");
-                td.className = 'text-muted text-center';
-                td.textContent = adresBosMesaj;
-                tr.appendChild(td);
-                uygulamaAdresListesi.appendChild(tr);
-                return;
-            }
-
-            uygulamaAdresleri.forEach((adres, index) => {
-                const tr = document.createElement('tr');
-                const alanlar = [
-                    String(adres.siraNo),
-                    adres.il,
-                    adres.ilce,
-                    adres.tamAdres,
-                    "",
-                    adresMetni(adres),
-                    ""
-                ];
-
-                alanlar.forEach((value, alanIndex) => {
-                    const td = document.createElement('td');
-                    td.textContent = value || '';
-                    if (alanIndex === 3) td.className = 'adres-tam-adres';
-                    tr.appendChild(td);
-                });
-
-                if (@(ro ? "false" : "true")) {
-                    const actionTd = document.createElement('td');
-                    const editBtn = document.createElement('button');
-                    const deleteBtn = document.createElement('button');
-
-                    editBtn.type = 'button';
-                    editBtn.className = 'btn btn-sm btn-outline-secondary mr-1';
-                    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-                    editBtn.addEventListener('click', () => adresModalAc(index));
-
-                    deleteBtn.type = 'button';
-                    deleteBtn.className = 'btn btn-sm btn-outline-danger';
-                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-                    deleteBtn.addEventListener('click', async () => {
-                        if (!confirm(adresSilOnay)) return;
-                        await adresSil(adres.id);
-                    });
-
-                    actionTd.appendChild(editBtn);
-                    actionTd.appendChild(deleteBtn);
-                    tr.appendChild(actionTd);
-                }
-
-                uygulamaAdresListesi.appendChild(tr);
-            });
-
-            if (degisti) dirty = true;
-        }
-
-        function adresModalAc(index) {
-            const adres = index >= 0 ? uygulamaAdresleri[index] : null;
-            modalSet('adresModalIndex', index >= 0 ? String(index) : '');
-            modalSet('adresModalSiraNo', adresDeger(adres, 'SiraNo') || String((uygulamaAdresleri.length || 0) + 1));
-            modalSet('adresModalIl', adresDeger(adres, 'Il') || basvuruIlAdi);
-            modalSet('adresModalIlce', adresDeger(adres, 'IlceId'));
-            modalSet('adresModalTamAdres', adresDeger(adres, 'TamAdres') || adresDeger(adres, 'AcikAdres'));
-            modalSet('adresModalYatirimYeriStatusu', adresDeger(adres, 'YatirimYeriStatusu'));
-            modalSet('adresModalKiraVeyaTahsisSuresi', adresDeger(adres, 'KiraVeyaTahsisSuresi') || adresDeger(adres, 'KiraTahsisDurumu'));
-            modalSet('adresModalKiraTahsisBitisTarihi', adresDeger(adres, 'KiraTahsisBitisTarihi'));
-            modalSet('adresModalYapiRuhsatiDurumu', adresDeger(adres, 'YapiRuhsatiDurumu'));
-            uygulamaAdresModal?.show();
-        }
-
         renderUygulamaAdresleri(false);
 
         document.getElementById('adresYeniBtn')?.addEventListener('click', () => adresModalAc(-1));
         document.querySelectorAll('.uygulama-adres-modal-kapat').forEach(btn => {
             btn.addEventListener('click', () => uygulamaAdresModal?.hide());
         });
-        document.getElementById('adresKaydetBtn')?.addEventListener('click', async () => {
-            const indexText = modalValue('adresModalIndex');
-            const mevcutAdres = indexText === '' ? null : uygulamaAdresleri[Number(indexText)];
-            const seciliIlceId = Number(modalValue('adresModalIlce') || 0) || null;
-            const adres = {
-                id: mevcutAdres?.id || 0,
-                basvuruId,
-                siraNo: Number(modalValue('adresModalSiraNo') || 0) || 1,
-                il: basvuruIlAdi,
-                ilceId: seciliIlceId,
-                ilce: ilceAdiBul(seciliIlceId),
-                tamAdres: modalValue('adresModalTamAdres'),
-                yatirimYeriStatusu: Number(modalValue('adresModalYatirimYeriStatusu') || 0) || null,
-                kiraVeyaTahsisSuresi: Number(modalValue('adresModalKiraVeyaTahsisSuresi') || 0) || null,
-                kiraTahsisBitisTarihi: modalValue('adresModalKiraTahsisBitisTarihi'),
-                yapiRuhsatiDurumu: Number(modalValue('adresModalYapiRuhsatiDurumu') || 0) || null
-            };
 
-            if (!adres.kiraTahsisBitisTarihi) {
-                basvuruMesajGoster('Kira/tahsis bitiş tarihi girilmelidir.', false);
-                return;
-            }
-
-            await adresKaydet(adres);
-        });
-
-        async function adresKaydet(adres) {
-            const token = antiForgeryToken();
-            const body = new URLSearchParams();
-            body.set('__RequestVerificationToken', token);
-            body.set('Id', adres.id || '');
-            body.set('BasvuruId', adres.basvuruId || '');
-            body.set('SiraNo', adres.siraNo || '1');
-            body.set('IlceId', adres.ilceId || '');
-            body.set('TamAdres', adres.tamAdres || '');
-            body.set('YatirimYeriStatusu', adres.yatirimYeriStatusu || '');
-            body.set('KiraVeyaTahsisSuresi', adres.kiraVeyaTahsisSuresi || '');
-            body.set('KiraTahsisBitisTarihi', adres.kiraTahsisBitisTarihi || '');
-            body.set('YapiRuhsatiDurumu', adres.yapiRuhsatiDurumu || '');
-
-            const response = await fetch('@Url.Action("UygulamaAdresiKaydet", "Basvuru")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'RequestVerificationToken': token
-                },
-                body
-            });
-            const result = await response.json();
-            if (!result.basarili) {
-                basvuruMesajGoster(result.mesaj || 'Uygulama adresi kaydedilemedi.', false);
-                return;
-            }
-
-            const kayitliAdres = result.adres;
-            const adresId = Number(kayitliAdres.id || kayitliAdres.Id || 0);
-            const index = uygulamaAdresleri.findIndex(x => Number(x.id || x.Id || 0) === adresId);
-            if (index >= 0) {
-                uygulamaAdresleri[index] = kayitliAdres;
-            } else {
-                uygulamaAdresleri.push(kayitliAdres);
-            }
-
-            renderUygulamaAdresleri(false);
-            uygulamaAdresModal?.hide();
-            basvuruMesajGoster(result.mesaj || 'Uygulama adresi kaydedildi.');
-        }
 
         async function adresSil(adresId) {
             if (!adresId) return;

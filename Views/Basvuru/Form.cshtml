@@ -8,6 +8,5 @@
 <form asp-controller="Basvuru" asp-action="Kaydet" method="post" id="basvuruForm">
     @Html.AntiForgeryToken()
     <input asp-for="Basvuru.Id" type="hidden" />
-    <input asp-for="AktifBolum" type="hidden" id="aktifBolum" />
     <partial name="_FormContent" model="Model" />
 </form>

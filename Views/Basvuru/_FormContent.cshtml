@@ -69,7 +69,7 @@
             <option value="7" disabled="@(kilitli)">@L["Basvuru.Step.7"]</option>
             @if (Model.DenetciGorunumu)
             {
-                <option value="8" selected="@(Model.AktifBolum == 8)">@L["Basvuru.Step.8"]</option>
+                <option value="8">@L["Basvuru.Step.8"]</option>
             }
         </select>
         <button type="button" class="btn btn-outline-secondary nav-prev">@L["Basvuru.Common.Previous"]</button>
@@ -205,7 +205,7 @@
                     </div>
                     <div class="preapp-line">
                         <label for="yatirimTuru">@L["Basvuru.Field.YatirimTuru"]</label>
-                        <select id="yatirimTuru" name="Basvuru.degerZinciri.yatirimTuru" disabled="@ro">
+                        <select id="yatirimTuru" name="Basvuru.yatirim.yatirimTuru" disabled="@ro">
                             @foreach (enumYatirimTuru item in Enum.GetValues<enumYatirimTuru>())
                             {
                                 <option value="@((int)item)" selected="@(b.yatirim.yatirimTuru == item)">
@@ -239,8 +239,40 @@
                 <div class="check-grid">
                     @foreach (var item in Enum.GetValues<enumHarcamaTuru>())
                     {
-                        <label><input type="checkbox" name="Basvuru.yatirim.harcamaTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.harcamaTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label>
+                        if ((int)item > 0)
+                        {
+                            <label><input type="checkbox" name="Basvuru.yatirim.harcamaTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.harcamaTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label>
+                        }
                     }
+                </div>
+            </section>
+            <section class="basvuru-panel" data-panel="4">
+                <h2>@L["Basvuru.Section4.Title"]</h2>
+                <div class="adres-toolbar">
+                    @if (!ro)
+                    {
+                        <button type="button" class="btn btn-outline-primary" id="adresYeniBtn"><i class="fas fa-plus"></i> @L["Basvuru.Address.New"]</button>
+                    }
+                </div>
+                <div class="table-responsive uygulama-adres-wrap">
+                    <table class="table uygulama-adres-table">
+                        <thead>
+                            <tr>
+                                <th>@L["Basvuru.Field.SiraNo"]</th>
+                                <th>@L["Basvuru.Field.Il"]</th>
+                                <th>@L["Basvuru.Field.Ilce"]</th>
+                                <th>@L["Basvuru.Field.TamAdres"]</th>
+                                <th>@L["Basvuru.Field.YatirimYeriStatusu"]</th>
+                                <th>@L["Basvuru.Field.KiraTahsis"]</th>
+                                <th>@L["Basvuru.Field.YapiRuhsatiDurumu"]</th>
+                                @if (!ro)
+                                {
+                                    <th>@L["Basvuru.Common.Actions"]</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody id="uygulamaAdresListesi"></tbody>
+                    </table>
                 </div>
             </section>
 
@@ -353,6 +385,11 @@
 
 <script>
     var active=1;
+    const adresBosMesaj = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Address.Empty")));
+    function modalValue(id) {
+        return document.getElementById(id)?.value || '';
+    }
+
 
     document.addEventListener('DOMContentLoaded', () => {
         active = 1;
@@ -468,7 +505,28 @@
         $('#degerZinciriSelect').on('change', function () {
             degerZinciriAsamalariYukle($(this).val());
         });
+
+        document.getElementById('adresKaydetBtn')?.addEventListener('click', async () => {
+            const indexText = modalValue('adresModalIndex');
+            const mevcutAdres = indexText === '' ? {} : sonUygulamaAdresleri[Number(indexText)];
+            const seciliIlceId = Number(modalValue('adresModalIlce') || 0) || null;
+            const adres = {
+                id: mevcutAdres?.id || 0,
+                basvuruId: degerInt('Basvuru.Id'),
+                siraNo: Number(modalValue('adresModalSiraNo') || 0) || 1,
+                ilceId: seciliIlceId,
+                tamAdres: modalValue('adresModalTamAdres'),
+                yatirimYeriStatusu: Number(modalValue('adresModalYatirimYeriStatusu') || 0) || null,
+                kiraVeyaTahsisSuresi: Number(modalValue('adresModalKiraVeyaTahsisSuresi') || 0) || null,
+                kiraTahsisBitisTarihi: modalValue('adresModalKiraTahsisBitisTarihi'),
+                yapiRuhsatiDurumu: Number(modalValue('adresModalYapiRuhsatiDurumu') || 0) || null
+            };
+
+            adresKaydet(adres);
+        });
+
         degerZinciriYukle();
+        UygulamaAdresleriListele();
     });
 
     function SonucGoster(sonuc)
@@ -478,6 +536,17 @@
         } else {
             PopupMesajGoster(sonuc.hataStr, false);
         }
+    }
+
+    function SonucGosterGizle(sonuc)
+    {
+        UygulamaAdresleriListele();
+        uygulamaAdresModal?.hide();
+        SonucGoster(sonuc);
+    }
+
+    function adresKaydet(adres) {
+        AjaxPost('/Basvuru/UygulamaAdresiKaydet', adres, SonucGosterGizle);
     }
 
     function FirmaIrtibatKaydet() {
@@ -512,14 +581,139 @@
         );
     }
 
+    function YatirimKaydet()
+    {
+        const yatirim = {
+            "basvuruId": degerInt('Basvuru.Id'),
+            "yatirimAdi": degerStr('Basvuru.YatirimAdi'),
+            "yatirimTuru": degerInt('Basvuru.yatirim.yatirimTuru'),
+            "harcamaTurleri": $('input[name="Basvuru.yatirim.harcamaTurleri"]:checked').map(function () { return parseInt(this.value);}).get(),
+            "degerZinciriAsamalari":  $('input[name="Basvuru.DegerZinciriAsamalari"]:checked').map(
+                function ()  {
+                    return {
+                        id: parseInt(this.value)
+                    };
+                }
+            ).get()};
+        AjaxPost('/Basvuru/KaydetYatirim', 
+            yatirim, 
+            SonucGoster
+        );
+    }
+
     function PaneliKaydet()
     {
         if(active == 1)
             FirmaBasvuruKaydet()
         else if(active == 2)
             FirmaIrtibatKaydet()
+        else if(active == 3)
+            YatirimKaydet()
         else
             alert(active);
     }
+    
+    function UygulamaAdresleriListele() {
+        const formId = degerInt('Basvuru.Id');
+        AjaxGet('/Basvuru/UygulamaAdresiListele', { basvuruId: formId },
+            function (response) {
+                RenderUygulamaAdresleri(response.nesne);
+            }
+        );
+    }
 
+    function modalSet(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.value = value || '';
+    }
+
+    var sonUygulamaAdresleri;
+
+    function modalOlustur(element) {
+        if (!element) return null;
+        return {
+            show: () => window.jQuery(element).modal('show'),
+            hide: () => window.jQuery(element).modal('hide')
+        };
+    }
+
+    var uygulamaAdresModal;
+    function adresModalAc(index) {
+        const uygulamaAdresModalEl = document.getElementById('uygulamaAdresModal');
+        uygulamaAdresModal = modalOlustur(uygulamaAdresModalEl);
+
+        const adres = index >= 0 ? sonUygulamaAdresleri[index] : {};
+        modalSet('adresModalIndex', index >= 0 ? String(index) : '');
+        modalSet('adresModalSiraNo', adres.siraNo);
+        modalSet('adresModalIl', adres.ilId);
+        modalSet('adresModalIlce', adres.ilceId);
+        modalSet('adresModalTamAdres', adres.tamAdres);
+        modalSet('adresModalYatirimYeriStatusu', adres.yatirimYeriStatusu);
+        modalSet('adresModalKiraVeyaTahsisSuresi', adres.kiraVeyaTahsisSuresi);
+        modalSet('adresModalKiraTahsisBitisTarihi', adres.kiraTahsisBitisTarihi);
+        modalSet('adresModalYapiRuhsatiDurumu', adres.yapiRuhsatiDurumu);
+        uygulamaAdresModal?.show();
+    }
+
+    function RenderUygulamaAdresleri(uygulamaAdresleri) {
+        const uygulamaAdresListesi = document.getElementById("uygulamaAdresListesi");
+        if (!uygulamaAdresListesi) return;
+        uygulamaAdresleri = uygulamaAdresleri || [];
+        sonUygulamaAdresleri = uygulamaAdresleri;
+        uygulamaAdresListesi.innerHTML = '';
+
+        if (uygulamaAdresleri.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = "7"; //at(ro ? "7" : "8");
+            td.className = 'text-muted text-center';
+            td.textContent = adresBosMesaj;
+            tr.appendChild(td);
+            uygulamaAdresListesi.appendChild(tr);
+            return;
+        }
+
+        uygulamaAdresleri.forEach((adres, index) => {
+            const tr = document.createElement('tr');
+            const alanlar = [
+                String(adres.siraNo),
+                adres.ilAdi,
+                adres.ilceAdi,
+                adres.tamAdres,
+                "",
+                adres.kiraTahsisBitis,
+                ""
+            ];
+
+            alanlar.forEach((value, alanIndex) => {
+                const td = document.createElement('td');
+                td.textContent = value || '';
+                if (alanIndex === 3) td.className = 'adres-tam-adres';
+                tr.appendChild(td);
+            });
+
+            const actionTd = document.createElement('td');
+            const editBtn = document.createElement('button');
+            const deleteBtn = document.createElement('button');
+
+            editBtn.type = 'button';
+            editBtn.className = 'btn btn-sm btn-outline-secondary mr-1';
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            editBtn.addEventListener('click', () => adresModalAc(index));
+
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-sm btn-outline-danger';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.addEventListener('click', async () => {
+                if (!confirm(adresSilOnay)) return;
+                await adresSil(adres.id);
+            });
+
+            actionTd.appendChild(editBtn);
+            actionTd.appendChild(deleteBtn);
+            tr.appendChild(actionTd);
+
+            uygulamaAdresListesi.appendChild(tr);
+        });
+    }
 </script>
