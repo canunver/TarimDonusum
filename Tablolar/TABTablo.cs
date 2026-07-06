@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Localization;
 using System.Reflection.Metadata.Ecma335;
 
 namespace TarimDonusum.Tablolar
@@ -6,11 +7,13 @@ namespace TarimDonusum.Tablolar
     public abstract class TABTablo
     {
         protected SqlConnection Connection { get; }
+        protected IStringLocalizer<SharedResource>? L { get; }
         protected SqlTransaction? Transaction { get; }
 
-        protected TABTablo(SqlConnection connection, SqlTransaction? transaction = null)
+        protected TABTablo(SqlConnection connection, IStringLocalizer<SharedResource>? localizer = null, SqlTransaction? transaction = null)
         {
             Connection = connection;
+            L = localizer;
             Transaction = transaction;
         }
 

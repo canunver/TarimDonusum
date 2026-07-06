@@ -2,13 +2,14 @@ using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Identity;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
+using Microsoft.Extensions.Localization;
 
 namespace TarimDonusum.Tablolar
 {
     public class TABKullanici : TABTablo
     {
-        public TABKullanici(SqlConnection connection, SqlTransaction? transaction = null)
-            : base(connection, transaction)
+        public TABKullanici(SqlConnection connection, IStringLocalizer<SharedResource>? localizer = null, SqlTransaction? transaction = null)
+            : base(connection, localizer, transaction)
         {
         }
 

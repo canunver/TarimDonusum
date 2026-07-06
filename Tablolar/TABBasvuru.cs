@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
@@ -7,8 +8,8 @@ namespace TarimDonusum.Tablolar
 {
     public class TABBasvuru : TABTablo
     {
-        public TABBasvuru(SqlConnection connection, SqlTransaction? transaction = null)
-            : base(connection, transaction)
+        public TABBasvuru(SqlConnection connection, IStringLocalizer<SharedResource>? localizer = null, SqlTransaction? transaction = null)
+            : base(connection, localizer, transaction)
         {
         }
 
@@ -397,7 +398,7 @@ namespace TarimDonusum.Tablolar
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                adresler.Add(UygulamaAdresiOku(reader));
+                adresler.Add(UygulamaAdresiOku(reader, L));
             }
             return adresler;
         }
@@ -468,10 +469,10 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@SiraNo", adres.siraNo);
             command.Parameters.AddWithValue("@IlceId", adres.ilceId.HasValue && adres.ilceId.Value > 0 ? adres.ilceId.Value : (object)DBNull.Value);
             command.Parameters.AddWithValue("@TamAdres", adres.tamAdres?.Trim() ?? "");
-            command.Parameters.AddWithValue("@YatirimYeriStatusu", adres.yatirimYeriStatusu.HasValue ? (int)adres.yatirimYeriStatusu.Value : (object)DBNull.Value);
+            command.Parameters.AddWithValue("@YatirimYeriStatusu", (int)adres.yatirimYeriStatusu);
             command.Parameters.AddWithValue("@KiraVeyaTahsisSuresi", adres.kiraVeyaTahsisSuresi.HasValue ? adres.kiraVeyaTahsisSuresi.Value : (object)DBNull.Value);
             command.Parameters.AddWithValue("@KiraTahsisBitisTarihi", adres.kiraTahsisBitisTarihi.HasValue ? adres.kiraTahsisBitisTarihi.Value.Date : (object)DBNull.Value);
-            command.Parameters.AddWithValue("@YapiRuhsatiDurumu", adres.yapiRuhsatiDurumu.HasValue ? (int)adres.yapiRuhsatiDurumu.Value : (object)DBNull.Value);
+            command.Parameters.AddWithValue("@YapiRuhsatiDurumu", (int)adres.yapiRuhsatiDurumu);
         }
 
         private async Task DetaylariYukleAsync(Basvuru basvuru)
@@ -497,7 +498,7 @@ namespace TarimDonusum.Tablolar
             List<BasvuruUygulamaAdresi> adresler = new List<BasvuruUygulamaAdresi>();
             while (await reader.ReadAsync())
             {
-                adresler.Add(UygulamaAdresiOku(reader));
+                adresler.Add(UygulamaAdresiOku(reader, L));
             }
 
             await reader.NextResultAsync();
@@ -537,9 +538,9 @@ namespace TarimDonusum.Tablolar
                     : null;
         }
 
-        private static BasvuruUygulamaAdresi UygulamaAdresiOku(SqlDataReader reader)
+        private static BasvuruUygulamaAdresi UygulamaAdresiOku(SqlDataReader reader, IStringLocalizer<SharedResource>? l)
         {
-            return new BasvuruUygulamaAdresi
+            BasvuruUygulamaAdresi bu = new BasvuruUygulamaAdresi
             {
                 id = reader.GetInt32(0),
                 basvuruId = reader.GetInt32(1),
@@ -550,11 +551,17 @@ namespace TarimDonusum.Tablolar
                 ilAdi = reader.IsDBNull(6) ? "" : reader.GetString(6),
                 ilceAdi = reader.IsDBNull(7) ? "" : reader.GetString(7),
                 tamAdres = reader.GetString(8),
-                yatirimYeriStatusu = reader.IsDBNull(9) ? null : (enumUygulamaAdresiYatirimYeriStatusu)reader.GetInt32(9),
+                yatirimYeriStatusu = reader.IsDBNull(9) ? enumUygulamaAdresiYatirimYeriStatusu.Tanimsiz : (enumUygulamaAdresiYatirimYeriStatusu)reader.GetInt32(9),
                 kiraVeyaTahsisSuresi = reader.IsDBNull(10) ? null : reader.GetInt32(10),
                 kiraTahsisBitisTarihi = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
-                yapiRuhsatiDurumu = reader.IsDBNull(12) ? null : (enumUygulamaAdresiYapiRuhsatiDurumu)reader.GetInt32(12)
+                yapiRuhsatiDurumu = reader.IsDBNull(12) ? enumUygulamaAdresiYapiRuhsatiDurumu.Tanimsiz : (enumUygulamaAdresiYapiRuhsatiDurumu)reader.GetInt32(12)
             };
+            if (l != null)
+            {
+                bu.yapiRuhsatiDurumuAd = IsimBul.EnumAdi<enumUygulamaAdresiYapiRuhsatiDurumu>(bu.yapiRuhsatiDurumu, l);
+                bu.yatirimYeriStatusuAd = IsimBul.EnumAdi<enumUygulamaAdresiYatirimYeriStatusu>(bu.yatirimYeriStatusu, l);
+            }
+            return bu;
         }
 
         internal async Task<int> DegerZinciriBul(int basvuruId)

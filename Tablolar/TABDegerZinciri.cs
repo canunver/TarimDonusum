@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Localization;
 using System.Collections.Generic;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
@@ -7,8 +8,8 @@ namespace TarimDonusum.Tablolar
 {
     public class TABDegerZinciri : TABTablo
     {
-        public TABDegerZinciri(SqlConnection connection, SqlTransaction? transaction = null)
-            : base(connection, transaction)
+        public TABDegerZinciri(SqlConnection connection, IStringLocalizer<SharedResource> localizer, SqlTransaction? transaction = null)
+            : base(connection, localizer, transaction)
         {
         }
 

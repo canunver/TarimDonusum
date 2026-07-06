@@ -861,25 +861,6 @@
   <data name="Basvuru.Options.BuildingPermitStatuses" xml:space="preserve">
     <value>Building permit available|Building permit application submitted|Letter stating no permit is required is available|Not yet obtained|No construction work</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="Home.Login" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Home.LoginButton" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Home.SecurityCode" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Home.RefreshCaptcha" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Home.SignIn" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Home.UserId" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
   <data name="Home.ApplicationForm" xml:space="preserve">
     <value>Application Form</value>
   </data>
@@ -894,27 +875,6 @@
   </data>
   <data name="Home.Faq" xml:space="preserve">
     <value>FAQ</value>
-  </data>
-  <data name="Home.HowRegister" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Home.HowUser" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Home.NewUser" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Layout.Title" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Layout.AppName" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Layout.Subtitle" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="Layout.Footer" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
   </data>
   <data name="Basvuru.Common.Delete" xml:space="preserve">
     <value>Delete</value>
@@ -993,5 +953,23 @@
   </data>
   <data name="enumUygulamaAdresiYatirimYeriStatusu_6" xml:space="preserve">
     <value>Other</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_0" xml:space="preserve">
+    <value>Please Select</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_1" xml:space="preserve">
+    <value>Building permit available</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_2" xml:space="preserve">
+    <value>Building permit application submitted</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_4" xml:space="preserve">
+    <value>Not yet obtained</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_3" xml:space="preserve">
+    <value>Letter stating no permit is required is available</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_5" xml:space="preserve">
+    <value>No construction work</value>
   </data>
 </root>

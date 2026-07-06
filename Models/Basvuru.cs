@@ -12,19 +12,19 @@ namespace TarimDonusum.Models
             return localizer[typeof(T).Name + "_" + Convert.ToInt32(enumDegeri)];
         }
     }
-
-    public enum enumUygulamaAdresiYatirimYeriStatusu
+    
+    public enum enumUygulamaAdresiYatirimYeriStatusu : int
     {
         Tanimsiz = 0, //"Tanımsız";
         Mulkiyet = 1,
         Kira = 2,
         Tahsis = 3,
         IrtifakHakki = 4,
-        OrganizeSanayiIhtisasAlaniTahsis = 5,
+        OrganizeSanayi_IhtisasAlaniTahsisi = 5,
         Diger = 6
     }
-
-    public enum enumUygulamaAdresiYapiRuhsatiDurumu
+     
+    public enum enumUygulamaAdresiYapiRuhsatiDurumu : int
     {
         Tanimsiz = 0, //"Tanımsız";
         YapiRuhsatiMevcut = 1,
@@ -33,6 +33,16 @@ namespace TarimDonusum.Models
         HenuzTeminEdilmedi = 4,
         YapimIsiYok = 5
     }
+
+    public enum enumBasvuruDurum : int
+    {
+        Tanimsiz = 0, //"Tanımsız";
+        OnBasvuruDurumu = 1, //"Ön Başvuru";
+        IptalDurumu = 9, //"İptal";
+        BasvuruDurumu = 3, //"Başvuru";
+        KabulEdildiDurumu = 5, //"Kabul Edildi";
+    }
+
 
 
     public enum enumBasvuruSahibiTuru
@@ -53,36 +63,6 @@ namespace TarimDonusum.Models
         HizmetAlimi = 3,
         Gorunurluk = 4,
         YazilimDonanım = 5
-    }
-
-    public enum enumYatirimYeriDurumu : int
-    {
-        Tanimsiz = 0, //"Tanımsız";
-        Mulkiyet = 1,
-        Kira = 2,
-        Tahsis = 3,
-        IrtifakHakki = 4,
-        OrganizeSanayi_IhtisasAlaniTahsisi = 5,
-        Diger = 6
-    }
-
-    public enum enumYapiRuhsatiDurumu : int
-    {
-        Tanimsiz = 0, //"Tanımsız";
-        YapiRuhsatiMevcut = 1,
-        YapiRuhsatiBasvurusuYapildi = 2,
-        RuhsatGerekmedigineDairYaziMevcut = 3,
-        HenuzTeminEdilmedi = 4,
-        YapimIsiYok = 5
-    }
-
-    public enum enumBasvuruDurum : int
-    {
-        Tanimsiz = 0, //"Tanımsız";
-        OnBasvuruDurumu = 1, //"Ön Başvuru";
-        IptalDurumu = 9, //"İptal";
-        BasvuruDurumu = 3, //"Başvuru";
-        KabulEdildiDurumu = 5, //"Kabul Edildi";
     }
 
     public enum enumYatirimTuru : int
@@ -315,7 +295,7 @@ namespace TarimDonusum.Models
         public string ilAdi { get; set; } = "";
         public string ilceAdi { get; set; } = "";
         public string tamAdres { get; set; } = "";
-        public enumUygulamaAdresiYatirimYeriStatusu? yatirimYeriStatusu { get; set; }
+        public enumUygulamaAdresiYatirimYeriStatusu yatirimYeriStatusu { get; set; } = enumUygulamaAdresiYatirimYeriStatusu.Tanimsiz;
         public int? kiraVeyaTahsisSuresi { get; set; }
         public DateTime? kiraTahsisBitisTarihi { get; set; }
 
@@ -323,7 +303,9 @@ namespace TarimDonusum.Models
         {
             get => string.Join(" / ", new[] { kiraVeyaTahsisSuresi.ToString(), kiraTahsisBitisTarihi?.ToString("yyyy-MM-dd") ?? "" }.Where(x => !string.IsNullOrWhiteSpace(x)));
         }
-        public enumUygulamaAdresiYapiRuhsatiDurumu? yapiRuhsatiDurumu { get; set; }
+        public enumUygulamaAdresiYapiRuhsatiDurumu yapiRuhsatiDurumu { get; set; } = enumUygulamaAdresiYapiRuhsatiDurumu.Tanimsiz;
+        public string? yapiRuhsatiDurumuAd { get; set; }
+        public string? yatirimYeriStatusuAd { get; set; }
     }
 
     public class Ilce

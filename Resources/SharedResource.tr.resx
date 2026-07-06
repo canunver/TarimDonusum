@@ -1002,4 +1002,22 @@
   <data name="enumUygulamaAdresiYatirimYeriStatusu_6" xml:space="preserve">
     <value>Diğer</value>
   </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_0" xml:space="preserve">
+    <value>Lütfen Seçiniz</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_1" xml:space="preserve">
+    <value>Yapı ruhsatı mevcut</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_2" xml:space="preserve">
+    <value>Yapı ruhsatı başvurusu yapıldı</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_4" xml:space="preserve">
+    <value>Henüz temin edilmedi</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_3" xml:space="preserve">
+    <value>Ruhsat gerekmediğine dair yazı mevcut|</value>
+  </data>
+  <data name="enumUygulamaAdresiYapiRuhsatiDurumu_5" xml:space="preserve">
+    <value>Yapım işi yok</value>
+  </data>
 </root>

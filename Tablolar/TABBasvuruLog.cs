@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Localization;
 using TarimDonusum.Models;
 
 namespace TarimDonusum.Tablolar
@@ -11,8 +12,8 @@ namespace TarimDonusum.Tablolar
             //PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
-        public TABBasvuruLog(SqlConnection connection, SqlTransaction? transaction = null)
-            : base(connection, transaction)
+        public TABBasvuruLog(SqlConnection connection, IStringLocalizer<SharedResource>? localizer = null, SqlTransaction? transaction = null)
+            : base(connection, localizer, transaction)
         {
         }
 

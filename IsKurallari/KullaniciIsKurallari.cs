@@ -202,7 +202,7 @@ namespace TarimDonusum.IsKurallari
             SqlTransaction transaction,
             Kullanici kullanici)
         {
-            TABKullanici tabKullanici = new TABKullanici(connection, transaction);
+            TABKullanici tabKullanici = new TABKullanici(connection, null, transaction);
 
             return await tabKullanici.EkleAsync(kullanici);
         }
@@ -213,7 +213,7 @@ namespace TarimDonusum.IsKurallari
             Kullanici kullanici,
             int kullaniciId)
         {
-            TABKullaniciYetki tabKullaniciYetki = new TABKullaniciYetki(connection, transaction);
+            TABKullaniciYetki tabKullaniciYetki = new TABKullaniciYetki(connection, null, transaction);
             KullaniciYetki basvuranYetkisi = new KullaniciYetki
             {
                 KullaniciId = kullaniciId,
@@ -237,7 +237,7 @@ namespace TarimDonusum.IsKurallari
             string islem,
             KullaniciYetki basvuranYetkisi)
         {
-            TABKullaniciLog tabKullaniciLog = new TABKullaniciLog(connection, transaction);
+            TABKullaniciLog tabKullaniciLog = new TABKullaniciLog(connection, null, transaction);
             KullaniciLog log = new KullaniciLog
             {
                 KullaniciId = kullaniciId,

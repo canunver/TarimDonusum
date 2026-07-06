@@ -351,8 +351,7 @@
                             <label>
                                 @L["Basvuru.Field.YatirimYeriStatusu"]
                                 <select id="adresModalYatirimYeriStatusu">
-                                    <option value="">@L["Basvuru.Common.Select"]</option>
-                                    @foreach(var item in Enum.GetValues<TarimDonusum.Models.enumYatirimYeriDurumu>())
+                                    @foreach(var item in Enum.GetValues<TarimDonusum.Models.enumUygulamaAdresiYatirimYeriStatusu>())
                                     {
                                         <option value="@((int)item)">@TarimDonusum.Models.IsimBul.EnumAdi(item, L)</option>
                                     }
@@ -363,8 +362,7 @@
                             <label>
                                 @L["Basvuru.Field.YapiRuhsatiDurumu"]
                                 <select id="adresModalYapiRuhsatiDurumu">
-                                    <option value="">@L["Basvuru.Common.Select"]</option>
-                                    @foreach (var item in Enum.GetValues < TarimDonusum.Models.enumYapiRuhsatiDurumu>())
+                                    @foreach (var item in Enum.GetValues < TarimDonusum.Models.enumUygulamaAdresiYapiRuhsatiDurumu>())
                                     {
                                         <option value="@((int)item)">@TarimDonusum.Models.IsimBul.EnumAdi(item, L)</option>
                                     }
@@ -695,9 +693,9 @@
                 adres.ilAdi,
                 adres.ilceAdi,
                 adres.tamAdres,
-                "",
+                adres.yatirimYeriStatusuAd,
                 adres.kiraTahsisBitis,
-                ""
+                adres.yapiRuhsatiDurumuAd 
             ];
 
             alanlar.forEach((value, alanIndex) => {

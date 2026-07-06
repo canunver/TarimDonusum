@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Localization;
 using TarimDonusum.Models;
 using TarimDonusum.Tablolar;
 
@@ -8,11 +9,13 @@ namespace TarimDonusum.IsKurallari
     {
         private readonly string _connectionString;
         private readonly ILogger<BasvuruIsKurallari> _logger;
+        private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public BasvuruIsKurallari(IConfiguration configuration, ILogger<BasvuruIsKurallari> logger)
+        public BasvuruIsKurallari(IConfiguration configuration, ILogger<BasvuruIsKurallari> logger, IStringLocalizer<SharedResource> localizer)
         {
             _logger = logger;
             _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
+            _localizer = localizer;
         }
 
         public async Task<Sonuc<List<Basvuru>>> KullaniciBasvurulariniListeleAsync(Kullanici kullanici)
@@ -24,7 +27,7 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                TABBasvuru tabBasvuru = new TABBasvuru(connection);
+                TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer);
                 sonuc = await tabBasvuru.KullaniciBasvurulariniListeleAsync(kullanici.Id);
             }
             catch (Exception ex)
@@ -58,7 +61,7 @@ namespace TarimDonusum.IsKurallari
                     return sonuc;
                 }
 
-                TABKullaniciYetki tabKullaniciYetki = new TABKullaniciYetki(connection);
+                TABKullaniciYetki tabKullaniciYetki = new TABKullaniciYetki(connection, _localizer);
                 kullanici.Yetkiler = await tabKullaniciYetki.KullaniciYetkileriniListeleAsync(kullanici.Id);
                 sonuc.nesne = kullanici;
             }
@@ -79,7 +82,7 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                TABBasvuru tabBasvuru = new TABBasvuru(connection);
+                TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer);
                 sonuc = await tabBasvuru.TumunuListeleAsync();
             }
             catch (Exception ex)
@@ -119,7 +122,7 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                TABIl tabIl = new TABIl(connection);
+                TABIl tabIl = new TABIl(connection, _localizer);
                 sonuc.nesne = await tabIl.ListeleAsync();
             }
             catch (Exception ex)
@@ -160,10 +163,10 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                TABBasvuru tabBasvuru = new TABBasvuru(connection);
+                TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer);
                 int seciliZincirId = await tabBasvuru.DegerZinciriBul(basvuruId);
 
-                TABDegerZinciri tabDegerZinciri = new TABDegerZinciri(connection);
+                TABDegerZinciri tabDegerZinciri = new TABDegerZinciri(connection, _localizer);
                 sonuc = await tabDegerZinciri.ListeleAsync(true, ilId, seciliZincirId);
             }
             catch (Exception ex)
@@ -193,7 +196,7 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                TABDegerZinciri tabDegerZinciri = new TABDegerZinciri(connection);
+                TABDegerZinciri tabDegerZinciri = new TABDegerZinciri(connection, _localizer);
                 sonuc = await tabDegerZinciri.AsamalariOku(degerZinciriId, basvuruId);
             }
             catch (Exception ex)
@@ -213,7 +216,7 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                TABBasvuru tabBasvuru = new TABBasvuru(connection);
+                TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer);
                 Basvuru? basvuru = await tabBasvuru.OkuAsync(basvuruId);
 
                 if (basvuru == null)
@@ -224,7 +227,7 @@ namespace TarimDonusum.IsKurallari
 
                 if (kullanici != null && basvuru.FirmaId.HasValue)
                 {
-                    TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection);
+                    TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection, _localizer);
                     if (!await tabFirmaKullanici.IliskiVarMiAsync(basvuru.FirmaId.Value, kullanici.Id))
                     {
                         sonuc.HataEkle("Bu başvuruyu görüntüleme yetkiniz yok.");
@@ -265,12 +268,12 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                TABFirma tabFirma = new TABFirma(connection);
+                TABFirma tabFirma = new TABFirma(connection, _localizer);
                 Firma? firma = await tabFirma.VergiKimlikNoIleOkuAsync(vergiKimlikNo);
                 if (firma == null || firma.Id == null)
                     return sonuc;
 
-                TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection);
+                TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection, _localizer);
                 if (!await tabFirmaKullanici.IliskiVarMiAsync(firma.Id.Value, kullanici.Id))
                 {
                     sonuc.HataEkle("Bu firma kullanıcı ile ilişkili değil.");
@@ -329,10 +332,10 @@ namespace TarimDonusum.IsKurallari
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
                 {
-                    TABFirma txFirma = new TABFirma(connection, transaction);
+                    TABFirma txFirma = new TABFirma(connection, null, transaction);
                     sonuc.nesne = await txFirma.EkleAsync(firma);
 
-                    TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection, transaction);
+                    TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection, null, transaction);
                     await tabFirmaKullanici.EkleYoksaAsync(new FirmaKullanici
                     {
                         FirmaId = firma.Id,
@@ -342,7 +345,7 @@ namespace TarimDonusum.IsKurallari
                         IliskiyiKuranKullaniciId = kullaniciId
                     });
 
-                    TABFirmaLog tabFirmaLog = new TABFirmaLog(connection, transaction);
+                    TABFirmaLog tabFirmaLog = new TABFirmaLog(connection, null, transaction);
                     await tabFirmaLog.EkleAsync(firma, "YeniKayit");
 
                     await transaction.CommitAsync();
@@ -415,10 +418,10 @@ namespace TarimDonusum.IsKurallari
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
                 {
-                    TABFirma txFirma = new TABFirma(connection, transaction);
+                    TABFirma txFirma = new TABFirma(connection, null, transaction);
                     await txFirma.GuncelleAsync(firma);
 
-                    TABFirmaLog tabFirmaLog = new TABFirmaLog(connection, transaction);
+                    TABFirmaLog tabFirmaLog = new TABFirmaLog(connection, null, transaction);
                     await tabFirmaLog.EkleAsync(firma, "Update");
 
                     await transaction.CommitAsync();
@@ -464,10 +467,10 @@ namespace TarimDonusum.IsKurallari
 
                 try
                 {
-                    TABBasvuru tabBasvuru = new TABBasvuru(connection, transaction);
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer, transaction);
                     sonuc.nesne = await tabBasvuru.BasvuruFirmaKaydetAsync(firmaBasvuru);
 
-                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, transaction);
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, _localizer, transaction);
                     await tabBasvuruLog.EkleAsync(sonuc.nesne, kullanici, "KaydetFirmaBasvuru", firmaBasvuru);
 
                     await transaction.CommitAsync();
@@ -517,10 +520,10 @@ namespace TarimDonusum.IsKurallari
 
                 try
                 {
-                    TABBasvuru tabBasvuru = new TABBasvuru(connection, transaction);
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
                     await tabBasvuru.BasvuruIletisimGuncelleAsync(iletisim);
 
-                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, transaction);
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     await tabBasvuruLog.EkleAsync(iletisim.BasvuruId, kullanici, "KaydetIrtibatAsync", iletisim);
 
                     await transaction.CommitAsync();
@@ -567,11 +570,11 @@ namespace TarimDonusum.IsKurallari
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
                 {
-                    TABBasvuru tabBasvuru = new TABBasvuru(connection, transaction);
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
                     int eklenenKayit = await tabBasvuru.YatirimBilgisiGuncelleAsync(yatirim);
                     await tabBasvuru.YatirimDetaylariKaydetAsync(yatirim);
 
-                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, transaction);
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     await tabBasvuruLog.EkleAsync(yatirim.basvuruId, kullanici, "KaydetYatirimBilgisiAsync", yatirim);
                     await transaction.CommitAsync();
                 }
@@ -625,7 +628,7 @@ namespace TarimDonusum.IsKurallari
                 if (!sonuc.basarili || mevcut == null)
                     return sonuc;
 
-                TABBasvuru tabBasvuru = new TABBasvuru(connection);
+                TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer);
                 sonuc.nesne = await tabBasvuru.UygulamaAdresiOkuAsync(basvuruId, 0);
 
             }
@@ -691,10 +694,10 @@ namespace TarimDonusum.IsKurallari
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
                 {
-                    TABBasvuru tabBasvuru = new TABBasvuru(connection, transaction);
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
                     int adresId = await tabBasvuru.UygulamaAdresiKaydetAsync(adres);
 
-                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, transaction);
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     await tabBasvuruLog.EkleAsync(
                         mevcut.Id,
                         kullanici,
@@ -761,10 +764,10 @@ namespace TarimDonusum.IsKurallari
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
                 {
-                    TABBasvuru tabBasvuru = new TABBasvuru(connection, transaction);
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
                     await tabBasvuru.UygulamaAdresiSilAsync(eskiAdres.basvuruId, adresId);
 
-                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, transaction);
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     await tabBasvuruLog.EkleAsync(mevcut.Id, kullanici, "UygulamaAdresiSil", eskiAdres);
 
                     await transaction.CommitAsync();
@@ -852,7 +855,7 @@ namespace TarimDonusum.IsKurallari
 
         private async Task<Basvuru?> BasvuruOnBasvuruYetkiKontrolAsync(SqlConnection connection, int basvuruId, Kullanici kullanici, Sonuc sonuc)
         {
-            TABBasvuru tabBasvuru = new TABBasvuru(connection);
+            TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer);
             Basvuru? mevcut = await tabBasvuru.OkuAsync(basvuruId);
             if (mevcut == null)
             {
@@ -908,10 +911,10 @@ namespace TarimDonusum.IsKurallari
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
                 {
-                    TABBasvuru tabBasvuru = new TABBasvuru(connection, transaction);
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
                     await tabBasvuru.OrtaklikKaydetAsync(mevcut);
 
-                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, transaction);
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     //await tabBasvuruLog.EkleAsync(mevcut.Id, kullanici, "OrtaklikKaydet", new
                     //{
                     //    mevcut.OzelSektorPayi,

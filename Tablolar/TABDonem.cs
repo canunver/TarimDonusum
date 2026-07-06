@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Localization;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
 
@@ -6,8 +7,8 @@ namespace TarimDonusum.Tablolar
 {
     public class TABDonem : TABTablo
     {
-        public TABDonem(SqlConnection connection, SqlTransaction? transaction = null)
-            : base(connection, transaction)
+        public TABDonem(SqlConnection connection, IStringLocalizer<SharedResource>? localizer = null, SqlTransaction? transaction = null)
+            : base(connection, localizer, transaction)
         {
         }
 

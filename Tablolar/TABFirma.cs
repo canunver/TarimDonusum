@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Localization;
 using System.Text.Json;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
@@ -12,8 +13,8 @@ namespace TarimDonusum.Tablolar
             PropertyNameCaseInsensitive = true
         };
 
-        public TABFirma(SqlConnection connection, SqlTransaction? transaction = null)
-            : base(connection, transaction)
+        public TABFirma(SqlConnection connection, IStringLocalizer<SharedResource>? localizer = null, SqlTransaction? transaction = null)
+            : base(connection, localizer, transaction)
         {
         }
 
