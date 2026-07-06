@@ -973,4 +973,25 @@
   <data name="enumYatirimTuru_4" xml:space="preserve">
     <value>Technology Renewal</value>
   </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_0" xml:space="preserve">
+    <value>Please Select</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_1" xml:space="preserve">
+    <value>Ownership</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_2" xml:space="preserve">
+    <value>Lease</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_3" xml:space="preserve">
+    <value>Allocation</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_4" xml:space="preserve">
+    <value>Easement right</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_5" xml:space="preserve">
+    <value>Organized industrial / specialized zone allocation</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_6" xml:space="preserve">
+    <value>Other</value>
+  </data>
 </root>

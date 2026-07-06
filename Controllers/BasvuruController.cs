@@ -27,7 +27,7 @@ namespace TarimDonusum.Controllers
         public async Task<IActionResult> Index()
         {
             Sonuc<List<Basvuru>> sonuc;
-;            try
+            ; try
             {
                 Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
                 sonuc = await _basvuruIsKurallari.KullaniciBasvurulariniListeleAsync(kullanici);
@@ -215,7 +215,7 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UygulamaAdresiKaydet(BasvuruUygulamaAdresi adres)
+        public async Task<IActionResult> UygulamaAdresiKaydet([FromBody] BasvuruUygulamaAdresi adres)
         {
             try
             {
@@ -239,23 +239,23 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UygulamaAdresiSil(int basvuruId, int adresId)
+        public async Task<IActionResult> UygulamaAdresiSil([FromBody] BasvuruUygulamaAdresi adres)
         {
+            Sonuc sonuc;
             try
             {
                 Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
 
-                Sonuc sonuc = await _basvuruIsKurallari.UygulamaAdresiSilAsync(basvuruId, adresId, kullanici);
-                if (!sonuc.basarili)
-                    return Json(sonuc);
+                sonuc = await _basvuruIsKurallari.UygulamaAdresiSilAsync(adres.id, kullanici);
                 sonuc.mesaj = "Uygulama adresi silindi.";
-                return Json(sonuc);
             }
             catch (Exception ex)
             {
-                Log(LogLevel.Error, BMYEventID.Yok, ex, "Uygulama adresi sil action tamamlanamadı.");
-                return Json(new { basarili = false, mesaj = "Uygulama adresi silinemedi." });
+                sonuc = new Sonuc();
+                sonuc.HataEkle("Uygulama adresi silinemedi.");
+                Log(LogLevel.Error, BMYEventID.Yok, ex, sonuc.hatalar[0]);
             }
+            return Json(sonuc);
         }
 
         [OturumKontrol]
@@ -367,26 +367,6 @@ namespace TarimDonusum.Controllers
                     b.Aktif,
                     IliskiTarihi = b.IliskiTarihi.ToString("yyyy-MM-dd HH:mm")
                 }).ToList()
-            };
-        }
-
-        private static object UygulamaAdresiJson(BasvuruUygulamaAdresi adres)
-        {
-            return new
-            {
-                adres.id,
-                adres.basvuruId,
-                adres.siraNo,
-                adres.ilceId,
-                adres.ilId,
-                adres.ilKod,
-                adres.ilAdi,
-                adres.ilceAdi,
-                adres.tamAdres,
-                YatirimYeriStatusu = adres.yatirimYeriStatusu.HasValue ? (int)adres.yatirimYeriStatusu.Value : (int?)null,
-                adres.kiraVeyaTahsisSuresi,
-                KiraTahsisBitisTarihi = adres.kiraTahsisBitisTarihi?.ToString("yyyy-MM-dd"),
-                YapiRuhsatiDurumu = adres.yapiRuhsatiDurumu.HasValue ? (int)adres.yapiRuhsatiDurumu.Value : (int?)null
             };
         }
 
@@ -642,7 +622,6 @@ Building permit available|Building permit application submitted|Letter stating n
         const paraLocale = @Html.Raw(JsonSerializer.Serialize(CultureInfo.CurrentUICulture.Name));
         const paraFormatter = new Intl.NumberFormat(paraLocale || undefined, { maximumFractionDigits: 0 });
         const basvuruIlAdi = @Html.Raw(JsonSerializer.Serialize(basvuruIlAdi));
-        const adresSilOnay = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Address.DeleteConfirm")));
         let uygulamaAdresleri = @Html.Raw(JsonSerializer.Serialize(b.YatirimAdresleri
         .Where(adres => adres.Id > 0)
         .Select((adres, index) => new
@@ -971,39 +950,10 @@ Building permit available|Building permit application submitted|Letter stating n
 
         renderUygulamaAdresleri(false);
 
-        document.getElementById('adresYeniBtn')?.addEventListener('click', () => adresModalAc(-1));
         document.querySelectorAll('.uygulama-adres-modal-kapat').forEach(btn => {
             btn.addEventListener('click', () => uygulamaAdresModal?.hide());
         });
 
-
-        async function adresSil(adresId) {
-            if (!adresId) return;
-
-            const token = antiForgeryToken();
-            const body = new URLSearchParams();
-            body.set('__RequestVerificationToken', token);
-            body.set('basvuruId', String(basvuruId));
-            body.set('adresId', String(adresId));
-
-            const response = await fetch('@Url.Action("UygulamaAdresiSil", "Basvuru")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'RequestVerificationToken': token
-                },
-                body
-            });
-            const result = await response.json();
-            if (!result.basarili) {
-                basvuruMesajGoster(result.mesaj || 'Uygulama adresi silinemedi.', false);
-                return;
-            }
-
-            uygulamaAdresleri = uygulamaAdresleri.filter(x => Number(x.id || x.Id || 0) !== Number(adresId));
-            renderUygulamaAdresleri(false);
-            basvuruMesajGoster(result.mesaj || 'Uygulama adresi silindi.');
-        }
 
         document.getElementById('firmaSorgulaBtn')?.addEventListener('click', async () => {
             const vergiNo = vergiInput?.value?.trim() || '';

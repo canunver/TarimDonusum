@@ -550,10 +550,10 @@ namespace TarimDonusum.Tablolar
                 ilAdi = reader.IsDBNull(6) ? "" : reader.GetString(6),
                 ilceAdi = reader.IsDBNull(7) ? "" : reader.GetString(7),
                 tamAdres = reader.GetString(8),
-                yatirimYeriStatusu = reader.IsDBNull(9) ? null : (UygulamaAdresiYatirimYeriStatusu)reader.GetInt32(9),
+                yatirimYeriStatusu = reader.IsDBNull(9) ? null : (enumUygulamaAdresiYatirimYeriStatusu)reader.GetInt32(9),
                 kiraVeyaTahsisSuresi = reader.IsDBNull(10) ? null : reader.GetInt32(10),
                 kiraTahsisBitisTarihi = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
-                yapiRuhsatiDurumu = reader.IsDBNull(12) ? null : (UygulamaAdresiYapiRuhsatiDurumu)reader.GetInt32(12)
+                yapiRuhsatiDurumu = reader.IsDBNull(12) ? null : (enumUygulamaAdresiYapiRuhsatiDurumu)reader.GetInt32(12)
             };
         }
 

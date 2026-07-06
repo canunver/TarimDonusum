@@ -981,4 +981,25 @@
   <data name="enumYatirimTuru_4" xml:space="preserve">
     <value>Teknoloji Yenileme</value>
   </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_0" xml:space="preserve">
+    <value>Tanimsiz</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_1" xml:space="preserve">
+    <value>Mulkiyet</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_2" xml:space="preserve">
+    <value>Kira</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_3" xml:space="preserve">
+    <value>Tahsis</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_4" xml:space="preserve">
+    <value>IrtifakHakki</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_5" xml:space="preserve">
+    <value>OrganizeSanayiIhtisasAlaniTahsis</value>
+  </data>
+  <data name="enumUygulamaAdresiYatirimYeriStatusu_6" xml:space="preserve">
+    <value>Diger</value>
+  </data>
 </root>

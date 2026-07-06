@@ -12,6 +12,29 @@ namespace TarimDonusum.Models
             return localizer[typeof(T).Name + "_" + Convert.ToInt32(enumDegeri)];
         }
     }
+
+    public enum enumUygulamaAdresiYatirimYeriStatusu
+    {
+        Tanimsiz = 0, //"Tanımsız";
+        Mulkiyet = 1,
+        Kira = 2,
+        Tahsis = 3,
+        IrtifakHakki = 4,
+        OrganizeSanayiIhtisasAlaniTahsis = 5,
+        Diger = 6
+    }
+
+    public enum enumUygulamaAdresiYapiRuhsatiDurumu
+    {
+        Tanimsiz = 0, //"Tanımsız";
+        YapiRuhsatiMevcut = 1,
+        YapiRuhsatiBasvurusuYapildi = 2,
+        RuhsatGerekmedigineDairYaziMevcut = 3,
+        HenuzTeminEdilmedi = 4,
+        YapimIsiYok = 5
+    }
+
+
     public enum enumBasvuruSahibiTuru
     {
         Tanimsiz = 0, //"Tanımsız";
@@ -252,12 +275,6 @@ namespace TarimDonusum.Models
         */
     }
 
-    public class BasvuruYatirimAdresBilgisi
-    {
-        public int BasvuruId { get; set; }
-        public List<BasvuruUygulamaAdresi> YatirimAdresleri { get; set; } = new();
-    }
-
     public class BasvuruFinans
     {
         public int BasvuruId { get; set; }
@@ -298,7 +315,7 @@ namespace TarimDonusum.Models
         public string ilAdi { get; set; } = "";
         public string ilceAdi { get; set; } = "";
         public string tamAdres { get; set; } = "";
-        public UygulamaAdresiYatirimYeriStatusu? yatirimYeriStatusu { get; set; }
+        public enumUygulamaAdresiYatirimYeriStatusu? yatirimYeriStatusu { get; set; }
         public int? kiraVeyaTahsisSuresi { get; set; }
         public DateTime? kiraTahsisBitisTarihi { get; set; }
 
@@ -306,26 +323,7 @@ namespace TarimDonusum.Models
         {
             get => string.Join(" / ", new[] { kiraVeyaTahsisSuresi.ToString(), kiraTahsisBitisTarihi?.ToString("yyyy-MM-dd") ?? "" }.Where(x => !string.IsNullOrWhiteSpace(x)));
         }
-        public UygulamaAdresiYapiRuhsatiDurumu? yapiRuhsatiDurumu { get; set; }
-    }
-
-    public enum UygulamaAdresiYatirimYeriStatusu
-    {
-        Mulkiyet = 1,
-        Kira = 2,
-        Tahsis = 3,
-        IrtifakHakki = 4,
-        OrganizeSanayiIhtisasAlaniTahsis = 5,
-        Diger = 6
-    }
-
-    public enum UygulamaAdresiYapiRuhsatiDurumu
-    {
-        YapiRuhsatiMevcut = 1,
-        YapiRuhsatiBasvurusuYapildi = 2,
-        RuhsatGerekmedigineDairYaziMevcut = 3,
-        HenuzTeminEdilmedi = 4,
-        YapimIsiYok = 5
+        public enumUygulamaAdresiYapiRuhsatiDurumu? yapiRuhsatiDurumu { get; set; }
     }
 
     public class Ilce

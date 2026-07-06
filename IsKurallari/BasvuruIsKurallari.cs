@@ -640,6 +640,11 @@ namespace TarimDonusum.IsKurallari
         public async Task<Sonuc<BasvuruUygulamaAdresi>> UygulamaAdresiKaydetAsync(BasvuruUygulamaAdresi adres, Kullanici kullanici)
         {
             Sonuc<BasvuruUygulamaAdresi> sonuc = new Sonuc<BasvuruUygulamaAdresi>();
+            if (kullanici == null)
+            {
+                sonuc.HataEkle("Kullanıcı bilgisi gelmedi");
+                return sonuc;
+            }
 
             try
             {
@@ -689,25 +694,15 @@ namespace TarimDonusum.IsKurallari
                     TABBasvuru tabBasvuru = new TABBasvuru(connection, transaction);
                     int adresId = await tabBasvuru.UygulamaAdresiKaydetAsync(adres);
 
-                    List<BasvuruUygulamaAdresi> d = await tabBasvuru.UygulamaAdresiOkuAsync(adres.basvuruId, adres.id);
-
-                    BasvuruUygulamaAdresi? eskiAdres;
-
-                    if (d != null && d.Count == 1)
-                        eskiAdres = d[0];
-                    else
-                        eskiAdres = null;
-                    mevcut.YatirimAdresleri = (await new TABBasvuru(connection, transaction).OkuAsync(adres.basvuruId))?.YatirimAdresleri ?? mevcut.YatirimAdresleri;
-
                     TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, transaction);
                     await tabBasvuruLog.EkleAsync(
                         mevcut.Id,
                         kullanici,
                         yeniKayit ? "UygulamaAdresiYeniKayit" : "UygulamaAdresiUpdate",
-                        eskiAdres ?? adres);
+                        adres);
 
                     await transaction.CommitAsync();
-                    sonuc.nesne = eskiAdres ?? adres;
+                    sonuc.nesne = adres;
                 }
                 catch (Exception ex)
                 {
@@ -724,13 +719,18 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        public async Task<Sonuc> UygulamaAdresiSilAsync(int basvuruId, int adresId, Kullanici kullanici)
+        public async Task<Sonuc> UygulamaAdresiSilAsync(int adresId, Kullanici? kullanici)
         {
             Sonuc sonuc = new Sonuc();
+            if (kullanici == null)
+            {
+                sonuc.HataEkle("Kullanıcı bilgisi gelmedi");
+                return sonuc;
+            }
 
             try
             {
-                if (basvuruId <= 0 || adresId <= 0)
+                if (adresId <= 0)
                 {
                     sonuc.HataEkle("Adres kaydı seçilmelidir.");
                     return sonuc;
@@ -738,15 +738,8 @@ namespace TarimDonusum.IsKurallari
 
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
-
-
-                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
-                if (!sonuc.basarili || mevcut == null)
-                    return sonuc;
-
-
                 TABBasvuru kontrolTablosu = new TABBasvuru(connection);
-                List<BasvuruUygulamaAdresi> d = await kontrolTablosu.UygulamaAdresiOkuAsync(basvuruId, adresId);
+                List<BasvuruUygulamaAdresi> d = await kontrolTablosu.UygulamaAdresiOkuAsync(0, adresId);
 
                 BasvuruUygulamaAdresi? eskiAdres;
 
@@ -761,13 +754,16 @@ namespace TarimDonusum.IsKurallari
                     return sonuc;
                 }
 
+                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, eskiAdres.basvuruId, kullanici, sonuc);
+                if (!sonuc.basarili || mevcut == null)
+                    return sonuc;
+
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
                 {
                     TABBasvuru tabBasvuru = new TABBasvuru(connection, transaction);
-                    await tabBasvuru.UygulamaAdresiSilAsync(basvuruId, adresId);
+                    await tabBasvuru.UygulamaAdresiSilAsync(eskiAdres.basvuruId, adresId);
 
-                    mevcut.YatirimAdresleri = (await tabBasvuru.OkuAsync(basvuruId))?.YatirimAdresleri ?? new List<BasvuruUygulamaAdresi>();
                     TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, transaction);
                     await tabBasvuruLog.EkleAsync(mevcut.Id, kullanici, "UygulamaAdresiSil", eskiAdres);
 
@@ -776,13 +772,13 @@ namespace TarimDonusum.IsKurallari
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    _logger.LogError(ex, "Uygulama adresi silinemedi. BasvuruId: {BasvuruId}, AdresId: {AdresId}, KullaniciId: {KullaniciId}", basvuruId, adresId, kullanici.Id);
-                    sonuc.HataEkle("Uygulama adresi silinemedi.");
+                    sonuc.HataEkle($"Uygulama adresi silinemedi. AdresId: {adresId}, KullaniciId: {kullanici.Id}");
+                    _logger.LogError(ex, sonuc.hatalar[0]);
                 }
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Uygulama adresi silinemedi. BasvuruId: {BasvuruId}, AdresId: {AdresId}, KullaniciId: {KullaniciId}", "Uygulama adresi silinemedi.", basvuruId, adresId, kullanici.Id);
+                BeklenmeyenHata(sonuc, ex, $"Uygulama adresi silinemedi. AdresId: {adresId}, KullaniciId: {kullanici.Id}", "Uygulama adresi silinemedi.");
             }
 
             return sonuc;

@@ -386,11 +386,12 @@
 <script>
     var active=1;
     const adresBosMesaj = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Address.Empty")));
+    const adresSilOnay = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Address.DeleteConfirm")));
     function modalValue(id) {
         return document.getElementById(id)?.value || '';
     }
 
-
+    var uygulamaAdresModal;
     document.addEventListener('DOMContentLoaded', () => {
         active = 1;
         const lastStep = @sonBolum;
@@ -402,6 +403,12 @@
         document.querySelectorAll('.nav-prev').forEach(btn => btn.addEventListener('click', () => show(active - 1)));
         document.querySelectorAll('.nav-next').forEach(btn => btn.addEventListener('click', () => show(active + 1)));
         let dirty = false;
+        document.getElementById('adresYeniBtn')?.addEventListener('click', () => adresModalAc(-1));
+
+        uygulamaAdresModal = new bootstrap.Modal(
+            document.getElementById('uygulamaAdresModal')
+        );
+
 
         // $.querySelectorAll('input[name], select[name], textarea[name]').forEach(el => {
         //     if (el.type === 'hidden' || el.name === '__RequestVerificationToken')
@@ -541,12 +548,17 @@
     function SonucGosterGizle(sonuc)
     {
         UygulamaAdresleriListele();
-        uygulamaAdresModal?.hide();
+        uygulamaAdresModal.hide();
         SonucGoster(sonuc);
     }
 
     function adresKaydet(adres) {
         AjaxPost('/Basvuru/UygulamaAdresiKaydet', adres, SonucGosterGizle);
+    }
+
+    function adresSil(adresId) {
+        if (!adresId) return;
+        AjaxPost('/Basvuru/UygulamaAdresiSil', {id: adresId}, SonucGosterGizle);
     }
 
     function FirmaIrtibatKaydet() {
@@ -625,6 +637,13 @@
     function modalSet(id, value) {
         const el = document.getElementById(id);
         if (el) el.value = value || '';
+        
+        if (el.type === "date" && value) {
+            el.value = value.substring(0, 10);
+        } 
+        else {
+            el.value = value || '';
+        }
     }
 
     var sonUygulamaAdresleri;
@@ -637,11 +656,7 @@
         };
     }
 
-    var uygulamaAdresModal;
     function adresModalAc(index) {
-        const uygulamaAdresModalEl = document.getElementById('uygulamaAdresModal');
-        uygulamaAdresModal = modalOlustur(uygulamaAdresModalEl);
-
         const adres = index >= 0 ? sonUygulamaAdresleri[index] : {};
         modalSet('adresModalIndex', index >= 0 ? String(index) : '');
         modalSet('adresModalSiraNo', adres.siraNo);
@@ -652,7 +667,7 @@
         modalSet('adresModalKiraVeyaTahsisSuresi', adres.kiraVeyaTahsisSuresi);
         modalSet('adresModalKiraTahsisBitisTarihi', adres.kiraTahsisBitisTarihi);
         modalSet('adresModalYapiRuhsatiDurumu', adres.yapiRuhsatiDurumu);
-        uygulamaAdresModal?.show();
+        uygulamaAdresModal.show();
     }
 
     function RenderUygulamaAdresleri(uygulamaAdresleri) {
@@ -706,7 +721,7 @@
             deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
             deleteBtn.addEventListener('click', async () => {
                 if (!confirm(adresSilOnay)) return;
-                await adresSil(adres.id);
+                adresSil(adres.id);
             });
 
             actionTd.appendChild(editBtn);
