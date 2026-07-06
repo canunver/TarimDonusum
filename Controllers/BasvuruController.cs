@@ -504,18 +504,6 @@ Building permit available|Building permit application submitted|Letter stating n
 
 
 
-            <section class="basvuru-panel @Active(5)" data-panel="5">
-                <h2>@L["Basvuru.Section5.Title"]</h2>
-                <div class="form-grid">
-                    <label>@L["Basvuru.Field.ToplamYatirimTutari"]<input class="money-integer" name="Basvuru.ToplamYatirimTutari" type="text" inputmode="numeric" value="@Dec(b.ToplamYatirimTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.UygunHarcamaTutari"]<input class="money-integer" name="Basvuru.UygunHarcamaTutari" type="text" inputmode="numeric" value="@Dec(b.UygunHarcamaTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.TalepEdilenDestekTutari"]<input class="money-integer" name="Basvuru.TalepEdilenDestekTutari" type="text" inputmode="numeric" value="@Dec(b.TalepEdilenDestekTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.BasvuruSahibiKatkisi"]<input class="money-integer" name="Basvuru.BasvuruSahibiKatkisi" type="text" inputmode="numeric" value="@Dec(b.BasvuruSahibiKatkisi)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.DestekOrani"]<input name="Basvuru.DestekOrani" type="number" step="0.01" value="@Dec(b.DestekOrani)" disabled="@ro" /></label>
-                </div>
-                <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"]<textarea name="Basvuru.YatiriminAmaci" disabled="@ro">@b.YatiriminAmaci</textarea></label>
-            </section>
-
             <section class="basvuru-panel @Active(6)" data-panel="6">
                 <h2>@L["Basvuru.Section6.Title"]</h2>
                 <div class="form-grid">
@@ -645,42 +633,7 @@ Building permit available|Building permit application submitted|Letter stating n
         })));
 
 
-        function paraTamsayiDegeri(value) {
-            let text = String(value || '').trim();
-            if (!text) return '';
 
-            const sonVirgul = text.lastIndexOf(',');
-            const sonNokta = text.lastIndexOf('.');
-            const sonAyrac = Math.max(sonVirgul, sonNokta);
-
-            if (sonAyrac >= 0) {
-                const sonrasi = text.slice(sonAyrac + 1).replace(/\D/g, '');
-                if (sonrasi.length > 0 && sonrasi.length < 3) {
-                    text = text.slice(0, sonAyrac);
-                }
-            }
-
-            return text.replace(/\D/g, '');
-        }
-
-        function paraFormatla(input) {
-            const temizDeger = paraTamsayiDegeri(input.value);
-            input.value = temizDeger ? paraFormatter.format(Number(temizDeger)) : '';
-        }
-
-        function paraInputlariniNormalizeEt() {
-            form?.querySelectorAll('.money-integer').forEach(input => {
-                input.value = paraTamsayiDegeri(input.value);
-            });
-        }
-
-        form?.querySelectorAll('.money-integer').forEach(input => {
-            paraFormatla(input);
-            input.addEventListener('focus', () => {
-                input.value = paraTamsayiDegeri(input.value);
-            });
-            input.addEventListener('blur', () => paraFormatla(input));
-        });
 
         if (degerZinciriSelect && degerZinciriAsamaListesi) {
             degerZinciriSelect.addEventListener('change', () => {

@@ -280,12 +280,12 @@ namespace TarimDonusum.Tablolar
             basvuru.basvuruFirma.SonIkiYildirFaalMi = BoolYap(NullOkuInt(reader, kol++));
             basvuru.yatirim.yatirimAdi = NullOkuString(reader, kol++);
             basvuru.yatirim.yatirimTuru = (enumYatirimTuru)NullDuzeltInt(reader, kol++);
-            basvuru.ToplamYatirimTutari = NullOkuDecimal(reader, kol++);
-            basvuru.UygunHarcamaTutari = NullOkuDecimal(reader, kol++);
-            basvuru.TalepEdilenDestekTutari = NullOkuDecimal(reader, kol++);
-            basvuru.BasvuruSahibiKatkisi = NullOkuDecimal(reader, kol++);
-            basvuru.DestekOrani = NullOkuDecimal(reader, kol++);
-            basvuru.YatiriminAmaci = NullOkuString(reader, kol++);
+            basvuru.finans.ToplamYatirimTutari = NullOkuDecimal(reader, kol++);
+            basvuru.finans.UygunHarcamaTutari = NullOkuDecimal(reader, kol++);
+            basvuru.finans.TalepEdilenDestekTutari = NullOkuDecimal(reader, kol++);
+            basvuru.finans.BasvuruSahibiKatkisi = NullOkuDecimal(reader, kol++);
+            basvuru.finans.DestekOrani = NullOkuDecimal(reader, kol++);
+            basvuru.finans.YatiriminAmaci = NullOkuString(reader, kol++);
 
             basvuru.irtibat.BasvuruId = basvuru.Id;
             basvuru.irtibat.kisi = NullOkuString(reader, kol++);

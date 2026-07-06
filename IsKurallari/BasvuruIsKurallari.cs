@@ -652,7 +652,7 @@ namespace TarimDonusum.IsKurallari
             try
             {
                 UygulamaAdresiNormalizeEt(adres);
-                UygulamaAdresiDogrula(adres, sonuc);
+                adres.UygulamaAdresiDogrula(sonuc);
                 if (!sonuc.basarili)
                     return sonuc;
 
@@ -1045,35 +1045,35 @@ namespace TarimDonusum.IsKurallari
         //    hedef.HarcamaTurleri = kaynak.HarcamaTurleri;
         //}
 
-        private static void Asama4Kopyala(Basvuru hedef, Basvuru kaynak)
-        {
-        }
+        //private static void Asama4Kopyala(Basvuru hedef, Basvuru kaynak)
+        //{
+        //}
 
-        private static void Asama5Kopyala(Basvuru hedef, Basvuru kaynak)
-        {
-            hedef.ToplamYatirimTutari = kaynak.ToplamYatirimTutari;
-            hedef.UygunHarcamaTutari = kaynak.UygunHarcamaTutari;
-            hedef.TalepEdilenDestekTutari = kaynak.TalepEdilenDestekTutari;
-            hedef.BasvuruSahibiKatkisi = kaynak.BasvuruSahibiKatkisi;
-            hedef.DestekOrani = kaynak.DestekOrani;
-            hedef.YatiriminAmaci = kaynak.YatiriminAmaci;
-        }
+        //private static void Asama5Kopyala(Basvuru hedef, Basvuru kaynak)
+        //{
+        //    hedef.ToplamYatirimTutari = kaynak.ToplamYatirimTutari;
+        //    hedef.UygunHarcamaTutari = kaynak.UygunHarcamaTutari;
+        //    hedef.TalepEdilenDestekTutari = kaynak.TalepEdilenDestekTutari;
+        //    hedef.BasvuruSahibiKatkisi = kaynak.BasvuruSahibiKatkisi;
+        //    hedef.DestekOrani = kaynak.DestekOrani;
+        //    hedef.YatiriminAmaci = kaynak.YatiriminAmaci;
+        //}
 
-        private static void Asama6Kopyala(Basvuru hedef, Basvuru kaynak)
-        {
-            hedef.OncekiYilNetSatis = kaynak.OncekiYilNetSatis;
-            hedef.SonYilNetSatis = kaynak.SonYilNetSatis;
-            hedef.OncekiYilAktifToplami = kaynak.OncekiYilAktifToplami;
-            hedef.SonYilAktifToplami = kaynak.SonYilAktifToplami;
-        }
+        //private static void Asama6Kopyala(Basvuru hedef, Basvuru kaynak)
+        //{
+        //    hedef.OncekiYilNetSatis = kaynak.OncekiYilNetSatis;
+        //    hedef.SonYilNetSatis = kaynak.SonYilNetSatis;
+        //    hedef.OncekiYilAktifToplami = kaynak.OncekiYilAktifToplami;
+        //    hedef.SonYilAktifToplami = kaynak.SonYilAktifToplami;
+        //}
 
-        private static void Asama7Kopyala(Basvuru hedef, Basvuru kaynak)
-        {
-            hedef.BelgePaketiDosyaAdi = kaynak.BelgePaketiDosyaAdi;
-            hedef.TaahhutDosyaAdi = kaynak.TaahhutDosyaAdi;
-            hedef.BelgeBeyani = kaynak.BelgeBeyani;
-            hedef.BelgeGruplari = kaynak.BelgeGruplari;
-        }
+        //private static void Asama7Kopyala(Basvuru hedef, Basvuru kaynak)
+        //{
+        //    hedef.BelgePaketiDosyaAdi = kaynak.BelgePaketiDosyaAdi;
+        //    hedef.TaahhutDosyaAdi = kaynak.TaahhutDosyaAdi;
+        //    hedef.BelgeBeyani = kaynak.BelgeBeyani;
+        //    hedef.BelgeGruplari = kaynak.BelgeGruplari;
+        //}
 
         //private static object BasvuruLogDetayiOlustur(Basvuru basvuru, string logIslem)
         //{
@@ -1151,20 +1151,6 @@ namespace TarimDonusum.IsKurallari
             adres.kiraVeyaTahsisSuresi = adres.kiraVeyaTahsisSuresi.GetValueOrDefault() > 0 ? adres.kiraVeyaTahsisSuresi : null;
         }
 
-        private static void UygulamaAdresiDogrula(BasvuruUygulamaAdresi adres, Sonuc sonuc)
-        {
-            if (adres.basvuruId <= 0)
-                sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
-
-            if (!adres.ilceId.HasValue)
-                sonuc.HataEkle("İlçe seçilmelidir.");
-
-            if (string.IsNullOrWhiteSpace(adres.tamAdres))
-                sonuc.HataEkle("Tam adres girilmelidir.");
-
-            if (!adres.kiraTahsisBitisTarihi.HasValue)
-                sonuc.HataEkle("Kira/tahsis bitiş tarihi girilmelidir.");
-        }
 
         private void BeklenmeyenHata(Sonuc sonuc, Exception ex, string logMesaji, string kullaniciMesaji, params object[] logParametreleri)
         {

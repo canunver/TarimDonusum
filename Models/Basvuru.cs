@@ -138,24 +138,7 @@ namespace TarimDonusum.Models
         public BasvuruIletisim irtibat { get; set; } = new();
         public BasvuruYatirim yatirim { get; set; } = new();
         public List<BasvuruUygulamaAdresi> YatirimAdresleri { get; set; } = new();
-
-        [JsonIgnore]
-        public decimal? ToplamYatirimTutari { get; set; }
-
-        [JsonIgnore]
-        public decimal? UygunHarcamaTutari { get; set; }
-
-        [JsonIgnore]
-        public decimal? TalepEdilenDestekTutari { get; set; }
-
-        [JsonIgnore]
-        public decimal? BasvuruSahibiKatkisi { get; set; }
-
-        [JsonIgnore]
-        public decimal? DestekOrani { get; set; } = 80;
-
-        [JsonIgnore]
-        public string? YatiriminAmaci { get; set; } = "";
+        public BasvuruFinans finans = new();
 
         public decimal? OncekiYilNetSatis { get; set; }
         public decimal? SonYilNetSatis { get; set; }
@@ -263,7 +246,7 @@ namespace TarimDonusum.Models
         public decimal? TalepEdilenDestekTutari { get; set; }
         public decimal? BasvuruSahibiKatkisi { get; set; }
         public decimal? DestekOrani { get; set; }
-        public string YatiriminAmaci { get; set; } = "";
+        public string? YatiriminAmaci { get; set; }
     }
 
     public class BasvuruMali
@@ -306,6 +289,21 @@ namespace TarimDonusum.Models
         public enumUygulamaAdresiYapiRuhsatiDurumu yapiRuhsatiDurumu { get; set; } = enumUygulamaAdresiYapiRuhsatiDurumu.Tanimsiz;
         public string? yapiRuhsatiDurumuAd { get; set; }
         public string? yatirimYeriStatusuAd { get; set; }
+
+        public void UygulamaAdresiDogrula(Sonuc sonuc)
+        {
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
+
+            if (!ilceId.HasValue)
+                sonuc.HataEkle("İlçe seçilmelidir.");
+
+            if (string.IsNullOrWhiteSpace(tamAdres))
+                sonuc.HataEkle("Tam adres girilmelidir.");
+
+            if (!kiraTahsisBitisTarihi.HasValue)
+                sonuc.HataEkle("Kira/tahsis bitiş tarihi girilmelidir.");
+        }
     }
 
     public class Ilce

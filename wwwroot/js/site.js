@@ -108,6 +108,7 @@ window.AjaxPost = function (url, data, success) {
             alert("İşlem sırasında bir hata oluştu.");
         });
 };
+
 function AjaxGet(url, data, success) {
     $.ajax({
         url: url,
@@ -160,7 +161,6 @@ window.degerBool = function (name) {
 };
 
 function MenuRenderItems(items, aktifUrl, acikMenuler) {
-
     var html = "";
     var herhangiAktif = false;
 
@@ -181,15 +181,11 @@ function MenuRenderItems(items, aktifUrl, acikMenuler) {
 }
 
 function MenuRenderItem(item, aktifUrl, acikMenuler) {
-
     var icon = item.icon || "far fa-circle";
-
     var active = false;
-
     var html = "";
 
     switch (item.type) {
-
         // Menu
         case 0:
             var child = MenuRenderItems(item.children || [], aktifUrl, acikMenuler);
@@ -230,7 +226,6 @@ function MenuRenderItem(item, aktifUrl, acikMenuler) {
 }
 
 function NormalizeUrl(url) {
-
     return (url || "")
         .toLowerCase()
         .replace(/\/$/, "");
@@ -257,7 +252,6 @@ function CookieYaz(ad, deger, gun) {
 }
 
 function MenuRender(menu) {
-
     var aktifUrl = NormalizeUrl(window.location.pathname + window.location.search);
     var acikMenuler = [];
     var cookieAdi = window.aktifMenuCookieAdi || "HomeMenuAcik";
@@ -295,7 +289,6 @@ function BasvuruMenuCookieKaydet() {
 }
 
 function MenuCookieKaydet(menuSecici, cookieAdi) {
-
     var aciklar = [];
 
     $(menuSecici + " .menu-folder.menu-open").each(function () {
@@ -316,3 +309,52 @@ $(document).on("expanded.lte.treeview collapsed.lte.treeview",
     function () {
         BasvuruMenuCookieKaydet();
     });
+
+
+
+function paraTamsayiDegeri(value) {
+    let text = String(value || '').trim();
+    if (!text) return '';
+
+    const sonVirgul = text.lastIndexOf(',');
+    const sonNokta = text.lastIndexOf('.');
+    const sonAyrac = Math.max(sonVirgul, sonNokta);
+
+    if (sonAyrac >= 0) {
+        const sonrasi = text.slice(sonAyrac + 1).replace(/\D/g, '');
+        if (sonrasi.length > 0 && sonrasi.length < 3) {
+            text = text.slice(0, sonAyrac);
+        }
+    }
+
+    return text.replace(/\D/g, '');
+}
+
+const paraFormatter = new Intl.NumberFormat(
+    window.paraLocale || undefined,
+    {
+        maximumFractionDigits: 0
+    }
+);
+
+function paraFormatla(input) {
+    const temizDeger = paraTamsayiDegeri(input.value);
+    input.value = temizDeger ? paraFormatter.format(Number(temizDeger)) : '';
+}
+
+function paraInputlariniNormalizeEt() {
+    document.querySelectorAll('.money-integer').forEach(input => {
+        input.value = paraTamsayiDegeri(input.value);
+    });
+}
+
+function ParaTamsayiAyarla() {
+    document.querySelectorAll('.money-integer').forEach(input => {
+        paraFormatla(input);
+        input.addEventListener('focus', () => {
+            input.value = paraTamsayiDegeri(input.value);
+        });
+        input.addEventListener('blur', () => paraFormatla(input));
+    });
+
+}
