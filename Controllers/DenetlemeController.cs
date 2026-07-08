@@ -52,7 +52,7 @@ namespace TarimDonusum.Controllers
 
                 Sonuc<List<Donem>> donemSonuc = await _basvuruIsKurallari.DonemleriListeleAsync();
                 Sonuc<List<Il>> ilSonuc = await _basvuruIsKurallari.IlleriListeleAsync();
-                Sonuc<List<Ilce>> ilceSonuc = await _basvuruIsKurallari.IlceleriListeleAsync(sonuc.nesne.IlId);
+                Sonuc<List<Ilce>> ilceSonuc = await _basvuruIsKurallari.IlceleriListeleAsync(sonuc.nesne.basvuruFirma.il.id);
                 //Sonuc<List<DegerZinciri>> degerZinciriSonuc = await _basvuruIsKurallari.DegerZincirleriListeleAsync(sonuc.nesne.IlId.Value, 1);
                 //List<DegerZinciri> degerZincirleri = degerZinciriSonuc.nesne ?? new List<DegerZinciri>();
                 //bool kayitliZincirGecerli = sonuc.nesne.yatirim.degerZinciriId.HasValue &&

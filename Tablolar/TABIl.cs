@@ -54,10 +54,10 @@ namespace TarimDonusum.Tablolar
         {
             return new Il
             {
-                Id = reader.GetInt32(0),
-                Kod = OrtakFonksiyonlar.Int32Yap(reader.GetValue(1)),
-                Ad = reader.GetString(2),
-                Aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(3)) == 1
+                id = reader.GetInt32(0),
+                kod = OrtakFonksiyonlar.Int32Yap(reader.GetValue(1)),
+                ad = reader.GetString(2),
+                aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(3)) == 1
             };
         }
     }

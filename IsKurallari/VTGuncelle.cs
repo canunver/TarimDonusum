@@ -327,13 +327,75 @@ namespace TarimDonusum.IsKurallari
                     CREATE INDEX IX_BasvuruUygulamaAdresleri_IlceId ON dbo.BasvuruUygulamaAdresleri(IlceId);
                 "),
             new(19,
-                @"ALTER TABLE Basvuru add 
+                @"ALTER TABLE Basvuru ADD 
                     IrtibatKisi nvarchar(150) NULL,
                     IrtibatUnvan nvarchar(100) NULL,
                     IrtibatTelefon nvarchar(30) NULL,
                     IrtibatePosta nvarchar(256) NULL,
                     IrtibatAdres nvarchar(1000) NULL,
                     IrtibatYetkiliKisiler nvarchar(1000) NULL
+                "),
+            new(20,
+                @"ALTER TABLE Basvuru ADD 
+                    OncekiYilNetSatis DECIMAL(18,2) NULL, 
+                    SonYilNetSatis DECIMAL(18,2) NULL, 
+                    OncekiYilAktifToplami DECIMAL(18,2) NULL, 
+                    SonYilAktifToplami DECIMAL(18,2) NULL
+                "),
+            new(21,
+                @"CREATE TABLE dbo.DosyaBilgisi
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_DosyaBilgisi PRIMARY KEY,
+                        ModulKod NVARCHAR(100) NOT NULL,
+                        FormAd NVARCHAR(150) NOT NULL,
+                        FormAnahtar NVARCHAR(150) NOT NULL,
+                        DosyaNo INT NOT NULL,
+                        DosyaAdi NVARCHAR(260) NOT NULL,
+                        Buyukluk BIGINT NOT NULL,
+                        IlkYuklemeTarihi DATETIME NOT NULL CONSTRAINT DF_DosyaBilgisi_IlkYuklemeTarihi DEFAULT GETDATE(),
+                        STarihi DATETIME NOT NULL CONSTRAINT DF_DosyaBilgisi_STarihi DEFAULT GETDATE(),
+                        Aciklama NVARCHAR(1000) NULL
+                    );
+
+                    CREATE UNIQUE INDEX UX_DosyaBilgisi_Anahtar
+                        ON dbo.DosyaBilgisi(ModulKod, FormAd, FormAnahtar, DosyaNo);
+                    CREATE INDEX IX_DosyaBilgisi_ModulKod
+                        ON dbo.DosyaBilgisi(ModulKod);
+                    CREATE INDEX IX_DosyaBilgisi_Form
+                        ON dbo.DosyaBilgisi(ModulKod, FormAd, FormAnahtar);
+
+                    CREATE TABLE dbo.DosyaIcerik
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_DosyaIcerik PRIMARY KEY,
+                        DosyaId INT NOT NULL,
+                        PaketNo INT NOT NULL,
+                        PaketIcerik VARBINARY(MAX) NOT NULL,
+                        CONSTRAINT FK_DosyaIcerik_DosyaBilgisi
+                            FOREIGN KEY (DosyaId) REFERENCES dbo.DosyaBilgisi(Id) ON DELETE CASCADE
+                    );
+
+                    CREATE UNIQUE INDEX UX_DosyaIcerik_DosyaPaket
+                        ON dbo.DosyaIcerik(DosyaId, PaketNo);
+
+                    CREATE TABLE dbo.DosyaBilgisiLog
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_DosyaBilgisiLog PRIMARY KEY,
+                        DosyaId INT NULL,
+                        ModulKod NVARCHAR(100) NOT NULL,
+                        FormAd NVARCHAR(150) NOT NULL,
+                        FormAnahtar NVARCHAR(150) NOT NULL,
+                        DosyaNo INT NOT NULL,
+                        IslemTarihi DATETIME NOT NULL CONSTRAINT DF_DosyaBilgisiLog_IslemTarihi DEFAULT GETDATE(),
+                        Islem NVARCHAR(100) NOT NULL,
+                        JsonText NVARCHAR(MAX) NOT NULL
+                    );
+
+                    CREATE INDEX IX_DosyaBilgisiLog_DosyaId
+                        ON dbo.DosyaBilgisiLog(DosyaId);
+                    CREATE INDEX IX_DosyaBilgisiLog_Anahtar
+                        ON dbo.DosyaBilgisiLog(ModulKod, FormAd, FormAnahtar, DosyaNo);
+                    CREATE INDEX IX_DosyaBilgisiLog_IslemTarihi
+                        ON dbo.DosyaBilgisiLog(IslemTarihi);
                 "),
         ];
 
@@ -347,14 +409,28 @@ namespace TarimDonusum.IsKurallari
                 return;
             }
 
+            await GuncelleAsync(connectionString, logger, Komutlar);
+
+            string? dosyaConnectionString = configuration.GetConnectionString("DosyaConnection");
+            if (!string.IsNullOrWhiteSpace(dosyaConnectionString)
+                && !string.Equals(dosyaConnectionString, connectionString, StringComparison.OrdinalIgnoreCase))
+            {
+                await GuncelleAsync(
+                    dosyaConnectionString,
+                    logger,
+                    Komutlar.Where(komut => komut.KomutNo == 21).ToArray());
+            }
+        }
+
+        private static async Task GuncelleAsync(string connectionString, ILogger logger, VTKomut[] komutlar)
+        {
             await using SqlConnection connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
             await VTGuncelleLogTablosuOlusturAsync(connection);
-            await EksikTabloLoglariniTemizleAsync(connection);
 
             HashSet<int> calisanKomutNolari = await CalisanKomutNolariniOkuAsync(connection);
-            VTKomut[] calisacakKomutlar = Komutlar
+            VTKomut[] calisacakKomutlar = komutlar
                 .Where(komut => !calisanKomutNolari.Contains(komut.KomutNo))
                 .OrderBy(komut => komut.KomutNo)
                 .ToArray();
@@ -416,43 +492,6 @@ namespace TarimDonusum.IsKurallari
                         Zaman DATETIME NOT NULL CONSTRAINT DF_VTGuncelleLog_Zaman DEFAULT GETDATE()
                     );
                 END
-                ";
-
-            await KomutCalistirAsync(connection, null, sql);
-        }
-
-        private static async Task EksikTabloLoglariniTemizleAsync(SqlConnection connection)
-        {
-            const string sql = @"
-                DELETE FROM dbo.VTGuncelleLog
-                WHERE
-                    (KomutNo = 4 AND OBJECT_ID(N'dbo.Donem', N'U') IS NULL)
-                    OR (KomutNo = 5 AND OBJECT_ID(N'dbo.Firma', N'U') IS NULL)
-                    OR (KomutNo = 6 AND (OBJECT_ID(N'dbo.Il', N'U') IS NULL OR OBJECT_ID(N'dbo.Basvuru', N'U') IS NULL))
-                    OR (KomutNo = 8 AND OBJECT_ID(N'dbo.BasvuruLog', N'U') IS NULL)
-                    OR (KomutNo = 9 AND OBJECT_ID(N'dbo.FirmaLog', N'U') IS NULL)
-                    OR (KomutNo = 10 AND OBJECT_ID(N'dbo.FirmaKullanici', N'U') IS NULL)
-                    OR (KomutNo = 14 AND OBJECT_ID(N'dbo.DegerZinciri', N'U') IS NULL)
-                    OR (KomutNo = 15 AND OBJECT_ID(N'dbo.DegerZinciriIl', N'U') IS NULL)
-                    OR (KomutNo = 16 AND OBJECT_ID(N'dbo.DegerZinciriAsama', N'U') IS NULL)
-                    OR (KomutNo = 17 AND (
-                        OBJECT_ID(N'dbo.DegerZinciri', N'U') IS NULL
-                        OR OBJECT_ID(N'dbo.DegerZinciriIl', N'U') IS NULL
-                        OR OBJECT_ID(N'dbo.DegerZinciriAsama', N'U') IS NULL
-                    ))
-                    OR (KomutNo = 18 AND COL_LENGTH(N'dbo.Basvuru', N'YatirimTuru') IS NULL)
-                    OR (KomutNo = 20 AND OBJECT_ID(N'dbo.BasvuruHarcamaTuru', N'U') IS NULL)
-                    OR (KomutNo = 21 AND OBJECT_ID(N'dbo.BasvuruDegerZinciriAsama', N'U') IS NULL)
-                    OR (KomutNo = 22 AND OBJECT_ID(N'dbo.Ilce', N'U') IS NULL)
-                    OR (KomutNo = 23 AND OBJECT_ID(N'dbo.BasvuruUygulamaAdresleri', N'U') IS NULL)
-                    OR (KomutNo = 24 AND (
-                        COL_LENGTH(N'dbo.Basvuru', N'ToplamYatirimTutari') IS NULL
-                        OR COL_LENGTH(N'dbo.Basvuru', N'UygunHarcamaTutari') IS NULL
-                        OR COL_LENGTH(N'dbo.Basvuru', N'TalepEdilenDestekTutari') IS NULL
-                        OR COL_LENGTH(N'dbo.Basvuru', N'BasvuruSahibiKatkisi') IS NULL
-                        OR COL_LENGTH(N'dbo.Basvuru', N'DestekOrani') IS NULL
-                        OR COL_LENGTH(N'dbo.Basvuru', N'YatiriminAmaci') IS NULL
-                    ));
                 ";
 
             await KomutCalistirAsync(connection, null, sql);

@@ -4,7 +4,7 @@ namespace TarimDonusum.Models
 {
     public class Firma
     {
-        public int? Id { get; set; }
+        public int id { get; set; } = 0;
 
         [Required]
         [StringLength(20)]

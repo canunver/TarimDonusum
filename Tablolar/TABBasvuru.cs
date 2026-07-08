@@ -56,6 +56,11 @@ namespace TarimDonusum.Tablolar
                     B.IrtibatAdres,
                     B.IrtibatYetkiliKisiler,
 
+                    B.OncekiYilNetSatis,
+                    B.SonYilNetSatis,
+                    B.OncekiYilAktifToplami,
+                    B.SonYilAktifToplami,
+
                     D.Yil,
                     D.Ad,
                     D.BasvuruyaAcikMi,
@@ -136,11 +141,11 @@ namespace TarimDonusum.Tablolar
 
         public async Task<int> BasvuruFirmaKaydetAsync(BasvuruFirma basvuru)
         {
-            if (basvuru.Id <= 0)
+            if (basvuru.id <= 0)
                 return await BasvuruFirmaEkleAsync(basvuru);
 
             await BasvuruFirmaGuncelleAsync(basvuru);
-            return basvuru.Id;
+            return basvuru.id;
         }
 
         private async Task<int> BasvuruFirmaEkleAsync(BasvuruFirma basvuru)
@@ -156,8 +161,8 @@ namespace TarimDonusum.Tablolar
             await using SqlCommand command = KomutOlustur(sql);
             BasvuruFirmaParametreleriEkle(command, basvuru);
 
-            basvuru.Id = OrtakFonksiyonlar.Int32Yap(await command.ExecuteScalarAsync());
-            return basvuru.Id;
+            basvuru.id = OrtakFonksiyonlar.Int32Yap(await command.ExecuteScalarAsync());
+            return basvuru.id;
         }
 
         private async Task BasvuruFirmaGuncelleAsync(BasvuruFirma basvuru)
@@ -169,8 +174,56 @@ namespace TarimDonusum.Tablolar
                 WHERE Id = @Id;";
 
             await using SqlCommand command = KomutOlustur(sql);
-            command.Parameters.AddWithValue("@Id", basvuru.Id);
+            command.Parameters.AddWithValue("@Id", basvuru.id);
             BasvuruFirmaParametreleriEkle(command, basvuru);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task BasvuruFinansGuncelleAsync(BasvuruFinans finans)
+        {
+            const string sql = @"
+                UPDATE dbo.Basvuru
+                SET
+                    ToplamYatirimTutari = @ToplamYatirimTutari,
+                    UygunHarcamaTutari = @UygunHarcamaTutari,
+                    TalepEdilenDestekTutari = @TalepEdilenDestekTutari,
+                    BasvuruSahibiKatkisi = @BasvuruSahibiKatkisi,
+                    DestekOrani = @DestekOrani,
+                    YatiriminAmaci = @YatiriminAmaci
+                WHERE Id = @Id;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+
+            command.Parameters.AddWithValue("@ToplamYatirimTutari", finans.toplamYatirimTutari);
+            command.Parameters.AddWithValue("@UygunHarcamaTutari", finans.uygunHarcamaTutari);
+            command.Parameters.AddWithValue("@TalepEdilenDestekTutari", finans.talepEdilenDestekTutari);
+            command.Parameters.AddWithValue("@BasvuruSahibiKatkisi", finans.basvuruSahibiKatkisi);
+            command.Parameters.AddWithValue("@DestekOrani", finans.destekOrani);
+            command.Parameters.AddWithValue("@YatiriminAmaci", finans.yatiriminAmaci);
+            command.Parameters.AddWithValue("@Id", finans.basvuruId);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task BasvuruMaliGuncelleAsync(BasvuruMali mali)
+        {
+            const string sql = @"
+                UPDATE dbo.Basvuru
+                SET
+                    OncekiYilNetSatis = @OncekiYilNetSatis,
+                    SonYilNetSatis = @SonYilNetSatis,
+                    OncekiYilAktifToplami = @OncekiYilAktifToplami,
+                    SonYilAktifToplami = @SonYilAktifToplami
+                WHERE Id = @Id;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+
+            command.Parameters.AddWithValue("@OncekiYilNetSatis", mali.oncekiYilNetSatis);
+            command.Parameters.AddWithValue("@SonYilNetSatis", mali.sonYilNetSatis);
+            command.Parameters.AddWithValue("@OncekiYilAktifToplami", mali.oncekiYilAktifToplami);
+            command.Parameters.AddWithValue("@SonYilAktifToplami", mali.sonYilAktifToplami);
+            command.Parameters.AddWithValue("@Id", mali.basvuruId);
 
             await command.ExecuteNonQueryAsync();
         }
@@ -186,7 +239,7 @@ namespace TarimDonusum.Tablolar
             return await command.ExecuteNonQueryAsync();
         }
 
-        public async Task BasvuruIletisimGuncelleAsync(BasvuruIletisim iletisim)
+        public async Task BasvuruIletisimGuncelleAsync(BasvuruIrtibat iletisim)
         {
             const string sql = @"
                 UPDATE dbo.Basvuru
@@ -207,7 +260,7 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@IrtibatePosta", iletisim.ePosta);
             command.Parameters.AddWithValue("@IrtibatAdres", iletisim.adres);
             command.Parameters.AddWithValue("@IrtibatYetkiliKisiler", iletisim.yetkiliKisiler);
-            command.Parameters.AddWithValue("@Id", iletisim.BasvuruId);
+            command.Parameters.AddWithValue("@Id", iletisim.basvuruId);
 
             await command.ExecuteNonQueryAsync();
         }
@@ -234,15 +287,15 @@ namespace TarimDonusum.Tablolar
 
         private static void BasvuruFirmaParametreleriEkle(SqlCommand command, BasvuruFirma basvuru)
         {
-            command.Parameters.AddWithValue("@FirmaId", (object?)basvuru.firma.Id ?? DBNull.Value);
-            command.Parameters.AddWithValue("@DonemId", (object?)basvuru.donem.Id ?? DBNull.Value);
-            command.Parameters.AddWithValue("@IlId", (object?)basvuru.il.Id ?? DBNull.Value);
-            command.Parameters.AddWithValue("@BasvuruKonusu", basvuru.BasvuruKonusu ?? "");
-            command.Parameters.AddWithValue("@BasvuruSahibiTuru", basvuru.BasvuruSahibiTuru.HasValue ? (int)basvuru.BasvuruSahibiTuru.Value : DBNull.Value);
-            command.Parameters.AddWithValue("@SonIkiYildirFaalMi", basvuru.SonIkiYildirFaalMi ? 1 : 0);
-            command.Parameters.AddWithValue("@OzelSektorPayi", (object?)basvuru.OzelSektorPayi ?? DBNull.Value);
-            command.Parameters.AddWithValue("@BagliOrtakIsletmeVarMi", basvuru.BagliOrtakIsletmeVarMi ? 1 : 0);
-            command.Parameters.AddWithValue("@BagliOrtakAciklama", string.IsNullOrWhiteSpace(basvuru.BagliOrtakAciklama) ? DBNull.Value : basvuru.BagliOrtakAciklama);
+            command.Parameters.AddWithValue("@FirmaId", (object?)basvuru.firma.id ?? DBNull.Value);
+            command.Parameters.AddWithValue("@DonemId", (object?)basvuru.donem.id ?? DBNull.Value);
+            command.Parameters.AddWithValue("@IlId", (object?)basvuru.il.id ?? DBNull.Value);
+            command.Parameters.AddWithValue("@BasvuruKonusu", basvuru.basvuruKonusu ?? "");
+            command.Parameters.AddWithValue("@BasvuruSahibiTuru", basvuru.basvuruSahibiTuru.HasValue ? (int)basvuru.basvuruSahibiTuru.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@SonIkiYildirFaalMi", basvuru.sonIkiYildirFaalMi ? 1 : 0);
+            command.Parameters.AddWithValue("@OzelSektorPayi", (object?)basvuru.ozelSektorPayi ?? DBNull.Value);
+            command.Parameters.AddWithValue("@BagliOrtakIsletmeVarMi", basvuru.bagliOrtakIsletmeVarMi ? 1 : 0);
+            command.Parameters.AddWithValue("@BagliOrtakAciklama", string.IsNullOrWhiteSpace(basvuru.bagliOrtakAciklama) ? DBNull.Value : basvuru.bagliOrtakAciklama);
             command.Parameters.AddWithValue("@Durum", 1);
         }
 
@@ -269,25 +322,25 @@ namespace TarimDonusum.Tablolar
             int kol = 0;
             basvuru.Id = reader.GetInt32(kol++);
             basvuru.durum = (enumBasvuruDurum)reader.GetInt32(kol++);
-            basvuru.basvuruFirma.OzelSektorPayi = NullOkuDecimal(reader, kol++);
-            basvuru.basvuruFirma.BagliOrtakIsletmeVarMi = BoolYap(NullOkuInt(reader, kol++));
-            basvuru.basvuruFirma.BagliOrtakAciklama = NullOkuString(reader, kol++);
-            basvuru.FirmaId = reader.GetInt32(kol++);
-            basvuru.DonemId = reader.GetInt32(kol++);
-            basvuru.IlId = reader.GetInt32(kol++);
-            basvuru.basvuruFirma.BasvuruKonusu = reader.GetString(kol++);
-            basvuru.basvuruFirma.BasvuruSahibiTuru = (enumBasvuruSahibiTuru)NullDuzeltInt(reader, kol++);
-            basvuru.basvuruFirma.SonIkiYildirFaalMi = BoolYap(NullOkuInt(reader, kol++));
+            basvuru.basvuruFirma.ozelSektorPayi = NullOkuDecimal(reader, kol++);
+            basvuru.basvuruFirma.bagliOrtakIsletmeVarMi = BoolYap(NullOkuInt(reader, kol++));
+            basvuru.basvuruFirma.bagliOrtakAciklama = NullOkuString(reader, kol++);
+            basvuru.basvuruFirma.firmaId = reader.GetInt32(kol++);
+            basvuru.basvuruFirma.donem.id = reader.GetInt32(kol++);
+            basvuru.basvuruFirma.il.id = reader.GetInt32(kol++);
+            basvuru.basvuruFirma.basvuruKonusu = reader.GetString(kol++);
+            basvuru.basvuruFirma.basvuruSahibiTuru = (enumBasvuruSahibiTuru)NullDuzeltInt(reader, kol++);
+            basvuru.basvuruFirma.sonIkiYildirFaalMi = BoolYap(NullOkuInt(reader, kol++));
             basvuru.yatirim.yatirimAdi = NullOkuString(reader, kol++);
             basvuru.yatirim.yatirimTuru = (enumYatirimTuru)NullDuzeltInt(reader, kol++);
-            basvuru.finans.ToplamYatirimTutari = NullOkuDecimal(reader, kol++);
-            basvuru.finans.UygunHarcamaTutari = NullOkuDecimal(reader, kol++);
-            basvuru.finans.TalepEdilenDestekTutari = NullOkuDecimal(reader, kol++);
-            basvuru.finans.BasvuruSahibiKatkisi = NullOkuDecimal(reader, kol++);
-            basvuru.finans.DestekOrani = NullOkuDecimal(reader, kol++);
-            basvuru.finans.YatiriminAmaci = NullOkuString(reader, kol++);
+            basvuru.finans.toplamYatirimTutari = NullOkuDecimal(reader, kol++);
+            basvuru.finans.uygunHarcamaTutari = NullOkuDecimal(reader, kol++);
+            basvuru.finans.talepEdilenDestekTutari = NullOkuDecimal(reader, kol++);
+            basvuru.finans.basvuruSahibiKatkisi = NullOkuDecimal(reader, kol++);
+            basvuru.finans.destekOrani = NullOkuDecimal(reader, kol++);
+            basvuru.finans.yatiriminAmaci = NullOkuString(reader, kol++);
 
-            basvuru.irtibat.BasvuruId = basvuru.Id;
+            basvuru.irtibat.basvuruId = basvuru.Id;
             basvuru.irtibat.kisi = NullOkuString(reader, kol++);
             basvuru.irtibat.unvan = NullOkuString(reader, kol++);
             basvuru.irtibat.telefon = NullOkuString(reader, kol++);
@@ -295,20 +348,26 @@ namespace TarimDonusum.Tablolar
             basvuru.irtibat.adres = NullOkuString(reader, kol++);
             basvuru.irtibat.yetkiliKisiler = NullOkuString(reader, kol++);
 
-            basvuru.donem.Yil = NullDuzeltInt(reader, kol++);
-            basvuru.donem.Ad = reader.GetString(kol++);
-            basvuru.donem.BasvuruyaAcikMi = BoolYap(NullOkuInt(reader, kol++));
-            basvuru.donem.BasvuruBaslangicTarihi = reader.GetDateTime(kol++);
-            basvuru.donem.BasvuruBitisTarihi = reader.GetDateTime(kol++);
-            basvuru.donem.OnBasvuruBitisTarihi = reader.GetDateTime(kol++);
-            basvuru.donem.MinimumYatirimTutari = NullOkuDecimal(reader, kol++);
-            basvuru.donem.MaksimumYatirimTutari = NullOkuDecimal(reader, kol++);
-            basvuru.donem.MaksimumDestekTutari = NullOkuDecimal(reader, kol++);
-            basvuru.donem.DestekOrani = NullOkuDecimal(reader, kol++);
-            basvuru.donem.Aciklama = reader.GetString(kol++);
-            basvuru.Il.Kod = NullDuzeltInt(reader, kol++);
-            basvuru.Il.Ad = reader.GetString(kol++);
-            basvuru.Il.Aktif = BoolYap(NullOkuInt(reader, kol++));
+            basvuru.mali.basvuruId = basvuru.Id;
+            basvuru.mali.oncekiYilNetSatis = NullOkuDecimal(reader, kol++);
+            basvuru.mali.sonYilNetSatis = NullOkuDecimal(reader, kol++);
+            basvuru.mali.oncekiYilAktifToplami = NullOkuDecimal(reader, kol++);
+            basvuru.mali.sonYilAktifToplami = NullOkuDecimal(reader, kol++);
+
+            basvuru.basvuruFirma.donem.yil = NullDuzeltInt(reader, kol++);
+            basvuru.basvuruFirma.donem.ad = reader.GetString(kol++);
+            basvuru.basvuruFirma.donem.basvuruyaAcikMi = BoolYap(NullOkuInt(reader, kol++));
+            basvuru.basvuruFirma.donem.basvuruBaslangicTarihi = reader.GetDateTime(kol++);
+            basvuru.basvuruFirma.donem.basvuruBitisTarihi = reader.GetDateTime(kol++);
+            basvuru.basvuruFirma.donem.onBasvuruBitisTarihi = reader.GetDateTime(kol++);
+            basvuru.basvuruFirma.donem.minimumYatirimTutari = NullOkuDecimal(reader, kol++);
+            basvuru.basvuruFirma.donem.maksimumYatirimTutari = NullOkuDecimal(reader, kol++);
+            basvuru.basvuruFirma.donem.maksimumDestekTutari = NullOkuDecimal(reader, kol++);
+            basvuru.basvuruFirma.donem.destekOrani = NullOkuDecimal(reader, kol++);
+            basvuru.basvuruFirma.donem.aciklama = reader.GetString(kol++);
+            basvuru.basvuruFirma.il.kod = NullDuzeltInt(reader, kol++);
+            basvuru.basvuruFirma.il.ad = reader.GetString(kol++);
+            basvuru.basvuruFirma.il.aktif = BoolYap(NullOkuInt(reader, kol++));
 
             basvuru.basvuruFirma.firma.vergiKimlikNo = reader.GetString(kol++);
             basvuru.basvuruFirma.firma.ticaretUnvani = reader.GetString(kol++);

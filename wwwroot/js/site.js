@@ -310,26 +310,58 @@ $(document).on("expanded.lte.treeview collapsed.lte.treeview",
         BasvuruMenuCookieKaydet();
     });
 
+function paraAyraclari() {
+    const locale = window.paraLocale || undefined;
+    const parts = new Intl.NumberFormat(locale).formatToParts(1234567.89);
+    return {
+        grup: parts.find(p => p.type === "group")?.value || ".",
+        ondalik: parts.find(p => p.type === "decimal")?.value || ","
+    };
+}
 
+window.degerDec = function (name) {
+    const ham = $(`[name="${name}"]`).val()?.toString().trim();
+    if (!ham) return 0.0;
+
+    const ayrac = paraAyraclari();
+
+    let text = ham;
+
+    // Binlik ayraçlarını kaldır
+    if (ayrac.grup) {
+        text = text.replaceAll(ayrac.grup, "");
+    }
+
+    // Ondalık ayracını JS standardına çevir
+    if (ayrac.ondalik !== ".") {
+        text = text.replace(ayrac.ondalik, ".");
+    }
+
+    const v = parseFloat(text);
+    return isNaN(v) ? 0.0 : v;
+};
 
 function paraTamsayiDegeri(value) {
     let text = String(value || '').trim();
     if (!text) return '';
 
-    const sonVirgul = text.lastIndexOf(',');
-    const sonNokta = text.lastIndexOf('.');
-    const sonAyrac = Math.max(sonVirgul, sonNokta);
+    const ayrac = paraAyraclari();
 
-    if (sonAyrac >= 0) {
-        const sonrasi = text.slice(sonAyrac + 1).replace(/\D/g, '');
-        if (sonrasi.length > 0 && sonrasi.length < 3) {
-            text = text.slice(0, sonAyrac);
+    // Sadece gerçek ondalık ayracı varsa kuruş kısmını at
+    const ondalikIndex = text.lastIndexOf(ayrac.ondalik);
+
+    if (ondalikIndex >= 0) {
+        const sonrasi = text.slice(ondalikIndex + 1).replace(/\D/g, '');
+
+        // 10,50 gibi girişlerde 50 kuruş sayılır ve atılır
+        if (sonrasi.length > 0 && sonrasi.length <= 2) {
+            text = text.slice(0, ondalikIndex);
         }
     }
 
+    // Geriye kalan tüm rakam dışı karakterleri temizle
     return text.replace(/\D/g, '');
 }
-
 const paraFormatter = new Intl.NumberFormat(
     window.paraLocale || undefined,
     {

@@ -77,18 +77,18 @@ namespace TarimDonusum.Tablolar
         {
             Donem d = new Donem();
             int kol = 0;
-            d.Id = reader.GetInt32(kol++);
-            d.Yil = NullDuzeltInt(reader, kol++);
-            d.Ad = reader.GetString(kol++);
-            d.BasvuruyaAcikMi = BoolYap(NullDuzeltInt(reader, kol++));
-            d.BasvuruBaslangicTarihi = reader.GetDateTime(kol++);
-            d.BasvuruBitisTarihi = reader.GetDateTime(kol++);
-            d.OnBasvuruBitisTarihi = reader.GetDateTime(kol++);
-            d.MinimumYatirimTutari = reader.GetDecimal(kol++);
-            d.MaksimumYatirimTutari = reader.GetDecimal(kol++);
-            d.MaksimumDestekTutari = reader.GetDecimal(kol++);
-            d.DestekOrani = reader.GetDecimal(kol++);
-            d.Aciklama = reader.GetString(kol++);
+            d.id = reader.GetInt32(kol++);
+            d.yil = NullDuzeltInt(reader, kol++);
+            d.ad = reader.GetString(kol++);
+            d.basvuruyaAcikMi = BoolYap(NullDuzeltInt(reader, kol++));
+            d.basvuruBaslangicTarihi = reader.GetDateTime(kol++);
+            d.basvuruBitisTarihi = reader.GetDateTime(kol++);
+            d.onBasvuruBitisTarihi = reader.GetDateTime(kol++);
+            d.minimumYatirimTutari = reader.GetDecimal(kol++);
+            d.maksimumYatirimTutari = reader.GetDecimal(kol++);
+            d.maksimumDestekTutari = reader.GetDecimal(kol++);
+            d.destekOrani = reader.GetDecimal(kol++);
+            d.aciklama = reader.GetString(kol++);
             return d;
         }
     }

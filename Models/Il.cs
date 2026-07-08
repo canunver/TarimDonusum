@@ -2,9 +2,9 @@ namespace TarimDonusum.Models
 {
     public class Il
     {
-        public int? Id { get; set; }
-        public int Kod { get; set; }
-        public string Ad { get; set; } = "";
-        public bool Aktif { get; set; } = true;
+        public int id { get; set; } = -1;
+        public int kod { get; set; } = -1;
+        public string ad { get; set; } = "";
+        public bool aktif { get; set; } = true;
     }
 }

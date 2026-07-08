@@ -2,30 +2,30 @@ namespace TarimDonusum.Models
 {
     public class Donem
     {
-        public int? Id { get; set; }
-        public int Yil { get; set; } = 0;
-        public string Ad { get; set; } = "";
-        public bool BasvuruyaAcikMi { get; set; }
-        public DateTime? BasvuruBaslangicTarihi { get; set; }
-        public DateTime? BasvuruBitisTarihi { get; set; }
-        public DateTime? OnBasvuruBitisTarihi { get; set; }
-        public decimal? MinimumYatirimTutari { get; set; }
-        public decimal? MaksimumYatirimTutari { get; set; }
-        public decimal? MaksimumDestekTutari { get; set; }
-        public decimal? DestekOrani { get; set; }
-        public string Aciklama { get; set; } = "";
+        public int id { get; set; } = 0;
+        public int yil { get; set; } = 0;
+        public string ad { get; set; } = "";
+        public bool basvuruyaAcikMi { get; set; }
+        public DateTime? basvuruBaslangicTarihi { get; set; }
+        public DateTime? basvuruBitisTarihi { get; set; }
+        public DateTime? onBasvuruBitisTarihi { get; set; }
+        public decimal? minimumYatirimTutari { get; set; }
+        public decimal? maksimumYatirimTutari { get; set; }
+        public decimal? maksimumDestekTutari { get; set; }
+        public decimal? destekOrani { get; set; }
+        public string aciklama { get; set; } = "";
 
         public bool SecilebilirMi()
         {
             DateTime bugun = DateTime.Today;
 
-            if (!BasvuruyaAcikMi)
+            if (!basvuruyaAcikMi)
                 return false;
 
-            if (BasvuruBaslangicTarihi.HasValue && BasvuruBaslangicTarihi.Value.Date > bugun)
+            if (basvuruBaslangicTarihi.HasValue && basvuruBaslangicTarihi.Value.Date > bugun)
                 return false;
 
-            if (BasvuruBitisTarihi.HasValue && BasvuruBitisTarihi.Value.Date < bugun)
+            if (basvuruBitisTarihi.HasValue && basvuruBitisTarihi.Value.Date < bugun)
                 return false;
 
             return true;

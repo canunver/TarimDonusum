@@ -225,10 +225,10 @@ namespace TarimDonusum.IsKurallari
                     return sonuc;
                 }
 
-                if (kullanici != null && basvuru.FirmaId.HasValue)
+                if (kullanici != null && basvuru.basvuruFirma.firmaId > 0)
                 {
                     TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection, _localizer);
-                    if (!await tabFirmaKullanici.IliskiVarMiAsync(basvuru.FirmaId.Value, kullanici.Id))
+                    if (!await tabFirmaKullanici.IliskiVarMiAsync(basvuru.basvuruFirma.firmaId, kullanici.Id))
                     {
                         sonuc.HataEkle("Bu başvuruyu görüntüleme yetkiniz yok.");
                         return sonuc;
@@ -245,7 +245,7 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        public async Task<Sonuc<Firma>> FirmaVergiNoIleOkuAsync(string vergiKimlikNo, Kullanici? kullanici)
+        public async Task<Sonuc<Firma>> FirmaVergiNoIleOkuAsync(Kullanici? kullanici, int firmaId, string vergiKimlikNo)
         {
             Sonuc<Firma> sonuc = new Sonuc<Firma>();
             vergiKimlikNo = vergiKimlikNo?.Trim() ?? "";
@@ -256,9 +256,9 @@ namespace TarimDonusum.IsKurallari
                 return sonuc;
             }
 
-            if (string.IsNullOrWhiteSpace(vergiKimlikNo))
+            if (string.IsNullOrWhiteSpace(vergiKimlikNo) && firmaId <= 0)
             {
-                sonuc.HataEkle("Vergi kimlik no girilmelidir.");
+                sonuc.HataEkle("Sorgulama bilgisi verilmelidir.");
             }
             if (!sonuc.basarili)
                 return sonuc;
@@ -269,17 +269,21 @@ namespace TarimDonusum.IsKurallari
                 await connection.OpenAsync();
 
                 TABFirma tabFirma = new TABFirma(connection, _localizer);
-                Firma? firma = await tabFirma.VergiKimlikNoIleOkuAsync(vergiKimlikNo);
-                if (firma == null || firma.Id == null)
-                    return sonuc;
-
-                TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection, _localizer);
-                if (!await tabFirmaKullanici.IliskiVarMiAsync(firma.Id.Value, kullanici.Id))
+                Firma? firma = await tabFirma.VergiKimlikNoIleOkuAsync(firmaId, vergiKimlikNo);
+                if (firma == null || firma.id <= 0)
                 {
-                    sonuc.HataEkle("Bu firma kullanıcı ile ilişkili değil.");
+                    sonuc.HataEkle("Firma bulunamadı!");
                     return sonuc;
                 }
-
+                if (true) //başvuru kullanıcısı ise
+                {
+                    TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection, _localizer);
+                    if (!await tabFirmaKullanici.IliskiVarMiAsync(firma.id, kullanici.Id))
+                    {
+                        sonuc.HataEkle("Bu firma kullanıcı ile ilişkili değil.");
+                        return sonuc;
+                    }
+                }
                 sonuc.nesne = firma;
             }
             catch (Exception ex)
@@ -290,7 +294,7 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        public async Task<Sonuc<int>> FirmaEkleAsync(Firma firma, Kullanici? kullanici)
+        public async Task<Sonuc<int>> FirmaEkleGuncelleAsync(Firma firma, Kullanici? kullanici)
         {
             Sonuc<int> sonuc = new Sonuc<int>();
 
@@ -317,12 +321,12 @@ namespace TarimDonusum.IsKurallari
                 await connection.OpenAsync();
 
                 TABFirma tabFirma = new TABFirma(connection);
-                Firma? mevcut = await tabFirma.VergiKimlikNoIleOkuAsync(firma.vergiKimlikNo);
+                Firma? mevcut = await tabFirma.VergiKimlikNoIleOkuAsync(0, firma.vergiKimlikNo);
                 if (mevcut != null)
                 {
                     TABFirmaKullanici mevcutIliskiTablosu = new TABFirmaKullanici(connection);
-                    if (await mevcutIliskiTablosu.IliskiVarMiAsync(mevcut.Id.Value, kullaniciId))
-                        sonuc.nesne = mevcut.Id.Value;
+                    if (await mevcutIliskiTablosu.IliskiVarMiAsync(mevcut.id, kullaniciId))
+                        sonuc.nesne = mevcut.id;
                     else
                         sonuc.HataEkle("Firma sistemde var fakat kullanıcı ile ilişkili değil.");
 
@@ -338,7 +342,7 @@ namespace TarimDonusum.IsKurallari
                     TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection, null, transaction);
                     await tabFirmaKullanici.EkleYoksaAsync(new FirmaKullanici
                     {
-                        FirmaId = firma.Id,
+                        FirmaId = firma.id,
                         KullaniciId = kullaniciId,
                         Aktif = true,
                         IliskiTarihi = DateTime.Now,
@@ -365,82 +369,82 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        public async Task<Sonuc<Firma>> FirmaGuncelleAsync(Firma firma, Kullanici? kullanici)
-        {
-            Sonuc<Firma> sonuc = new Sonuc<Firma>();
-            if (kullanici == null)
-            {
-                sonuc.HataEkle("Kullanıcı bilgisi gelmedi!.");
-                return sonuc;
-            }
-            int kullaniciId = kullanici.Id;
-            try
-            {
-                //FirmaNormalizeEt(firma);
+        //public async Task<Sonuc<Firma>> FirmaGuncelleAsync(Firma firma, Kullanici? kullanici)
+        //{
+        //    Sonuc<Firma> sonuc = new Sonuc<Firma>();
+        //    if (kullanici == null)
+        //    {
+        //        sonuc.HataEkle("Kullanıcı bilgisi gelmedi!.");
+        //        return sonuc;
+        //    }
+        //    int kullaniciId = kullanici.Id;
+        //    try
+        //    {
+        //        //FirmaNormalizeEt(firma);
 
-                if (firma.Id <= 0)
-                    sonuc.HataEkle("Firma seçilmelidir.");
+        //        if (firma.id <= 0)
+        //            sonuc.HataEkle("Firma seçilmelidir.");
 
-                if (string.IsNullOrWhiteSpace(firma.vergiKimlikNo))
-                    sonuc.HataEkle("Vergi kimlik no girilmelidir.");
+        //        if (string.IsNullOrWhiteSpace(firma.vergiKimlikNo))
+        //            sonuc.HataEkle("Vergi kimlik no girilmelidir.");
 
-                if (string.IsNullOrWhiteSpace(firma.ticaretUnvani))
-                    sonuc.HataEkle("Firma adı girilmelidir.");
+        //        if (string.IsNullOrWhiteSpace(firma.ticaretUnvani))
+        //            sonuc.HataEkle("Firma adı girilmelidir.");
 
-                if (!sonuc.basarili)
-                    return sonuc;
+        //        if (!sonuc.basarili)
+        //            return sonuc;
 
-                await using SqlConnection connection = new SqlConnection(_connectionString);
-                await connection.OpenAsync();
+        //        await using SqlConnection connection = new SqlConnection(_connectionString);
+        //        await connection.OpenAsync();
 
-                TABFirma tabFirma = new TABFirma(connection);
-                Firma? mevcut = await tabFirma.OkuAsync(firma.Id.Value);
-                if (mevcut == null)
-                {
-                    sonuc.HataEkle("Firma bulunamadı.");
-                    return sonuc;
-                }
+        //        TABFirma tabFirma = new TABFirma(connection);
+        //        Firma? mevcut = await tabFirma.OkuAsync(firma.id);
+        //        if (mevcut == null)
+        //        {
+        //            sonuc.HataEkle("Firma bulunamadı.");
+        //            return sonuc;
+        //        }
 
-                TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection);
-                if (!await tabFirmaKullanici.IliskiVarMiAsync(firma.Id.Value, kullaniciId))
-                {
-                    sonuc.HataEkle("Bu firma kullanıcı ile ilişkili değil.");
-                    return sonuc;
-                }
+        //        TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection);
+        //        if (!await tabFirmaKullanici.IliskiVarMiAsync(firma.id, kullaniciId))
+        //        {
+        //            sonuc.HataEkle("Bu firma kullanıcı ile ilişkili değil.");
+        //            return sonuc;
+        //        }
 
-                Firma? ayniVergiNo = await tabFirma.VergiKimlikNoIleOkuAsync(firma.vergiKimlikNo);
-                if (ayniVergiNo != null && ayniVergiNo.Id != firma.Id)
-                {
-                    sonuc.HataEkle("Bu vergi kimlik no başka bir firma kaydında kullanılıyor.");
-                    return sonuc;
-                }
+        //        Firma? ayniVergiNo = await tabFirma.VergiKimlikNoIleOkuAsync(0, firma.vergiKimlikNo);
+        //        if (ayniVergiNo != null && ayniVergiNo.id != firma.id)
+        //        {
+        //            sonuc.HataEkle("Bu vergi kimlik no başka bir firma kaydında kullanılıyor.");
+        //            return sonuc;
+        //        }
 
-                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
-                try
-                {
-                    TABFirma txFirma = new TABFirma(connection, null, transaction);
-                    await txFirma.GuncelleAsync(firma);
+        //        await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+        //        try
+        //        {
+        //            TABFirma txFirma = new TABFirma(connection, null, transaction);
+        //            await txFirma.GuncelleAsync(firma);
 
-                    TABFirmaLog tabFirmaLog = new TABFirmaLog(connection, null, transaction);
-                    await tabFirmaLog.EkleAsync(firma, "Update");
+        //            TABFirmaLog tabFirmaLog = new TABFirmaLog(connection, null, transaction);
+        //            await tabFirmaLog.EkleAsync(firma, "Update");
 
-                    await transaction.CommitAsync();
-                    sonuc.nesne = firma;
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    _logger.LogError(ex, "Firma güncellenemedi. FirmaId: {FirmaId}, KullaniciId: {KullaniciId}", firma.Id, kullaniciId);
-                    sonuc.HataEkle("Firma güncellenemedi.");
-                }
-            }
-            catch (Exception ex)
-            {
-                BeklenmeyenHata(sonuc, ex, "Firma güncelleme işlemi tamamlanamadı. FirmaId: {FirmaId}, KullaniciId: {KullaniciId}", "Firma güncellenemedi.", firma.Id, kullaniciId);
-            }
+        //            await transaction.CommitAsync();
+        //            sonuc.nesne = firma;
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            await transaction.RollbackAsync();
+        //            _logger.LogError(ex, "Firma güncellenemedi. FirmaId: {FirmaId}, KullaniciId: {KullaniciId}", firma.id, kullaniciId);
+        //            sonuc.HataEkle("Firma güncellenemedi.");
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        BeklenmeyenHata(sonuc, ex, "Firma güncelleme işlemi tamamlanamadı. FirmaId: {FirmaId}, KullaniciId: {KullaniciId}", "Firma güncellenemedi.", firma.id, kullaniciId);
+        //    }
 
-            return sonuc;
-        }
+        //    return sonuc;
+        //}
 
         public async Task<Sonuc<int>> KaydetFirmaBasvuru(BasvuruFirma firmaBasvuru, Kullanici kullanici)
         {
@@ -456,9 +460,9 @@ namespace TarimDonusum.IsKurallari
                 await connection.OpenAsync();
 
                 Basvuru? mevcut = null;
-                if (firmaBasvuru.Id > 0)
+                if (firmaBasvuru.id > 0)
                 {
-                    mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, firmaBasvuru.Id, kullanici, sonuc);
+                    mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, firmaBasvuru.id, kullanici, sonuc);
                     if (!sonuc.basarili || mevcut == null)
                         return sonuc;
                 }
@@ -478,19 +482,19 @@ namespace TarimDonusum.IsKurallari
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    _logger.LogError(ex, "Başvuru firma bilgisi kaydedilemedi. BasvuruId: {BasvuruId}", firmaBasvuru.Id);
+                    _logger.LogError(ex, "Başvuru firma bilgisi kaydedilemedi. BasvuruId: {BasvuruId}", firmaBasvuru.id);
                     throw;
                 }
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Firma basvurusu  kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", firmaBasvuru.Id, kullanici.Id);
+                BeklenmeyenHata(sonuc, ex, "Firma basvurusu  kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", firmaBasvuru.id, kullanici.Id);
             }
 
             return sonuc;
         }
 
-        public async Task<Sonuc<int>> KaydetIrtibatAsync(BasvuruIletisim iletisim, Kullanici kullanici)
+        public async Task<Sonuc<int>> KaydetIrtibatAsync(BasvuruIrtibat irtibat, Kullanici kullanici)
         {
             Sonuc<int> sonuc = new Sonuc<int>();
             if (kullanici == null)
@@ -500,7 +504,7 @@ namespace TarimDonusum.IsKurallari
             }
             try
             {
-                iletisim.Dogrula(sonuc);
+                irtibat.Dogrula(sonuc);
 
                 if (!sonuc.basarili)
                     return sonuc;
@@ -509,9 +513,9 @@ namespace TarimDonusum.IsKurallari
                 await connection.OpenAsync();
 
                 Basvuru? mevcut = null;
-                if (iletisim.BasvuruId > 0)
+                if (irtibat.basvuruId > 0)
                 {
-                    mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, iletisim.BasvuruId, kullanici, sonuc);
+                    mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, irtibat.basvuruId, kullanici, sonuc);
                     if (!sonuc.basarili || mevcut == null)
                         return sonuc;
                 }
@@ -521,10 +525,10 @@ namespace TarimDonusum.IsKurallari
                 try
                 {
                     TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
-                    await tabBasvuru.BasvuruIletisimGuncelleAsync(iletisim);
+                    await tabBasvuru.BasvuruIletisimGuncelleAsync(irtibat);
 
                     TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
-                    await tabBasvuruLog.EkleAsync(iletisim.BasvuruId, kullanici, "KaydetIrtibatAsync", iletisim);
+                    await tabBasvuruLog.EkleAsync(irtibat.basvuruId, kullanici, "KaydetIrtibatAsync", irtibat);
 
                     await transaction.CommitAsync();
                 }
@@ -536,7 +540,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Firma basvurusu  kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", iletisim.BasvuruId, kullanici.Id);
+                BeklenmeyenHata(sonuc, ex, "Firma basvurusu  kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", irtibat.basvuruId, kullanici.Id);
             }
             return sonuc;
         }
@@ -591,25 +595,108 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        //public async Task<Sonuc<int>> KaydetAsama4Async(Basvuru basvuru, Kullanici kullanici)
-        //{
-        //    return await KaydetMevcutAsamaAsync(basvuru, kullanici, 4, Asama4Kopyala, null, "Asama4Update");
-        //}
+        public async Task<Sonuc<int>> KaydetFinansAsync(BasvuruFinans finans, Kullanici kullanici)
+        {
+            Sonuc<int> sonuc = new Sonuc<int>();
+            if (kullanici == null)
+            {
+                sonuc.HataEkle("Kullanıcı bilgisi gelmedi");
+                return sonuc;
+            }
+            try
+            {
+                finans.Dogrula(sonuc);
 
-        //public async Task<Sonuc<int>> KaydetAsama5Async(Basvuru basvuru, Kullanici kullanici)
-        //{
-        //    return await KaydetMevcutAsamaAsync(basvuru, kullanici, 5, Asama5Kopyala, null, "Asama5Update");
-        //}
+                if (!sonuc.basarili)
+                    return sonuc;
 
-        //public async Task<Sonuc<int>> KaydetAsama6Async(Basvuru basvuru, Kullanici kullanici)
-        //{
-        //    return await KaydetMevcutAsamaAsync(basvuru, kullanici, 6, Asama6Kopyala, null, "Asama6Update");
-        //}
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
 
-        //public async Task<Sonuc<int>> KaydetAsama7Async(Basvuru basvuru, Kullanici kullanici)
-        //{
-        //    return await KaydetMevcutAsamaAsync(basvuru, kullanici, 7, Asama7Kopyala, null, "Asama7Update");
-        //}
+                Basvuru? mevcut = null;
+                if (finans.basvuruId > 0)
+                {
+                    mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, finans.basvuruId, kullanici, sonuc);
+                    if (!sonuc.basarili || mevcut == null)
+                        return sonuc;
+                }
+
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+
+                try
+                {
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
+                    await tabBasvuru.BasvuruFinansGuncelleAsync(finans);
+
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
+                    await tabBasvuruLog.EkleAsync(finans.basvuruId, kullanici, "KaydetFinansAsync", finans);
+
+                    await transaction.CommitAsync();
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Firma basvurusu  kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", finans.basvuruId, kullanici.Id);
+            }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> KaydetMaliAsync(BasvuruMali mali, Kullanici kullanici)
+        {
+            Sonuc<int> sonuc = new Sonuc<int>();
+            if (kullanici == null)
+            {
+                sonuc.HataEkle("Kullanıcı bilgisi gelmedi");
+                return sonuc;
+            }
+            try
+            {
+                mali.Dogrula(sonuc);
+
+                if (!sonuc.basarili)
+                    return sonuc;
+
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                Basvuru? mevcut = null;
+                if (mali.basvuruId > 0)
+                {
+                    mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, mali.basvuruId, kullanici, sonuc);
+                    if (!sonuc.basarili || mevcut == null)
+                        return sonuc;
+                }
+
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+
+                try
+                {
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
+                    await tabBasvuru.BasvuruMaliGuncelleAsync(mali);
+
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
+                    await tabBasvuruLog.EkleAsync(mali.basvuruId, kullanici, "KaydetMaliAsync", mali);
+
+                    await transaction.CommitAsync();
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Firma basvurusu  kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", mali.basvuruId, kullanici.Id);
+            }
+            return sonuc;
+        }
+
 
         public async Task<Sonuc<List<BasvuruUygulamaAdresi>>> UygulamaAdresiListeleAsync(int basvuruId, Kullanici? kullanici)
         {
@@ -665,7 +752,7 @@ namespace TarimDonusum.IsKurallari
 
                 TABIlce tabIlce = new TABIlce(connection);
                 Ilce? ilce = adres.ilceId.HasValue ? await tabIlce.OkuAsync(adres.ilceId.Value) : null;
-                if (ilce == null || !ilce.Aktif || ilce.IlId != mevcut.IlId)
+                if (ilce == null || !ilce.Aktif || ilce.IlId != mevcut.basvuruFirma.il.id)
                 {
                     sonuc.HataEkle("Seçilen ilçe başvuru iline ait değil veya pasif.");
                     return sonuc;
@@ -869,10 +956,10 @@ namespace TarimDonusum.IsKurallari
             //    return null;
             //}
 
-            if (mevcut.FirmaId.HasValue)
+            if (mevcut.basvuruFirma.firmaId > 0)
             {
                 TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection);
-                if (!await tabFirmaKullanici.IliskiVarMiAsync(mevcut.FirmaId.Value, kullanici.Id))
+                if (!await tabFirmaKullanici.IliskiVarMiAsync(mevcut.basvuruFirma.firmaId, kullanici.Id))
                 {
                     sonuc.HataEkle("Başvurunun firması ile kullanıcı ilişkili değil.");
                     return null;

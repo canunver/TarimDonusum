@@ -8,18 +8,19 @@
     bool ro = Model.SaltOkunur;
     bool kilitli = b.Id <= 0 && !Model.DenetciGorunumu;
     int sonBolum = Model.DenetciGorunumu ? 8 : 7;
-    string Dec(decimal? v) => v.HasValue ? v.Value.ToString(CultureInfo.InvariantCulture) : "";
+
     bool CheckedStr(IEnumerable<string> values, string value) => values.Contains(value);
     bool CheckedInt(IEnumerable<int> values, int value) => values.Contains(value);
     bool CheckedDZA(IEnumerable<DegerZinciriAsama> values, int value) => value == 1;
+    
     string T(string key) => L[key].Value;
     string[] Items(string key) => T(key).Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     string[] evetHayir = Items("Basvuru.Options.YesNo");    
     
-    string basvuruIlAdi = b.basvuruFirma.il?.Ad ?? "";
-    if (string.IsNullOrWhiteSpace(basvuruIlAdi) && b.IlId.HasValue)
+    string basvuruIlAdi = b.basvuruFirma.il?.ad ?? "";
+    if (string.IsNullOrWhiteSpace(basvuruIlAdi) && b.basvuruFirma.il.id>0)
     {
-        basvuruIlAdi = Model.Iller.FirstOrDefault(x => x.Id == b.IlId.Value)?.Ad ?? "";
+        basvuruIlAdi = Model.Iller.FirstOrDefault(x => x.id == b.basvuruFirma.il.id)?.ad ?? "";
     }
 }
 
@@ -78,7 +79,6 @@
         <button type="button" class="btn btn-outline-info icon-action" id="stepHelpBtn" title="@T("Basvuru.Common.Help")">?</button>
     </div>
     <input type="hidden" name="Basvuru.Id" value="@b.Id" />
-    <input type="hidden" name="Basvuru.FirmaId" value="@b.FirmaId" />
     <div class="basvuru-shell">
         <main class="basvuru-panels">
             <section class="basvuru-panel active" data-panel="1">
@@ -91,11 +91,11 @@
                             <option value="">@L["Basvuru.Common.Select"]</option>
                             @foreach (var donem in Model.Donemler)
                             {
-                                bool secili = b.DonemId == donem.Id;
+                                bool secili = b.basvuruFirma.donem.id == donem.id;
                                 bool secilebilir = donem.SecilebilirMi();
                                 string durum = secilebilir ? T("Basvuru.Donem.Open") : T("Basvuru.Donem.Closed");
-                                <option value="@donem.Id" selected="@secili" disabled="@(!secilebilir && !secili)">
-                                    @donem.Ad (@durum)
+                                <option value="@donem.id" selected="@secili" disabled="@(!secilebilir && !secili)">
+                                    @donem.ad (@durum)
                                 </option>
                             }
                         </select>
@@ -107,13 +107,15 @@
                             <option value="">@L["Basvuru.Common.Select"]</option>
                             @foreach (var il in Model.Iller)
                             {
-                                <option value="@il.Id" selected="@(b.IlId == il.Id)">@il.Kod.ToString("00") - @il.Ad</option>
+                                <option value="@il.id" selected="@(b.basvuruFirma.il.id == il.id)">@il.kod.ToString("00") - @il.ad</option>
                             }
                         </select>
                     </div>
 
                     <div class="preapp-line company-line">
                         <label for="vergiKimlikNo">@L["Basvuru.Field.VergiKimlikNo"]</label>
+                        <input type="hidden" id='firmaId' name="Basvuru.FirmaId" value="@b.basvuruFirma.firma.id" />
+
                         <input id="vergiKimlikNo" name="Basvuru.VergiKimlikNo" value="@b.basvuruFirma.firma.vergiKimlikNo" disabled="@ro" />
                         @if (!ro)
                         {
@@ -132,12 +134,12 @@
 
                     <div class="preapp-line two-fields">
                         <label for="basvuruKonusu">@L["Basvuru.Field.BasvuruKonusu"]</label>
-                        <input id="basvuruKonusu" name="Basvuru.BasvuruKonusu" value="@b.basvuruFirma.BasvuruKonusu" disabled="@ro" />
+                        <input id="basvuruKonusu" name="Basvuru.BasvuruKonusu" value="@b.basvuruFirma.basvuruKonusu" disabled="@ro" />
                         <label for="basvuruTipi">@L["Basvuru.Field.BasvuruTipi"]</label>
                         <select id="basvuruTipi" name="Basvuru.BasvuruSahibiTuru" disabled="@ro">
                             @foreach (TarimDonusum.Models.enumBasvuruSahibiTuru item in Enum.GetValues<TarimDonusum.Models.enumBasvuruSahibiTuru>())
                             {
-                                <option value="@((int)item)" selected="@(b.basvuruFirma.BasvuruSahibiTuru == item)">@IsimBul.EnumAdi(item, L)</option>
+                                <option value="@((int)item)" selected="@(b.basvuruFirma.basvuruSahibiTuru == item)">@IsimBul.EnumAdi(item, L)</option>
                             }
                         </select>
                     </div>
@@ -145,24 +147,24 @@
                     <div class="preapp-line">
                         <label for="sonIkiYil">@L["Basvuru.Field.SonIkiYildirFaalMi"]</label>
                         <select id="sonIkiYil" name="Basvuru.SonIkiYildirFaalMi" disabled="@ro">
-                            <option value="false" selected="@(!b.basvuruFirma.SonIkiYildirFaalMi)">@(evetHayir.Length > 1 ? evetHayir[1] : "Hayır")</option>
-                            <option value="true" selected="@(b.basvuruFirma.SonIkiYildirFaalMi)">@(evetHayir.Length > 0 ? evetHayir[0] : "Evet")</option>
+                            <option value="false" selected="@(!b.basvuruFirma.sonIkiYildirFaalMi)">@(evetHayir.Length > 1 ? evetHayir[1] : "Hayır")</option>
+                            <option value="true" selected="@(b.basvuruFirma.sonIkiYildirFaalMi)">@(evetHayir.Length > 0 ? evetHayir[0] : "Evet")</option>
                         </select>
                     </div>
 
                     <h3 class="preapp-subtitle">@L["Basvuru.Section2.PartnershipTitle"]</h3>
                     <div class="preapp-line two-fields">
                         <label for="ozelSektorPayi">@L["Basvuru.Field.OzelSektorPayi"]</label>
-                        <input id="ozelSektorPayi" name="Basvuru.OzelSektorPayi" type="number" step="0.01" value="@Dec(b.basvuruFirma.OzelSektorPayi)" disabled="@ro" />
+                        <input id="ozelSektorPayi" name="Basvuru.OzelSektorPayi" type="text" value="@IsimBul.MetneCevirKuruslu(b.basvuruFirma.ozelSektorPayi)" disabled="@ro" />
                         <label for="bagliOrtakIsletmeVarMi">@L["Basvuru.Field.BagliOrtakIsletmeVarMi"]</label>
                         <select id="bagliOrtakIsletmeVarMi" name="Basvuru.BagliOrtakIsletmeVarMi" disabled="@ro">
                             <option value="">@L["Basvuru.Common.Select"]</option>
-                            <option value="false" selected="@(!b.basvuruFirma.BagliOrtakIsletmeVarMi )">@(evetHayir.Length > 1 ? evetHayir[1] : "Hayır")</option>
-                            <option value="true" selected="@(b.basvuruFirma.BagliOrtakIsletmeVarMi )">@(evetHayir.Length > 0 ? evetHayir[0] : "Evet")</option>
+                            <option value="false" selected="@(!b.basvuruFirma.bagliOrtakIsletmeVarMi )">@(evetHayir.Length > 1 ? evetHayir[1] : "Hayır")</option>
+                            <option value="true" selected="@(b.basvuruFirma.bagliOrtakIsletmeVarMi )">@(evetHayir.Length > 0 ? evetHayir[0] : "Evet")</option>
                         </select>
                     </div>
                     <div class="preapp-line textarea-line"><label for="bagliOrtakAciklama">@L["Basvuru.Field.BagliOrtakAciklama"]</label>
-                        <textarea id="bagliOrtakAciklama" name="Basvuru.BagliOrtakAciklama" disabled="@ro">@b.basvuruFirma.BagliOrtakAciklama</textarea>
+                        <textarea id="bagliOrtakAciklama" name="Basvuru.BagliOrtakAciklama" disabled="@ro">@b.basvuruFirma.bagliOrtakAciklama</textarea>
                     </div>
                 </div>
             </section>
@@ -275,18 +277,57 @@
                     </table>
                 </div>
             </section>
-
             <section class="basvuru-panel" data-panel="5">
                 <h2>@L["Basvuru.Section5.Title"]</h2>
                 <div class="form-grid">
-                    <label>@L["Basvuru.Field.ToplamYatirimTutari"]<input class="money-integer" name="Basvuru.ToplamYatirimTutari" type="text" inputmode="numeric" value="@Dec(b.finans.ToplamYatirimTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.UygunHarcamaTutari"]<input class="money-integer" name="Basvuru.UygunHarcamaTutari" type="text" inputmode="numeric" value="@Dec(b.finans.UygunHarcamaTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.TalepEdilenDestekTutari"]<input class="money-integer" name="Basvuru.TalepEdilenDestekTutari" type="text" inputmode="numeric" value="@Dec(b.finans.TalepEdilenDestekTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.BasvuruSahibiKatkisi"]<input class="money-integer" name="Basvuru.BasvuruSahibiKatkisi" type="text" inputmode="numeric" value="@Dec(b.finans.BasvuruSahibiKatkisi)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.DestekOrani"]<input name="Basvuru.DestekOrani" type="number" step="0.01" value="@Dec(b.finans.DestekOrani)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.ToplamYatirimTutari"]<input class="money-integer" name="Basvuru.finans.ToplamYatirimTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.toplamYatirimTutari)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.UygunHarcamaTutari"]<input class="money-integer" name="Basvuru.finans.UygunHarcamaTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.uygunHarcamaTutari)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.TalepEdilenDestekTutari"]<input class="money-integer" name="Basvuru.finans.TalepEdilenDestekTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.talepEdilenDestekTutari)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.BasvuruSahibiKatkisi"]<input class="money-integer" name="Basvuru.finans.BasvuruSahibiKatkisi" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.basvuruSahibiKatkisi)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.DestekOrani"]<input name="Basvuru.finans.DestekOrani" type="text" value="@IsimBul.MetneCevirKuruslu(b.finans.destekOrani)" disabled="@ro" /></label>
                 </div>
-                <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"]<textarea name="Basvuru.YatiriminAmaci" disabled="@ro">@b.finans.YatiriminAmaci</textarea></label>
+                <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"]<textarea name="Basvuru.finans.YatiriminAmaci" disabled="@ro">@b.finans.yatiriminAmaci</textarea></label>
             </section>
+
+            <section class="basvuru-panel" data-panel="6">
+                <h2>@L["Basvuru.Section6.Title"]</h2>
+                <div class="form-grid">
+                    <label>@L["Basvuru.Field.OncekiYilNetSatis"]<input class="money-integer" name="Basvuru.mali.OncekiYilNetSatis" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilNetSatis)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.SonYilNetSatis"]<input class="money-integer" name="Basvuru.mali.SonYilNetSatis" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilNetSatis)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.OncekiYilAktifToplami"]<input class="money-integer" name="Basvuru.mali.OncekiYilAktifToplami" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilAktifToplami)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.SonYilAktifToplami"]<input class="money-integer" name="Basvuru.mali.SonYilAktifToplami" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilAktifToplami)" disabled="@ro" /></label>
+                </div>
+            </section>
+
+            <section class="basvuru-panel" data-panel="7">
+                <h2>@L["Basvuru.Section6.Title"]</h2>
+                <div class="form-grid">
+                    <label>@L["Basvuru.Field.BelgePaketiDosyaAdi"]<input name="Basvuru.BelgePaketiDosyaAdi" value="@b.BelgePaketiDosyaAdi" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.TaahhutDosyaAdi"]<input name="Basvuru.TaahhutDosyaAdi" value="@b.TaahhutDosyaAdi" disabled="@ro" /></label>
+                </div>
+                <label class="wide-label">@L["Basvuru.Field.BelgeBeyani"]<textarea name="Basvuru.BelgeBeyani" disabled="@ro">@b.BelgeBeyani</textarea></label>
+                <h3>@L["Basvuru.Field.BelgeGruplari"]</h3>
+                <div class="check-grid">
+                </div>
+            </section>
+
+            @if (Model.DenetciGorunumu)
+            {
+                bool maliUygun = (b.mali.sonYilNetSatis >= 100000000 && b.mali.sonYilNetSatis <= 4000000000) ||
+                (b.mali.sonYilAktifToplami >= 100000000 && b.mali.sonYilAktifToplami <= 4000000000);
+                <section class="basvuru-panel" data-panel="8">
+                    <h2>@L["Basvuru.Section8.Title"]</h2>
+                    <div class="metric-grid">
+                        <div><span>@L["Basvuru.Common.Application"]</span><strong>@b.Id</strong></div>
+                        <div><span>@L["Basvuru.Field.Durum"]</span><strong>@IsimBul.EnumAdi(@b.durum, L)</strong></div>
+                        <div><span>@L["Basvuru.Field.BelgeGruplariShort"]</span><strong>b.BelgeGruplari.Count / belgeler.Length</strong></div>
+                        <div><span>@L["Basvuru.Field.MaliKontrol"]</span><strong>@(maliUygun ? T("Basvuru.Common.Eligible") : T("Basvuru.Common.NeedsReview"))</strong></div>
+                    </div>
+                    <div class="alert @(maliUygun ? "alert-success" : "alert-warning")">@L["Basvuru.Warning.FinancialRange"]</div>
+                    <label class="wide-label">@L["Basvuru.Field.DenetciNotu"]<textarea name="Basvuru.DenetciNotu" disabled>@b.DenetciNotu</textarea></label>
+                    <label class="wide-label">@L["Basvuru.Field.DenetimSonucu"]<input name="Basvuru.DenetimSonucu" value="@b.DenetimSonucu" disabled /></label>
+                </section>
+            }
 
             <div class="basvuru-footer">
                 <div>
@@ -311,6 +352,7 @@
                     <div class="alert alert-info">@L["Basvuru.Firma.ModalInfo"]</div>
                     <div class="firma-modal-fields">
                         <div class="form-grid">
+                            <input type="hidden" id="modalFirmaId" />
                             <label>@L["Basvuru.Field.VergiKimlikNo"]<input id="modalVergiKimlikNo" /></label>
                             <label>@L["Basvuru.Field.TicaretUnvani"]<input id="modalTicaretUnvani" /></label>
                             <label>@L["Basvuru.Field.TicaretSicilNo"]<input id="modalTicaretSicilNo" /></label>
@@ -402,6 +444,7 @@
     }
 
     var uygulamaAdresModal;
+    var firmaModal;
     document.addEventListener('DOMContentLoaded', () => {
         active = 1;
         const lastStep = @sonBolum;
@@ -419,6 +462,123 @@
             document.getElementById('uygulamaAdresModal')
         );
 
+        firmaModal = new bootstrap.Modal(
+            document.getElementById('firmaModal')
+        );
+
+        document.querySelectorAll('.firma-modal-kapat').forEach(btn => {
+            btn.addEventListener('click', () => firmaModal?.hide());
+        });
+
+        function setFirma(firma) {
+            $("#firmaId").val(firma.id);
+            $("#vergiKimlikNo").val(firma.vergiKimlikNo);
+            $("#firmaAdi").val(firma.ticaretUnvani);
+            dirty = true;
+        }
+
+        function modalSet(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.value = value || '';
+        
+            if (el.type === "date" && value) {
+                el.value = value.substring(0, 10);
+            } 
+            else {
+                el.value = value || '';
+            }
+        }
+
+        function firmaModalDoldur(firma) {
+            modalSet('modalFirmaId',  firma.id);
+            modalSet('modalVergiKimlikNo',  firma.vergiKimlikNo);
+            modalSet('modalTicaretUnvani', firma.ticaretUnvani);
+            modalSet('modalTicaretSicilNo', firma.ticaretSicilNo);
+            modalSet('modalKurulusTarihi', firma.kurulusTarihi);
+            modalSet('modalMersisNo', firma.mersisNo);
+            modalSet('modalNaceKodu', firma.naceKodu);
+            modalSet('modalWebSitesi', firma.webSitesi);
+            modalSet('modalTelefon', firma.telefon);
+            modalSet('modalKepAdresi', firma.kepAdresi);
+            modalSet('modalEposta', firma.eposta);
+            modalSet('modalFaaliyetKonusu', firma.faaliyetKonusu);
+            modalSet('modalAdres', firma.adres);
+            document.getElementById('firmaModalHata').textContent = '';
+        }
+
+        function FirmaBilgiYaz(result)
+        {
+            if (!result.basarili) {
+                alert(result.hataStr );
+                return;
+            }
+            if(result.nesne)
+                setFirma(result.nesne);
+            else
+            {
+                if (confirm(result.mesaj || @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.CreateQuestion"))))) {
+                    firmaModalDoldur({ vergiKimlikNo: vergiNo });
+                    firmaModal?.show();
+                }
+            }
+        }
+
+        function FirmaBilgiDoldur(result)
+        {
+            console.log(result);
+            if (!result.basarili) {
+                alert(result.hataStr );
+                return;
+            }
+            if(result.nesne)
+                firmaModalDoldur(result.nesne);
+
+
+            firmaModal?.show();
+        }
+
+        document.getElementById('firmaSorgulaBtn')?.addEventListener('click', async () => {
+            AjaxGet("/Basvuru/FirmaSorgula", {vergiKimlikNo: $("#vergiKimlikNo").val(), id: 0}, FirmaBilgiYaz);
+        });
+
+        document.getElementById('firmaYeniBtn')?.addEventListener('click', () => {
+            firmaModalDoldur({id:0, vergiKimlikNo: $("#vergiKimlikNo").val() || '' });
+            firmaModal?.show();
+        });
+
+        document.getElementById('firmaDuzenleBtn')?.addEventListener('click', () => {
+            const id = firmaId?.value || '';
+            if (!id) {
+                alert(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.SelectFirst"))));
+                return;
+            }
+            AjaxGet("/Basvuru/FirmaSorgula", {vergiKimlikNo:$("#vergiKimlikNo").val(), id:0}, FirmaBilgiDoldur);
+        });
+
+        document.getElementById('firmaKaydetBtn')?.addEventListener('click', async () => {
+            var firma = {
+                'id':  modalValue('hdnFirmaId'),
+                'vergiKimlikNo': modalValue('modalVergiKimlikNo'),
+                'ticaretUnvani': modalValue('modalTicaretUnvani'),
+                'ticaretSicilNo': modalValue('modalTicaretSicilNo'),
+                'kurulusTarihi': modalValue('modalKurulusTarihi'),
+                'mersisNo': modalValue('modalMersisNo'),
+                'naceKodu': modalValue('modalNaceKodu'),
+                'webSitesi': modalValue('modalWebSitesi'),
+                'telefon': modalValue('modalTelefon'),
+                'kepAdresi': modalValue('modalKepAdresi'),
+                'eposta': modalValue('modalEposta'),
+                'faaliyetKonusu': modalValue('modalFaaliyetKonusu'),
+                'adres': modalValue('modalAdres') 
+            }
+            AjaxPost("/Basvuru/FirmaKaydet", firma, SonucGosterGizle)
+        });
+
+        //    setFirma(result.firma);
+        //    firmaModal?.hide();
+        //    basvuruMesajGoster(firmaModalModu === 'duzenle'
+        //        ? @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.Updated")))
+        //        : @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.Saved"))));
 
         // $.querySelectorAll('input[name], select[name], textarea[name]').forEach(el => {
         //     if (el.type === 'hidden' || el.name === '__RequestVerificationToken')
@@ -573,7 +733,7 @@
 
     function FirmaIrtibatKaydet() {
         const model = {
-            "BasvuruId": degerInt('Basvuru.Id'),
+            "basvuruId": degerInt('Basvuru.Id'),
             "kisi":  degerStr('Basvuru.irtibat.kisi'),
             "unvan": degerStr('Basvuru.irtibat.unvan'),
             "telefon": degerStr('Basvuru.irtibat.telefon'),
@@ -586,16 +746,16 @@
 
     function FirmaBasvuruKaydet() {
         const basvuruFirma = {
-            "Id": degerInt('Basvuru.Id'),
+            "id": degerInt('Basvuru.Id'),
             "firmaId":  degerInt('Basvuru.FirmaId'),
             "donemId": degerInt('Basvuru.DonemId'),
             "ilId": degerInt('Basvuru.IlId'),
-            "BasvuruKonusu": degerStr('Basvuru.BasvuruKonusu'),
-            "SonIkiYildirFaalMi": degerBool('Basvuru.SonIkiYildirFaalMi'),
-            "BasvuruSahibiTuru": degerInt('Basvuru.BasvuruSahibiTuru'),
-            "OzelSektorPayi": degerDec('Basvuru.OzelSektorPayi'),
-            "BagliOrtakIsletmeVarMi": degerBool('Basvuru.BagliOrtakIsletmeVarMi'),
-            "BagliOrtakAciklama": degerStr('Basvuru.BagliOrtakAciklama')
+            "basvuruKonusu": degerStr('Basvuru.BasvuruKonusu'),
+            "sonIkiYildirFaalMi": degerBool('Basvuru.SonIkiYildirFaalMi'),
+            "basvuruSahibiTuru": degerInt('Basvuru.BasvuruSahibiTuru'),
+            "ozelSektorPayi": degerDec('Basvuru.OzelSektorPayi'),
+            "bagliOrtakIsletmeVarMi": degerBool('Basvuru.BagliOrtakIsletmeVarMi'),
+            "bagliOrtakAciklama": degerStr('Basvuru.BagliOrtakAciklama')
         };
         AjaxPost('/Basvuru/KaydetFirmaBasvuru', 
             basvuruFirma, 
@@ -623,6 +783,32 @@
         );
     }
 
+    function FinansKaydet()
+    {
+        const model = {
+            "basvuruId": degerInt('Basvuru.Id'),
+            "toplamYatirimTutari":  degerDec('Basvuru.finans.ToplamYatirimTutari'),
+            "uygunHarcamaTutari": degerDec('Basvuru.finans.UygunHarcamaTutari'),
+            "talepEdilenDestekTutari": degerDec('Basvuru.finans.TalepEdilenDestekTutari'),
+            "basvuruSahibiKatkisi": degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
+            "destekOrani": degerDec('Basvuru.finans.DestekOrani'),
+            "yatiriminAmaci": degerStr('Basvuru.finans.YatiriminAmaci'),
+        };
+        AjaxPost('/Basvuru/KaydetFinans', model, SonucGoster);
+    }
+
+    function MaliKaydet()
+    {
+        const model = {
+            "basvuruId": degerInt('Basvuru.Id'),
+            "oncekiYilNetSatis": degerDec('Basvuru.mali.OncekiYilNetSatis'),
+            "sonYilNetSatis": degerDec('Basvuru.mali.SonYilNetSatis'),
+            "oncekiYilAktifToplami": degerDec('Basvuru.mali.OncekiYilAktifToplami'),
+            "sonYilAktifToplami": degerDec('Basvuru.mali.SonYilAktifToplami'),
+        };
+        AjaxPost('/Basvuru/KaydetMali', model, SonucGoster);
+    }
+
     function PaneliKaydet()
     {
         if(active == 1)
@@ -631,6 +817,10 @@
             FirmaIrtibatKaydet()
         else if(active == 3)
             YatirimKaydet()
+        else if(active == 5)
+            FinansKaydet()
+        else if(active == 6)
+            MaliKaydet()
         else
             alert(active);
     }
@@ -642,18 +832,6 @@
                 RenderUygulamaAdresleri(response.nesne);
             }
         );
-    }
-
-    function modalSet(id, value) {
-        const el = document.getElementById(id);
-        if (el) el.value = value || '';
-        
-        if (el.type === "date" && value) {
-            el.value = value.substring(0, 10);
-        } 
-        else {
-            el.value = value || '';
-        }
     }
 
     var sonUygulamaAdresleri;

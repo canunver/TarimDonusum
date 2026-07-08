@@ -38,7 +38,7 @@ namespace TarimDonusum.Tablolar
                 );";
 
             await using SqlCommand command = KomutOlustur(sql);
-            command.Parameters.AddWithValue("@FirmaId", firma.Id);
+            command.Parameters.AddWithValue("@FirmaId", firma.id);
             command.Parameters.AddWithValue("@IslemTarihi", DateTime.Now);
             command.Parameters.AddWithValue("@Islem", islem);
             command.Parameters.AddWithValue("@JsonText", JsonSerializer.Serialize(firma, JsonOptions));

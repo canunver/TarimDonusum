@@ -18,26 +18,12 @@ namespace TarimDonusum.Tablolar
         {
         }
 
-        public async Task<Firma?> VergiKimlikNoIleOkuAsync(string vergiKimlikNo)
+        public async Task<Firma?> VergiKimlikNoIleOkuAsync(int firmaId, string vergiKimlikNo)
         {
-            const string sql = @"
-                SELECT
-                    f.Id,
-                    f.KullaniciId,
-                    f.VergiKimlikNo,
-                    f.TicaretUnvani,
-                    f.TicaretSicilNo,
-                    f.KurulusTarihi,
-                    f.MersisNo,
-                    f.NaceKodu,
-                    f.WebSitesi,
-                    f.Telefon,
-                    f.KepAdresi,
-                    f.Eposta,
-                    f.FaaliyetKonusu,
-                    f.Adres,
-                    ISNULL((
-                        SELECT
+            string sql = @"SELECT f.Id, f.KullaniciId, f.VergiKimlikNo, f.TicaretUnvani,
+                    f.TicaretSicilNo, f.KurulusTarihi, f.MersisNo, f.NaceKodu, f.WebSitesi,
+                    f.Telefon, f.KepAdresi, f.Eposta, f.FaaliyetKonusu, f.Adres,
+                    ISNULL((SELECT
                             fk.KullaniciId,
                             LTRIM(RTRIM(k.Ad + N' ' + k.Soyad)) AS AdSoyad,
                             k.Eposta,
@@ -49,17 +35,25 @@ namespace TarimDonusum.Tablolar
                         WHERE fk.FirmaId = f.Id
                         FOR JSON PATH
                     ), N'[]') AS BasvuranlarJson
-                FROM dbo.Firma f
-                WHERE f.VergiKimlikNo = @VergiKimlikNo;";
+                FROM dbo.Firma f WHERE ";
+
+            if (firmaId > 0)
+                sql += "f.Id = @Id;";
+            else
+                sql += "f.VergiKimlikNo = @VergiKimlikNo;";
 
             await using SqlCommand command = KomutOlustur(sql);
-            command.Parameters.AddWithValue("@VergiKimlikNo", vergiKimlikNo?.Trim() ?? "");
+
+            if (firmaId > 0)
+                command.Parameters.AddWithValue("@Id", firmaId);
+            else
+                command.Parameters.AddWithValue("@VergiKimlikNo", vergiKimlikNo?.Trim() ?? "");
 
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
                 return null;
 
-            return Oku(reader);
+            return OkuFirma(reader);
         }
 
         public async Task<Firma?> OkuAsync(int id)
@@ -103,7 +97,7 @@ namespace TarimDonusum.Tablolar
             if (!await reader.ReadAsync())
                 return null;
 
-            return Oku(reader);
+            return OkuFirma(reader);
         }
 
         public async Task<int> EkleAsync(Firma firma)
@@ -127,7 +121,7 @@ namespace TarimDonusum.Tablolar
             ParametreleriEkle(command, firma);
 
             int id = OrtakFonksiyonlar.Int32Yap(await command.ExecuteScalarAsync());
-            firma.Id = id;
+            firma.id = id;
             return id;
         }
 
@@ -151,7 +145,7 @@ namespace TarimDonusum.Tablolar
                 WHERE Id = @Id;";
 
             await using SqlCommand command = KomutOlustur(sql);
-            command.Parameters.AddWithValue("@Id", firma.Id);
+            command.Parameters.AddWithValue("@Id", firma.id);
             ParametreleriEkle(command, firma);
 
             await command.ExecuteNonQueryAsync();
@@ -173,11 +167,11 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@Adres", firma.adres ?? "");
         }
 
-        private static Firma Oku(SqlDataReader reader)
+        private static Firma OkuFirma(SqlDataReader reader)
         {
             return new Firma
             {
-                Id = reader.GetInt32(0),
+                id = reader.GetInt32(0),
                 vergiKimlikNo = reader.GetString(2),
                 ticaretUnvani = reader.GetString(3),
                 ticaretSicilNo = reader.GetString(4),
