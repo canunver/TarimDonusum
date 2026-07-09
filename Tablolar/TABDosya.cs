@@ -14,18 +14,7 @@ namespace TarimDonusum.Tablolar
 
         public async Task<List<DosyaBilgisi>> ListeleAsync(string modulKod, string? formAd = null, string? formAnahtar = null)
         {
-            const string sql = @"
-                SELECT
-                    Id,
-                    ModulKod,
-                    FormAd,
-                    FormAnahtar,
-                    DosyaNo,
-                    DosyaAdi,
-                    Buyukluk,
-                    IlkYuklemeTarihi,
-                    STarihi,
-                    Aciklama
+            const string sql = @"SELECT Id, ModulKod, FormAd, FormAnahtar, DosyaNo, DosyaAdi, Buyukluk, IlkYuklemeTarihi, STarihi, Aciklama
                 FROM dbo.DosyaBilgisi
                 WHERE ModulKod = @ModulKod
                   AND (@FormAd IS NULL OR FormAd = @FormAd)

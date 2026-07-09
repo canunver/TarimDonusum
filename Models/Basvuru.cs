@@ -141,8 +141,12 @@ namespace TarimDonusum.Models
         public BasvuruMali mali = new BasvuruMali();
 
         public string BelgePaketiDosyaAdi { get; set; } = "";
+        public int? BelgePaketiDosyaId { get; set; }
+        public string BelgePaketiAciklama { get; set; } = "";
         public string BelgeBeyani { get; set; } = "";
         public string TaahhutDosyaAdi { get; set; } = "";
+        public int? TaahhutDosyaId { get; set; }
+        public string TaahhutAciklama { get; set; } = "";
         public List<string> BelgeGruplari { get; set; } = new();
 
         public string DenetciNotu { get; set; } = "";
@@ -291,9 +295,21 @@ namespace TarimDonusum.Models
     {
         public int BasvuruId { get; set; }
         public string BelgePaketiDosyaAdi { get; set; } = "";
+        public int? BelgePaketiDosyaId { get; set; }
+        public string BelgePaketiAciklama { get; set; } = "";
         public string TaahhutDosyaAdi { get; set; } = "";
+        public int? TaahhutDosyaId { get; set; }
+        public string TaahhutAciklama { get; set; } = "";
         public string BelgeBeyani { get; set; } = "";
         public List<string> BelgeGruplari { get; set; } = new();
+    }
+
+    public class BasvuruDosyaYuklemeSonucu
+    {
+        public int BasvuruId { get; set; }
+        public int DosyaId { get; set; }
+        public string DosyaAdi { get; set; } = "";
+        public string Aciklama { get; set; } = "";
     }
 
     public class BasvuruUygulamaAdresi

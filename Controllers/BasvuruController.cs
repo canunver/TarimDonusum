@@ -282,6 +282,98 @@ namespace TarimDonusum.Controllers
         }
 
         [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BelgePaketiYukle(int basvuruId, string aciklama, bool belgeBeyani, IFormFile dosya)
+        {
+            Sonuc<BasvuruDosyaYuklemeSonucu> sonuc;
+            try
+            {
+                if (!belgeBeyani)
+                {
+                    sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+                    sonuc.HataEkle("Zorunlu belgelerin tamamının tek dokümanda yer aldığı beyan edilmelidir.");
+                    return Json(sonuc);
+                }
+
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                {
+                    sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+                    sonuc.HataEkle("Oturum süresi doldu.");
+                    return Json(sonuc);
+                }
+
+                byte[] icerik = await DosyaIcerigiOkuAsync(dosya);
+                sonuc = await _basvuruIsKurallari.BelgePaketiKaydetAsync(basvuruId, dosya?.FileName ?? "", icerik, aciklama, kullanici);
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Doküman paketi yükleme action tamamlanamadı.");
+                sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+                sonuc.HataEkle("Doküman paketi yüklenemedi.");
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TaahhutDosyasiYukle(int basvuruId, string aciklama, IFormFile dosya)
+        {
+            Sonuc<BasvuruDosyaYuklemeSonucu> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                {
+                    sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+                    sonuc.HataEkle("Oturum süresi doldu.");
+                    return Json(sonuc);
+                }
+
+                byte[] icerik = await DosyaIcerigiOkuAsync(dosya);
+                sonuc = await _basvuruIsKurallari.TaahhutDosyasiKaydetAsync(basvuruId, dosya?.FileName ?? "", icerik, aciklama, kullanici);
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Taahhüt dosyası yükleme action tamamlanamadı.");
+                sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+                sonuc.HataEkle("Taahhüt dosyası yüklenemedi.");
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> DosyaIndir(int id)
+        {
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return RedirectToAction("Index", "Home");
+
+                Sonuc<Dosya> sonuc = await _basvuruIsKurallari.DosyaIndirAsync(id, kullanici);
+                if (!sonuc.basarili || sonuc.nesne == null)
+                    return NotFound(sonuc.hataStr);
+
+                string dosyaAdi = string.IsNullOrWhiteSpace(sonuc.nesne.DosyaAdi)
+                    ? $"dosya-{id}"
+                    : sonuc.nesne.DosyaAdi;
+
+                return File(sonuc.nesne.Icerik, "application/octet-stream", dosyaAdi);
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Dosya indirme action tamamlanamadı. DosyaId: {DosyaId}", id);
+                return NotFound("Dosya indirilemedi.");
+            }
+        }
+
+        [OturumKontrol]
         [HttpGet]
         public async Task<IActionResult> FirmaSorgula(string vergiKimlikNo, int id)
         {
@@ -393,6 +485,16 @@ namespace TarimDonusum.Controllers
         private static Basvuru YeniBasvuru()
         {
             return new Basvuru();
+        }
+
+        private static async Task<byte[]> DosyaIcerigiOkuAsync(IFormFile? dosya)
+        {
+            if (dosya == null || dosya.Length == 0)
+                return [];
+
+            await using MemoryStream stream = new MemoryStream();
+            await dosya.CopyToAsync(stream);
+            return stream.ToArray();
         }
 
         //private static Basvuru BasvuruHazirla(Basvuru basvuru)

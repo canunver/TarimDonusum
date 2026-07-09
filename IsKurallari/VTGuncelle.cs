@@ -397,6 +397,16 @@ namespace TarimDonusum.IsKurallari
                     CREATE INDEX IX_DosyaBilgisiLog_IslemTarihi
                         ON dbo.DosyaBilgisiLog(IslemTarihi);
                 "),
+            new(22,
+                @"ALTER TABLE dbo.Basvuru ADD
+                    BelgePaketiDosyaAdi NVARCHAR(260) NOT NULL CONSTRAINT DF_Basvuru_BelgePaketiDosyaAdi DEFAULT N'',
+                    BelgePaketiDosyaId INT NULL,
+                    BelgePaketiAciklama NVARCHAR(1000) NOT NULL CONSTRAINT DF_Basvuru_BelgePaketiAciklama DEFAULT N'',
+                    BelgeBeyani NVARCHAR(20) NOT NULL CONSTRAINT DF_Basvuru_BelgeBeyani DEFAULT N'',
+                    TaahhutDosyaAdi NVARCHAR(260) NOT NULL CONSTRAINT DF_Basvuru_TaahhutDosyaAdi DEFAULT N'',
+                    TaahhutDosyaId INT NULL,
+                    TaahhutAciklama NVARCHAR(1000) NOT NULL CONSTRAINT DF_Basvuru_TaahhutAciklama DEFAULT N''
+                "),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

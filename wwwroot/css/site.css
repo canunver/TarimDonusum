@@ -226,6 +226,94 @@ body {
   background: #fff;
 }
 
+.document-upload-box {
+  border: 2px dashed #b9c9e6;
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin: 20px 0;
+  background: #fbfdff;
+}
+
+.document-file-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.document-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.document-file-name,
+.document-note {
+  color: #56637a;
+  font-size: .86rem;
+}
+
+.document-note {
+  border: 1px dashed #d8e0ea;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 14px;
+  background: #fff;
+}
+
+.document-two-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.document-two-column label {
+  display: block;
+  font-size: .82rem;
+  font-weight: 700;
+  color: #344054;
+}
+
+.document-two-column select,
+.document-two-column textarea {
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid #ccd6e2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-height: 44px;
+  background: #fff;
+}
+
+.document-two-column textarea {
+  min-height: 106px;
+  resize: vertical;
+}
+
+.document-upload-action {
+  margin: 0;
+}
+
+.document-action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 0 18px;
+}
+
+.document-download-action {
+  min-height: 38px;
+}
+
+.required-mark {
+  color: #d92d20;
+}
+
 .deger-zinciri-asama-wrap {
   border: 1px solid #d8e0ea;
   border-radius: 16px;
@@ -268,6 +356,60 @@ body {
 .deger-zinciri-asama-table input[type="checkbox"] {
   width: 18px;
   height: 18px;
+}
+
+.mali-section-title {
+  display: inline-block;
+  margin: 18px 0 28px;
+  padding: 6px 14px;
+  border: 1px solid #cfe0ff;
+  border-radius: 18px;
+  background: #f3f7ff;
+  color: #1f3f7a;
+  font-weight: 800;
+}
+
+.mali-table-wrap {
+  margin-bottom: 26px;
+  border: 1px solid #d8e0ea;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.mali-table {
+  margin-bottom: 0;
+  table-layout: fixed;
+}
+
+.mali-table th {
+  border-top: 0;
+  border-bottom: 1px solid #d8e0ea;
+  background: #f3f6fa;
+  color: #263348;
+  font-size: .86rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.mali-table th:first-child,
+.mali-table td:first-child {
+  width: 30%;
+}
+
+.mali-table td {
+  border-top: 1px solid #d8e0ea;
+  color: #0f172a;
+  vertical-align: middle;
+}
+
+.mali-table input {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: .95rem;
+  color: #101828;
 }
 
 .field-button-wrap {
@@ -429,7 +571,8 @@ body {
 
   .form-grid,
   .check-grid,
-  .metric-grid {
+  .metric-grid,
+  .document-two-column {
     grid-template-columns: 1fr;
   }
 

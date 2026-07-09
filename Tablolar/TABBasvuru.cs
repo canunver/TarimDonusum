@@ -60,6 +60,13 @@ namespace TarimDonusum.Tablolar
                     B.SonYilNetSatis,
                     B.OncekiYilAktifToplami,
                     B.SonYilAktifToplami,
+                    B.BelgePaketiDosyaAdi,
+                    B.BelgePaketiDosyaId,
+                    B.BelgePaketiAciklama,
+                    B.BelgeBeyani,
+                    B.TaahhutDosyaAdi,
+                    B.TaahhutDosyaId,
+                    B.TaahhutAciklama,
 
                     D.Yil,
                     D.Ad,
@@ -285,6 +292,46 @@ namespace TarimDonusum.Tablolar
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task BasvuruBelgePaketiGuncelleAsync(Basvuru basvuru)
+        {
+            const string sql = @"
+                UPDATE dbo.Basvuru
+                SET
+                    BelgePaketiDosyaAdi = @BelgePaketiDosyaAdi,
+                    BelgePaketiDosyaId = @BelgePaketiDosyaId,
+                    BelgePaketiAciklama = @BelgePaketiAciklama,
+                    BelgeBeyani = @BelgeBeyani
+                WHERE Id = @Id;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@Id", basvuru.Id);
+            command.Parameters.AddWithValue("@BelgePaketiDosyaAdi", basvuru.BelgePaketiDosyaAdi ?? "");
+            command.Parameters.AddWithValue("@BelgePaketiDosyaId", basvuru.BelgePaketiDosyaId.HasValue ? basvuru.BelgePaketiDosyaId.Value : (object)DBNull.Value);
+            command.Parameters.AddWithValue("@BelgePaketiAciklama", basvuru.BelgePaketiAciklama ?? "");
+            command.Parameters.AddWithValue("@BelgeBeyani", basvuru.BelgeBeyani ?? "");
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task BasvuruTaahhutGuncelleAsync(Basvuru basvuru)
+        {
+            const string sql = @"
+                UPDATE dbo.Basvuru
+                SET
+                    TaahhutDosyaAdi = @TaahhutDosyaAdi,
+                    TaahhutDosyaId = @TaahhutDosyaId,
+                    TaahhutAciklama = @TaahhutAciklama
+                WHERE Id = @Id;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@Id", basvuru.Id);
+            command.Parameters.AddWithValue("@TaahhutDosyaAdi", basvuru.TaahhutDosyaAdi ?? "");
+            command.Parameters.AddWithValue("@TaahhutDosyaId", basvuru.TaahhutDosyaId.HasValue ? basvuru.TaahhutDosyaId.Value : (object)DBNull.Value);
+            command.Parameters.AddWithValue("@TaahhutAciklama", basvuru.TaahhutAciklama ?? "");
+
+            await command.ExecuteNonQueryAsync();
+        }
+
         private static void BasvuruFirmaParametreleriEkle(SqlCommand command, BasvuruFirma basvuru)
         {
             command.Parameters.AddWithValue("@FirmaId", (object?)basvuru.firma.id ?? DBNull.Value);
@@ -353,6 +400,13 @@ namespace TarimDonusum.Tablolar
             basvuru.mali.sonYilNetSatis = NullOkuDecimal(reader, kol++);
             basvuru.mali.oncekiYilAktifToplami = NullOkuDecimal(reader, kol++);
             basvuru.mali.sonYilAktifToplami = NullOkuDecimal(reader, kol++);
+            basvuru.BelgePaketiDosyaAdi = NullOkuString(reader, kol++) ?? "";
+            basvuru.BelgePaketiDosyaId = NullOkuInt(reader, kol++);
+            basvuru.BelgePaketiAciklama = NullOkuString(reader, kol++) ?? "";
+            basvuru.BelgeBeyani = NullOkuString(reader, kol++) ?? "";
+            basvuru.TaahhutDosyaAdi = NullOkuString(reader, kol++) ?? "";
+            basvuru.TaahhutDosyaId = NullOkuInt(reader, kol++);
+            basvuru.TaahhutAciklama = NullOkuString(reader, kol++) ?? "";
 
             basvuru.basvuruFirma.donem.yil = NullDuzeltInt(reader, kol++);
             basvuru.basvuruFirma.donem.ad = reader.GetString(kol++);

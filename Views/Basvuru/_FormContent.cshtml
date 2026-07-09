@@ -16,12 +16,36 @@
     string T(string key) => L[key].Value;
     string[] Items(string key) => T(key).Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     string[] evetHayir = Items("Basvuru.Options.YesNo");    
+    string[] belgeGruplari =
+    [
+        "Adli sicil kaydı",
+        "Gelir tablosu",
+        "Bilanço",
+        "İflas, konkordato ve tasfiye sürecinin olmadığına dair belge",
+        "Ticaret sicil gazetesi (kuruluş ve mevcut)",
+        "Noter onaylı imza sirküleri"
+    ];
     
     string basvuruIlAdi = b.basvuruFirma.il?.ad ?? "";
     if (string.IsNullOrWhiteSpace(basvuruIlAdi) && b.basvuruFirma.il.id>0)
     {
         basvuruIlAdi = Model.Iller.FirstOrDefault(x => x.id == b.basvuruFirma.il.id)?.ad ?? "";
     }
+
+    Donem? maliDonem = b.basvuruFirma.donem;
+    if ((maliDonem == null || maliDonem.yil <= 0) && b.basvuruFirma.donem.id > 0)
+    {
+        maliDonem = Model.Donemler.FirstOrDefault(x => x.id == b.basvuruFirma.donem.id);
+    }
+
+    int maliOncekiYil = maliDonem?.yil > 1 ? maliDonem.yil - 2 : 0;
+    int maliSonYil = maliDonem?.yil > 0 ? maliDonem.yil - 1 : 0;
+    string maliOncekiYilBaslik = maliOncekiYil > 0
+        ? string.Format(T("Basvuru.Mali.OncekiYilHeader"), maliOncekiYil)
+        : T("Basvuru.Mali.OncekiYilFallback");
+    string maliSonYilBaslik = maliSonYil > 0
+        ? string.Format(T("Basvuru.Mali.SonYilHeader"), maliSonYil)
+        : T("Basvuru.Mali.SonYilFallback");
 }
 
 <div class="basvuru-page">
@@ -291,39 +315,133 @@
 
             <section class="basvuru-panel" data-panel="6">
                 <h2>@L["Basvuru.Section6.Title"]</h2>
-                <div class="form-grid">
-                    <label>@L["Basvuru.Field.OncekiYilNetSatis"]<input class="money-integer" name="Basvuru.mali.OncekiYilNetSatis" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilNetSatis)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.SonYilNetSatis"]<input class="money-integer" name="Basvuru.mali.SonYilNetSatis" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilNetSatis)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.OncekiYilAktifToplami"]<input class="money-integer" name="Basvuru.mali.OncekiYilAktifToplami" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilAktifToplami)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.SonYilAktifToplami"]<input class="money-integer" name="Basvuru.mali.SonYilAktifToplami" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilAktifToplami)" disabled="@ro" /></label>
+                <div class="mali-section-title">@L["Basvuru.Mali.GelirTablosu"]</div>
+                <div class="table-responsive mali-table-wrap">
+                    <table class="table mali-table">
+                        <thead>
+                            <tr>
+                                <th>@L["Basvuru.Mali.GelirTablosuKalemi"]</th>
+                                <th>@maliOncekiYilBaslik</th>
+                                <th>@maliSonYilBaslik</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@L["Basvuru.Mali.YillikNetSatisHasilati"]</td>
+                                <td><input class="money-integer" name="Basvuru.mali.OncekiYilNetSatis" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilNetSatis)" disabled="@ro" /></td>
+                                <td><input class="money-integer" name="Basvuru.mali.SonYilNetSatis" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilNetSatis)" disabled="@ro" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mali-section-title">@L["Basvuru.Mali.Bilanco"]</div>
+                <div class="table-responsive mali-table-wrap">
+                    <table class="table mali-table">
+                        <thead>
+                            <tr>
+                                <th>@L["Basvuru.Mali.BilancoKalemi"]</th>
+                                <th>@maliOncekiYilBaslik</th>
+                                <th>@maliSonYilBaslik</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@L["Basvuru.Mali.AktifToplami"]</td>
+                                <td><input class="money-integer" name="Basvuru.mali.OncekiYilAktifToplami" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilAktifToplami)" disabled="@ro" /></td>
+                                <td><input class="money-integer" name="Basvuru.mali.SonYilAktifToplami" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilAktifToplami)" disabled="@ro" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
             <section class="basvuru-panel" data-panel="7">
-                <h2>@L["Basvuru.Section6.Title"]</h2>
-                <div class="form-grid">
-                    <label>@L["Basvuru.Field.BelgePaketiDosyaAdi"]<input name="Basvuru.BelgePaketiDosyaAdi" value="@b.BelgePaketiDosyaAdi" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.TaahhutDosyaAdi"]<input name="Basvuru.TaahhutDosyaAdi" value="@b.TaahhutDosyaAdi" disabled="@ro" /></label>
+                <h2>@L["Basvuru.Section7.Title"]</h2>
+                <p>Zorunlu belgeler tek bir doküman paketi olarak yüklenecektir. Ayrıca başvuru rehberi ekinde yer alan beyan ve taahhütler ayrı bir dosya olarak eklenecektir.</p>
+
+                <div class="document-upload-box">
+                    <div class="document-file-row">
+                        <label class="btn btn-primary mb-0" for="belgePaketiDosya">Tek doküman paketini seç</label>
+                        <input id="belgePaketiDosya" type="file" class="document-file-input" disabled="@ro" />
+                        <span id="belgePaketiDosyaSecim" class="document-file-name">@(string.IsNullOrWhiteSpace(b.BelgePaketiDosyaAdi) ? "Henüz dosya seçilmedi." : b.BelgePaketiDosyaAdi)</span>
+                    </div>
+                    <label class="wide-label">Yüklenen doküman paketi adı <span class="required-mark">*</span>
+                        <input name="Basvuru.BelgePaketiDosyaAdi" value="@b.BelgePaketiDosyaAdi" readonly />
+                    </label>
+                    <div class="document-note">Dosya sunucuya yüklendikten sonra dosya adı, dosya id bilgisi ve belge kontrol beyanı başvuru kaydına işlenir.</div>
                 </div>
-                <label class="wide-label">@L["Basvuru.Field.BelgeBeyani"]<textarea name="Basvuru.BelgeBeyani" disabled="@ro">@b.BelgeBeyani</textarea></label>
+
                 <h3>@L["Basvuru.Field.BelgeGruplari"]</h3>
                 <div class="check-grid">
+                    @foreach (string belgeGrubu in belgeGruplari)
+                    {
+                        <label><input type="checkbox" class="belge-grubu-check" value="@belgeGrubu" disabled="@ro" /> @belgeGrubu <span class="required-mark">*</span></label>
+                    }
                 </div>
+                <div class="document-two-column">
+                    <label>@L["Basvuru.Field.BelgeBeyani"] <span class="required-mark">*</span>
+                        <select id="belgeBeyaniSelect" name="Basvuru.BelgeBeyani" disabled="@ro">
+                            <option value="">@L["Basvuru.Common.Select"]</option>
+                            <option value="Evet" selected="@(string.Equals(b.BelgeBeyani, "Evet", StringComparison.OrdinalIgnoreCase))">Evet</option>
+                            <option value="Hayır" selected="@(string.Equals(b.BelgeBeyani, "Hayır", StringComparison.OrdinalIgnoreCase))">Hayır</option>
+                        </select>
+                    </label>
+                    <label>Belge açıklaması / not <span class="required-mark">*</span>
+                        <textarea name="Basvuru.BelgePaketiAciklama" disabled="@ro">@b.BelgePaketiAciklama</textarea>
+                    </label>
+                </div>
+                <div class="document-action-row">
+                    @if (!ro)
+                    {
+                        <button type="button" class="btn btn-primary document-upload-action" id="belgePaketiYukleBtn">Tek Doküman Paketi Yükle</button>
+                    }
+                    <a class="btn btn-outline-primary document-download-action @(b.BelgePaketiDosyaId.HasValue ? "" : "d-none")"
+                       id="belgePaketiIndirBtn"
+                       href="@(b.BelgePaketiDosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = b.BelgePaketiDosyaId.Value }) : "#")"
+                       target="_blank"
+                       rel="noopener">Dosya indir</a>
+                </div>
+                <input type="hidden" name="Basvuru.BelgePaketiDosyaId" value="@b.BelgePaketiDosyaId" />
+
+                <h3>Taahhüt / Başvuru rehberi eki beyanlar</h3>
+                <div class="document-upload-box">
+                    <div class="document-file-row">
+                        <label class="btn btn-primary mb-0" for="taahhutDosya">Taahhüt dosyasını seç</label>
+                        <input id="taahhutDosya" type="file" class="document-file-input" disabled="@ro" />
+                        <span id="taahhutDosyaSecim" class="document-file-name">@(string.IsNullOrWhiteSpace(b.TaahhutDosyaAdi) ? "Henüz dosya seçilmedi." : b.TaahhutDosyaAdi)</span>
+                    </div>
+                    <label class="wide-label">Yüklenen taahhüt / beyan dosyası adı <span class="required-mark">*</span>
+                        <input name="Basvuru.TaahhutDosyaAdi" value="@b.TaahhutDosyaAdi" readonly />
+                    </label>
+                    <label class="wide-label">Taahhüt açıklaması / not <span class="required-mark">*</span>
+                        <textarea name="Basvuru.TaahhutAciklama" disabled="@ro">@b.TaahhutAciklama</textarea>
+                    </label>
+                    <div class="document-note">Bu alan, başvuru rehberi ekinde yer alan beyan ve taahhütlerin imzalı/yetkili dosyasının yüklenmesi için ayrılmıştır.</div>
+                </div>
+                <div class="document-action-row">
+                    @if (!ro)
+                    {
+                        <button type="button" class="btn btn-primary document-upload-action" id="taahhutYukleBtn">Taahhüt dosyayı ekle</button>
+                    }
+                    <a class="btn btn-outline-primary document-download-action @(b.TaahhutDosyaId.HasValue ? "" : "d-none")"
+                       id="taahhutIndirBtn"
+                       href="@(b.TaahhutDosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = b.TaahhutDosyaId.Value }) : "#")"
+                       target="_blank"
+                       rel="noopener">Dosya indir</a>
+                </div>
+                <input type="hidden" name="Basvuru.TaahhutDosyaId" value="@b.TaahhutDosyaId" />
             </section>
 
             @if (Model.DenetciGorunumu)
             {
-                bool maliUygun = (b.mali.sonYilNetSatis >= 100000000 && b.mali.sonYilNetSatis <= 4000000000) ||
-                (b.mali.sonYilAktifToplami >= 100000000 && b.mali.sonYilAktifToplami <= 4000000000);
                 <section class="basvuru-panel" data-panel="8">
                     <h2>@L["Basvuru.Section8.Title"]</h2>
                     <div class="metric-grid">
                         <div><span>@L["Basvuru.Common.Application"]</span><strong>@b.Id</strong></div>
                         <div><span>@L["Basvuru.Field.Durum"]</span><strong>@IsimBul.EnumAdi(@b.durum, L)</strong></div>
                         <div><span>@L["Basvuru.Field.BelgeGruplariShort"]</span><strong>b.BelgeGruplari.Count / belgeler.Length</strong></div>
-                        <div><span>@L["Basvuru.Field.MaliKontrol"]</span><strong>@(maliUygun ? T("Basvuru.Common.Eligible") : T("Basvuru.Common.NeedsReview"))</strong></div>
                     </div>
-                    <div class="alert @(maliUygun ? "alert-success" : "alert-warning")">@L["Basvuru.Warning.FinancialRange"]</div>
                     <label class="wide-label">@L["Basvuru.Field.DenetciNotu"]<textarea name="Basvuru.DenetciNotu" disabled>@b.DenetciNotu</textarea></label>
                     <label class="wide-label">@L["Basvuru.Field.DenetimSonucu"]<input name="Basvuru.DenetimSonucu" value="@b.DenetimSonucu" disabled /></label>
                 </section>
@@ -574,6 +692,17 @@
             AjaxPost("/Basvuru/FirmaKaydet", firma, SonucGosterGizle)
         });
 
+        document.getElementById('belgePaketiDosya')?.addEventListener('change', function () {
+            dosyaSecimYaz(this, 'belgePaketiDosyaSecim', 'Basvuru.BelgePaketiDosyaAdi');
+        });
+
+        document.getElementById('taahhutDosya')?.addEventListener('change', function () {
+            dosyaSecimYaz(this, 'taahhutDosyaSecim', 'Basvuru.TaahhutDosyaAdi');
+        });
+
+        document.getElementById('belgePaketiYukleBtn')?.addEventListener('click', BelgePaketiYukle);
+        document.getElementById('taahhutYukleBtn')?.addEventListener('click', TaahhutDosyasiYukle);
+
         //    setFirma(result.firma);
         //    firmaModal?.hide();
         //    basvuruMesajGoster(firmaModalModu === 'duzenle'
@@ -809,6 +938,125 @@
         AjaxPost('/Basvuru/KaydetMali', model, SonucGoster);
     }
 
+    function antiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function dosyaSecimYaz(input, hedefId, dosyaAdiInputName) {
+        const dosyaAdi = input.files && input.files.length ? input.files[0].name : 'Henüz dosya seçilmedi.';
+        const hedef = document.getElementById(hedefId);
+        if (hedef) hedef.textContent = dosyaAdi;
+        const dosyaAdiInput = document.querySelector(`[name="${dosyaAdiInputName}"]`);
+        if (dosyaAdiInput && input.files && input.files.length) dosyaAdiInput.value = dosyaAdi;
+    }
+
+    function belgePaketiDogrula() {
+        const dosya = document.getElementById('belgePaketiDosya');
+        const tumBelgelerSecili = $('.belge-grubu-check').length > 0
+            && $('.belge-grubu-check').length === $('.belge-grubu-check:checked').length;
+        const beyanEvet = $('#belgeBeyaniSelect').val() === 'Evet';
+        const aciklamaDolu = degerStr('Basvuru.BelgePaketiAciklama').length > 0;
+
+        if (!dosya || !dosya.files || dosya.files.length === 0) {
+            PopupMesajGoster('Doküman paketi dosyası seçilmelidir.', false);
+            return false;
+        }
+        if (!tumBelgelerSecili) {
+            PopupMesajGoster('Zorunlu belge gruplarının tamamı işaretlenmelidir.', false);
+            return false;
+        }
+        if (!beyanEvet) {
+            PopupMesajGoster('Belge beyanı Evet olmalıdır.', false);
+            return false;
+        }
+        if (!aciklamaDolu) {
+            PopupMesajGoster('Belge açıklaması girilmelidir.', false);
+            return false;
+        }
+
+        return true;
+    }
+
+    function BelgePaketiYukle() {
+        if (!belgePaketiDogrula()) return;
+
+        const dosya = document.getElementById('belgePaketiDosya').files[0];
+        const data = new FormData();
+        data.append('basvuruId', degerInt('Basvuru.Id') || 0);
+        data.append('aciklama', degerStr('Basvuru.BelgePaketiAciklama'));
+        data.append('belgeBeyani', 'true');
+        data.append('dosya', dosya);
+        data.append('__RequestVerificationToken', antiForgeryToken());
+
+        DosyaAjaxPost('/Basvuru/BelgePaketiYukle', data, function (sonuc) {
+            belgeYuklemeSonucGoster(sonuc, 'Basvuru.BelgePaketiDosyaId', 'Basvuru.BelgePaketiDosyaAdi', 'belgePaketiIndirBtn');
+        });
+    }
+
+    function TaahhutDosyasiYukle() {
+        const dosyaInput = document.getElementById('taahhutDosya');
+        if (!dosyaInput || !dosyaInput.files || dosyaInput.files.length === 0) {
+            PopupMesajGoster('Taahhüt dosyası seçilmelidir.', false);
+            return;
+        }
+        if (degerStr('Basvuru.TaahhutAciklama').length === 0) {
+            PopupMesajGoster('Taahhüt açıklaması girilmelidir.', false);
+            return;
+        }
+
+        const data = new FormData();
+        data.append('basvuruId', degerInt('Basvuru.Id') || 0);
+        data.append('aciklama', degerStr('Basvuru.TaahhutAciklama'));
+        data.append('dosya', dosyaInput.files[0]);
+        data.append('__RequestVerificationToken', antiForgeryToken());
+
+        DosyaAjaxPost('/Basvuru/TaahhutDosyasiYukle', data, function (sonuc) {
+            belgeYuklemeSonucGoster(sonuc, 'Basvuru.TaahhutDosyaId', 'Basvuru.TaahhutDosyaAdi', 'taahhutIndirBtn');
+        });
+    }
+
+    function DosyaAjaxPost(url, data, success) {
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: data,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            headers: {
+                'RequestVerificationToken': antiForgeryToken()
+            }
+        })
+            .done(function (result) {
+                if (success) success(result);
+            })
+            .fail(function (xhr) {
+                console.error('Dosya yükleme hatası:', xhr);
+                PopupMesajGoster('Dosya yüklenemedi.', false);
+            });
+    }
+
+    function belgeYuklemeSonucGoster(sonuc, dosyaIdInputName, dosyaAdiInputName, indirLinkId) {
+        if (!sonuc || !sonuc.basarili) {
+            PopupMesajGoster((sonuc && (sonuc.hataStr || sonuc.mesaj)) || 'Dosya yüklenemedi.', false);
+            return;
+        }
+
+        const nesne = sonuc.nesne || sonuc.Nesne || {};
+        const dosyaId = nesne.dosyaId || nesne.DosyaId || '';
+        const dosyaAdi = nesne.dosyaAdi || nesne.DosyaAdi || '';
+        $(`[name="${dosyaIdInputName}"]`).val(dosyaId);
+        if (dosyaAdi) $(`[name="${dosyaAdiInputName}"]`).val(dosyaAdi);
+        if (dosyaId && indirLinkId) {
+            const indirLink = document.getElementById(indirLinkId);
+            if (indirLink) {
+                indirLink.href = `/Basvuru/DosyaIndir/${dosyaId}`;
+                indirLink.classList.remove('d-none');
+            }
+        }
+        PopupMesajGoster(sonuc.mesaj || 'Dosya yüklendi.', true);
+    }
+
     function PaneliKaydet()
     {
         if(active == 1)
@@ -821,6 +1069,8 @@
             FinansKaydet()
         else if(active == 6)
             MaliKaydet()
+        else if(active == 7)
+            PopupMesajGoster('Belge yükleme işlemleri ilgili dosya butonları ile yapılır.', true)
         else
             alert(active);
     }
