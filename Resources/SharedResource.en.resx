@@ -496,7 +496,7 @@
     <value>5. Investment and Finance</value>
   </data>
   <data name="Basvuru.Step.6" xml:space="preserve">
-    <value>6. Financial Data</value>
+    <value>Financial Data</value>
   </data>
   <data name="Basvuru.Section1.Title" xml:space="preserve">
     <value>1. Pre-application Information</value>
@@ -520,7 +520,7 @@
     <value>5. Investment and Finance Information</value>
   </data>
   <data name="Basvuru.Section6.Title" xml:space="preserve">
-    <value>6. Financial Data for the Last 2 Years</value>
+    <value>2. Applicant's Own Financial Data and Scale Check</value>
   </data>
   <data name="Basvuru.Field.TicaretUnvani" xml:space="preserve">
     <value>Trade title</value>
@@ -774,6 +774,9 @@
   <data name="Basvuru.Firma.ModalTitle" xml:space="preserve">
     <value>New Company</value>
   </data>
+  <data name="Basvuru.Firma.InfoTitle" xml:space="preserve">
+    <value>Company Information</value>
+  </data>
   <data name="Basvuru.Firma.ModalInfo" xml:space="preserve">
     <value>Company details are stored on the company record; application contact details remain application-specific.</value>
   </data>
@@ -802,7 +805,7 @@
     <value>Cancel</value>
   </data>
   <data name="Basvuru.Field.BasvuruTipi" xml:space="preserve">
-    <value>Application Type</value>
+    <value>Legal type / company type</value>
   </data>
   <data name="Basvuru.ContactInformation" xml:space="preserve">
     <value>Contact Information</value>
@@ -972,4 +975,160 @@
   <data name="enumUygulamaAdresiYapiRuhsatiDurumu_5" xml:space="preserve">
     <value>No construction work</value>
   </data>
+Tabii, İngilizce resource XML’i:
+
+```xml
+<data name="Basvuru.Common.YesAnswer" xml:space="preserve">
+  <value>Yes</value>
+</data>
+<data name="Basvuru.Common.NoAnswer" xml:space="preserve">
+  <value>No</value>
+</data>
+<data name="Basvuru.Options.RequiredDocumentGroups" xml:space="preserve">
+  <value>Criminal record certificate|Income statement|Balance sheet|Certificate stating no bankruptcy, concordat or liquidation process|Trade registry gazette (incorporation and current)|Notarized signature circular</value>
+</data>
+<data name="Basvuru.Documents.Description" xml:space="preserve">
+  <value>Required documents will be uploaded as a single document package. Declarations and commitments included in the application guide annex will also be added as a separate file.</value>
+</data>
+<data name="Basvuru.Documents.SelectPackage" xml:space="preserve">
+  <value>Select single document package</value>
+</data>
+<data name="Basvuru.Documents.NoFileSelected" xml:space="preserve">
+  <value>No file selected yet.</value>
+</data>
+<data name="Basvuru.Documents.PackageFileName" xml:space="preserve">
+  <value>Uploaded document package file name</value>
+</data>
+<data name="Basvuru.Documents.PackageUploadNote" xml:space="preserve">
+  <value>After the file is uploaded to the server, the file name, file id and document control declaration are saved to the application record.</value>
+</data>
+<data name="Basvuru.Documents.PackageDescription" xml:space="preserve">
+  <value>Document description / note</value>
+</data>
+<data name="Basvuru.Documents.UploadPackage" xml:space="preserve">
+  <value>Upload Single Document Package</value>
+</data>
+<data name="Basvuru.Documents.DownloadFile" xml:space="preserve">
+  <value>Download file</value>
+</data>
+<data name="Basvuru.Documents.CommitmentTitle" xml:space="preserve">
+  <value>Commitments / Application guide annex declarations</value>
+</data>
+<data name="Basvuru.Documents.SelectCommitment" xml:space="preserve">
+  <value>Select commitment file</value>
+</data>
+<data name="Basvuru.Documents.CommitmentFileName" xml:space="preserve">
+  <value>Uploaded commitment / declaration file name</value>
+</data>
+<data name="Basvuru.Documents.CommitmentDescription" xml:space="preserve">
+  <value>Commitment description / note</value>
+</data>
+<data name="Basvuru.Documents.CommitmentUploadNote" xml:space="preserve">
+  <value>This field is reserved for uploading the signed/authorized file containing declarations and commitments included in the application guide annex.</value>
+</data>
+<data name="Basvuru.Documents.UploadCommitment" xml:space="preserve">
+  <value>Add commitment file</value>
+</data>
+<data name="Basvuru.Documents.PackageFileRequired" xml:space="preserve">
+  <value>The document package file must be selected.</value>
+</data>
+<data name="Basvuru.Documents.AllGroupsRequired" xml:space="preserve">
+  <value>All required document groups must be checked.</value>
+</data>
+<data name="Basvuru.Documents.DeclarationMustBeYes" xml:space="preserve">
+  <value>The document declaration must be Yes.</value>
+</data>
+<data name="Basvuru.Documents.PackageDescriptionRequired" xml:space="preserve">
+  <value>Document description is required.</value>
+</data>
+<data name="Basvuru.Documents.CommitmentFileRequired" xml:space="preserve">
+  <value>The commitment file must be selected.</value>
+</data>
+<data name="Basvuru.Documents.CommitmentDescriptionRequired" xml:space="preserve">
+  <value>Commitment description is required.</value>
+</data>
+<data name="Basvuru.Documents.UploadErrorConsole" xml:space="preserve">
+  <value>File upload error:</value>
+</data>
+<data name="Basvuru.Documents.UploadFailed" xml:space="preserve">
+  <value>File could not be uploaded.</value>
+</data>
+<data name="Basvuru.Documents.UploadSucceeded" xml:space="preserve">
+  <value>File uploaded.</value>
+</data>
+<data name="Basvuru.Documents.SectionSaveInfo" xml:space="preserve">
+  <value>Document upload operations are performed with the related file buttons.</value>
+</data>
+<data name="Basvuru.Mali.BagimsizDenetim" xml:space="preserve">
+  <value>Independent audit</value>
+</data>
+<data name="Basvuru.Mali.BagimsizDenetimeTabiMi" xml:space="preserve">
+  <value>Subject to independent audit?</value>
+</data>
+<data name="Basvuru.Mali.SelectAuditFile" xml:space="preserve">
+  <value>Upload File</value>
+</data>
+<data name="Basvuru.Mali.AuditFileName" xml:space="preserve">
+  <value>Independent Audit Report</value>
+</data>
+<data name="Basvuru.Mali.AuditFileUploadNote" xml:space="preserve">
+  <value>If the applicant is subject to independent audit, the audit file is uploaded here.</value>
+</data>
+<data name="Basvuru.Mali.UploadAuditFile" xml:space="preserve">
+  <value>Upload File</value>
+</data>
+<data name="Basvuru.Mali.AuditFileRequired" xml:space="preserve">
+  <value>The independent audit file must be selected.</value>
+</data>
+<data name="Basvuru.Mali.OncekiYilHeader" xml:space="preserve">
+  <value>{0}</value>
+</data>
+<data name="Basvuru.Mali.SonYilHeader" xml:space="preserve">
+  <value>{0}</value>
+</data>
+<data name="Basvuru.Mali.OncekiYilFallback" xml:space="preserve">
+  <value>Previous year</value>
+</data>
+<data name="Basvuru.Mali.SonYilFallback" xml:space="preserve">
+  <value>Last year</value>
+</data>
+<data name="Basvuru.Mali.GelirTablosu" xml:space="preserve">
+  <value>Income statement</value>
+</data>
+<data name="Basvuru.Mali.GelirTablosuKalemi" xml:space="preserve">
+  <value>Income statement item</value>
+</data>
+<data name="Basvuru.Mali.YillikNetSatisHasilati" xml:space="preserve">
+  <value>Annual net sales revenue (TL)</value>
+</data>
+<data name="Basvuru.Mali.Bilanco" xml:space="preserve">
+  <value>Balance sheet</value>
+</data>
+<data name="Basvuru.Mali.BilancoKalemi" xml:space="preserve">
+  <value>Balance sheet item</value>
+</data>
+<data name="Basvuru.Mali.AktifToplami" xml:space="preserve">
+  <value>Total assets (TL)</value>
+</data>
+<data name="Basvuru.Mali.ScaleDescription" xml:space="preserve">
+  <value>The applicant's annual net sales revenue and total assets for the last two years are used. If there is a legal entity partner, the amounts calculated according to the shareholding ratio are included in the financial scale check.</value>
+</data>
+<data name="Basvuru.Mali.ScaleLimitWarning" xml:space="preserve">
+  <value>At least one of net sales revenue or total assets must be between {0} TL and {1} TL. (It is sufficient if either of the last 2 years meets the range)</value>
+</data>
+<data name="Basvuru.Mali.ApplicantOwnFinancialData" xml:space="preserve">
+  <value>Applicant's Own Financial Data</value>
+</data>
+<data name="Basvuru.Mali.FinancialDataItem" xml:space="preserve">
+  <value>Financial data</value>
+</data>
+<data name="Basvuru.Mali.ScaleCheckOk" xml:space="preserve">
+  <value>The scale condition is met.</value>
+</data>
+<data name="Basvuru.Mali.ScaleCheckNotOk" xml:space="preserve">
+  <value>The entered values do not meet the range yet.</value>
+</data>
+<data name="Basvuru.Step.Ortaklik" xml:space="preserve">
+  <value>3. Ownership and Authority</value>
+</data>
 </root>

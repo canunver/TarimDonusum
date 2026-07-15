@@ -1,0 +1,37 @@
+﻿@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+}
+            <section class="basvuru-panel active" data-panel="4">
+                <h2>@L["Basvuru.Section4.Title"]</h2>
+                <div class="adres-toolbar">
+                    @if (!ro)
+                    {
+                        <button type="button" class="btn btn-outline-primary" id="adresYeniBtn"><i class="fas fa-plus"></i> @L["Basvuru.Address.New"]</button>
+                    }
+                </div>
+                <div class="table-responsive uygulama-adres-wrap">
+                    <table class="table uygulama-adres-table">
+                        <thead>
+                            <tr>
+                                <th>@L["Basvuru.Field.SiraNo"]</th>
+                                <th>@L["Basvuru.Field.Il"]</th>
+                                <th>@L["Basvuru.Field.Ilce"]</th>
+                                <th>@L["Basvuru.Field.TamAdres"]</th>
+                                <th>@L["Basvuru.Field.YatirimYeriStatusu"]</th>
+                                <th>@L["Basvuru.Field.KiraTahsis"]</th>
+                                <th>@L["Basvuru.Field.YapiRuhsatiDurumu"]</th>
+                                @if (!ro)
+                                {
+                                    <th>@L["Basvuru.Common.Actions"]</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody id="uygulamaAdresListesi"></tbody>
+                    </table>
+                </div>
+            </section>
+

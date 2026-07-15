@@ -264,6 +264,50 @@ body {
   background: #fff;
 }
 
+.audit-inline-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: end;
+  margin-top: 18px;
+}
+
+.audit-question,
+.audit-file-inline {
+  margin: 0;
+}
+
+.audit-file-header {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px;
+  border: 1px solid #d8e0ea;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.audit-file-title {
+  margin-right: auto;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.audit-file-name {
+  margin-top: 6px;
+  color: #56637a;
+  font-size: .92rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 820px) {
+  .audit-inline-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .document-two-column {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -369,6 +413,69 @@ body {
   font-weight: 800;
 }
 
+.mali-info-text {
+  margin: 0 0 12px;
+  color: #475467;
+  line-height: 1.55;
+}
+
+.mali-scale-warning {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #f6c85f;
+  border-radius: 8px;
+  background: #fff4cc;
+  color: #6b4e00;
+}
+
+.mali-scale-warning.scale-ok {
+  border-color: #8ecf9b;
+  background: #eaf8ee;
+  color: #1f6b35;
+}
+
+.mali-scale-result {
+  display: block;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.partners-table-wrap,
+.legal-financial-table,
+.ortak-table {
+  margin-bottom: 12px;
+}
+
+.ortak-table th,
+.legal-financial-table th {
+  white-space: nowrap;
+}
+
+.ortak-table td,
+.legal-financial-table td {
+  vertical-align: middle;
+}
+
+.related-enterprise-box {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px dashed #b8c8ea;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.legal-partner-modal-fields {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #d8e0ea;
+}
+
+.legal-partner-modal-fields h6 {
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
 .mali-table-wrap {
   margin-bottom: 26px;
   border: 1px solid #d8e0ea;
@@ -460,6 +567,47 @@ body {
 .company-line {
   grid-template-columns: 190px minmax(0, 170px) 40px 40px 40px;
   justify-content: start;
+}
+
+.company-inline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px 40px 40px;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.company-inline input {
+  margin-top: 0;
+}
+
+.company-details {
+  margin-top: 18px;
+  padding: 12px 14px 14px;
+  border: 1px solid #d8e0ec;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.company-details summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #1f3f78;
+}
+
+.company-details[open] summary {
+  margin-bottom: 12px;
+}
+
+.company-summary-grid .company-name-field {
+  grid-column: span 2;
+}
+
+.form-grid input[readonly],
+.form-grid textarea[readonly],
+.wide-label input[readonly],
+.wide-label textarea[readonly] {
+  background: #f7f9fc;
 }
 
 .two-fields {

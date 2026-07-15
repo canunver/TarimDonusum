@@ -1,0 +1,118 @@
+﻿@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+    string T(string key) => L[key].Value;
+    string[] Items(string key) => T(key).Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    string[] evetHayir = Items("Basvuru.Options.YesNo");
+    string evetMetni = evetHayir.Length > 0 ? evetHayir[0] : T("Basvuru.Common.YesAnswer");
+    string hayirMetni = evetHayir.Length > 1 ? evetHayir[1] : T("Basvuru.Common.NoAnswer");
+    string kurulusTarihi = b.basvuruFirma.firma.kurulusTarihi?.ToString("yyyy-MM-dd") ?? "";
+}
+
+<section class="basvuru-panel active" data-bolum="Firma">
+    <h2>@L["Basvuru.Step.1"]</h2>
+    <p>@L["Basvuru.Section1.Description"]</p>
+
+    <h3 class="preapp-subtitle">@L["Basvuru.Section1.Title"]</h3>
+    <div class="form-grid">
+        <label>
+            @L["Basvuru.Field.BasvuruDonemi"]
+            <select id="basvuruDonemi" name="Basvuru.DonemId" disabled="@ro">
+                <option value="">@L["Basvuru.Common.Select"]</option>
+                @foreach (var donem in Model.Donemler)
+                {
+                    bool secili = b.basvuruFirma.donem.id == donem.id;
+                    bool secilebilir = donem.SecilebilirMi();
+                    string durum = secilebilir ? T("Basvuru.Donem.Open") : T("Basvuru.Donem.Closed");
+                    <option value="@donem.id" selected="@secili" disabled="@(!secilebilir && !secili)">
+                        @donem.ad (@durum)
+                    </option>
+                }
+            </select>
+        </label>
+        <label>
+            @L["Basvuru.Field.Il"]
+            <select id="basvuruIl" name="Basvuru.IlId" disabled="@ro">
+                <option value="">@L["Basvuru.Common.Select"]</option>
+                @foreach (var il in Model.Iller)
+                {
+                    <option value="@il.id" selected="@(b.basvuruFirma.il.id == il.id)">@il.kod.ToString("00") - @il.ad</option>
+                }
+            </select>
+        </label>
+    </div>
+
+    <h3 class="preapp-subtitle">@L["Basvuru.Firma.InfoTitle"]</h3>
+    <div class="form-grid company-summary-grid">
+        <label>
+            @L["Basvuru.Field.VergiKimlikNo"]
+            <span class="company-inline">
+                <input type="hidden" id="firmaId" name="Basvuru.FirmaId" value="@b.basvuruFirma.firma.id" />
+                <input id="vergiKimlikNo" name="Basvuru.VergiKimlikNo" value="@b.basvuruFirma.firma.vergiKimlikNo" disabled="@ro" />
+                @if (!ro)
+                {
+                    <button type="button" class="btn btn-outline-primary icon-action" id="firmaSorgulaBtn" title="@T("Basvuru.Firma.Query")">?</button>
+                    <button type="button" class="btn btn-outline-success icon-action" id="firmaYeniBtn" title="@T("Basvuru.Firma.ModalTitle")">+</button>
+                    <button type="button" class="btn btn-outline-secondary icon-action" id="firmaDuzenleBtn" title="@T("Basvuru.Common.Edit")">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                }
+            </span>
+        </label>
+        <label class="company-name-field">@L["Basvuru.Field.TicaretUnvani"]<input id="firmaAdi" name="Basvuru.TicaretUnvani" value="@b.basvuruFirma.firma.ticaretUnvani" readonly /></label>
+    </div>
+
+    <details class="company-details">
+        <summary>@L["Basvuru.Firma.InfoTitle"]</summary>
+        <div class="form-grid">
+            <label>@L["Basvuru.Field.TicaretSicilNo"]<input id="firmaTicaretSicilNo" value="@b.basvuruFirma.firma.ticaretSicilNo" readonly /></label>
+            <label>@L["Basvuru.Field.KurulusTarihi"]<input id="firmaKurulusTarihi" type="date" value="@kurulusTarihi" readonly /></label>
+            <label>@L["Basvuru.Field.Telefon"]<input id="firmaTelefon" value="@b.basvuruFirma.firma.telefon" readonly /></label>
+            <label>@L["Basvuru.Field.WebSitesi"]<input id="firmaWebSitesi" value="@b.basvuruFirma.firma.webSitesi" readonly /></label>
+            <label>@L["Basvuru.Field.MersisNo"]<input id="firmaMersisNo" value="@b.basvuruFirma.firma.mersisNo" readonly /></label>
+            <label>@L["Basvuru.Field.NaceKodu"]<input id="firmaNaceKodu" value="@b.basvuruFirma.firma.naceKodu" readonly /></label>
+            <label>@L["Basvuru.Field.KepAdresi"]<input id="firmaKepAdresi" value="@b.basvuruFirma.firma.kepAdresi" readonly /></label>
+            <label>@L["Basvuru.Field.Eposta"]<input id="firmaEposta" type="email" value="@b.basvuruFirma.firma.eposta" readonly /></label>
+        </div>
+        <label class="wide-label">@L["Basvuru.Field.FaaliyetKonusu"]<textarea id="firmaFaaliyetKonusu" readonly>@b.basvuruFirma.firma.faaliyetKonusu</textarea></label>
+        <label class="wide-label">@L["Basvuru.Field.FirmaAdresi"]<textarea id="firmaAdres" readonly>@b.basvuruFirma.firma.adres</textarea></label>
+    </details>
+
+    <div class="form-grid">
+        <label>
+            @L["Basvuru.Field.SonIkiYildirFaalMi"]
+            <select id="sonIkiYil" name="Basvuru.SonIkiYildirFaalMi" disabled="@ro">
+                <option value="" selected="@(!b.basvuruFirma.sonIkiYildirFaalMi.HasValue)">@L["Basvuru.Common.Select"]</option>
+                <option value="false" selected="@(b.basvuruFirma.sonIkiYildirFaalMi == false)">@hayirMetni</option>
+                <option value="true" selected="@(b.basvuruFirma.sonIkiYildirFaalMi == true)">@evetMetni</option>
+            </select>
+        </label>
+        <label>
+            @L["Basvuru.Field.BasvuruTipi"]
+            <select id="basvuruTipi" name="Basvuru.BasvuruSahibiTuru" disabled="@ro">
+                <option value="" selected="@(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru == TarimDonusum.Models.enumBasvuruSahibiTuru.Tanimsiz)">@L["Basvuru.Common.Select"]</option>
+                @foreach (TarimDonusum.Models.enumBasvuruSahibiTuru item in Enum.GetValues<TarimDonusum.Models.enumBasvuruSahibiTuru>())
+                {
+                    if (item == TarimDonusum.Models.enumBasvuruSahibiTuru.Tanimsiz)
+                    {
+                        continue;
+                    }
+                    <option value="@((int)item)" selected="@(b.basvuruFirma.basvuruSahibiTuru == item)">@IsimBul.EnumAdi(item, L)</option>
+                }
+            </select>
+        </label>
+    </div>
+
+    <h3 class="preapp-subtitle">@L["Basvuru.ContactInformation"]</h3>
+    <div class="form-grid">
+        <label>@L["Basvuru.Field.IrtibatKisisi"]<input id="irtibatKisisi" name="Basvuru.irtibat.kisi" value="@b.irtibat.kisi" disabled="@ro" /></label>
+        <label>@L["Basvuru.Field.IrtibatUnvani"]<input id="irtibatUnvani" name="Basvuru.irtibat.unvan" value="@b.irtibat.unvan" disabled="@ro" /></label>
+        <label>@L["Basvuru.Field.IrtibatTelefon"]<input id="irtibatTelefon" name="Basvuru.irtibat.telefon" value="@b.irtibat.telefon" disabled="@ro" /></label>
+        <label>@L["Basvuru.Field.IrtibatEposta"]<input id="irtibatEposta" name="Basvuru.irtibat.ePosta" type="email" value="@b.irtibat.ePosta" disabled="@ro" /></label>
+    </div>
+    <label class="wide-label">@L["Basvuru.Field.IletisimAdresi"]<textarea id="iletisimAdresi" name="Basvuru.irtibat.adres" disabled="@ro">@b.irtibat.adres</textarea></label>
+    <label class="wide-label">@L["Basvuru.Field.YetkiliKisiler"]<textarea id="yetkiliKisiler" name="Basvuru.irtibat.yetkiliKisiler" disabled="@ro">@b.irtibat.yetkiliKisiler</textarea></label>
+</section>

@@ -164,35 +164,24 @@ namespace TarimDonusum.IsKurallari
             new(10,
                 @"CREATE TABLE dbo.Basvuru(
                     Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Basvuru PRIMARY KEY,
-                    FirmaId INT NOT NULL,
-                    DonemId INT NOT NULL,
-                    IlId INT NOT NULL,
-                    BasvuruKonusu NVARCHAR(250) NOT NULL,
+                    BasvuruAnaId INT NULL,
+                    RevizyonNo INT NOT NULL CONSTRAINT DF_Basvuru_RevizyonNo DEFAULT 0,
+                    SiraNo INT NOT NULL CONSTRAINT DF_Basvuru_SiraNo DEFAULT 1,
+                    BasvuruKonusu NVARCHAR(250) NULL,
                     BasvuruSahibiTuru INT NULL,
-                    SonIkiYildirFaalMi INT NOT NULL CONSTRAINT DF_Basvuru_SonIkiYildirFaalMi DEFAULT 0,
-                    YatirimAdi NVARCHAR(250) NOT NULL CONSTRAINT DF_Basvuru_YatirimAdi DEFAULT N'',
+                    SonIkiYildirFaalMi INT NULL,
+                    YatirimAdi NVARCHAR(250) NULL,
                     ToplamYatirimTutari DECIMAL(18,2) NULL,
                     UygunHarcamaTutari DECIMAL(18,2) NULL,
                     TalepEdilenDestekTutari DECIMAL(18,2) NULL,
                     BasvuruSahibiKatkisi DECIMAL(18,2) NULL,
                     DestekOrani DECIMAL(5,2) NULL,
                     YatirimTuru INT NULL,
-                    YatiriminAmaci NVARCHAR(MAX) NOT NULL CONSTRAINT DF_Basvuru_YatiriminAmaci DEFAULT N'',
+                    YatiriminAmaci NVARCHAR(MAX) NULL,
                     OzelSektorPayi DECIMAL(5,2) NULL,
                     BagliOrtakIsletmeVarMi NVARCHAR(10) NULL,
-                    BagliOrtakAciklama NVARCHAR(MAX) NULL,
-                    Durum INT NOT NULL CONSTRAINT DF_Basvuru_Durum DEFAULT 1,
-                    CONSTRAINT FK_Basvuru_Firma
-                        FOREIGN KEY (FirmaId) REFERENCES dbo.Firma(Id),
-                    CONSTRAINT FK_Basvuru_Donem
-                        FOREIGN KEY (DonemId) REFERENCES dbo.Donem(Id),
-                    CONSTRAINT FK_Basvuru_Il
-                        FOREIGN KEY (IlId) REFERENCES dbo.Il(Id)
+                    BagliOrtakAciklama NVARCHAR(MAX) NULL
                 );
-
-                CREATE INDEX IX_Basvuru_FirmaId ON dbo.Basvuru(FirmaId);
-                CREATE INDEX IX_Basvuru_DonemId ON dbo.Basvuru(DonemId);
-                CREATE INDEX IX_Basvuru_IlId ON dbo.Basvuru(IlId);
                 "),
             new(11,
                 @"CREATE TABLE dbo.BasvuruLog
@@ -399,13 +388,196 @@ namespace TarimDonusum.IsKurallari
                 "),
             new(22,
                 @"ALTER TABLE dbo.Basvuru ADD
-                    BelgePaketiDosyaAdi NVARCHAR(260) NOT NULL CONSTRAINT DF_Basvuru_BelgePaketiDosyaAdi DEFAULT N'',
+                    BelgePaketiDosyaAdi NVARCHAR(260) NULL,
                     BelgePaketiDosyaId INT NULL,
-                    BelgePaketiAciklama NVARCHAR(1000) NOT NULL CONSTRAINT DF_Basvuru_BelgePaketiAciklama DEFAULT N'',
-                    BelgeBeyani NVARCHAR(20) NOT NULL CONSTRAINT DF_Basvuru_BelgeBeyani DEFAULT N'',
-                    TaahhutDosyaAdi NVARCHAR(260) NOT NULL CONSTRAINT DF_Basvuru_TaahhutDosyaAdi DEFAULT N'',
+                    BelgePaketiAciklama NVARCHAR(1000) NULL,
+                    BelgeBeyani NVARCHAR(20) NULL,
+                    TaahhutDosyaAdi NVARCHAR(260) NULL,
                     TaahhutDosyaId INT NULL,
-                    TaahhutAciklama NVARCHAR(1000) NOT NULL CONSTRAINT DF_Basvuru_TaahhutAciklama DEFAULT N''
+                    TaahhutAciklama NVARCHAR(1000) NULL
+                "),
+            new(23,
+                @"CREATE TABLE dbo.BasvuruAna
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruAna PRIMARY KEY,
+                        FirmaId INT NOT NULL,
+                        DonemId INT NOT NULL,
+                        IlId INT NOT NULL,
+                        Durum INT NOT NULL CONSTRAINT DF_BasvuruAna_Durum DEFAULT 1,
+                        CONSTRAINT FK_BasvuruAna_Firma
+                            FOREIGN KEY (FirmaId) REFERENCES dbo.Firma(Id),
+                        CONSTRAINT FK_BasvuruAna_Donem
+                            FOREIGN KEY (DonemId) REFERENCES dbo.Donem(Id),
+                        CONSTRAINT FK_BasvuruAna_Il
+                            FOREIGN KEY (IlId) REFERENCES dbo.Il(Id)
+                    );
+                    
+                    CREATE INDEX IX_BasvuruAna_FirmaId ON dbo.BasvuruAna(FirmaId);
+                    CREATE INDEX IX_BasvuruAna_DonemId ON dbo.BasvuruAna(DonemId);
+                    CREATE INDEX IX_BasvuruAna_IlId ON dbo.BasvuruAna(IlId);
+                "),
+            new(24,
+                @"IF COL_LENGTH('dbo.Basvuru', 'BasvuruAnaId') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD BasvuruAnaId INT NULL;
+
+                IF COL_LENGTH('dbo.Basvuru', 'RevizyonNo') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD RevizyonNo INT NOT NULL CONSTRAINT DF_Basvuru_RevizyonNo DEFAULT 0;
+
+                IF COL_LENGTH('dbo.Basvuru', 'SiraNo') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD SiraNo INT NOT NULL CONSTRAINT DF_Basvuru_SiraNo DEFAULT 1;
+
+                IF COL_LENGTH('dbo.Basvuru', 'BasvuruKonusu') IS NOT NULL
+                    ALTER TABLE dbo.Basvuru ALTER COLUMN BasvuruKonusu NVARCHAR(250) NULL;
+
+                IF OBJECT_ID(N'dbo.DF_Basvuru_SonIkiYildirFaalMi', N'D') IS NOT NULL
+                    ALTER TABLE dbo.Basvuru DROP CONSTRAINT DF_Basvuru_SonIkiYildirFaalMi;
+
+                IF COL_LENGTH('dbo.Basvuru', 'SonIkiYildirFaalMi') IS NOT NULL
+                    ALTER TABLE dbo.Basvuru ALTER COLUMN SonIkiYildirFaalMi INT NULL;
+
+                IF OBJECT_ID(N'dbo.DF_Basvuru_YatiriminAmaci', N'D') IS NOT NULL
+                    ALTER TABLE dbo.Basvuru DROP CONSTRAINT DF_Basvuru_YatiriminAmaci;
+
+                IF COL_LENGTH('dbo.Basvuru', 'YatiriminAmaci') IS NOT NULL
+                    ALTER TABLE dbo.Basvuru ALTER COLUMN YatiriminAmaci NVARCHAR(MAX) NULL;
+
+                IF COL_LENGTH('dbo.Basvuru', 'BasvuruAnaId') IS NOT NULL
+                   AND NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Basvuru_BasvuruAna')
+                    ALTER TABLE dbo.Basvuru ADD CONSTRAINT FK_Basvuru_BasvuruAna
+                        FOREIGN KEY (BasvuruAnaId) REFERENCES dbo.BasvuruAna(Id);
+
+                IF COL_LENGTH('dbo.Basvuru', 'BasvuruAnaId') IS NOT NULL
+                   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Basvuru_BasvuruAnaId' AND object_id = OBJECT_ID(N'dbo.Basvuru'))
+                    CREATE INDEX IX_Basvuru_BasvuruAnaId ON dbo.Basvuru(BasvuruAnaId);
+
+                IF COL_LENGTH('dbo.Basvuru', 'BasvuruAnaId') IS NOT NULL
+                   AND COL_LENGTH('dbo.Basvuru', 'RevizyonNo') IS NOT NULL
+                   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Basvuru_BasvuruAnaRevizyon' AND object_id = OBJECT_ID(N'dbo.Basvuru'))
+                    CREATE UNIQUE INDEX UX_Basvuru_BasvuruAnaRevizyon ON dbo.Basvuru(BasvuruAnaId, RevizyonNo)
+                    WHERE BasvuruAnaId IS NOT NULL;
+
+                IF COL_LENGTH('dbo.Basvuru', 'BasvuruAnaId') IS NOT NULL
+                   AND NOT EXISTS (SELECT 1 FROM dbo.Basvuru WHERE BasvuruAnaId IS NULL)
+                    ALTER TABLE dbo.Basvuru ALTER COLUMN BasvuruAnaId INT NOT NULL;
+                "),
+            new(25,
+                @"IF COL_LENGTH('dbo.Basvuru', 'YatirimAdi') IS NOT NULL
+                BEGIN
+                    IF OBJECT_ID(N'dbo.DF_Basvuru_YatirimAdi', N'D') IS NOT NULL
+                        ALTER TABLE dbo.Basvuru DROP CONSTRAINT DF_Basvuru_YatirimAdi;
+
+                    ALTER TABLE dbo.Basvuru ALTER COLUMN YatirimAdi NVARCHAR(250) NULL;
+                END
+                "),
+            new(26,
+                @"IF COL_LENGTH('dbo.Basvuru', 'BagimsizDenetimeTabiMi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD BagimsizDenetimeTabiMi INT NULL;
+
+                IF COL_LENGTH('dbo.Basvuru', 'DenetimDosyaAdi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD DenetimDosyaAdi NVARCHAR(260) NULL;
+
+                IF COL_LENGTH('dbo.Basvuru', 'DenetimDosyaId') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD DenetimDosyaId INT NULL;
+                "),
+            new(27,
+                @"IF OBJECT_ID(N'dbo.BasvuruOrtaklar', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE dbo.BasvuruOrtaklar
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruOrtaklar PRIMARY KEY,
+                        BasvuruId INT NOT NULL,
+                        SiraNo INT NOT NULL,
+                        AdUnvan NVARCHAR(250) NOT NULL,
+                        TcknVkn NVARCHAR(20) NULL,
+                        KisiTuru NVARCHAR(30) NULL,
+                        PayOrani DECIMAL(18,2) NULL,
+                        HesabaDahilOran DECIMAL(18,2) NULL,
+                        OzelKamuNiteligi NVARCHAR(30) NULL,
+                        NihaiFaydalaniciBilgisi NVARCHAR(250) NULL,
+                        UboKycBelgeAdi NVARCHAR(260) NULL,
+                        UboKycDosyaId INT NULL,
+                        OncekiYilNetSatis DECIMAL(18,2) NULL,
+                        SonYilNetSatis DECIMAL(18,2) NULL,
+                        OncekiYilAktifToplami DECIMAL(18,2) NULL,
+                        SonYilAktifToplami DECIMAL(18,2) NULL,
+                        CONSTRAINT FK_BasvuruOrtaklar_Basvuru
+                            FOREIGN KEY (BasvuruId) REFERENCES dbo.Basvuru(Id)
+                    );
+
+                    CREATE INDEX IX_BasvuruOrtaklar_BasvuruSira ON dbo.BasvuruOrtaklar(BasvuruId, SiraNo);
+                    CREATE INDEX IX_BasvuruOrtaklar_AdUnvan ON dbo.BasvuruOrtaklar(AdUnvan);
+                END
+                "),
+            new(28,
+                @"IF OBJECT_ID(N'dbo.BasvuruOrtaklar', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE dbo.BasvuruOrtaklar
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruOrtaklar PRIMARY KEY,
+                        BasvuruId INT NOT NULL,
+                        SiraNo INT NOT NULL,
+                        AdUnvan NVARCHAR(250) NOT NULL,
+                        TcknVkn NVARCHAR(20) NULL,
+                        KisiTuru NVARCHAR(30) NULL,
+                        PayOrani DECIMAL(18,2) NULL,
+                        HesabaDahilOran DECIMAL(18,2) NULL,
+                        OzelKamuNiteligi NVARCHAR(30) NULL,
+                        NihaiFaydalaniciBilgisi NVARCHAR(250) NULL,
+                        UboKycBelgeAdi NVARCHAR(260) NULL,
+                        UboKycDosyaId INT NULL,
+                        OncekiYilNetSatis DECIMAL(18,2) NULL,
+                        SonYilNetSatis DECIMAL(18,2) NULL,
+                        OncekiYilAktifToplami DECIMAL(18,2) NULL,
+                        SonYilAktifToplami DECIMAL(18,2) NULL,
+                        CONSTRAINT FK_BasvuruOrtaklar_Basvuru
+                            FOREIGN KEY (BasvuruId) REFERENCES dbo.Basvuru(Id)
+                    );
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_BasvuruOrtaklar_BasvuruSira' AND object_id = OBJECT_ID(N'dbo.BasvuruOrtaklar'))
+                    CREATE INDEX IX_BasvuruOrtaklar_BasvuruSira ON dbo.BasvuruOrtaklar(BasvuruId, SiraNo);
+
+                IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_BasvuruOrtaklar_AdUnvan' AND object_id = OBJECT_ID(N'dbo.BasvuruOrtaklar'))
+                    CREATE INDEX IX_BasvuruOrtaklar_AdUnvan ON dbo.BasvuruOrtaklar(AdUnvan);
+
+                IF COL_LENGTH('dbo.Basvuru', 'OrtaklikJson') IS NOT NULL
+                    ALTER TABLE dbo.Basvuru DROP COLUMN OrtaklikJson;
+                "),
+            new(29,
+                @"IF OBJECT_ID(N'dbo.BasvuruOrtaklar', N'U') IS NOT NULL
+                   AND COL_LENGTH('dbo.BasvuruOrtaklar', 'HesabaDahilOran') IS NULL
+                    ALTER TABLE dbo.BasvuruOrtaklar ADD HesabaDahilOran DECIMAL(18,2) NULL;
+                "),
+            new(30,
+                @"IF OBJECT_ID(N'dbo.BasvuruOrtaklar', N'U') IS NOT NULL
+                   AND COL_LENGTH('dbo.BasvuruOrtaklar', 'UboKycDosyaId') IS NULL
+                    ALTER TABLE dbo.BasvuruOrtaklar ADD UboKycDosyaId INT NULL;
+                "),
+            new(31,
+                @"IF OBJECT_ID(N'dbo.BasvuruOrtaklar', N'U') IS NOT NULL
+                   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_BasvuruOrtaklar_Basvuru_TcknVkn' AND object_id = OBJECT_ID(N'dbo.BasvuruOrtaklar'))
+                    CREATE UNIQUE INDEX UX_BasvuruOrtaklar_Basvuru_TcknVkn
+                        ON dbo.BasvuruOrtaklar(BasvuruId, TcknVkn)
+                        WHERE TcknVkn IS NOT NULL AND TcknVkn <> N'';
+                "),
+            new(32,
+                @"IF COL_LENGTH('dbo.Basvuru', 'BagliOrtakUnvani') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD BagliOrtakUnvani NVARCHAR(250) NULL;
+
+                  IF COL_LENGTH('dbo.Basvuru', 'BagliOrtakKimlikNo') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD BagliOrtakKimlikNo NVARCHAR(50) NULL;
+
+                  IF COL_LENGTH('dbo.Basvuru', 'BagliOrtakOncekiYilNetSatis') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD BagliOrtakOncekiYilNetSatis DECIMAL(18,2) NULL;
+
+                  IF COL_LENGTH('dbo.Basvuru', 'BagliOrtakSonYilNetSatis') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD BagliOrtakSonYilNetSatis DECIMAL(18,2) NULL;
+
+                  IF COL_LENGTH('dbo.Basvuru', 'BagliOrtakOncekiYilAktifToplami') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD BagliOrtakOncekiYilAktifToplami DECIMAL(18,2) NULL;
+
+                  IF COL_LENGTH('dbo.Basvuru', 'BagliOrtakSonYilAktifToplami') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD BagliOrtakSonYilAktifToplami DECIMAL(18,2) NULL;
                 "),
         ];
 

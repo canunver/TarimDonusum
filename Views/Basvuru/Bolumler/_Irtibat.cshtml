@@ -1,0 +1,38 @@
+﻿@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+}
+            <section class="basvuru-panel active" data-panel="2">
+                <h2>@L["Basvuru.Section2.Title"]</h2>
+                <h3 class="preapp-subtitle">@L["Basvuru.ContactInformation"]</h3>
+                <div class="preapp-form">
+                    <div class="preapp-line">
+                        <label for="irtibatKisisi">@L["Basvuru.Field.IrtibatKisisi"]</label>
+                        <input id="irtibatKisisi" name="Basvuru.irtibat.kisi" value="@b.irtibat.kisi" disabled="@ro" />
+                    </div>
+                    <div class="preapp-line">
+                        <label for="irtibatUnvani">@L["Basvuru.Field.IrtibatUnvani"]</label>
+                        <input id="irtibatUnvani" name="Basvuru.irtibat.unvan" value="@b.irtibat.unvan" disabled="@ro" />
+                    </div>
+                    <div class="preapp-line">
+                        <label for="irtibatTelefon">@L["Basvuru.Field.IrtibatTelefon"]</label>
+                        <input id="irtibatTelefon" name="Basvuru.irtibat.telefon" value="@b.irtibat.telefon" disabled="@ro" />
+                    </div>
+                    <div class="preapp-line">
+                        <label for="irtibatEposta">@L["Basvuru.Field.IrtibatEposta"]</label>
+                        <input id="irtibatEposta" name="Basvuru.irtibat.ePosta" type="email" value="@b.irtibat.ePosta" disabled="@ro" />
+                    </div>
+                    <div class="preapp-line textarea-line">
+                        <label for="iletisimAdresi">@L["Basvuru.Field.IletisimAdresi"]</label>
+                        <textarea id="iletisimAdresi" name="Basvuru.irtibat.adres" disabled="@ro">@b.irtibat.adres</textarea>
+                    </div>
+                    <div class="preapp-line textarea-line">
+                        <label for="yetkiliKisiler">@L["Basvuru.Field.YetkiliKisiler"]</label>
+                        <textarea id="yetkiliKisiler" name="Basvuru.irtibat.yetkiliKisiler" disabled="@ro">@b.irtibat.yetkiliKisiler</textarea>
+                    </div>
+                </div>
+            </section>
+

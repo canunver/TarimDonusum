@@ -1,0 +1,18 @@
+﻿@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+}
+                <section class="basvuru-panel active" data-panel="8">
+                    <h2>@L["Basvuru.Section8.Title"]</h2>
+                    <div class="metric-grid">
+                        <div><span>@L["Basvuru.Common.Application"]</span><strong>@b.Id</strong></div>
+                        <div><span>@L["Basvuru.Field.Durum"]</span><strong>@IsimBul.EnumAdi(@b.durum, L)</strong></div>
+                        <div><span>@L["Basvuru.Field.BelgeGruplariShort"]</span><strong>b.BelgeGruplari.Count / belgeler.Length</strong></div>
+                    </div>
+                    <label class="wide-label">@L["Basvuru.Field.DenetciNotu"]<textarea name="Basvuru.DenetciNotu" disabled>@b.DenetciNotu</textarea></label>
+                    <label class="wide-label">@L["Basvuru.Field.DenetimSonucu"]<input name="Basvuru.DenetimSonucu" value="@b.DenetimSonucu" disabled /></label>
+                </section>
+

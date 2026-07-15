@@ -87,6 +87,88 @@ namespace TarimDonusum.Controllers
         }
 
         [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> BolumGetir(int basvuruId, enumBasvuruBolum bolum)
+        {
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return Unauthorized();
+
+                Basvuru basvuru = YeniBasvuru();
+                if (basvuruId > 0)
+                {
+                    Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(basvuruId, kullanici);
+                    if (!sonuc.basarili || sonuc.nesne == null)
+                        return NotFound();
+
+                    basvuru = sonuc.nesne;
+                }
+                else if (bolum != enumBasvuruBolum.Firma)
+                {
+                    return BadRequest();
+                }
+
+                BasvuruFormViewModel model = await FormViewModelHazirlaAsync(basvuru);
+                BasvuruBolumTanim? bolumTanim = BasvuruBolumleri.Bul(bolum, model.DenetciGorunumu);
+                if (bolumTanim == null)
+                    return BadRequest();
+
+                return PartialView(bolumTanim.PartialView, model);
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Başvuru bölüm partial yüklenemedi. BasvuruId: {BasvuruId}, Bolum: {Bolum}", basvuruId, bolum);
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetBasvuruSahibi([FromBody] Basvuru? model)
+        {
+            Sonuc<int> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return RedirectToAction("Index", "Home");
+
+                if (model == null || !ModelState.IsValid)
+                {
+                    List<string> modelStateHatalari = ModelStateHatalariniOku();
+                    string hataDetayi = modelStateHatalari.Count > 0
+                        ? string.Join(" | ", modelStateHatalari)
+                        : "Request body bos ya da Basvuru modeline donusturulemedi.";
+
+                    Log(LogLevel.Warning, BMYEventID.Yok, null, "KaydetBasvuruSahibi model binding hatası. Hatalar: {Hatalar}", hataDetayi);
+
+                    sonuc = new Sonuc<int>();
+                    sonuc.HataEkle("Başvuru sahibi bilgileri okunamadı.");
+                    foreach (string hata in modelStateHatalari.Take(10))
+                        sonuc.HataEkle(hata);
+
+                    return Json(sonuc);
+                }
+
+                sonuc = await _basvuruIsKurallari.KaydetBasvuruSahibiAsync(model, kullanici);
+                if (sonuc.basarili)
+                    sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Başvuru sahibi kaydet action tamamlanamadı.");
+                sonuc = new Sonuc<int>();
+                sonuc.HataEkle("Başvuru kaydedilemedi.");
+                return Json(sonuc);
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> KaydetFirmaBasvuru([FromBody] BasvuruFirma model)
@@ -284,18 +366,71 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> BelgePaketiYukle(int basvuruId, string aciklama, bool belgeBeyani, IFormFile dosya)
+        public async Task<IActionResult> KaydetOrtaklik([FromBody] BasvuruOrtaklik model)
+        {
+            Sonuc<int> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return RedirectToAction("Index", "Home");
+
+                sonuc = await _basvuruIsKurallari.KaydetOrtaklikAsync(model, kullanici);
+                if (sonuc.basarili)
+                    sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Ortaklık bilgileri kaydet action tamamlanamadı.");
+                sonuc = new Sonuc<int>();
+                sonuc.HataEkle("Ortaklık bilgileri kaydedilemedi.");
+                return Json(sonuc);
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetOrtaklar([FromBody] BasvuruOrtaklik model)
+        {
+            Sonuc<int> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return RedirectToAction("Index", "Home");
+
+                sonuc = await _basvuruIsKurallari.KaydetOrtaklarAsync(model, kullanici);
+                if (sonuc.basarili)
+                    sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Ortak/pay sahibi bilgileri kaydet action tamamlanamadı.");
+                sonuc = new Sonuc<int>();
+                sonuc.HataEkle("Ortak/pay sahibi bilgileri kaydedilemedi.");
+                return Json(sonuc);
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BelgePaketiYukle(
+            int basvuruId,
+            string aciklama,
+            string belgeBeyani,
+            List<string> belgeGruplari,
+            List<string> seciliBelgeGruplari,
+            IFormFile dosya)
         {
             Sonuc<BasvuruDosyaYuklemeSonucu> sonuc;
             try
             {
-                if (!belgeBeyani)
-                {
-                    sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
-                    sonuc.HataEkle("Zorunlu belgelerin tamamının tek dokümanda yer aldığı beyan edilmelidir.");
-                    return Json(sonuc);
-                }
-
                 Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
                 if (kullanici == null)
                 {
@@ -305,7 +440,15 @@ namespace TarimDonusum.Controllers
                 }
 
                 byte[] icerik = await DosyaIcerigiOkuAsync(dosya);
-                sonuc = await _basvuruIsKurallari.BelgePaketiKaydetAsync(basvuruId, dosya?.FileName ?? "", icerik, aciklama, kullanici);
+                sonuc = await _basvuruIsKurallari.BelgePaketiKaydetAsync(
+                    basvuruId,
+                    dosya?.FileName ?? "",
+                    icerik,
+                    aciklama,
+                    belgeBeyani,
+                    belgeGruplari,
+                    seciliBelgeGruplari,
+                    kullanici);
             }
             catch (Exception ex)
             {
@@ -344,6 +487,72 @@ namespace TarimDonusum.Controllers
             }
 
             return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DenetimDosyasiYukle(int basvuruId, IFormFile dosya)
+        {
+            Sonuc<BasvuruDosyaYuklemeSonucu> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                {
+                    sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+                    sonuc.HataEkle("Oturum süresi doldu.");
+                    return Json(sonuc);
+                }
+
+                byte[] icerik = await DosyaIcerigiOkuAsync(dosya);
+                sonuc = await _basvuruIsKurallari.DenetimDosyasiKaydetAsync(basvuruId, dosya?.FileName ?? "", icerik, kullanici);
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Bağımsız denetim dosyası yükleme action tamamlanamadı.");
+                sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+                sonuc.HataEkle("Bağımsız denetim dosyası yüklenemedi.");
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BasvuruDosyasiYukle(int basvuruId, string formAd, int dosyaNo, IFormFile dosya)
+        {
+            Sonuc<BasvuruDosyaYuklemeSonucu> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                {
+                    sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+                    sonuc.HataEkle("Oturum süresi doldu.");
+                    return Json(sonuc);
+                }
+
+                byte[] icerik = await DosyaIcerigiOkuAsync(dosya);
+                sonuc = await _basvuruIsKurallari.BasvuruDosyasiKaydetAsync(basvuruId, formAd, dosyaNo, dosya?.FileName ?? "", icerik, kullanici);
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Ortaklık dosyası yükleme action tamamlanamadı.");
+                sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+                sonuc.HataEkle("Ortaklık dosyası yüklenemedi.");
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public Task<IActionResult> OrtaklikDosyasiYukle(int basvuruId, string formAd, int dosyaNo, IFormFile dosya)
+        {
+            return BasvuruDosyasiYukle(basvuruId, formAd, dosyaNo, dosya);
         }
 
         [OturumKontrol]
@@ -418,6 +627,21 @@ namespace TarimDonusum.Controllers
             return Json(sonuc);
         }
         
+        private List<string> ModelStateHatalariniOku()
+        {
+            return ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .SelectMany(x => x.Value!.Errors.Select(e =>
+                {
+                    string mesaj = !string.IsNullOrWhiteSpace(e.ErrorMessage)
+                        ? e.ErrorMessage
+                        : e.Exception?.Message ?? "Bilinmeyen model binding hatası.";
+
+                    return $"{x.Key}: {mesaj}";
+                }))
+                .ToList();
+        }
+
         private async Task<BasvuruFormViewModel> FormViewModelHazirlaAsync(Basvuru basvuru)
         {
             BasvuruFormViewModel model = new BasvuruFormViewModel

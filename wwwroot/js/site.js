@@ -140,7 +140,7 @@ window.degerStr = function (name) {
 // Global Integer Alıcı
 window.degerInt = function (name) {
     const v = parseInt($(`[name="${name}"]`).val());
-    return isNaN(v) ? null : v;
+    return isNaN(v) ? 0 : v;
 };
 
 // Global Decimal Alıcı

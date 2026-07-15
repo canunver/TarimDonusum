@@ -96,6 +96,44 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<Dosya>> DosyaGetirAsync(int dosyaId, IDosyaYetkiKontrol yetki)
+        {
+            Sonuc<Dosya> sonuc = new Sonuc<Dosya>();
+
+            try
+            {
+                if (dosyaId <= 0)
+                {
+                    sonuc.HataEkle("Dosya seçilmelidir.");
+                    return sonuc;
+                }
+
+                await using SqlConnection connection = await BaglantiAcAsync();
+                TABDosya tabDosya = new TABDosya(connection);
+                Dosya? dosya = await tabDosya.GetirAsync(dosyaId);
+
+                if (dosya == null)
+                {
+                    sonuc.HataEkle("Dosya bulunamadı.");
+                    return sonuc;
+                }
+
+                if (!await yetki.GorebilirAsync(dosya.ModulKod, dosya.FormAd, dosya.FormAnahtar, dosya.DosyaNo))
+                {
+                    sonuc.HataEkle("Dosyayı görüntüleme yetkiniz yok.");
+                    return sonuc;
+                }
+
+                sonuc.nesne = dosya;
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Dosya okunamadı. DosyaId: {DosyaId}", "Dosya okunamadı.", dosyaId);
+            }
+
+            return sonuc;
+        }
+
         public async Task<Sonuc<DosyaBilgisi>> DosyaEkleVeyaGuncelleAsync(DosyaKaydetModel dosya, IDosyaYetkiKontrol yetki)
         {
             Sonuc<DosyaBilgisi> sonuc = new Sonuc<DosyaBilgisi>();

@@ -42,6 +42,20 @@ namespace TarimDonusum.Tablolar
             if (bilgi == null)
                 return null;
 
+            return await DosyaIcerigiIleOlusturAsync(bilgi);
+        }
+
+        public async Task<Dosya?> GetirAsync(int dosyaId)
+        {
+            DosyaBilgisi? bilgi = await BilgiGetirAsync(dosyaId);
+            if (bilgi == null)
+                return null;
+
+            return await DosyaIcerigiIleOlusturAsync(bilgi);
+        }
+
+        private async Task<Dosya> DosyaIcerigiIleOlusturAsync(DosyaBilgisi bilgi)
+        {
             const string sql = @"
                 SELECT PaketIcerik
                 FROM dbo.DosyaIcerik
@@ -107,6 +121,33 @@ namespace TarimDonusum.Tablolar
 
             await using SqlCommand command = KomutOlustur(sql);
             AnahtarParametreleriEkle(command, anahtar);
+
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return null;
+
+            return DosyaBilgisiOku(reader);
+        }
+
+        public async Task<DosyaBilgisi?> BilgiGetirAsync(int dosyaId)
+        {
+            const string sql = @"
+                SELECT
+                    Id,
+                    ModulKod,
+                    FormAd,
+                    FormAnahtar,
+                    DosyaNo,
+                    DosyaAdi,
+                    Buyukluk,
+                    IlkYuklemeTarihi,
+                    STarihi,
+                    Aciklama
+                FROM dbo.DosyaBilgisi
+                WHERE Id = @Id;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@Id", dosyaId);
 
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())

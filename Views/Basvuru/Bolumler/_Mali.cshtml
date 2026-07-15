@@ -1,0 +1,101 @@
+﻿@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+    string T(string key) => L[key].Value;
+    string[] Items(string key) => T(key).Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    string[] evetHayir = Items("Basvuru.Options.YesNo");
+    string evetMetni = evetHayir.Length > 0 ? evetHayir[0] : T("Basvuru.Common.YesAnswer");
+    string hayirMetni = evetHayir.Length > 1 ? evetHayir[1] : T("Basvuru.Common.NoAnswer");
+
+    Donem? maliDonem = b.basvuruFirma.donem;
+    if ((maliDonem == null || maliDonem.yil <= 0) && b.basvuruFirma.donem.id > 0)
+    {
+        maliDonem = Model.Donemler.FirstOrDefault(x => x.id == b.basvuruFirma.donem.id);
+    }
+
+    int maliOncekiYil = maliDonem?.yil > 1 ? maliDonem.yil - 2 : 0;
+    int maliSonYil = maliDonem?.yil > 0 ? maliDonem.yil - 1 : 0;
+    string maliOncekiYilBaslik = maliOncekiYil > 0
+        ? string.Format(T("Basvuru.Mali.OncekiYilHeader"), maliOncekiYil)
+        : T("Basvuru.Mali.OncekiYilFallback");
+    string maliSonYilBaslik = maliSonYil > 0
+        ? string.Format(T("Basvuru.Mali.SonYilHeader"), maliSonYil)
+        : T("Basvuru.Mali.SonYilFallback");
+    string denetimDosyaBolumuClass = b.mali.bagimsizDenetimeTabiMi == true ? "" : "d-none";
+    decimal maliAltLimit = maliDonem?.minimumYatirimTutari ?? 0;
+    decimal maliUstLimit = maliDonem?.maksimumYatirimTutari ?? 0;
+    string maliAltLimitMetin = IsimBul.MetneCevirKurussuz(maliAltLimit);
+    string maliUstLimitMetin = IsimBul.MetneCevirKurussuz(maliUstLimit);
+    string maliAltLimitHam = maliAltLimit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    string maliUstLimitHam = maliUstLimit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+}
+            <section class="basvuru-panel active" data-panel="6">
+                <h2>@L["Basvuru.Section6.Title"]</h2>
+                <p class="mali-info-text">@L["Basvuru.Mali.ScaleDescription"]</p>
+                <div id="maliOlcekUyari" class="mali-scale-warning">
+                    <strong>@Html.Raw(string.Format(T("Basvuru.Mali.ScaleLimitWarning"), maliAltLimitMetin, maliUstLimitMetin))</strong>
+                    <span id="maliOlcekSonuc" class="mali-scale-result"></span>
+                </div>
+                <input type="hidden" id="maliOlcekAltLimit" value="@maliAltLimitHam" />
+                <input type="hidden" id="maliOlcekUstLimit" value="@maliUstLimitHam" />
+
+                <div class="mali-section-title">@L["Basvuru.Mali.ApplicantOwnFinancialData"]</div>
+                <div class="table-responsive mali-table-wrap">
+                    <table class="table mali-table">
+                        <thead>
+                            <tr>
+                                <th>@L["Basvuru.Mali.FinancialDataItem"]</th>
+                                <th>@maliOncekiYilBaslik</th>
+                                <th>@maliSonYilBaslik</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@L["Basvuru.Mali.YillikNetSatisHasilati"]</td>
+                                <td><input class="money-integer mali-scale-input" name="Basvuru.mali.OncekiYilNetSatis" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilNetSatis)" disabled="@ro" /></td>
+                                <td><input class="money-integer mali-scale-input" name="Basvuru.mali.SonYilNetSatis" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilNetSatis)" disabled="@ro" /></td>
+                            </tr>
+                            <tr>
+                                <td>@L["Basvuru.Mali.AktifToplami"]</td>
+                                <td><input class="money-integer mali-scale-input" name="Basvuru.mali.OncekiYilAktifToplami" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilAktifToplami)" disabled="@ro" /></td>
+                                <td><input class="money-integer mali-scale-input" name="Basvuru.mali.SonYilAktifToplami" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilAktifToplami)" disabled="@ro" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="audit-inline-row">
+                    <label class="audit-question">
+                        @L["Basvuru.Mali.BagimsizDenetimeTabiMi"]
+                        <select id="bagimsizDenetimeTabiMi" name="Basvuru.mali.BagimsizDenetimeTabiMi" disabled="@ro">
+                            <option value="" selected="@(!b.mali.bagimsizDenetimeTabiMi.HasValue)">@L["Basvuru.Common.Select"]</option>
+                            <option value="true" selected="@(b.mali.bagimsizDenetimeTabiMi == true)">@evetMetni</option>
+                            <option value="false" selected="@(b.mali.bagimsizDenetimeTabiMi == false)">@hayirMetni</option>
+                        </select>
+                    </label>
+
+                    <div id="denetimDosyaBolumu" class="audit-file-inline @denetimDosyaBolumuClass">
+                        <div class="audit-file-header">
+                            <span class="audit-file-title">@L["Basvuru.Mali.AuditFileName"] <span class="required-mark">*</span></span>
+                            @if (!ro)
+                            {
+                                <label class="btn btn-primary mb-0" for="denetimDosya">@L["Basvuru.Mali.UploadAuditFile"]</label>
+                            }
+                            <input id="denetimDosya" type="file" class="document-file-input" disabled="@ro" />
+                            <a class="btn btn-outline-primary document-download-action @(b.mali.denetimDosyaId.HasValue ? "" : "d-none")"
+                               id="denetimIndirBtn"
+                               href="@(b.mali.denetimDosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = b.mali.denetimDosyaId.Value }) : "#")"
+                               target="_blank"
+                               rel="noopener">@L["Basvuru.Documents.DownloadFile"]</a>
+                        </div>
+                        <div id="denetimDosyaSecim" class="audit-file-name">@(string.IsNullOrWhiteSpace(b.mali.denetimDosyaAdi) ? T("Basvuru.Documents.NoFileSelected") : b.mali.denetimDosyaAdi)</div>
+                        <input type="hidden" name="Basvuru.mali.DenetimDosyaAdi" value="@b.mali.denetimDosyaAdi" />
+                    </div>
+                </div>
+                <input type="hidden" name="Basvuru.mali.DenetimDosyaId" value="@b.mali.denetimDosyaId" />
+            </section>
+
+

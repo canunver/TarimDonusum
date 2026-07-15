@@ -1,0 +1,132 @@
+@using System.Text.Json
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+    var ortaklik = b.ortaklik ?? new BasvuruOrtaklik { basvuruId = b.Id };
+    ortaklik.basvuruId = b.Id;
+    if (ortaklik.bagliOrtakDosyalari.Count == 0)
+    {
+        ortaklik.bagliOrtakDosyalari =
+        [
+            new BasvuruOrtaklikDosya { dosyaNo = 1, dosyaTuru = "Gelir tablosu" },
+            new BasvuruOrtaklikDosya { dosyaNo = 2, dosyaTuru = "Bilanço" },
+            new BasvuruOrtaklikDosya { dosyaNo = 3, dosyaTuru = "Detaylı mizan" },
+            new BasvuruOrtaklikDosya { dosyaNo = 4, dosyaTuru = "Ara dönem raporları" },
+            new BasvuruOrtaklikDosya { dosyaNo = 5, dosyaTuru = "İflas, konkordato ve tasfiye sürecinin olmadığına dair belge" },
+            new BasvuruOrtaklikDosya { dosyaNo = 6, dosyaTuru = "Ticaret sicil gazetesi, kuruluş ve mevcut durum" },
+            new BasvuruOrtaklikDosya { dosyaNo = 7, dosyaTuru = "Noter onaylı imza sirküleri" }
+        ];
+    }
+    string relatedClass = ortaklik.bagliOrtakIsletmeVarMi == true ? "" : "d-none";
+    string initialJson = JsonSerializer.Serialize(ortaklik);
+    string dosyaYok = L["Basvuru.Documents.NoFileSelected"].Value;
+    int donemYil = b.basvuruFirma.donem?.yil ?? 0;
+    if (donemYil <= 0 && b.basvuruFirma.donemId > 0)
+    {
+        donemYil = Model.Donemler?.FirstOrDefault(x => x.id == b.basvuruFirma.donemId)?.yil ?? 0;
+    }
+    string oncekiMaliYil = donemYil > 0 ? (donemYil - 2).ToString() : "Önceki Yıl";
+    string sonMaliYil = donemYil > 0 ? (donemYil - 1).ToString() : "Son Yıl";
+}
+<section class="basvuru-panel active" data-panel="9">
+    <h2>3. Ortaklık ve Yetki Bilgileri</h2>
+    <p class="lead">Ortak/pay sahibi satırları üzerinden toplam pay oranı ve özel sektör payı sistem tarafından hesaplanır. Gerçek kişi ortaklar için mali veri istenmez; tüzel kişi ortaklar için mali veriler ayrıca alınır ve ortaklık payına göre mali ölçek kontrolüne dahil edilir.</p>
+
+    <script type="application/json" id="ortaklikInitialJson">@Html.Raw(initialJson)</script>
+
+    <div class="form-grid">
+        <label>
+            Bağlı/ortak işletme ilişkisi var mı?
+            <select id="hasRelatedEnterprise" name="Basvuru.ortaklik.BagliOrtakIsletmeVarMi" disabled="@ro">
+                <option value="">Seçiniz</option>
+                <option value="true" selected="@(ortaklik.bagliOrtakIsletmeVarMi == true)">Evet</option>
+                <option value="false" selected="@(ortaklik.bagliOrtakIsletmeVarMi == false)">Hayır</option>
+            </select>
+        </label>
+        <label>
+            Özel sektör payı (%) - sistem hesaplar
+            <input id="privateShareCalculated" name="Basvuru.ortaklik.OzelSektorPayi" value="@ortaklik.ozelSektorPayi" readonly />
+        </label>
+    </div>
+
+    <h3 class="subhead">Ortaklık yapısı detay tablosu</h3>
+    <div id="partnersTable" class="partners-table-wrap"></div>
+    @if (!ro)
+    {
+        <button type="button" class="btn btn-outline-primary no-print" id="ortakEkleBtn">+ Ortak / pay sahibi ekle</button>
+    }
+
+    <div id="partnerAlerts" class="mt-3"></div>
+    <div id="legalPartnerFinancials" class="mt-3"></div>
+
+    <div id="relatedEnterpriseBox" class="box related-enterprise-box @relatedClass">
+        <h3 class="subhead mt-0">Bağlı / Ortak İşletme Bilgileri</h3>
+        <p class="mini">Bağlı/ortak işletme ilişkisi ayrıca beyan edilmişse bu işletmeye ilişkin temel mali bilgiler ve belgeler de alınır. Tüzel kişi ortakların mali bilgileri ise yukarıdaki ortaklık tablosu üzerinden ayrıca hesaplamaya dahil edilir.</p>
+        <div class="form-grid">
+            <label>Bağlı/ortak işletme unvanı<input id="relatedTitle" name="Basvuru.ortaklik.BagliOrtakUnvani" value="@ortaklik.bagliOrtakUnvani" disabled="@ro" /></label>
+            <label>Bağlı/ortak işletme VKN/MERSİS<input id="relatedId" name="Basvuru.ortaklik.BagliOrtakKimlikNo" value="@ortaklik.bagliOrtakKimlikNo" disabled="@ro" /></label>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered mali-table">
+                <thead>
+                    <tr>
+                        <th>Mali Veri</th>
+                        <th>@oncekiMaliYil</th>
+                        <th>@sonMaliYil</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Yıllık net satış hasılatı (TL)</td>
+                        <td><input id="relPrevNetSales" class="money-integer" name="Basvuru.ortaklik.BagliOrtakOncekiYilNetSatis" value="@ortaklik.bagliOrtakOncekiYilNetSatis" disabled="@ro" /></td>
+                        <td><input id="relLastNetSales" class="money-integer" name="Basvuru.ortaklik.BagliOrtakSonYilNetSatis" value="@ortaklik.bagliOrtakSonYilNetSatis" disabled="@ro" /></td>
+                    </tr>
+                    <tr>
+                        <td>Aktif toplamı (TL)</td>
+                        <td><input id="relPrevAssets" class="money-integer" name="Basvuru.ortaklik.BagliOrtakOncekiYilAktifToplami" value="@ortaklik.bagliOrtakOncekiYilAktifToplami" disabled="@ro" /></td>
+                        <td><input id="relLastAssets" class="money-integer" name="Basvuru.ortaklik.BagliOrtakSonYilAktifToplami" value="@ortaklik.bagliOrtakSonYilAktifToplami" disabled="@ro" /></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <h4>Zorunlu belgeler - bağlı/ortak işletme</h4>
+        <div id="relatedDocs" class="table-responsive">
+            <table class="table table-bordered ortak-doc-table">
+                <thead>
+                    <tr>
+                        <th>Dosya Türü</th>
+                        <th>Dosya Adı</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (BasvuruOrtaklikDosya belge in ortaklik.bagliOrtakDosyalari)
+                    {
+                        string inputId = $"bagliOrtakDosya_{belge.dosyaNo}";
+                        string fileNameId = $"bagliOrtakDosyaAdi_{belge.dosyaNo}";
+                        string downloadId = $"bagliOrtakIndir_{belge.dosyaNo}";
+                        <tr>
+                            <td>@belge.dosyaTuru</td>
+                            <td id="@fileNameId">@(string.IsNullOrWhiteSpace(belge.dosyaAdi) ? dosyaYok : belge.dosyaAdi)</td>
+                            <td class="text-nowrap">
+                                @if (!ro)
+                                {
+                                    <label class="btn btn-sm btn-primary mb-0" for="@inputId">Yükle</label>
+                                    <input id="@inputId" type="file" class="document-file-input ortaklik-dosya-input" data-form-ad="Basvuru_BagliBelge" data-dosya-no="@belge.dosyaNo" data-name-target="@fileNameId" data-download-target="@downloadId" />
+                                }
+                                <a class="btn btn-sm btn-outline-primary @(belge.dosyaId.HasValue ? "" : "d-none")"
+                                   id="@downloadId"
+                                   href="@(belge.dosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = belge.dosyaId.Value }) : "#")"
+                                   target="_blank"
+                                   rel="noopener">İndir</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

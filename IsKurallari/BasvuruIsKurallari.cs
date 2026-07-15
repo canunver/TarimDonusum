@@ -7,6 +7,32 @@ namespace TarimDonusum.IsKurallari
 {
     public class BasvuruIsKurallari
     {
+        private const string BasvuruZorunluBelgelerFormAd = "ZorunluBelgeler";
+        private const string BasvuruZorunluBelgeFormAd = "Basvuru_ZorunluBelge";
+        private const string BasvuruBagliBelgeFormAd = "Basvuru_BagliBelge";
+        private const string BasvuruOrtakUboKycFormAd = "Basvuru_OrtakUboKyc";
+        private const string BasvuruOrtakUboKycFormAdPrefix = "OBOKYC_";
+        private static readonly IReadOnlyDictionary<int, string> ZorunluBelgeTurleri = new Dictionary<int, string>
+        {
+            [1] = "Gelir tablosu",
+            [2] = "Bilanço",
+            [3] = "Detaylı mizan",
+            [4] = "Ara dönem raporları",
+            [5] = "İflas, konkordato ve tasfiye sürecinin olmadığına dair belge",
+            [6] = "Ticaret sicil gazetesi, kuruluş ve mevcut durum",
+            [7] = "Noter onaylı imza sirküleri"
+        };
+        private static readonly IReadOnlyDictionary<int, string> BagliOrtakDosyaTurleri = new Dictionary<int, string>
+        {
+            [1] = "Gelir tablosu",
+            [2] = "Bilanço",
+            [3] = "Detaylı mizan",
+            [4] = "Ara dönem raporları",
+            [5] = "İflas, konkordato ve tasfiye sürecinin olmadığına dair belge",
+            [6] = "Ticaret sicil gazetesi, kuruluş ve mevcut durum",
+            [7] = "Noter onaylı imza sirküleri"
+        };
+
         private readonly string _connectionString;
         private readonly ILogger<BasvuruIsKurallari> _logger;
         private readonly IStringLocalizer<SharedResource> _localizer;
@@ -237,6 +263,7 @@ namespace TarimDonusum.IsKurallari
                     }
                 }
 
+                await BasvuruDosyaListeleriniYukleAsync(basvuru);
                 sonuc.nesne = basvuru;
             }
             catch (Exception ex)
@@ -309,21 +336,18 @@ namespace TarimDonusum.IsKurallari
 
             try
             {
-                //FirmaNormalizeEt(firma);
-                if (string.IsNullOrWhiteSpace(firma.vergiKimlikNo))
-                    sonuc.HataEkle("Vergi kimlik no girilmelidir.");
-
-                if (string.IsNullOrWhiteSpace(firma.ticaretUnvani))
-                    sonuc.HataEkle("Firma adı girilmelidir.");
+                firma.Dogrula(sonuc);
 
                 if (!sonuc.basarili)
                     return sonuc;
+
+                string vergiKimlikNo = firma.vergiKimlikNo!;
 
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
                 TABFirma tabFirma = new TABFirma(connection);
-                Firma? mevcut = await tabFirma.VergiKimlikNoIleOkuAsync(0, firma.vergiKimlikNo);
+                Firma? mevcut = await tabFirma.VergiKimlikNoIleOkuAsync(0, vergiKimlikNo);
                 if (mevcut != null)
                 {
                     TABFirmaKullanici mevcutIliskiTablosu = new TABFirmaKullanici(connection);
@@ -491,6 +515,68 @@ namespace TarimDonusum.IsKurallari
             catch (Exception ex)
             {
                 BeklenmeyenHata(sonuc, ex, "Firma basvurusu  kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", firmaBasvuru.id, kullanici.Id);
+            }
+
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> KaydetBasvuruSahibiAsync(Basvuru basvuru, Kullanici kullanici)
+        {
+            Sonuc<int> sonuc = new Sonuc<int>();
+            try
+            {
+                if (basvuru == null)
+                {
+                    sonuc.HataEkle("Başvuru sahibi bilgileri gönderilmelidir.");
+                    return sonuc;
+                }
+
+                basvuru.basvuruFirma ??= new BasvuruFirma();
+                basvuru.irtibat ??= new BasvuruIrtibat();
+
+                basvuru.basvuruFirma.Dogrula(sonuc);
+                basvuru.irtibat.Dogrula(sonuc, basvuru.Id > 0);
+
+                if (!sonuc.basarili)
+                    return sonuc;
+
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                Basvuru? mevcut = null;
+                if (basvuru.Id > 0)
+                {
+                    mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuru.Id, kullanici, sonuc);
+                    if (!sonuc.basarili || mevcut == null)
+                        return sonuc;
+                }
+
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+
+                try
+                {
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer, transaction);
+                    sonuc.nesne = await tabBasvuru.BasvuruFirmaKaydetAsync(basvuru.basvuruFirma);
+
+                    basvuru.Id = sonuc.nesne;
+                    basvuru.irtibat.basvuruId = sonuc.nesne;
+                    await tabBasvuru.BasvuruIletisimGuncelleAsync(basvuru.irtibat);
+
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, _localizer, transaction);
+                    await tabBasvuruLog.EkleAsync(sonuc.nesne, kullanici, "KaydetBasvuruSahibiAsync", basvuru);
+
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Başvuru sahibi bilgisi kaydedilemedi. BasvuruId: {BasvuruId}", basvuru.Id);
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Başvuru sahibi kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", basvuru.Id, kullanici.Id);
             }
 
             return sonuc;
@@ -699,10 +785,236 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        public async Task<Sonuc<BasvuruDosyaYuklemeSonucu>> BelgePaketiKaydetAsync(int basvuruId, string dosyaAdi, byte[] icerik, string aciklama, Kullanici kullanici)
+        public async Task<Sonuc<int>> KaydetOrtaklikAsync(BasvuruOrtaklik ortaklik, Kullanici kullanici)
+        {
+            Sonuc<int> sonuc = new Sonuc<int>();
+            if (kullanici == null)
+            {
+                sonuc.HataEkle("Kullanıcı bilgisi gelmedi");
+                return sonuc;
+            }
+
+            try
+            {
+                ortaklik ??= new BasvuruOrtaklik();
+                ortaklik.ortaklar ??= new List<BasvuruOrtak>();
+                ortaklik.ozelSektorPayi = ortaklik.ortaklar
+                    .Where(x => string.Equals(x.ozelKamuNiteligi, "Özel", StringComparison.OrdinalIgnoreCase))
+                    .Sum(x => x.payOrani.GetValueOrDefault());
+
+                ortaklik.Dogrula(sonuc);
+                if (!sonuc.basarili)
+                    return sonuc;
+
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, ortaklik.basvuruId, kullanici, sonuc);
+                if (!sonuc.basarili || mevcut == null)
+                    return sonuc;
+
+                mevcut.ortaklik = ortaklik;
+
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                try
+                {
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
+                    await tabBasvuru.OrtaklikKaydetAsync(mevcut);
+
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
+                    await tabBasvuruLog.EkleAsync(ortaklik.basvuruId, kullanici, "KaydetOrtaklikAsync", ortaklik);
+
+                    await transaction.CommitAsync();
+                    sonuc.nesne = ortaklik.basvuruId;
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Ortaklık bilgileri kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Ortaklık bilgileri kaydedilemedi.", ortaklik?.basvuruId ?? 0, kullanici.Id);
+            }
+
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> KaydetOrtaklarAsync(BasvuruOrtaklik ortaklik, Kullanici kullanici)
+        {
+            Sonuc<int> sonuc = new Sonuc<int>();
+            if (kullanici == null)
+            {
+                sonuc.HataEkle("Kullanıcı bilgisi gelmedi");
+                return sonuc;
+            }
+
+            try
+            {
+                ortaklik ??= new BasvuruOrtaklik();
+                ortaklik.ortaklar ??= new List<BasvuruOrtak>();
+                if (ortaklik.basvuruId <= 0)
+                    sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
+                ortaklik.OrtaklariDogrula(sonuc);
+                if (!sonuc.basarili)
+                    return sonuc;
+
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, ortaklik.basvuruId, kullanici, sonuc);
+                if (!sonuc.basarili || mevcut == null)
+                    return sonuc;
+
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                try
+                {
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
+                    await tabBasvuru.BasvuruOrtaklariKaydetAsync(ortaklik.basvuruId, ortaklik.ortaklar);
+
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
+                    await tabBasvuruLog.EkleAsync(ortaklik.basvuruId, kullanici, "KaydetOrtaklarAsync", new
+                    {
+                        ortaklik.basvuruId,
+                        ortaklik.ortaklar
+                    });
+
+                    await transaction.CommitAsync();
+                    sonuc.nesne = ortaklik.basvuruId;
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Ortak/pay sahibi bilgileri kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Ortak/pay sahibi bilgileri kaydedilemedi.", ortaklik?.basvuruId ?? 0, kullanici.Id);
+            }
+
+            return sonuc;
+        }
+
+        public async Task<Sonuc<BasvuruDosyaYuklemeSonucu>> BasvuruDosyasiKaydetAsync(int basvuruId, string formAd, int dosyaNo, string dosyaAdi, byte[] icerik, Kullanici kullanici)
+        {
+            Sonuc<BasvuruDosyaYuklemeSonucu> sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+            formAd = formAd?.Trim() ?? "";
+            string dosyaTuru = BasvuruDosyaTuruBul(formAd, dosyaNo);
+
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
+            if (!BasvuruFormAdGecerliMi(formAd))
+                sonuc.HataEkle("Dosya formu tanımlı değildir.");
+            if (dosyaNo <= 0)
+                sonuc.HataEkle("Dosya türü seçilmelidir.");
+            if (string.IsNullOrWhiteSpace(dosyaTuru))
+                sonuc.HataEkle("Dosya türü tanımlı değildir.");
+            if (string.IsNullOrWhiteSpace(dosyaAdi))
+                sonuc.HataEkle("Dosya seçilmelidir.");
+            if (icerik == null || icerik.Length == 0)
+                sonuc.HataEkle("Dosya seçilmelidir.");
+            if (!sonuc.basarili)
+                return sonuc;
+
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
+                if (!sonuc.basarili || mevcut == null)
+                    return sonuc;
+
+                if (UboKycFormAdMi(formAd))
+                {
+                    string tcknVkn = UboKycFormAdKimlikOku(formAd);
+                    if (!await BasvuruOrtakKimlikVarMiAsync(connection, basvuruId, tcknVkn))
+                    {
+                        sonuc.HataEkle("UBO-KYC belgesi yüklemek için ortak önce kaydedilmelidir.");
+                        return sonuc;
+                    }
+                }
+
+                Sonuc<DosyaBilgisi> dosyaSonuc = await _dosyaYonetimIsKurallari.DosyaEkleVeyaGuncelleAsync(
+                    BasvuruDosyaModeliOlustur(basvuruId, formAd, dosyaNo, dosyaAdi, icerik ?? [], dosyaTuru),
+                    new BasvuruDosyaYetkiKontrol(basvuruId));
+
+                if (!dosyaSonuc.basarili || dosyaSonuc.nesne == null)
+                {
+                    SonucHatalariniAktar(dosyaSonuc, sonuc);
+                    return sonuc;
+                }
+
+                if (string.Equals(formAd, BasvuruOrtakUboKycFormAd, StringComparison.OrdinalIgnoreCase) || UboKycFormAdMi(formAd))
+                {
+                    int siraNo = dosyaNo;
+                    string tcknVkn = UboKycFormAdKimlikOku(formAd);
+                    await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                    try
+                    {
+                        TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
+                        if (!string.IsNullOrWhiteSpace(tcknVkn))
+                            await tabBasvuru.BasvuruOrtakUboKycDosyasiGuncelleAsync(basvuruId, tcknVkn, dosyaSonuc.nesne.Id, dosyaSonuc.nesne.DosyaAdi);
+                        else
+                            await tabBasvuru.BasvuruOrtakUboKycDosyasiGuncelleAsync(basvuruId, siraNo, dosyaSonuc.nesne.Id, dosyaSonuc.nesne.DosyaAdi);
+
+                        TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
+                        await tabBasvuruLog.EkleAsync(basvuruId, kullanici, "OrtakUboKycDosyasiKaydet", new
+                        {
+                            SiraNo = siraNo,
+                            TcknVkn = tcknVkn,
+                            dosyaSonuc.nesne.Id,
+                            dosyaSonuc.nesne.DosyaAdi
+                        });
+
+                        await transaction.CommitAsync();
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                }
+
+                sonuc.nesne = new BasvuruDosyaYuklemeSonucu
+                {
+                    BasvuruId = basvuruId,
+                    DosyaId = dosyaSonuc.nesne.Id,
+                    DosyaAdi = dosyaSonuc.nesne.DosyaAdi,
+                    Aciklama = dosyaTuru
+                };
+                sonuc.mesaj = "Dosya yüklendi.";
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Başvuru dosyası kaydedilemedi. BasvuruId: {BasvuruId}, FormAd: {FormAd}, DosyaNo: {DosyaNo}", "Başvuru dosyası kaydedilemedi.", basvuruId, formAd, dosyaNo);
+            }
+
+            return sonuc;
+        }
+
+        public Task<Sonuc<BasvuruDosyaYuklemeSonucu>> OrtaklikDosyasiKaydetAsync(int basvuruId, string formAd, int dosyaNo, string dosyaAdi, byte[] icerik, Kullanici kullanici)
+        {
+            return BasvuruDosyasiKaydetAsync(basvuruId, formAd, dosyaNo, dosyaAdi, icerik, kullanici);
+        }
+
+        public async Task<Sonuc<BasvuruDosyaYuklemeSonucu>> BelgePaketiKaydetAsync(
+            int basvuruId,
+            string dosyaAdi,
+            byte[] icerik,
+            string aciklama,
+            string belgeBeyani,
+            List<string>? belgeGruplari,
+            List<string>? seciliBelgeGruplari,
+            Kullanici kullanici)
         {
             Sonuc<BasvuruDosyaYuklemeSonucu> sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
             string temizAciklama = aciklama?.Trim() ?? "";
+            string temizBeyan = belgeBeyani?.Trim() ?? "";
+            List<string> tumBelgeGruplari = TemizListe(belgeGruplari);
+            List<string> seciliGruplar = TemizListe(seciliBelgeGruplari);
 
             if (basvuruId <= 0)
                 sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
@@ -712,6 +1024,7 @@ namespace TarimDonusum.IsKurallari
                 sonuc.HataEkle("Doküman paketi dosyası seçilmelidir.");
             if (string.IsNullOrWhiteSpace(temizAciklama))
                 sonuc.HataEkle("Belge açıklaması girilmelidir.");
+            BelgePaketiBeyaniDogrula(temizBeyan, tumBelgeGruplari, seciliGruplar, sonuc);
             if (!sonuc.basarili)
                 return sonuc;
 
@@ -737,7 +1050,7 @@ namespace TarimDonusum.IsKurallari
                 mevcut.BelgePaketiDosyaAdi = dosyaSonuc.nesne.DosyaAdi;
                 mevcut.BelgePaketiDosyaId = dosyaSonuc.nesne.Id;
                 mevcut.BelgePaketiAciklama = temizAciklama;
-                mevcut.BelgeBeyani = "Evet";
+                mevcut.BelgeBeyani = temizBeyan;
 
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
@@ -857,6 +1170,80 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<BasvuruDosyaYuklemeSonucu>> DenetimDosyasiKaydetAsync(int basvuruId, string dosyaAdi, byte[] icerik, Kullanici kullanici)
+        {
+            Sonuc<BasvuruDosyaYuklemeSonucu> sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
+            const string aciklama = "Bağımsız denetim dosyası";
+
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
+            if (string.IsNullOrWhiteSpace(dosyaAdi))
+                sonuc.HataEkle("Bağımsız denetim dosyası seçilmelidir.");
+            if (icerik == null || icerik.Length == 0)
+                sonuc.HataEkle("Bağımsız denetim dosyası seçilmelidir.");
+            if (!sonuc.basarili)
+                return sonuc;
+
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
+                if (!sonuc.basarili || mevcut == null)
+                    return sonuc;
+
+                Sonuc<DosyaBilgisi> dosyaSonuc = await _dosyaYonetimIsKurallari.DosyaEkleVeyaGuncelleAsync(
+                    BasvuruDosyaModeliOlustur(basvuruId, 3, dosyaAdi, icerik ?? [], aciklama),
+                    new BasvuruDosyaYetkiKontrol(basvuruId));
+
+                if (!dosyaSonuc.basarili || dosyaSonuc.nesne == null)
+                {
+                    SonucHatalariniAktar(dosyaSonuc, sonuc);
+                    return sonuc;
+                }
+
+                mevcut.mali.denetimDosyaAdi = dosyaSonuc.nesne.DosyaAdi;
+                mevcut.mali.denetimDosyaId = dosyaSonuc.nesne.Id;
+
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                try
+                {
+                    TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
+                    await tabBasvuru.BasvuruDenetimDosyasiGuncelleAsync(mevcut.mali);
+
+                    TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
+                    await tabBasvuruLog.EkleAsync(mevcut.Id, kullanici, "DenetimDosyasiKaydet", new
+                    {
+                        mevcut.mali.denetimDosyaAdi,
+                        mevcut.mali.denetimDosyaId
+                    });
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+
+                sonuc.nesne = new BasvuruDosyaYuklemeSonucu
+                {
+                    BasvuruId = mevcut.Id,
+                    DosyaId = dosyaSonuc.nesne.Id,
+                    DosyaAdi = dosyaSonuc.nesne.DosyaAdi,
+                    Aciklama = aciklama
+                };
+                sonuc.mesaj = "Bağımsız denetim dosyası yüklendi.";
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Bağımsız denetim dosyası kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Bağımsız denetim dosyası kaydedilemedi.", basvuruId, kullanici.Id);
+            }
+
+            return sonuc;
+        }
+
         public async Task<Sonuc<Dosya>> DosyaIndirAsync(int dosyaId, Kullanici kullanici)
         {
             Sonuc<Dosya> sonuc = new Sonuc<Dosya>();
@@ -869,31 +1256,30 @@ namespace TarimDonusum.IsKurallari
 
             try
             {
-                await using SqlConnection connection = new SqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                (int basvuruId, int dosyaNo) = await BasvuruDosyaAnahtariBulAsync(connection, dosyaId);
-                if (basvuruId <= 0 || dosyaNo <= 0)
-                {
-                    sonuc.HataEkle("Dosya bulunamadı.");
-                    return sonuc;
-                }
-
-                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
-                if (!sonuc.basarili || mevcut == null)
-                    return sonuc;
-
-                Sonuc<Dosya> dosyaSonuc = await _dosyaYonetimIsKurallari.DosyaGetirAsync(
-                    BasvuruDosyaAnahtariOlustur(basvuruId, dosyaNo),
-                    new BasvuruDosyaYetkiKontrol(basvuruId));
-
+                Sonuc<Dosya> dosyaSonuc = await _dosyaYonetimIsKurallari.DosyaGetirAsync(dosyaId, new BasvuruDosyaIndirmeYetkiKontrol());
                 if (!dosyaSonuc.basarili || dosyaSonuc.nesne == null)
                 {
                     SonucHatalariniAktar(dosyaSonuc, sonuc);
                     return sonuc;
                 }
 
-                sonuc.nesne = dosyaSonuc.nesne;
+                Dosya dosyaBilgisi = dosyaSonuc.nesne!;
+                int basvuruId = BasvuruIdDosyaFormAnahtarindanOku(dosyaBilgisi.FormAnahtar);
+                int dosyaNo = dosyaBilgisi.DosyaNo;
+                if (basvuruId <= 0 || dosyaNo <= 0)
+                {
+                    sonuc.HataEkle("Dosya bulunamadı.");
+                    return sonuc;
+                }
+
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
+                if (!sonuc.basarili || mevcut == null)
+                    return sonuc;
+
+                sonuc.nesne = dosyaBilgisi;
             }
             catch (Exception ex)
             {
@@ -1436,9 +1822,63 @@ namespace TarimDonusum.IsKurallari
             }
         }
 
+        private void BelgePaketiBeyaniDogrula(string belgeBeyani, List<string> belgeGruplari, List<string> seciliBelgeGruplari, Sonuc sonuc)
+        {
+            if (!string.Equals(belgeBeyani, "Evet", StringComparison.OrdinalIgnoreCase))
+                sonuc.HataEkle("Zorunlu belgelerin tamamının tek dokümanda yer aldığı beyan edilmelidir.");
+
+            List<string> zorunluGruplar = ResourceListesi("Basvuru.Options.RequiredDocumentGroups");
+            if (zorunluGruplar.Count == 0)
+            {
+                sonuc.HataEkle("Zorunlu belge grupları tanımlı değildir.");
+                return;
+            }
+
+            if (belgeGruplari.Count == 0)
+            {
+                sonuc.HataEkle("Zorunlu belge grupları sunucuya gönderilmelidir.");
+                return;
+            }
+
+            bool tumZorunluGruplarEkrandaVar = zorunluGruplar.All(zorunlu => belgeGruplari.Contains(zorunlu, StringComparer.OrdinalIgnoreCase));
+            bool tumEkranGruplariSecili = belgeGruplari.All(grup => seciliBelgeGruplari.Contains(grup, StringComparer.OrdinalIgnoreCase));
+            bool tumZorunluGruplarSecili = zorunluGruplar.All(zorunlu => seciliBelgeGruplari.Contains(zorunlu, StringComparer.OrdinalIgnoreCase));
+
+            if (!tumZorunluGruplarEkrandaVar || !tumEkranGruplariSecili || !tumZorunluGruplarSecili)
+                sonuc.HataEkle("Zorunlu belge gruplarının tamamı işaretlenmelidir.");
+        }
+
+        private List<string> ResourceListesi(string key)
+        {
+            string deger = _localizer[key].Value;
+            if (string.IsNullOrWhiteSpace(deger) || string.Equals(deger, key, StringComparison.Ordinal))
+                return new List<string>();
+
+            return deger
+                .Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private static List<string> TemizListe(IEnumerable<string>? liste)
+        {
+            return (liste ?? [])
+                .Select(x => x?.Trim() ?? "")
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
         private static DosyaKaydetModel BasvuruDosyaModeliOlustur(int basvuruId, int dosyaNo, string dosyaAdi, byte[] icerik, string aciklama)
         {
+            return BasvuruDosyaModeliOlustur(basvuruId, BasvuruZorunluBelgelerFormAd, dosyaNo, dosyaAdi, icerik, aciklama);
+        }
+
+        private static DosyaKaydetModel BasvuruDosyaModeliOlustur(int basvuruId, string formAd, int dosyaNo, string dosyaAdi, byte[] icerik, string aciklama)
+        {
             DosyaAnahtari anahtar = BasvuruDosyaAnahtariOlustur(basvuruId, dosyaNo);
+            anahtar.FormAd = formAd;
 
             return new DosyaKaydetModel
             {
@@ -1452,12 +1892,101 @@ namespace TarimDonusum.IsKurallari
             };
         }
 
+        private async Task BasvuruDosyaListeleriniYukleAsync(Basvuru basvuru)
+        {
+            if (basvuru.Id <= 0)
+                return;
+
+            basvuru.ZorunluBelgeler = await BasvuruDosyaListesiOlusturAsync(basvuru.Id, BasvuruZorunluBelgeFormAd, ZorunluBelgeTurleri);
+            basvuru.ortaklik.bagliOrtakDosyalari = await BasvuruDosyaListesiOlusturAsync(basvuru.Id, BasvuruBagliBelgeFormAd, BagliOrtakDosyaTurleri);
+        }
+
+        private async Task<List<BasvuruOrtaklikDosya>> BasvuruDosyaListesiOlusturAsync(int basvuruId, string formAd, IReadOnlyDictionary<int, string> dosyaTurleri)
+        {
+            Sonuc<List<DosyaBilgisi>> dosyaSonuc = await _dosyaYonetimIsKurallari.DosyaListeleAsync(
+                "Basvuru",
+                new BasvuruDosyaYetkiKontrol(basvuruId),
+                formAd,
+                basvuruId.ToString());
+
+            List<DosyaBilgisi> dosyalar = dosyaSonuc.basarili && dosyaSonuc.nesne != null
+                ? dosyaSonuc.nesne
+                : new List<DosyaBilgisi>();
+
+            return dosyaTurleri
+                .Select(tur =>
+                {
+                    DosyaBilgisi? dosya = dosyalar.FirstOrDefault(x => x.DosyaNo == tur.Key);
+                    return new BasvuruOrtaklikDosya
+                    {
+                        dosyaNo = tur.Key,
+                        dosyaTuru = tur.Value,
+                        dosyaId = dosya?.Id,
+                        dosyaAdi = dosya?.DosyaAdi ?? ""
+                    };
+                })
+                .ToList();
+        }
+
+        private static string BasvuruDosyaTuruBul(string formAd, int dosyaNo)
+        {
+            if (string.Equals(formAd, BasvuruZorunluBelgeFormAd, StringComparison.OrdinalIgnoreCase)
+                && ZorunluBelgeTurleri.TryGetValue(dosyaNo, out string? zorunluBelgeTuru))
+                return zorunluBelgeTuru;
+
+            if (string.Equals(formAd, BasvuruBagliBelgeFormAd, StringComparison.OrdinalIgnoreCase)
+                && BagliOrtakDosyaTurleri.TryGetValue(dosyaNo, out string? dosyaTuru))
+                return dosyaTuru;
+
+            if (string.Equals(formAd, BasvuruOrtakUboKycFormAd, StringComparison.OrdinalIgnoreCase) && dosyaNo > 0)
+                return "UBO-KYC belgesi";
+
+            if (UboKycFormAdMi(formAd) && dosyaNo == 1)
+                return "UBO-KYC belgesi";
+
+            return "";
+        }
+
+        private static bool UboKycFormAdMi(string? formAd)
+        {
+            return !string.IsNullOrWhiteSpace(formAd)
+                && formAd.StartsWith(BasvuruOrtakUboKycFormAdPrefix, StringComparison.OrdinalIgnoreCase)
+                && formAd.Length > BasvuruOrtakUboKycFormAdPrefix.Length;
+        }
+
+        private static string UboKycFormAdKimlikOku(string formAd)
+        {
+            return UboKycFormAdMi(formAd)
+                ? formAd[BasvuruOrtakUboKycFormAdPrefix.Length..].Trim()
+                : "";
+        }
+
+        private static async Task<bool> BasvuruOrtakKimlikVarMiAsync(SqlConnection connection, int basvuruId, string tcknVkn)
+        {
+            const string sql = @"
+                SELECT COUNT(1)
+                FROM dbo.BasvuruOrtaklar
+                WHERE BasvuruId = @BasvuruId
+                    AND TcknVkn = @TcknVkn;";
+
+            await using SqlCommand command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@BasvuruId", basvuruId);
+            command.Parameters.AddWithValue("@TcknVkn", tcknVkn?.Trim() ?? "");
+            object? sonuc = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(sonuc) > 0;
+        }
+
+        private static int BasvuruIdDosyaFormAnahtarindanOku(string? formAnahtar)
+        {
+            return int.TryParse(formAnahtar, out int basvuruId) ? basvuruId : 0;
+        }
+
         private static DosyaAnahtari BasvuruDosyaAnahtariOlustur(int basvuruId, int dosyaNo)
         {
             return new DosyaAnahtari
             {
                 ModulKod = "Basvuru",
-                FormAd = "ZorunluBelgeler",
+                FormAd = BasvuruZorunluBelgelerFormAd,
                 FormAnahtar = basvuruId.ToString(),
                 DosyaNo = dosyaNo
             };
@@ -1471,11 +2000,13 @@ namespace TarimDonusum.IsKurallari
                     CASE
                         WHEN BelgePaketiDosyaId = @DosyaId THEN 1
                         WHEN TaahhutDosyaId = @DosyaId THEN 2
+                        WHEN DenetimDosyaId = @DosyaId THEN 3
                         ELSE 0
                     END AS DosyaNo
                 FROM dbo.Basvuru
                 WHERE BelgePaketiDosyaId = @DosyaId
-                   OR TaahhutDosyaId = @DosyaId;";
+                   OR TaahhutDosyaId = @DosyaId
+                   OR DenetimDosyaId = @DosyaId;";
 
             await using SqlCommand command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@DosyaId", dosyaId);
@@ -1508,7 +2039,7 @@ namespace TarimDonusum.IsKurallari
 
             public Task<bool> GuncelleyebilirAsync(string modulKod, string formAd, string formAnahtar, int dosyaNo)
             {
-                return Task.FromResult(AnahtarUygunMu(modulKod, formAd, formAnahtar) && (dosyaNo == 1 || dosyaNo == 2));
+                return Task.FromResult(AnahtarUygunMu(modulKod, formAd, formAnahtar) && dosyaNo > 0);
             }
 
             public Task<bool> SilebilirAsync(string modulKod, string formAd, string formAnahtar, int dosyaNo)
@@ -1519,9 +2050,44 @@ namespace TarimDonusum.IsKurallari
             private bool AnahtarUygunMu(string modulKod, string? formAd, string? formAnahtar)
             {
                 return string.Equals(modulKod, "Basvuru", StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(formAd, "ZorunluBelgeler", StringComparison.OrdinalIgnoreCase)
+                    && BasvuruFormAdGecerliMi(formAd)
                     && string.Equals(formAnahtar, _formAnahtar, StringComparison.Ordinal);
             }
+        }
+
+        private sealed class BasvuruDosyaIndirmeYetkiKontrol : IDosyaYetkiKontrol
+        {
+            public Task<bool> GorebilirAsync(string modulKod, string? formAd, string? formAnahtar, int? dosyaNo)
+            {
+                return Task.FromResult(string.Equals(modulKod, "Basvuru", StringComparison.OrdinalIgnoreCase)
+                    && BasvuruFormAdGecerliMi(formAd)
+                    && int.TryParse(formAnahtar, out _)
+                    && dosyaNo.GetValueOrDefault() > 0);
+            }
+
+            public Task<bool> EkleyebilirAsync(string modulKod, string formAd, string formAnahtar)
+            {
+                return Task.FromResult(false);
+            }
+
+            public Task<bool> GuncelleyebilirAsync(string modulKod, string formAd, string formAnahtar, int dosyaNo)
+            {
+                return Task.FromResult(false);
+            }
+
+            public Task<bool> SilebilirAsync(string modulKod, string formAd, string formAnahtar, int dosyaNo)
+            {
+                return Task.FromResult(false);
+            }
+        }
+
+        private static bool BasvuruFormAdGecerliMi(string? formAd)
+        {
+            return string.Equals(formAd, BasvuruZorunluBelgelerFormAd, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(formAd, BasvuruZorunluBelgeFormAd, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(formAd, BasvuruBagliBelgeFormAd, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(formAd, BasvuruOrtakUboKycFormAd, StringComparison.OrdinalIgnoreCase)
+                || UboKycFormAdMi(formAd);
         }
 
         private static void UygulamaAdresiNormalizeEt(BasvuruUygulamaAdresi adres)

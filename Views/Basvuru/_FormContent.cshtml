@@ -1,5 +1,5 @@
-@using System.Globalization
-@using System.Text.Json
+﻿@using System.Text.Json
+@using TarimDonusum.Models
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
@@ -7,47 +7,25 @@
     var b = Model.Basvuru;
     bool ro = Model.SaltOkunur;
     bool kilitli = b.Id <= 0 && !Model.DenetciGorunumu;
-    int sonBolum = Model.DenetciGorunumu ? 8 : 7;
+    IReadOnlyList<BasvuruBolumTanim> bolumler = BasvuruBolumleri.Tum(Model.DenetciGorunumu);
+    BasvuruBolumTanim ilkBolum = bolumler.First();
 
-    bool CheckedStr(IEnumerable<string> values, string value) => values.Contains(value);
-    bool CheckedInt(IEnumerable<int> values, int value) => values.Contains(value);
-    bool CheckedDZA(IEnumerable<DegerZinciriAsama> values, int value) => value == 1;
-    
     string T(string key) => L[key].Value;
-    string[] Items(string key) => T(key).Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-    string[] evetHayir = Items("Basvuru.Options.YesNo");    
-    string[] belgeGruplari =
-    [
-        "Adli sicil kaydı",
-        "Gelir tablosu",
-        "Bilanço",
-        "İflas, konkordato ve tasfiye sürecinin olmadığına dair belge",
-        "Ticaret sicil gazetesi (kuruluş ve mevcut)",
-        "Noter onaylı imza sirküleri"
-    ];
-    
+
     string basvuruIlAdi = b.basvuruFirma.il?.ad ?? "";
-    if (string.IsNullOrWhiteSpace(basvuruIlAdi) && b.basvuruFirma.il.id>0)
+    if (string.IsNullOrWhiteSpace(basvuruIlAdi) && b.basvuruFirma.il.id > 0)
     {
         basvuruIlAdi = Model.Iller.FirstOrDefault(x => x.id == b.basvuruFirma.il.id)?.ad ?? "";
     }
 
-    Donem? maliDonem = b.basvuruFirma.donem;
-    if ((maliDonem == null || maliDonem.yil <= 0) && b.basvuruFirma.donem.id > 0)
+    int donemYil = b.basvuruFirma.donem?.yil ?? 0;
+    if (donemYil <= 0 && b.basvuruFirma.donemId > 0)
     {
-        maliDonem = Model.Donemler.FirstOrDefault(x => x.id == b.basvuruFirma.donem.id);
+        donemYil = Model.Donemler?.FirstOrDefault(x => x.id == b.basvuruFirma.donemId)?.yil ?? 0;
     }
-
-    int maliOncekiYil = maliDonem?.yil > 1 ? maliDonem.yil - 2 : 0;
-    int maliSonYil = maliDonem?.yil > 0 ? maliDonem.yil - 1 : 0;
-    string maliOncekiYilBaslik = maliOncekiYil > 0
-        ? string.Format(T("Basvuru.Mali.OncekiYilHeader"), maliOncekiYil)
-        : T("Basvuru.Mali.OncekiYilFallback");
-    string maliSonYilBaslik = maliSonYil > 0
-        ? string.Format(T("Basvuru.Mali.SonYilHeader"), maliSonYil)
-        : T("Basvuru.Mali.SonYilFallback");
+    string oncekiMaliYil = donemYil > 0 ? (donemYil - 2).ToString() : "Önceki Yıl";
+    string sonMaliYil = donemYil > 0 ? (donemYil - 1).ToString() : "Son Yıl";
 }
-
 <div class="basvuru-page">
     <div class="basvuru-titlebar">
         <div>
@@ -85,16 +63,10 @@
     <div class="basvuru-stepbar">
         <label for="basvuruStepSelect">@L["Basvuru.Common.Steps"]</label>
         <select id="basvuruStepSelect" class="form-control">
-            <option value="1" selected="selected">@L["Basvuru.Step.1"]</option>
-            <option value="2" disabled="@(kilitli)">@L["Basvuru.Step.2"]</option>
-            <option value="3" disabled="@(kilitli)">@L["Basvuru.Step.3"]</option>
-            <option value="4" disabled="@(kilitli)">@L["Basvuru.Step.4"]</option>
-            <option value="5" disabled="@(kilitli)">@L["Basvuru.Step.5"]</option>
-            <option value="6" disabled="@(kilitli)">@L["Basvuru.Step.6"]</option>
-            <option value="7" disabled="@(kilitli)">@L["Basvuru.Step.7"]</option>
-            @if (Model.DenetciGorunumu)
+            @foreach (BasvuruBolumTanim bolum in bolumler)
             {
-                <option value="8">@L["Basvuru.Step.8"]</option>
+                bool devreDisi = kilitli && bolum.Bolum != enumBasvuruBolum.Firma;
+                <option value="@((int)bolum.Bolum)" selected="@(bolum.Bolum == ilkBolum.Bolum)" disabled="@devreDisi">@L[bolum.BaslikResourceKey]</option>
             }
         </select>
         <button type="button" class="btn btn-outline-secondary nav-prev">@L["Basvuru.Common.Previous"]</button>
@@ -105,348 +77,9 @@
     <input type="hidden" name="Basvuru.Id" value="@b.Id" />
     <div class="basvuru-shell">
         <main class="basvuru-panels">
-            <section class="basvuru-panel active" data-panel="1">
-                <h2>@L["Basvuru.Section1.Title"]</h2>
-                <p>@L["Basvuru.Section1.Description"]</p>
-                <div class="preapp-form">
-                    <div class="preapp-line">
-                        <label for="basvuruDonemi">@L["Basvuru.Field.BasvuruDonemi"]</label>
-                        <select id="basvuruDonemi" name="Basvuru.DonemId" disabled="@ro">
-                            <option value="">@L["Basvuru.Common.Select"]</option>
-                            @foreach (var donem in Model.Donemler)
-                            {
-                                bool secili = b.basvuruFirma.donem.id == donem.id;
-                                bool secilebilir = donem.SecilebilirMi();
-                                string durum = secilebilir ? T("Basvuru.Donem.Open") : T("Basvuru.Donem.Closed");
-                                <option value="@donem.id" selected="@secili" disabled="@(!secilebilir && !secili)">
-                                    @donem.ad (@durum)
-                                </option>
-                            }
-                        </select>
-                    </div>
-
-                    <div class="preapp-line">
-                        <label for="basvuruIl">@L["Basvuru.Field.Il"]</label>
-                        <select id="basvuruIl" name="Basvuru.IlId" disabled="@ro">
-                            <option value="">@L["Basvuru.Common.Select"]</option>
-                            @foreach (var il in Model.Iller)
-                            {
-                                <option value="@il.id" selected="@(b.basvuruFirma.il.id == il.id)">@il.kod.ToString("00") - @il.ad</option>
-                            }
-                        </select>
-                    </div>
-
-                    <div class="preapp-line company-line">
-                        <label for="vergiKimlikNo">@L["Basvuru.Field.VergiKimlikNo"]</label>
-                        <input type="hidden" id='firmaId' name="Basvuru.FirmaId" value="@b.basvuruFirma.firma.id" />
-
-                        <input id="vergiKimlikNo" name="Basvuru.VergiKimlikNo" value="@b.basvuruFirma.firma.vergiKimlikNo" disabled="@ro" />
-                        @if (!ro)
-                        {
-                            <button type="button" class="btn btn-outline-primary icon-action" id="firmaSorgulaBtn" title="@T("Basvuru.Firma.Query")">?</button>
-                            <button type="button" class="btn btn-outline-success icon-action" id="firmaYeniBtn" title="@T("Basvuru.Firma.ModalTitle")">+</button>
-                            <button type="button" class="btn btn-outline-secondary icon-action" id="firmaDuzenleBtn" title="@T("Basvuru.Common.Edit")">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        }
-                    </div>
-
-                    <div class="preapp-line">
-                        <label for="firmaAdi">@L["Basvuru.Field.FirmaAdi"]</label>
-                        <input id="firmaAdi" name="Basvuru.TicaretUnvani" value="@b.basvuruFirma.firma.ticaretUnvani" readonly aria-label="@T("Basvuru.Field.FirmaAdi")" />
-                    </div>
-
-                    <div class="preapp-line two-fields">
-                        <label for="basvuruKonusu">@L["Basvuru.Field.BasvuruKonusu"]</label>
-                        <input id="basvuruKonusu" name="Basvuru.BasvuruKonusu" value="@b.basvuruFirma.basvuruKonusu" disabled="@ro" />
-                        <label for="basvuruTipi">@L["Basvuru.Field.BasvuruTipi"]</label>
-                        <select id="basvuruTipi" name="Basvuru.BasvuruSahibiTuru" disabled="@ro">
-                            @foreach (TarimDonusum.Models.enumBasvuruSahibiTuru item in Enum.GetValues<TarimDonusum.Models.enumBasvuruSahibiTuru>())
-                            {
-                                <option value="@((int)item)" selected="@(b.basvuruFirma.basvuruSahibiTuru == item)">@IsimBul.EnumAdi(item, L)</option>
-                            }
-                        </select>
-                    </div>
-
-                    <div class="preapp-line">
-                        <label for="sonIkiYil">@L["Basvuru.Field.SonIkiYildirFaalMi"]</label>
-                        <select id="sonIkiYil" name="Basvuru.SonIkiYildirFaalMi" disabled="@ro">
-                            <option value="false" selected="@(!b.basvuruFirma.sonIkiYildirFaalMi)">@(evetHayir.Length > 1 ? evetHayir[1] : "Hayır")</option>
-                            <option value="true" selected="@(b.basvuruFirma.sonIkiYildirFaalMi)">@(evetHayir.Length > 0 ? evetHayir[0] : "Evet")</option>
-                        </select>
-                    </div>
-
-                    <h3 class="preapp-subtitle">@L["Basvuru.Section2.PartnershipTitle"]</h3>
-                    <div class="preapp-line two-fields">
-                        <label for="ozelSektorPayi">@L["Basvuru.Field.OzelSektorPayi"]</label>
-                        <input id="ozelSektorPayi" name="Basvuru.OzelSektorPayi" type="text" value="@IsimBul.MetneCevirKuruslu(b.basvuruFirma.ozelSektorPayi)" disabled="@ro" />
-                        <label for="bagliOrtakIsletmeVarMi">@L["Basvuru.Field.BagliOrtakIsletmeVarMi"]</label>
-                        <select id="bagliOrtakIsletmeVarMi" name="Basvuru.BagliOrtakIsletmeVarMi" disabled="@ro">
-                            <option value="">@L["Basvuru.Common.Select"]</option>
-                            <option value="false" selected="@(!b.basvuruFirma.bagliOrtakIsletmeVarMi )">@(evetHayir.Length > 1 ? evetHayir[1] : "Hayır")</option>
-                            <option value="true" selected="@(b.basvuruFirma.bagliOrtakIsletmeVarMi )">@(evetHayir.Length > 0 ? evetHayir[0] : "Evet")</option>
-                        </select>
-                    </div>
-                    <div class="preapp-line textarea-line"><label for="bagliOrtakAciklama">@L["Basvuru.Field.BagliOrtakAciklama"]</label>
-                        <textarea id="bagliOrtakAciklama" name="Basvuru.BagliOrtakAciklama" disabled="@ro">@b.basvuruFirma.bagliOrtakAciklama</textarea>
-                    </div>
-                </div>
-            </section>
-            <section class="basvuru-panel" data-panel="2">
-                <h2>@L["Basvuru.Section2.Title"]</h2>
-                <h3 class="preapp-subtitle">@L["Basvuru.ContactInformation"]</h3>
-                <div class="preapp-form">
-                    <div class="preapp-line">
-                        <label for="irtibatKisisi">@L["Basvuru.Field.IrtibatKisisi"]</label>
-                        <input id="irtibatKisisi" name="Basvuru.irtibat.kisi" value="@b.irtibat.kisi" disabled="@ro" />
-                    </div>
-                    <div class="preapp-line">
-                        <label for="irtibatUnvani">@L["Basvuru.Field.IrtibatUnvani"]</label>
-                        <input id="irtibatUnvani" name="Basvuru.irtibat.unvan" value="@b.irtibat.unvan" disabled="@ro" />
-                    </div>
-                    <div class="preapp-line">
-                        <label for="irtibatTelefon">@L["Basvuru.Field.IrtibatTelefon"]</label>
-                        <input id="irtibatTelefon" name="Basvuru.irtibat.telefon" value="@b.irtibat.telefon" disabled="@ro" />
-                    </div>
-                    <div class="preapp-line">
-                        <label for="irtibatEposta">@L["Basvuru.Field.IrtibatEposta"]</label>
-                        <input id="irtibatEposta" name="Basvuru.irtibat.ePosta" type="email" value="@b.irtibat.ePosta" disabled="@ro" />
-                    </div>
-                    <div class="preapp-line textarea-line">
-                        <label for="iletisimAdresi">@L["Basvuru.Field.IletisimAdresi"]</label>
-                        <textarea id="iletisimAdresi" name="Basvuru.irtibat.adres" disabled="@ro">@b.irtibat.adres</textarea>
-                    </div>
-                    <div class="preapp-line textarea-line">
-                        <label for="yetkiliKisiler">@L["Basvuru.Field.YetkiliKisiler"]</label>
-                        <textarea id="yetkiliKisiler" name="Basvuru.irtibat.yetkiliKisiler" disabled="@ro">@b.irtibat.yetkiliKisiler</textarea>
-                    </div>
-                </div>
-            </section>
-            <section class="basvuru-panel" data-panel="3">
-                <h2>@L["Basvuru.Section3.Title"]</h2>
-                <div class="preapp-form">
-                    <div class="preapp-line">
-                        <label for="yatirimAdi">@L["Basvuru.Field.YatirimAdi"]</label>
-                        <input id="yatirimAdi" name="Basvuru.YatirimAdi" value="@b.yatirim.yatirimAdi" disabled="@ro" />
-                    </div>
-                    <div class="preapp-line">
-                        <label for="yatirimTuru">@L["Basvuru.Field.YatirimTuru"]</label>
-                        <select id="yatirimTuru" name="Basvuru.yatirim.yatirimTuru" disabled="@ro">
-                            @foreach (enumYatirimTuru item in Enum.GetValues<enumYatirimTuru>())
-                            {
-                                <option value="@((int)item)" selected="@(b.yatirim.yatirimTuru == item)">
-                                    @IsimBul.EnumAdi(item, L)
-                                </option>
-                            }
-
-                        </select>
-                    </div>
-                    <div class="preapp-line">
-                        <label for="degerZinciriSelect">@L["Basvuru.Field.DegerZinciri"]</label>
-                        <select id="degerZinciriSelect" name="Basvuru.DegerZinciriId" disabled="@ro">
-                        </select>
-                    </div>
-                </div>
-                <h3>@L["Basvuru.Field.DegerZinciriAsamalari"]</h3>
-                <div class="table-responsive deger-zinciri-asama-wrap">
-                    <table class="table deger-zinciri-asama-table">
-                        <thead>
-                            <tr>
-                                <th>@L["Basvuru.Common.Select"]</th>
-                                <th>@L["Basvuru.Field.DegerZinciriAsamasi"]</th>
-                                <th>@L["Basvuru.Field.KisaAciklama"]</th>
-                            </tr>
-                        </thead>
-                        <tbody id="degerZinciriAsamaListesi">
-                        </tbody>
-                    </table>
-                </div>
-                <h3>@L["Basvuru.Field.HarcamaTurleri"]</h3>
-                <div class="check-grid">
-                    @foreach (var item in Enum.GetValues<enumHarcamaTuru>())
-                    {
-                        if ((int)item > 0)
-                        {
-                            <label><input type="checkbox" name="Basvuru.yatirim.harcamaTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.harcamaTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label>
-                        }
-                    }
-                </div>
-            </section>
-            <section class="basvuru-panel" data-panel="4">
-                <h2>@L["Basvuru.Section4.Title"]</h2>
-                <div class="adres-toolbar">
-                    @if (!ro)
-                    {
-                        <button type="button" class="btn btn-outline-primary" id="adresYeniBtn"><i class="fas fa-plus"></i> @L["Basvuru.Address.New"]</button>
-                    }
-                </div>
-                <div class="table-responsive uygulama-adres-wrap">
-                    <table class="table uygulama-adres-table">
-                        <thead>
-                            <tr>
-                                <th>@L["Basvuru.Field.SiraNo"]</th>
-                                <th>@L["Basvuru.Field.Il"]</th>
-                                <th>@L["Basvuru.Field.Ilce"]</th>
-                                <th>@L["Basvuru.Field.TamAdres"]</th>
-                                <th>@L["Basvuru.Field.YatirimYeriStatusu"]</th>
-                                <th>@L["Basvuru.Field.KiraTahsis"]</th>
-                                <th>@L["Basvuru.Field.YapiRuhsatiDurumu"]</th>
-                                @if (!ro)
-                                {
-                                    <th>@L["Basvuru.Common.Actions"]</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody id="uygulamaAdresListesi"></tbody>
-                    </table>
-                </div>
-            </section>
-            <section class="basvuru-panel" data-panel="5">
-                <h2>@L["Basvuru.Section5.Title"]</h2>
-                <div class="form-grid">
-                    <label>@L["Basvuru.Field.ToplamYatirimTutari"]<input class="money-integer" name="Basvuru.finans.ToplamYatirimTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.toplamYatirimTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.UygunHarcamaTutari"]<input class="money-integer" name="Basvuru.finans.UygunHarcamaTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.uygunHarcamaTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.TalepEdilenDestekTutari"]<input class="money-integer" name="Basvuru.finans.TalepEdilenDestekTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.talepEdilenDestekTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.BasvuruSahibiKatkisi"]<input class="money-integer" name="Basvuru.finans.BasvuruSahibiKatkisi" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.basvuruSahibiKatkisi)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.DestekOrani"]<input name="Basvuru.finans.DestekOrani" type="text" value="@IsimBul.MetneCevirKuruslu(b.finans.destekOrani)" disabled="@ro" /></label>
-                </div>
-                <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"]<textarea name="Basvuru.finans.YatiriminAmaci" disabled="@ro">@b.finans.yatiriminAmaci</textarea></label>
-            </section>
-
-            <section class="basvuru-panel" data-panel="6">
-                <h2>@L["Basvuru.Section6.Title"]</h2>
-                <div class="mali-section-title">@L["Basvuru.Mali.GelirTablosu"]</div>
-                <div class="table-responsive mali-table-wrap">
-                    <table class="table mali-table">
-                        <thead>
-                            <tr>
-                                <th>@L["Basvuru.Mali.GelirTablosuKalemi"]</th>
-                                <th>@maliOncekiYilBaslik</th>
-                                <th>@maliSonYilBaslik</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>@L["Basvuru.Mali.YillikNetSatisHasilati"]</td>
-                                <td><input class="money-integer" name="Basvuru.mali.OncekiYilNetSatis" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilNetSatis)" disabled="@ro" /></td>
-                                <td><input class="money-integer" name="Basvuru.mali.SonYilNetSatis" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilNetSatis)" disabled="@ro" /></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="mali-section-title">@L["Basvuru.Mali.Bilanco"]</div>
-                <div class="table-responsive mali-table-wrap">
-                    <table class="table mali-table">
-                        <thead>
-                            <tr>
-                                <th>@L["Basvuru.Mali.BilancoKalemi"]</th>
-                                <th>@maliOncekiYilBaslik</th>
-                                <th>@maliSonYilBaslik</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>@L["Basvuru.Mali.AktifToplami"]</td>
-                                <td><input class="money-integer" name="Basvuru.mali.OncekiYilAktifToplami" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilAktifToplami)" disabled="@ro" /></td>
-                                <td><input class="money-integer" name="Basvuru.mali.SonYilAktifToplami" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilAktifToplami)" disabled="@ro" /></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="basvuru-panel" data-panel="7">
-                <h2>@L["Basvuru.Section7.Title"]</h2>
-                <p>Zorunlu belgeler tek bir doküman paketi olarak yüklenecektir. Ayrıca başvuru rehberi ekinde yer alan beyan ve taahhütler ayrı bir dosya olarak eklenecektir.</p>
-
-                <div class="document-upload-box">
-                    <div class="document-file-row">
-                        <label class="btn btn-primary mb-0" for="belgePaketiDosya">Tek doküman paketini seç</label>
-                        <input id="belgePaketiDosya" type="file" class="document-file-input" disabled="@ro" />
-                        <span id="belgePaketiDosyaSecim" class="document-file-name">@(string.IsNullOrWhiteSpace(b.BelgePaketiDosyaAdi) ? "Henüz dosya seçilmedi." : b.BelgePaketiDosyaAdi)</span>
-                    </div>
-                    <label class="wide-label">Yüklenen doküman paketi adı <span class="required-mark">*</span>
-                        <input name="Basvuru.BelgePaketiDosyaAdi" value="@b.BelgePaketiDosyaAdi" readonly />
-                    </label>
-                    <div class="document-note">Dosya sunucuya yüklendikten sonra dosya adı, dosya id bilgisi ve belge kontrol beyanı başvuru kaydına işlenir.</div>
-                </div>
-
-                <h3>@L["Basvuru.Field.BelgeGruplari"]</h3>
-                <div class="check-grid">
-                    @foreach (string belgeGrubu in belgeGruplari)
-                    {
-                        <label><input type="checkbox" class="belge-grubu-check" value="@belgeGrubu" disabled="@ro" /> @belgeGrubu <span class="required-mark">*</span></label>
-                    }
-                </div>
-                <div class="document-two-column">
-                    <label>@L["Basvuru.Field.BelgeBeyani"] <span class="required-mark">*</span>
-                        <select id="belgeBeyaniSelect" name="Basvuru.BelgeBeyani" disabled="@ro">
-                            <option value="">@L["Basvuru.Common.Select"]</option>
-                            <option value="Evet" selected="@(string.Equals(b.BelgeBeyani, "Evet", StringComparison.OrdinalIgnoreCase))">Evet</option>
-                            <option value="Hayır" selected="@(string.Equals(b.BelgeBeyani, "Hayır", StringComparison.OrdinalIgnoreCase))">Hayır</option>
-                        </select>
-                    </label>
-                    <label>Belge açıklaması / not <span class="required-mark">*</span>
-                        <textarea name="Basvuru.BelgePaketiAciklama" disabled="@ro">@b.BelgePaketiAciklama</textarea>
-                    </label>
-                </div>
-                <div class="document-action-row">
-                    @if (!ro)
-                    {
-                        <button type="button" class="btn btn-primary document-upload-action" id="belgePaketiYukleBtn">Tek Doküman Paketi Yükle</button>
-                    }
-                    <a class="btn btn-outline-primary document-download-action @(b.BelgePaketiDosyaId.HasValue ? "" : "d-none")"
-                       id="belgePaketiIndirBtn"
-                       href="@(b.BelgePaketiDosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = b.BelgePaketiDosyaId.Value }) : "#")"
-                       target="_blank"
-                       rel="noopener">Dosya indir</a>
-                </div>
-                <input type="hidden" name="Basvuru.BelgePaketiDosyaId" value="@b.BelgePaketiDosyaId" />
-
-                <h3>Taahhüt / Başvuru rehberi eki beyanlar</h3>
-                <div class="document-upload-box">
-                    <div class="document-file-row">
-                        <label class="btn btn-primary mb-0" for="taahhutDosya">Taahhüt dosyasını seç</label>
-                        <input id="taahhutDosya" type="file" class="document-file-input" disabled="@ro" />
-                        <span id="taahhutDosyaSecim" class="document-file-name">@(string.IsNullOrWhiteSpace(b.TaahhutDosyaAdi) ? "Henüz dosya seçilmedi." : b.TaahhutDosyaAdi)</span>
-                    </div>
-                    <label class="wide-label">Yüklenen taahhüt / beyan dosyası adı <span class="required-mark">*</span>
-                        <input name="Basvuru.TaahhutDosyaAdi" value="@b.TaahhutDosyaAdi" readonly />
-                    </label>
-                    <label class="wide-label">Taahhüt açıklaması / not <span class="required-mark">*</span>
-                        <textarea name="Basvuru.TaahhutAciklama" disabled="@ro">@b.TaahhutAciklama</textarea>
-                    </label>
-                    <div class="document-note">Bu alan, başvuru rehberi ekinde yer alan beyan ve taahhütlerin imzalı/yetkili dosyasının yüklenmesi için ayrılmıştır.</div>
-                </div>
-                <div class="document-action-row">
-                    @if (!ro)
-                    {
-                        <button type="button" class="btn btn-primary document-upload-action" id="taahhutYukleBtn">Taahhüt dosyayı ekle</button>
-                    }
-                    <a class="btn btn-outline-primary document-download-action @(b.TaahhutDosyaId.HasValue ? "" : "d-none")"
-                       id="taahhutIndirBtn"
-                       href="@(b.TaahhutDosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = b.TaahhutDosyaId.Value }) : "#")"
-                       target="_blank"
-                       rel="noopener">Dosya indir</a>
-                </div>
-                <input type="hidden" name="Basvuru.TaahhutDosyaId" value="@b.TaahhutDosyaId" />
-            </section>
-
-            @if (Model.DenetciGorunumu)
-            {
-                <section class="basvuru-panel" data-panel="8">
-                    <h2>@L["Basvuru.Section8.Title"]</h2>
-                    <div class="metric-grid">
-                        <div><span>@L["Basvuru.Common.Application"]</span><strong>@b.Id</strong></div>
-                        <div><span>@L["Basvuru.Field.Durum"]</span><strong>@IsimBul.EnumAdi(@b.durum, L)</strong></div>
-                        <div><span>@L["Basvuru.Field.BelgeGruplariShort"]</span><strong>b.BelgeGruplari.Count / belgeler.Length</strong></div>
-                    </div>
-                    <label class="wide-label">@L["Basvuru.Field.DenetciNotu"]<textarea name="Basvuru.DenetciNotu" disabled>@b.DenetciNotu</textarea></label>
-                    <label class="wide-label">@L["Basvuru.Field.DenetimSonucu"]<input name="Basvuru.DenetimSonucu" value="@b.DenetimSonucu" disabled /></label>
-                </section>
-            }
-
+            <div id="basvuruBolumContainer" data-url="@Url.Action("BolumGetir", "Basvuru")">
+                @await Html.PartialAsync(ilkBolum.PartialView, Model)
+            </div>
             <div class="basvuru-footer">
                 <div>
                 </div>
@@ -454,7 +87,6 @@
         </main>
     </div>
 </div>
-
 @if (!ro)
 {
     <div class="modal fade firma-modal" id="firmaModal" tabindex="-1" aria-hidden="true">
@@ -551,304 +183,952 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade firma-modal" id="ortakModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content firma-modal-content">
+                <div class="modal-header firma-modal-header">
+                    <h5 class="modal-title">Ortak / pay sahibi bilgisi</h5>
+                    <button type="button" class="close ortak-modal-kapat" data-dismiss="modal" aria-label="@T("Basvuru.Common.Close")">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body firma-modal-body">
+                    <input id="ortakModalIndex" type="hidden" />
+                    <div class="firma-modal-fields">
+                        <div class="form-grid">
+                            <label>Ortak / pay sahibi adı-unvanı<input id="ortakAdUnvan" /></label>
+                            <label>TCKN / VKN<input id="ortakTcknVkn" /></label>
+                            <label>
+                                Gerçek / tüzel kişi
+                                <select id="ortakKisiTuru">
+                                    <option value="Gerçek Kişi">Gerçek Kişi</option>
+                                    <option value="Tüzel Kişi">Tüzel Kişi</option>
+                                </select>
+                            </label>
+                            <label>Pay oranı (%)<input id="ortakPayOrani" type="number" min="0" max="100" step="0.01" /></label>
+                            <label>
+                                Özel / kamu niteliği
+                                <select id="ortakOzelKamuNiteligi">
+                                    <option value="Özel">Özel</option>
+                                    <option value="Kamu">Kamu</option>
+                                </select>
+                            </label>
+                            <label>Nihai/gerçek faydalanıcı bilgisi<input id="ortakNihaiFaydalaniciBilgisi" /></label>
+                        </div>
+                        <div class="document-upload-box mt-3" id="ortakUboKycBox">
+                            <div class="document-file-row">
+                                <label class="btn btn-primary mb-0 disabled" for="ortakUboKycDosya" id="ortakUboKycSecBtn">UBO-KYC belgesi yükle</label>
+                                <input id="ortakUboKycDosya" type="file" class="document-file-input" disabled />
+                                <span id="ortakUboKycDosyaAdi" class="document-file-name">UBO-KYC belgesi yüklü değil, yükleyiniz</span>
+                                <a id="ortakUboKycIndirBtn" class="btn btn-outline-primary d-none" href="#" target="_blank" rel="noopener">İndir</a>
+                            </div>
+                            <div class="document-note" id="ortakUboKycNot">UBO-KYC belgesi yüklemek için önce ortağı kaydedin.</div>
+                        </div>
+                        <div id="ortakTuzelMaliAlanlari" class="legal-partner-modal-fields">
+                            <h6>Tüzel kişi mali verileri</h6>
+                            <div class="form-grid">
+                                <label>Hesaba dahil oran (%)<input id="ortakHesabaDahilOran" type="number" min="0" max="100" step="0.01" /></label>
+                                <label>@oncekiMaliYil net satış<input id="ortakOncekiYilNetSatis" class="money-integer" /></label>
+                                <label>@sonMaliYil net satış<input id="ortakSonYilNetSatis" class="money-integer" /></label>
+                                <label>@oncekiMaliYil aktif<input id="ortakOncekiYilAktifToplami" class="money-integer" /></label>
+                                <label>@sonMaliYil aktif<input id="ortakSonYilAktifToplami" class="money-integer" /></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-danger mt-2" id="ortakModalHata"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary ortak-modal-kapat" data-dismiss="modal">@L["Basvuru.Common.Cancel"]</button>
+                    <button type="button" class="btn btn-primary" id="ortakKaydetBtn">@L["Basvuru.Common.Save"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 <script>
-    var active=1;
+    var active = @((int)ilkBolum.Bolum);
+    const bolumFirma = @((int)enumBasvuruBolum.Firma);
+    const bolumIrtibat = @((int)enumBasvuruBolum.Irtibat);
+    const bolumYatirim = @((int)enumBasvuruBolum.Yatirim);
+    const bolumUygulamaAdresi = @((int)enumBasvuruBolum.UygulamaAdresi);
+    const bolumFinans = @((int)enumBasvuruBolum.Finans);
+    const bolumMali = @((int)enumBasvuruBolum.Mali);
+    const bolumBelgeler = @((int)enumBasvuruBolum.Belgeler);
+    const bolumOrtaklik = @((int)enumBasvuruBolum.Ortaklik);
+    const ortaklikReadonly = @(ro ? "true" : "false");
+    const oncekiMaliYil = @Html.Raw(JsonSerializer.Serialize(oncekiMaliYil));
+    const sonMaliYil = @Html.Raw(JsonSerializer.Serialize(sonMaliYil));
+    const zorunluBelgeFormAd = 'Basvuru_ZorunluBelge';
+    const bagliBelgeFormAd = 'Basvuru_BagliBelge';
+    const basvuruBolumleri = @Html.Raw(JsonSerializer.Serialize(bolumler.Select(x => (int)x.Bolum)));
     const adresBosMesaj = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Address.Empty")));
     const adresSilOnay = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Address.DeleteConfirm")));
+    const lockedMessage = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Js.LockedMessage")));
+    const unsavedMessage = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Js.UnsavedMessage")));
+    const partialLoadFailedMessage = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Message.NotFound")));
+    const firmaCreateQuestion = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.CreateQuestion")));
+    const firmaSelectFirstMessage = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.SelectFirst")));
+    const belgeMesajlari = {
+        noFileSelected: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Documents.NoFileSelected"))),
+        packageFileRequired: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Documents.PackageFileRequired"))),
+        uploadErrorConsole: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Documents.UploadErrorConsole"))),
+        uploadFailed: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Documents.UploadFailed"))),
+        uploadSucceeded: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Documents.UploadSucceeded"))),
+        sectionSaveInfo: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Documents.SectionSaveInfo"))),
+        commitmentFileRequired: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Documents.CommitmentFileRequired"))),
+        auditFileRequired: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Mali.AuditFileRequired")))
+    };
+    const maliMesajlari = {
+        scaleOk: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Mali.ScaleCheckOk"))),
+        scaleNotOk: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Mali.ScaleCheckNotOk")))
+    };
+
+    let locked = @(kilitli ? "true" : "false");
+    let dirty = false;
+    var uygulamaAdresModal;
+    var firmaModal;
+    var ortakModal;
+    var sonUygulamaAdresleri = [];
+    var basvuruOrtaklari = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        uygulamaAdresModal = modalOlustur(document.getElementById('uygulamaAdresModal'));
+        firmaModal = modalOlustur(document.getElementById('firmaModal'));
+        ortakModal = modalOlustur(document.getElementById('ortakModal'));
+
+        document.querySelectorAll('.firma-modal-kapat').forEach(btn => btn.addEventListener('click', () => firmaModal?.hide()));
+        document.querySelectorAll('.uygulama-adres-modal-kapat').forEach(btn => btn.addEventListener('click', () => uygulamaAdresModal?.hide()));
+        document.querySelectorAll('.ortak-modal-kapat').forEach(btn => btn.addEventListener('click', () => ortakModal?.hide()));
+
+        const stepSelect = document.getElementById('basvuruStepSelect');
+        stepSelect?.addEventListener('change', () => BasvuruBolumGoster(Number(stepSelect.value)));
+        document.querySelectorAll('.nav-prev').forEach(btn => btn.addEventListener('click', () => BasvuruBolumGoster(KomsuBolum(-1))));
+        document.querySelectorAll('.nav-next').forEach(btn => btn.addEventListener('click', () => BasvuruBolumGoster(KomsuBolum(1))));
+
+        document.getElementById('firmaKaydetBtn')?.addEventListener('click', FirmaKaydetModal);
+        document.getElementById('adresKaydetBtn')?.addEventListener('click', UygulamaAdresiModalKaydet);
+        document.getElementById('ortakKaydetBtn')?.addEventListener('click', OrtakModalKaydet);
+        document.getElementById('ortakUboKycDosya')?.addEventListener('change', OrtakModalUboKycDosyasiYukle);
+
+        BasvuruBolumIlklendir(active);
+    });
+
+    function modalOlustur(element) {
+        if (!element) return null;
+        if (window.bootstrap?.Modal) return new bootstrap.Modal(element);
+        return {
+            show: () => window.jQuery(element).modal('show'),
+            hide: () => window.jQuery(element).modal('hide')
+        };
+    }
+
     function modalValue(id) {
         return document.getElementById(id)?.value || '';
     }
 
-    var uygulamaAdresModal;
-    var firmaModal;
-    document.addEventListener('DOMContentLoaded', () => {
-        active = 1;
-        const lastStep = @sonBolum;
-        let locked = @(kilitli ? "true" : "false");
-        const lockedMessage = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Js.LockedMessage")));
-        const unsavedMessage = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Js.UnsavedMessage")));
+    function BasvuruId() {
+        return degerInt('Basvuru.Id') || 0;
+    }
+
+    function BasvuruKimlikleri() {
+        return {
+            basvuruId: BasvuruId()
+        };
+    }
+
+    function modalSet(id, value) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === 'date' && value) {
+            el.value = String(value).substring(0, 10);
+            return;
+        }
+        el.value = value || '';
+    }
+
+    function KomsuBolum(yon) {
+        const index = basvuruBolumleri.indexOf(active);
+        if (index < 0) return active;
+        return basvuruBolumleri[index + yon] || active;
+    }
+
+    function BasvuruBolumGoster(bolum) {
+        if (!basvuruBolumleri.includes(bolum) || bolum === active) {
+            BasvuruStepSec(active);
+            return;
+        }
+        if (locked && bolum !== bolumFirma) {
+            alert(lockedMessage);
+            BasvuruStepSec(active);
+            return;
+        }
+        if (dirty && !confirm(unsavedMessage)) {
+            BasvuruStepSec(active);
+            return;
+        }
+
+        const container = document.getElementById('basvuruBolumContainer');
+        const url = container?.dataset.url;
+        if (!container || !url) return;
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            data: { ...BasvuruKimlikleri(), bolum: bolum },
+            dataType: 'html'
+        })
+            .done(function (html) {
+                container.innerHTML = html;
+                active = bolum;
+                dirty = false;
+                BasvuruStepSec(active);
+                BasvuruBolumIlklendir(active);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            })
+            .fail(function () {
+                PopupMesajGoster(partialLoadFailedMessage, false);
+                BasvuruStepSec(active);
+            });
+    }
+
+    function BasvuruStepSec(bolum) {
         const stepSelect = document.getElementById('basvuruStepSelect');
-        stepSelect?.addEventListener('change', () => show(Number(stepSelect.value)));
-        document.querySelectorAll('.nav-prev').forEach(btn => btn.addEventListener('click', () => show(active - 1)));
-        document.querySelectorAll('.nav-next').forEach(btn => btn.addEventListener('click', () => show(active + 1)));
-        let dirty = false;
-        document.getElementById('adresYeniBtn')?.addEventListener('click', () => adresModalAc(-1));
+        if (stepSelect) stepSelect.value = String(bolum);
+    }
 
-        uygulamaAdresModal = new bootstrap.Modal(
-            document.getElementById('uygulamaAdresModal')
-        );
-
-        firmaModal = new bootstrap.Modal(
-            document.getElementById('firmaModal')
-        );
-
-        document.querySelectorAll('.firma-modal-kapat').forEach(btn => {
-            btn.addEventListener('click', () => firmaModal?.hide());
+    function BasvuruBolumIlklendir(bolum) {
+        const container = document.getElementById('basvuruBolumContainer');
+        container?.querySelectorAll('input, select, textarea').forEach(el => {
+            el.addEventListener('change', () => dirty = true);
+            el.addEventListener('input', () => dirty = true);
         });
 
-        function setFirma(firma) {
-            $("#firmaId").val(firma.id);
-            $("#vergiKimlikNo").val(firma.vergiKimlikNo);
-            $("#firmaAdi").val(firma.ticaretUnvani);
-            dirty = true;
-        }
+        if (bolum === bolumFirma) FirmaBolumuIlklendir();
+        if (bolum === bolumYatirim) YatirimBolumuIlklendir();
+        if (bolum === bolumUygulamaAdresi) UygulamaAdresiBolumuIlklendir();
+        if (bolum === bolumFinans || bolum === bolumMali || bolum === bolumOrtaklik) ParaTamsayiAyarla();
+        if (bolum === bolumMali) MaliBolumuIlklendir();
+        if (bolum === bolumOrtaklik) OrtaklikBolumuIlklendir();
+        if (bolum === bolumBelgeler) BelgelerBolumuIlklendir();
+    }
 
-        function modalSet(id, value) {
-            const el = document.getElementById(id);
-            if (el) el.value = value || '';
-        
-            if (el.type === "date" && value) {
-                el.value = value.substring(0, 10);
-            } 
-            else {
-                el.value = value || '';
-            }
-        }
-
-        function firmaModalDoldur(firma) {
-            modalSet('modalFirmaId',  firma.id);
-            modalSet('modalVergiKimlikNo',  firma.vergiKimlikNo);
-            modalSet('modalTicaretUnvani', firma.ticaretUnvani);
-            modalSet('modalTicaretSicilNo', firma.ticaretSicilNo);
-            modalSet('modalKurulusTarihi', firma.kurulusTarihi);
-            modalSet('modalMersisNo', firma.mersisNo);
-            modalSet('modalNaceKodu', firma.naceKodu);
-            modalSet('modalWebSitesi', firma.webSitesi);
-            modalSet('modalTelefon', firma.telefon);
-            modalSet('modalKepAdresi', firma.kepAdresi);
-            modalSet('modalEposta', firma.eposta);
-            modalSet('modalFaaliyetKonusu', firma.faaliyetKonusu);
-            modalSet('modalAdres', firma.adres);
-            document.getElementById('firmaModalHata').textContent = '';
-        }
-
-        function FirmaBilgiYaz(result)
-        {
-            if (!result.basarili) {
-                alert(result.hataStr );
-                return;
-            }
-            if(result.nesne)
-                setFirma(result.nesne);
-            else
-            {
-                if (confirm(result.mesaj || @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.CreateQuestion"))))) {
-                    firmaModalDoldur({ vergiKimlikNo: vergiNo });
-                    firmaModal?.show();
-                }
-            }
-        }
-
-        function FirmaBilgiDoldur(result)
-        {
-            console.log(result);
-            if (!result.basarili) {
-                alert(result.hataStr );
-                return;
-            }
-            if(result.nesne)
-                firmaModalDoldur(result.nesne);
-
-
-            firmaModal?.show();
-        }
-
-        document.getElementById('firmaSorgulaBtn')?.addEventListener('click', async () => {
-            AjaxGet("/Basvuru/FirmaSorgula", {vergiKimlikNo: $("#vergiKimlikNo").val(), id: 0}, FirmaBilgiYaz);
+    function FirmaBolumuIlklendir() {
+        document.getElementById('firmaSorgulaBtn')?.addEventListener('click', () => {
+            AjaxGet('/Basvuru/FirmaSorgula', { vergiKimlikNo: $('#vergiKimlikNo').val(), id: 0 }, FirmaBilgiYaz);
         });
-
         document.getElementById('firmaYeniBtn')?.addEventListener('click', () => {
-            firmaModalDoldur({id:0, vergiKimlikNo: $("#vergiKimlikNo").val() || '' });
+            firmaModalDoldur({ id: 0, vergiKimlikNo: $('#vergiKimlikNo').val() || '' });
             firmaModal?.show();
         });
-
         document.getElementById('firmaDuzenleBtn')?.addEventListener('click', () => {
-            const id = firmaId?.value || '';
+            const id = document.getElementById('firmaId')?.value || '';
             if (!id) {
-                alert(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.SelectFirst"))));
+                alert(firmaSelectFirstMessage);
                 return;
             }
-            AjaxGet("/Basvuru/FirmaSorgula", {vergiKimlikNo:$("#vergiKimlikNo").val(), id:0}, FirmaBilgiDoldur);
+            AjaxGet('/Basvuru/FirmaSorgula', { vergiKimlikNo: $('#vergiKimlikNo').val(), id: 0 }, FirmaBilgiDoldur);
         });
+    }
 
-        document.getElementById('firmaKaydetBtn')?.addEventListener('click', async () => {
-            var firma = {
-                'id':  modalValue('hdnFirmaId'),
-                'vergiKimlikNo': modalValue('modalVergiKimlikNo'),
-                'ticaretUnvani': modalValue('modalTicaretUnvani'),
-                'ticaretSicilNo': modalValue('modalTicaretSicilNo'),
-                'kurulusTarihi': modalValue('modalKurulusTarihi'),
-                'mersisNo': modalValue('modalMersisNo'),
-                'naceKodu': modalValue('modalNaceKodu'),
-                'webSitesi': modalValue('modalWebSitesi'),
-                'telefon': modalValue('modalTelefon'),
-                'kepAdresi': modalValue('modalKepAdresi'),
-                'eposta': modalValue('modalEposta'),
-                'faaliyetKonusu': modalValue('modalFaaliyetKonusu'),
-                'adres': modalValue('modalAdres') 
-            }
-            AjaxPost("/Basvuru/FirmaKaydet", firma, SonucGosterGizle)
+    function YatirimBolumuIlklendir() {
+        $('[name="Basvuru.IlId"]').off('change.basvuruBolum').on('change.basvuruBolum', degerZinciriYukle);
+        $('#degerZinciriSelect').off('change.basvuruBolum').on('change.basvuruBolum', function () {
+            degerZinciriAsamalariYukle($(this).val());
         });
+        degerZinciriYukle();
+    }
 
-        document.getElementById('belgePaketiDosya')?.addEventListener('change', function () {
-            dosyaSecimYaz(this, 'belgePaketiDosyaSecim', 'Basvuru.BelgePaketiDosyaAdi');
+    function UygulamaAdresiBolumuIlklendir() {
+        document.getElementById('adresYeniBtn')?.addEventListener('click', () => adresModalAc(-1));
+        UygulamaAdresleriListele();
+    }
+
+    function BelgelerBolumuIlklendir() {
+        document.querySelectorAll('.basvuru-dosya-input').forEach(input => {
+            input.addEventListener('change', function () {
+                BasvuruDosyasiYukle(this.dataset.formAd || zorunluBelgeFormAd, Number(this.dataset.dosyaNo || 0), this, this.dataset.nameTarget, this.dataset.downloadTarget);
+            });
         });
-
         document.getElementById('taahhutDosya')?.addEventListener('change', function () {
             dosyaSecimYaz(this, 'taahhutDosyaSecim', 'Basvuru.TaahhutDosyaAdi');
         });
-
-        document.getElementById('belgePaketiYukleBtn')?.addEventListener('click', BelgePaketiYukle);
         document.getElementById('taahhutYukleBtn')?.addEventListener('click', TaahhutDosyasiYukle);
+    }
 
-        //    setFirma(result.firma);
-        //    firmaModal?.hide();
-        //    basvuruMesajGoster(firmaModalModu === 'duzenle'
-        //        ? @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.Updated")))
-        //        : @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.Saved"))));
+    function MaliBolumuIlklendir() {
+        document.getElementById('denetimDosya')?.addEventListener('change', function () {
+            dosyaSecimYaz(this, 'denetimDosyaSecim', 'Basvuru.mali.DenetimDosyaAdi');
+            DenetimDosyasiYukle();
+        });
+        document.getElementById('bagimsizDenetimeTabiMi')?.addEventListener('change', DenetimDosyaBolumuGuncelle);
+        document.querySelectorAll('.mali-scale-input').forEach(input => {
+            input.addEventListener('input', MaliOlcekKontrolGuncelle);
+            input.addEventListener('blur', MaliOlcekKontrolGuncelle);
+        });
+        DenetimDosyaBolumuGuncelle();
+        MaliOlcekKontrolGuncelle();
+    }
 
-        // $.querySelectorAll('input[name], select[name], textarea[name]').forEach(el => {
-        //     if (el.type === 'hidden' || el.name === '__RequestVerificationToken')
-        //         return;
+    function DenetimDosyaBolumuGuncelle() {
+        const secim = document.getElementById('bagimsizDenetimeTabiMi')?.value || '';
+        const bolum = document.getElementById('denetimDosyaBolumu');
+        if (!bolum) return;
+        bolum.classList.toggle('d-none', secim !== 'true');
+    }
 
-        //     el.addEventListener('change', () => dirty = true);
-        //     el.addEventListener('input', () => dirty = true);
-        // });
+    function MaliOlcekKontrolGuncelle() {
+        const altLimit = Number(document.getElementById('maliOlcekAltLimit')?.value || 0);
+        const ustLimit = Number(document.getElementById('maliOlcekUstLimit')?.value || 0);
+        const uyari = document.getElementById('maliOlcekUyari');
+        const sonuc = document.getElementById('maliOlcekSonuc');
+        if (!uyari || !sonuc || altLimit <= 0 || ustLimit <= 0) return;
 
-        function show(step) {
-            if (locked && step > 1) {
-                alert(lockedMessage);
-                return;
-            }
-            if (step < 1 || step > lastStep) return;
-            if (dirty && !confirm(unsavedMessage)) {
-                if (stepSelect) stepSelect.value = String(active);
-                return;
-            }
+        const alanlar = [
+            'Basvuru.mali.OncekiYilNetSatis',
+            'Basvuru.mali.SonYilNetSatis',
+            'Basvuru.mali.OncekiYilAktifToplami',
+            'Basvuru.mali.SonYilAktifToplami'
+        ];
+        const saglandi = alanlar.some(name => {
+            const deger = degerDec(name);
+            return deger >= altLimit && deger <= ustLimit;
+        });
 
-            active = step;
-            dirty = false;
-            if (stepSelect) stepSelect.value = String(active);
-            document.querySelectorAll('.basvuru-panel').forEach(x => x.classList.toggle('active', x.dataset.panel == step));
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        uyari.classList.toggle('scale-ok', saglandi);
+        sonuc.textContent = saglandi ? maliMesajlari.scaleOk : maliMesajlari.scaleNotOk;
+    }
 
-        // Seçilen Değer Zincirine göre Tabloyu dolduran fonksiyon
-        function degerZinciriAsamalariYukle(zincirId) {
-            var formId = degerInt('Basvuru.Id');
-            const $tbody = $('#degerZinciriAsamaListesi');
-            $tbody.empty(); // Temizle
-
-            if (!zincirId) return;
-
-            // formId'yi de parametre olarak gönderiyoruz
-            AjaxGet('/Basvuru/DegerZinciriAsamalariListele', { zincirId: zincirId, basvuruId: formId }, function (response) {
-                if (response && response.nesne) {
-                    const isReadOnly = $('#degerZinciriSelect').is(':disabled') ? 'disabled' : '';
-
-                    $.each(response.nesne, function (index, item) {
-                        // C# tarafı checked dediyse işaretliyoruz
-                        const checkedAttr = item.secili ? 'checked="checked"' : '';
-
-                        const row = `
-                            <tr>
-                                <td class="text-center">
-                                    <input type="checkbox" name="Basvuru.DegerZinciriAsamalari" value="${item.id}" ${checkedAttr} ${isReadOnly} />
-                                </td>
-                                <td><strong>${item.ad}</strong></td>
-                                <td>${item.aciklama ?? ''}</td>
-                            </tr>
-                        `;
-                        $tbody.append(row);
-                    });
-                } else {
-                    $tbody.append('<tr><td colspan="3" class="text-center text-muted">Bu değer zincirine ait aşama bulunamadı.</td></tr>');
-                }
+    function OrtaklikBolumuIlklendir() {
+        OrtaklikInitialOku();
+        document.getElementById('hasRelatedEnterprise')?.addEventListener('change', toggleRelatedEnterprise);
+        document.getElementById('ortakEkleBtn')?.addEventListener('click', () => OrtakModalAc(-1));
+        document.getElementById('ortakKisiTuru')?.addEventListener('change', OrtakModalTuzelAlanGuncelle);
+        document.querySelectorAll('.ortaklik-dosya-input').forEach(input => {
+            input.addEventListener('change', function () {
+                OrtaklikDosyasiYukle(this.dataset.formAd || bagliBelgeFormAd, Number(this.dataset.dosyaNo || 0), this, this.dataset.nameTarget, this.dataset.downloadTarget);
             });
+        });
+        toggleRelatedEnterprise();
+        OrtaklarRender();
+    }
+
+    function OrtaklikInitialOku() {
+        const jsonElement = document.getElementById('ortaklikInitialJson');
+        if (!jsonElement) {
+            basvuruOrtaklari = [];
+            return;
         }
 
-        function degerZinciriYukle() {
-            var ilId= $("#basvuruIl").val();
-            formId = degerInt('Basvuru.Id')
-
-            const $select = $('#degerZinciriSelect');
-            $select.html('<option value="">Seçiniz...</option>'); // Temizle
-            $('#degerZinciriAsamaListesi').empty(); // Eski aşamaları sil
-
-            if (!ilId) return;
-
-            // formId'yi de parametre olarak gönderiyoruz
-            AjaxGet('/Basvuru/DegerZincirleriListele', { ilId: ilId, basvuruId: formId }, function (response) {
-                console.log(response);
-                if (response && response.nesne) {
-                    let aktifZincirId = null;
-
-                    $.each(response.nesne, function (index, item) {
-                        // Eğer C# tarafı bu kayıt için true döndüyse 'selected' özniteliğini ekliyoruz
-                        const selectedAttr = item.secili ? 'selected="selected"' : '';
-                        $select.append(`<option value="${item.id}" ${selectedAttr}>${item.ad}</option>`);
-                
-                        if (item.secili) {
-                            aktifZincirId = item.id;
-                        }
-                    });
-
-                    // Eğer veritabanından seçili bir zincir geldiyse, onun aşamalarını da otomatik yükle
-                    if (aktifZincirId) {
-                        degerZinciriAsamalariYukle(aktifZincirId);
-                    }
-                }
-            });
+        try {
+            const model = JSON.parse(jsonElement.textContent || '{}');
+            basvuruOrtaklari = Array.isArray(model.ortaklar) ? model.ortaklar : [];
         }
-
-        $('[name="Basvuru.IlId"]').on('change', function () {
-            degerZinciriYukle();
-        });
-
-        // 2. Değer Zinciri değiştiğinde Aşamaları yükle
-        $('#degerZinciriSelect').on('change', function () {
-            degerZinciriAsamalariYukle($(this).val());
-        });
-
-        document.getElementById('adresKaydetBtn')?.addEventListener('click', async () => {
-            const indexText = modalValue('adresModalIndex');
-            const mevcutAdres = indexText === '' ? {} : sonUygulamaAdresleri[Number(indexText)];
-            const seciliIlceId = Number(modalValue('adresModalIlce') || 0) || null;
-            const adres = {
-                id: mevcutAdres?.id || 0,
-                basvuruId: degerInt('Basvuru.Id'),
-                siraNo: Number(modalValue('adresModalSiraNo') || 0) || 1,
-                ilceId: seciliIlceId,
-                tamAdres: modalValue('adresModalTamAdres'),
-                yatirimYeriStatusu: Number(modalValue('adresModalYatirimYeriStatusu') || 0) || null,
-                kiraVeyaTahsisSuresi: Number(modalValue('adresModalKiraVeyaTahsisSuresi') || 0) || null,
-                kiraTahsisBitisTarihi: modalValue('adresModalKiraTahsisBitisTarihi'),
-                yapiRuhsatiDurumu: Number(modalValue('adresModalYapiRuhsatiDurumu') || 0) || null
-            };
-
-            adresKaydet(adres);
-        });
-        ParaTamsayiAyarla();
-        degerZinciriYukle();
-        UygulamaAdresleriListele();
-    });
-
-    function SonucGoster(sonuc)
-    {
-        if (sonuc.basarili) {
-            PopupMesajGoster(sonuc.mesaj, true);
-        } else {
-            PopupMesajGoster(sonuc.hataStr, false);
+        catch {
+            basvuruOrtaklari = [];
         }
     }
 
-    function SonucGosterGizle(sonuc)
-    {
-        UygulamaAdresleriListele();
-        uygulamaAdresModal.hide();
+    function toggleRelatedEnterprise() {
+        const secim = document.getElementById('hasRelatedEnterprise')?.value || '';
+        document.getElementById('relatedEnterpriseBox')?.classList.toggle('d-none', secim !== 'true');
+    }
+
+    function OrtakModalAc(index) {
+        const ortak = index >= 0 ? basvuruOrtaklari[index] : {};
+        modalSet('ortakModalIndex', index >= 0 ? String(index) : '');
+        modalSet('ortakAdUnvan', ortak.adUnvan);
+        modalSet('ortakTcknVkn', ortak.tcknVkn);
+        modalSet('ortakKisiTuru', ortak.kisiTuru || 'Gerçek Kişi');
+        modalSet('ortakPayOrani', ortak.payOrani);
+        modalSet('ortakOzelKamuNiteligi', ortak.ozelKamuNiteligi || 'Özel');
+        modalSet('ortakNihaiFaydalaniciBilgisi', ortak.nihaiFaydalaniciBilgisi);
+        modalSet('ortakHesabaDahilOran', ortak.hesabaDahilOran ?? ortak.payOrani);
+        modalSet('ortakOncekiYilNetSatis', ortak.oncekiYilNetSatis);
+        modalSet('ortakSonYilNetSatis', ortak.sonYilNetSatis);
+        modalSet('ortakOncekiYilAktifToplami', ortak.oncekiYilAktifToplami);
+        modalSet('ortakSonYilAktifToplami', ortak.sonYilAktifToplami);
+        const hata = document.getElementById('ortakModalHata');
+        if (hata) hata.textContent = '';
+        OrtakModalTuzelAlanGuncelle();
+        OrtakModalUboKycDurumGuncelle();
+        ortakModal?.show();
+    }
+
+    function OrtakModalTuzelAlanGuncelle() {
+        const tuzelMi = modalValue('ortakKisiTuru') === 'Tüzel Kişi';
+        document.getElementById('ortakTuzelMaliAlanlari')?.classList.toggle('d-none', !tuzelMi);
+    }
+
+    function OrtakModalKaydet() {
+        const ortak = {
+            id: mevcutOrtakId(),
+            basvuruId: BasvuruId(),
+            siraNo: 0,
+            adUnvan: modalValue('ortakAdUnvan').trim(),
+            tcknVkn: modalValue('ortakTcknVkn').trim(),
+            kisiTuru: modalValue('ortakKisiTuru'),
+            payOrani: sayiOkuId('ortakPayOrani'),
+            hesabaDahilOran: sayiOkuId('ortakHesabaDahilOran'),
+            ozelKamuNiteligi: modalValue('ortakOzelKamuNiteligi'),
+            nihaiFaydalaniciBilgisi: modalValue('ortakNihaiFaydalaniciBilgisi').trim(),
+            uboKycBelgeAdi: mevcutOrtakBelgeAdi(),
+            uboKycDosyaId: mevcutOrtakDosyaId(),
+            oncekiYilNetSatis: sayiOkuId('ortakOncekiYilNetSatis'),
+            sonYilNetSatis: sayiOkuId('ortakSonYilNetSatis'),
+            oncekiYilAktifToplami: sayiOkuId('ortakOncekiYilAktifToplami'),
+            sonYilAktifToplami: sayiOkuId('ortakSonYilAktifToplami')
+        };
+        const indexText = modalValue('ortakModalIndex');
+        const oncekiKimlik = indexText === '' ? '' : basvuruOrtaklari[Number(indexText)]?.tcknVkn || '';
+        if (TcknVknNormalize(oncekiKimlik) && TcknVknNormalize(oncekiKimlik) !== TcknVknNormalize(ortak.tcknVkn)) {
+            ortak.uboKycBelgeAdi = '';
+            ortak.uboKycDosyaId = null;
+        }
+
+        if (!ortak.adUnvan || !ortak.tcknVkn) {
+            const hata = document.getElementById('ortakModalHata');
+            if (hata) hata.textContent = 'Ortak adı/unvanı ve TCKN/VKN girilmelidir.';
+            return;
+        }
+        if (AyniTcknVknVarMi(ortak.tcknVkn, modalValue('ortakModalIndex'))) {
+            const hata = document.getElementById('ortakModalHata');
+            if (hata) hata.textContent = 'Aynı TCKN/VKN ile iki ortak kaydedilemez.';
+            return;
+        }
+        if (ortak.kisiTuru === 'Tüzel Kişi' && (!ortak.hesabaDahilOran || ortak.hesabaDahilOran <= 0)) {
+            const hata = document.getElementById('ortakModalHata');
+            if (hata) hata.textContent = 'Tüzel kişi ortak için hesaba dahil oran girilmelidir.';
+            return;
+        }
+
+        if (indexText === '') basvuruOrtaklari.push(ortak);
+        else basvuruOrtaklari[Number(indexText)] = ortak;
+        basvuruOrtaklari.forEach((item, index) => item.siraNo = index + 1);
+        dirty = true;
+        OrtaklarRender();
+        OrtaklarKaydet(function () {
+            modalSet('ortakModalIndex', String(basvuruOrtaklari.findIndex(x => TcknVknNormalize(x.tcknVkn) === TcknVknNormalize(ortak.tcknVkn))));
+            OrtakModalUboKycDurumGuncelle();
+        });
+    }
+
+    function AyniTcknVknVarMi(tcknVkn, mevcutIndexText) {
+        const kimlik = TcknVknNormalize(tcknVkn);
+        const mevcutIndex = mevcutIndexText === '' ? -1 : Number(mevcutIndexText);
+        return basvuruOrtaklari.some((ortak, index) =>
+            index !== mevcutIndex &&
+            TcknVknNormalize(ortak.tcknVkn) === kimlik);
+    }
+
+    function OrtakSil(index) {
+        if (ortaklikReadonly) return;
+        basvuruOrtaklari.splice(index, 1);
+        basvuruOrtaklari.forEach((item, itemIndex) => item.siraNo = itemIndex + 1);
+        dirty = true;
+        OrtaklarRender();
+        OrtaklarKaydet();
+    }
+
+    function OrtaklarRender() {
+        const container = document.getElementById('partnersTable');
+        if (!container) return;
+        basvuruOrtaklari.forEach((item, index) => item.siraNo = index + 1);
+
+        let html = `<div class="table-responsive"><table class="table table-bordered ortak-table"><thead><tr>
+            <th>Sıra</th><th>Ortak / pay sahibi adı-unvanı</th><th>TCKN / VKN</th><th>Gerçek / tüzel kişi</th>
+            <th>Pay oranı (%)</th><th>Özel / kamu niteliği</th><th>Nihai/gerçek faydalanıcı bilgisi</th><th>UBO-KYC belgesi</th><th></th>
+        </tr></thead><tbody>`;
+
+        if (basvuruOrtaklari.length === 0) {
+            html += `<tr><td colspan="9" class="text-muted text-center">Ortak/pay sahibi eklenmedi.</td></tr>`;
+        }
+        else {
+            basvuruOrtaklari.forEach((ortak, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${htmlEncode(ortak.adUnvan)}</td>
+                    <td>${htmlEncode(ortak.tcknVkn)}</td>
+                    <td>${htmlEncode(ortak.kisiTuru)}</td>
+                    <td>${sayiYaz(ortak.payOrani)}</td>
+                    <td>${htmlEncode(ortak.ozelKamuNiteligi)}</td>
+                    <td>${htmlEncode(ortak.nihaiFaydalaniciBilgisi)}</td>
+                    <td>${OrtakUboKycHucreHtml(ortak, index)}</td>
+                    <td class="text-nowrap">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="OrtakModalAc(${index})" ${ortaklikReadonly ? 'disabled' : ''}>Düzenle</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="OrtakSil(${index})" ${ortaklikReadonly ? 'disabled' : ''}>Sil</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+        OrtaklikOzetGuncelle();
+        TuzelOrtakMaliRender();
+    }
+
+    function OrtakUboKycHucreHtml(ortak, index) {
+        const uboKycYuklu = !!ortak.uboKycDosyaId;
+        const dosyaAdi = htmlEncode(uboKycYuklu ? ortak.uboKycBelgeAdi : 'UBO-KYC belgesi yüklü değil, yükleyiniz');
+        const href = ortak.uboKycDosyaId ? `/Basvuru/DosyaIndir/${ortak.uboKycDosyaId}` : '#';
+        const indir = uboKycYuklu
+            ? `<a class="btn btn-sm btn-outline-primary mt-1" href="${href}" target="_blank" rel="noopener">İndir</a>`
+            : '';
+        return `<div class="ortak-doc-cell">
+            <div class="document-file-name">${dosyaAdi}</div>
+            ${indir}
+        </div>`;
+    }
+
+    function mevcutOrtakId() {
+        const indexText = modalValue('ortakModalIndex');
+        if (indexText === '') return 0;
+        return basvuruOrtaklari[Number(indexText)]?.id || 0;
+    }
+
+    function mevcutOrtakDosyaId() {
+        const indexText = modalValue('ortakModalIndex');
+        if (indexText === '') return null;
+        return basvuruOrtaklari[Number(indexText)]?.uboKycDosyaId || null;
+    }
+
+    function mevcutOrtakBelgeAdi() {
+        const indexText = modalValue('ortakModalIndex');
+        if (indexText === '') return '';
+        return basvuruOrtaklari[Number(indexText)]?.uboKycBelgeAdi || '';
+    }
+
+    function OrtakModalUboKycDurumGuncelle() {
+        const indexText = modalValue('ortakModalIndex');
+        const ortak = indexText === '' ? null : basvuruOrtaklari[Number(indexText)];
+        const kayitliMi = !!ortak && !!String(ortak.tcknVkn || '').trim();
+        const input = document.getElementById('ortakUboKycDosya');
+        const button = document.getElementById('ortakUboKycSecBtn');
+        const name = document.getElementById('ortakUboKycDosyaAdi');
+        const note = document.getElementById('ortakUboKycNot');
+        const download = document.getElementById('ortakUboKycIndirBtn');
+
+        if (input) {
+            input.disabled = !kayitliMi || ortaklikReadonly;
+            input.value = '';
+        }
+        button?.classList.toggle('disabled', !kayitliMi || ortaklikReadonly);
+        const uboKycYuklu = !!ortak?.uboKycDosyaId;
+        if (name) name.textContent = uboKycYuklu ? (ortak?.uboKycBelgeAdi || '') : 'UBO-KYC belgesi yüklü değil, yükleyiniz';
+        if (note) {
+            note.textContent = kayitliMi
+                ? ''
+                : 'UBO-KYC belgesi yüklemek için önce ortağı kaydedin.';
+            note.classList.toggle('d-none', kayitliMi);
+        }
+        if (download) {
+            if (uboKycYuklu) {
+                download.href = `/Basvuru/DosyaIndir/${ortak.uboKycDosyaId}`;
+                download.classList.remove('d-none');
+            }
+            else {
+                download.href = '#';
+                download.classList.add('d-none');
+            }
+        }
+    }
+
+    function OrtakModalUboKycDosyasiYukle() {
+        const input = document.getElementById('ortakUboKycDosya');
+        const indexText = modalValue('ortakModalIndex');
+        const index = indexText === '' ? -1 : Number(indexText);
+        const ortak = index >= 0 ? basvuruOrtaklari[index] : null;
+        if (!ortak) {
+            PopupMesajGoster('UBO-KYC belgesi yüklemek için önce ortağı kaydedin.', false);
+            return;
+        }
+
+        BasvuruDosyasiYukle(UboKycFormAdOlustur(ortak.tcknVkn), 1, input, 'ortakUboKycDosyaAdi', 'ortakUboKycIndirBtn', function (sonuc) {
+            const nesne = sonuc?.nesne || sonuc?.Nesne || {};
+            ortak.uboKycDosyaId = nesne.dosyaId || nesne.DosyaId || null;
+            ortak.uboKycBelgeAdi = nesne.dosyaAdi || nesne.DosyaAdi || '';
+            OrtakModalUboKycDurumGuncelle();
+            OrtaklarRender();
+        });
+    }
+
+    function UboKycFormAdOlustur(tcknVkn) {
+        return `OBOKYC_${TcknVknNormalize(tcknVkn)}`;
+    }
+
+    function TcknVknNormalize(tcknVkn) {
+        return String(tcknVkn || '').trim().replace(/[^0-9A-Za-z]/g, '').toLocaleUpperCase('tr-TR');
+    }
+
+    function OrtaklikOzetGuncelle() {
+        const toplamPay = basvuruOrtaklari.reduce((sum, ortak) => sum + Number(ortak.payOrani || 0), 0);
+        const ozelPay = basvuruOrtaklari
+            .filter(ortak => ortak.ozelKamuNiteligi === 'Özel')
+            .reduce((sum, ortak) => sum + Number(ortak.payOrani || 0), 0);
+        const ozelInput = document.getElementById('privateShareCalculated');
+        if (ozelInput) ozelInput.value = sayiYaz(ozelPay);
+
+        const alert = document.getElementById('partnerAlerts');
+        if (!alert) return;
+        if (toplamPay > 100) {
+            alert.innerHTML = '<div class="alert alert-danger">Ortak/pay sahibi toplam pay oranı 100\'ü geçemez.</div>';
+        }
+        else if (basvuruOrtaklari.length > 0 && toplamPay !== 100) {
+            alert.innerHTML = `<div class="alert alert-warning">Toplam pay oranı: ${sayiYaz(toplamPay)}%. Toplamın 100 olması beklenir.</div>`;
+        }
+        else {
+            alert.innerHTML = '';
+        }
+    }
+
+    function TuzelOrtakMaliRender() {
+        const container = document.getElementById('legalPartnerFinancials');
+        if (!container) return;
+        const tuzelOrtaklar = basvuruOrtaklari.filter(ortak => ortak.kisiTuru === 'Tüzel Kişi');
+        if (tuzelOrtaklar.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = `<h3 class="subhead">Tüzel kişi ortak mali verileri</h3>
+            <div class="table-responsive"><table class="table table-bordered legal-financial-table"><thead><tr>
+                <th>Ortak / pay sahibi</th><th>Hesaba dahil oran</th><th>${htmlEncode(oncekiMaliYil)} net satış</th><th>${htmlEncode(sonMaliYil)} net satış</th><th>${htmlEncode(oncekiMaliYil)} aktif</th><th>${htmlEncode(sonMaliYil)} aktif</th>
+            </tr></thead><tbody>`;
+        tuzelOrtaklar.forEach(ortak => {
+            html += `<tr>
+                <td>${htmlEncode(ortak.adUnvan)}</td>
+                <td>%${sayiYaz(ortak.hesabaDahilOran ?? ortak.payOrani)}</td>
+                <td>${sayiYaz(ortak.oncekiYilNetSatis)}</td>
+                <td>${sayiYaz(ortak.sonYilNetSatis)}</td>
+                <td>${sayiYaz(ortak.oncekiYilAktifToplami)}</td>
+                <td>${sayiYaz(ortak.sonYilAktifToplami)}</td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+
+    function OrtaklikKaydet(afterSuccess, bosBagliSecimiHayirSay) {
+        const secim = document.getElementById('hasRelatedEnterprise')?.value || '';
+        const bagliOrtakVarMi = secim === '' ? (bosBagliSecimiHayirSay ? false : null) : secim === 'true';
+        if (bagliOrtakVarMi === true) {
+            const eksikler = [];
+            if (!modalValue('relatedTitle').trim()) eksikler.push('Bağlı/ortak işletme unvanı');
+            if (!modalValue('relatedId').trim()) eksikler.push('Bağlı/ortak işletme VKN/MERSİS');
+            if (sayiAlanBosMu('relPrevNetSales')) eksikler.push(`${oncekiMaliYil} net satış hasılatı`);
+            if (sayiAlanBosMu('relLastNetSales')) eksikler.push(`${sonMaliYil} net satış hasılatı`);
+            if (sayiAlanBosMu('relPrevAssets')) eksikler.push(`${oncekiMaliYil} aktif toplamı`);
+            if (sayiAlanBosMu('relLastAssets')) eksikler.push(`${sonMaliYil} aktif toplamı`);
+            if (eksikler.length > 0) {
+                PopupMesajGoster(`${eksikler.join(', ')} girilmelidir.`, false);
+                return;
+            }
+        }
+        const model = {
+            ...BasvuruKimlikleri(),
+            bagliOrtakIsletmeVarMi: bagliOrtakVarMi,
+            ozelSektorPayi: sayiOkuId('privateShareCalculated'),
+            ortaklar: basvuruOrtaklari,
+            bagliOrtakUnvani: modalValue('relatedTitle'),
+            bagliOrtakKimlikNo: modalValue('relatedId'),
+            bagliOrtakOncekiYilNetSatis: sayiOkuId('relPrevNetSales'),
+            bagliOrtakSonYilNetSatis: sayiOkuId('relLastNetSales'),
+            bagliOrtakOncekiYilAktifToplami: sayiOkuId('relPrevAssets'),
+            bagliOrtakSonYilAktifToplami: sayiOkuId('relLastAssets')
+        };
+        AjaxPost('/Basvuru/KaydetOrtaklik', model, function (sonuc) {
+            if (sonuc?.basarili) {
+                dirty = false;
+                if (afterSuccess) afterSuccess(sonuc);
+            }
+            SonucGoster(sonuc);
+        });
+    }
+
+    function OrtaklarKaydet(afterSuccess) {
+        const model = {
+            ...BasvuruKimlikleri(),
+            ortaklar: basvuruOrtaklari
+        };
+        AjaxPost('/Basvuru/KaydetOrtaklar', model, function (sonuc) {
+            if (sonuc?.basarili) {
+                dirty = false;
+                if (afterSuccess) afterSuccess(sonuc);
+            }
+            SonucGoster(sonuc);
+        });
+    }
+
+    function sayiAlanBosMu(id) {
+        return (document.getElementById(id)?.value || '').toString().trim() === '';
+    }
+
+    function sayiOkuId(id) {
+        const value = (document.getElementById(id)?.value || '').toString().trim();
+        if (!value) return null;
+        const normalized = value.includes(',')
+            ? value.replace(/\./g, '').replace(',', '.')
+            : value.replace(/\s/g, '');
+        const number = Number(normalized);
+        return Number.isFinite(number) ? number : null;
+    }
+
+    function sayiYaz(value) {
+        const number = Number(value || 0);
+        return Number.isFinite(number) ? number.toLocaleString('tr-TR', { maximumFractionDigits: 2 }) : '';
+    }
+
+    function htmlEncode(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function setFirma(firma) {
+        modalSet('firmaId', firma.id);
+        modalSet('vergiKimlikNo', firma.vergiKimlikNo);
+        modalSet('firmaAdi', firma.ticaretUnvani);
+        modalSet('firmaTicaretSicilNo', firma.ticaretSicilNo);
+        modalSet('firmaKurulusTarihi', firma.kurulusTarihi);
+        modalSet('firmaTelefon', firma.telefon);
+        modalSet('firmaWebSitesi', firma.webSitesi);
+        modalSet('firmaMersisNo', firma.mersisNo);
+        modalSet('firmaNaceKodu', firma.naceKodu);
+        modalSet('firmaKepAdresi', firma.kepAdresi);
+        modalSet('firmaEposta', firma.eposta);
+        modalSet('firmaFaaliyetKonusu', firma.faaliyetKonusu);
+        modalSet('firmaAdres', firma.adres);
+        dirty = true;
+    }
+
+    function firmaModalDoldur(firma) {
+        modalSet('modalFirmaId', firma.id);
+        modalSet('modalVergiKimlikNo', firma.vergiKimlikNo);
+        modalSet('modalTicaretUnvani', firma.ticaretUnvani);
+        modalSet('modalTicaretSicilNo', firma.ticaretSicilNo);
+        modalSet('modalKurulusTarihi', firma.kurulusTarihi);
+        modalSet('modalMersisNo', firma.mersisNo);
+        modalSet('modalNaceKodu', firma.naceKodu);
+        modalSet('modalWebSitesi', firma.webSitesi);
+        modalSet('modalTelefon', firma.telefon);
+        modalSet('modalKepAdresi', firma.kepAdresi);
+        modalSet('modalEposta', firma.eposta);
+        modalSet('modalFaaliyetKonusu', firma.faaliyetKonusu);
+        modalSet('modalAdres', firma.adres);
+        const hata = document.getElementById('firmaModalHata');
+        if (hata) hata.textContent = '';
+    }
+
+    function FirmaBilgiYaz(result) {
+        if (!result.basarili) {
+            alert(result.hataStr);
+            return;
+        }
+        if (result.nesne) {
+            setFirma(result.nesne);
+            return;
+        }
+        if (confirm(result.mesaj || firmaCreateQuestion)) {
+            firmaModalDoldur({ vergiKimlikNo: $('#vergiKimlikNo').val() || '' });
+            firmaModal?.show();
+        }
+    }
+
+    function FirmaBilgiDoldur(result) {
+        if (!result.basarili) {
+            alert(result.hataStr);
+            return;
+        }
+        if (result.nesne) firmaModalDoldur(result.nesne);
+        firmaModal?.show();
+    }
+
+    function FirmaKaydetModal() {
+        const firma = {
+            id: modalValue('modalFirmaId'),
+            vergiKimlikNo: modalValue('modalVergiKimlikNo'),
+            ticaretUnvani: modalValue('modalTicaretUnvani'),
+            ticaretSicilNo: modalValue('modalTicaretSicilNo'),
+            kurulusTarihi: modalValue('modalKurulusTarihi'),
+            mersisNo: modalValue('modalMersisNo'),
+            naceKodu: modalValue('modalNaceKodu'),
+            webSitesi: modalValue('modalWebSitesi'),
+            telefon: modalValue('modalTelefon'),
+            kepAdresi: modalValue('modalKepAdresi'),
+            eposta: modalValue('modalEposta'),
+            faaliyetKonusu: modalValue('modalFaaliyetKonusu'),
+            adres: modalValue('modalAdres')
+        };
+        AjaxPost('/Basvuru/FirmaKaydet', firma, function (sonuc) {
+            if (sonuc.basarili) {
+                firmaModal?.hide();
+                setFirma({ ...firma, id: sonuc.nesne || firma.id });
+            }
+            SonucGoster(sonuc);
+        });
+    }
+
+    function FirmaIrtibatKaydet() {
+        AjaxPost('/Basvuru/KaydetIrtibat', IrtibatModeliOlustur(), SonucGoster);
+    }
+
+    function IrtibatModeliOlustur() {
+        return {
+            ...BasvuruKimlikleri(),
+            kisi: degerStr('Basvuru.irtibat.kisi'),
+            unvan: degerStr('Basvuru.irtibat.unvan'),
+            telefon: degerStr('Basvuru.irtibat.telefon'),
+            ePosta: degerStr('Basvuru.irtibat.ePosta'),
+            adres: degerStr('Basvuru.irtibat.adres'),
+            yetkiliKisiler: degerStr('Basvuru.irtibat.yetkiliKisiler')
+        };
+    }
+
+    function BasvuruFirmaModeliOlustur() {
+        return {
+            id: BasvuruId(),
+            firmaId: degerInt('Basvuru.FirmaId'),
+            donemId: degerInt('Basvuru.DonemId'),
+            ilId: degerInt('Basvuru.IlId'),
+            basvuruKonusu: '',
+            sonIkiYildirFaalMi: degerStr('Basvuru.SonIkiYildirFaalMi') === '' ? null : degerBool('Basvuru.SonIkiYildirFaalMi'),
+            basvuruSahibiTuru: degerInt('Basvuru.BasvuruSahibiTuru'),
+            ozelSektorPayi: $('[name="Basvuru.OzelSektorPayi"]').length ? degerDec('Basvuru.OzelSektorPayi') : 0,
+            bagliOrtakIsletmeVarMi: $('[name="Basvuru.BagliOrtakIsletmeVarMi"]').length ? degerBool('Basvuru.BagliOrtakIsletmeVarMi') : null,
+            bagliOrtakAciklama: $('[name="Basvuru.BagliOrtakAciklama"]').length ? degerStr('Basvuru.BagliOrtakAciklama') : null
+        };
+    }
+
+    function FirmaBasvuruKaydet() {
+        AjaxPost('/Basvuru/KaydetFirmaBasvuru', BasvuruFirmaModeliOlustur(), BasvuruKayitSonucGoster);
+    }
+
+    function BasvuruSahibiKaydet() {
+        AjaxPost('/Basvuru/KaydetBasvuruSahibi', {
+            basvuruFirma: BasvuruFirmaModeliOlustur(),
+            irtibat: IrtibatModeliOlustur()
+        }, BasvuruKayitSonucGoster);
+    }
+
+    function BasvuruKayitKimlikGuncelle(sonuc) {
+        if (sonuc?.basarili && sonuc.nesne) {
+            $('[name="Basvuru.Id"]').val(sonuc.nesne);
+            locked = false;
+            $('#basvuruStepSelect option').prop('disabled', false);
+            dirty = false;
+        }
+    }
+
+    function BasvuruKayitSonucGoster(sonuc) {
+        BasvuruKayitKimlikGuncelle(sonuc);
         SonucGoster(sonuc);
+    }
+
+    function YatirimKaydet() {
+        const yatirim = {
+            ...BasvuruKimlikleri(),
+            yatirimAdi: degerStr('Basvuru.YatirimAdi'),
+            yatirimTuru: degerInt('Basvuru.yatirim.yatirimTuru'),
+            harcamaTurleri: $('input[name="Basvuru.yatirim.harcamaTurleri"]:checked').map(function () { return parseInt(this.value); }).get(),
+            degerZinciriAsamalari: $('input[name="Basvuru.DegerZinciriAsamalari"]:checked').map(function () { return { id: parseInt(this.value) }; }).get()
+        };
+        AjaxPost('/Basvuru/KaydetYatirim', yatirim, SonucGoster);
+    }
+
+    function FinansKaydet() {
+        const model = {
+            ...BasvuruKimlikleri(),
+            toplamYatirimTutari: degerDec('Basvuru.finans.ToplamYatirimTutari'),
+            uygunHarcamaTutari: degerDec('Basvuru.finans.UygunHarcamaTutari'),
+            talepEdilenDestekTutari: degerDec('Basvuru.finans.TalepEdilenDestekTutari'),
+            basvuruSahibiKatkisi: degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
+            destekOrani: degerDec('Basvuru.finans.DestekOrani'),
+            yatiriminAmaci: degerStr('Basvuru.finans.YatiriminAmaci')
+        };
+        AjaxPost('/Basvuru/KaydetFinans', model, SonucGoster);
+    }
+
+    function MaliKaydet() {
+        const model = {
+            ...BasvuruKimlikleri(),
+            oncekiYilNetSatis: degerDec('Basvuru.mali.OncekiYilNetSatis'),
+            sonYilNetSatis: degerDec('Basvuru.mali.SonYilNetSatis'),
+            oncekiYilAktifToplami: degerDec('Basvuru.mali.OncekiYilAktifToplami'),
+            sonYilAktifToplami: degerDec('Basvuru.mali.SonYilAktifToplami'),
+            bagimsizDenetimeTabiMi: degerStr('Basvuru.mali.BagimsizDenetimeTabiMi') === '' ? null : degerBool('Basvuru.mali.BagimsizDenetimeTabiMi'),
+            denetimDosyaAdi: degerStr('Basvuru.mali.DenetimDosyaAdi'),
+            denetimDosyaId: degerInt('Basvuru.mali.DenetimDosyaId')
+        };
+        AjaxPost('/Basvuru/KaydetMali', model, SonucGoster);
+    }
+
+    function PaneliKaydet() {
+        if (active === bolumFirma) BasvuruSahibiKaydet();
+        else if (active === bolumIrtibat) FirmaIrtibatKaydet();
+        else if (active === bolumYatirim) YatirimKaydet();
+        else if (active === bolumFinans) FinansKaydet();
+        else if (active === bolumMali) MaliKaydet();
+        else if (active === bolumOrtaklik) OrtaklikKaydet();
+        else if (active === bolumBelgeler) PopupMesajGoster(belgeMesajlari.sectionSaveInfo, true);
+        else PopupMesajGoster(String(active), false);
+    }
+
+    function degerZinciriAsamalariYukle(zincirId) {
+        const kimlik = BasvuruKimlikleri();
+        const $tbody = $('#degerZinciriAsamaListesi');
+        $tbody.empty();
+        if (!zincirId) return;
+        AjaxGet('/Basvuru/DegerZinciriAsamalariListele', { ...kimlik, zincirId: zincirId }, function (response) {
+            if (response && response.nesne) {
+                const isReadOnly = $('#degerZinciriSelect').is(':disabled') ? 'disabled' : '';
+                $.each(response.nesne, function (_, item) {
+                    const checkedAttr = item.secili ? 'checked="checked"' : '';
+                    $tbody.append(`<tr><td class="text-center"><input type="checkbox" name="Basvuru.DegerZinciriAsamalari" value="${item.id}" ${checkedAttr} ${isReadOnly} /></td><td><strong>${item.ad}</strong></td><td>${item.aciklama ?? ''}</td></tr>`);
+                });
+            }
+        });
+    }
+
+    function degerZinciriYukle() {
+        const ilId = $('#basvuruIl').val();
+        const kimlik = BasvuruKimlikleri();
+        const $select = $('#degerZinciriSelect');
+        $select.html('<option value="">Seçiniz...</option>');
+        $('#degerZinciriAsamaListesi').empty();
+        if (!ilId) return;
+        AjaxGet('/Basvuru/DegerZincirleriListele', { ...kimlik, ilId: ilId }, function (response) {
+            if (response && response.nesne) {
+                let aktifZincirId = null;
+                $.each(response.nesne, function (_, item) {
+                    const selectedAttr = item.secili ? 'selected="selected"' : '';
+                    $select.append(`<option value="${item.id}" ${selectedAttr}>${item.ad}</option>`);
+                    if (item.secili) aktifZincirId = item.id;
+                });
+                if (aktifZincirId) degerZinciriAsamalariYukle(aktifZincirId);
+            }
+        });
+    }
+
+    function UygulamaAdresiModalKaydet() {
+        const indexText = modalValue('adresModalIndex');
+        const mevcutAdres = indexText === '' ? {} : sonUygulamaAdresleri[Number(indexText)];
+        const adres = {
+            id: mevcutAdres?.id || 0,
+            ...BasvuruKimlikleri(),
+            siraNo: Number(modalValue('adresModalSiraNo') || 0) || 1,
+            ilceId: Number(modalValue('adresModalIlce') || 0) || 0,
+            tamAdres: modalValue('adresModalTamAdres'),
+            yatirimYeriStatusu: Number(modalValue('adresModalYatirimYeriStatusu') || 0) || 0,
+            kiraVeyaTahsisSuresi: Number(modalValue('adresModalKiraVeyaTahsisSuresi') || 0) || 0,
+            kiraTahsisBitisTarihi: modalValue('adresModalKiraTahsisBitisTarihi'),
+            yapiRuhsatiDurumu: Number(modalValue('adresModalYapiRuhsatiDurumu') || 0) || 0
+        };
+        adresKaydet(adres);
     }
 
     function adresKaydet(adres) {
@@ -857,85 +1137,80 @@
 
     function adresSil(adresId) {
         if (!adresId) return;
-        AjaxPost('/Basvuru/UygulamaAdresiSil', {id: adresId}, SonucGosterGizle);
+        AjaxPost('/Basvuru/UygulamaAdresiSil', { ...BasvuruKimlikleri(), id: adresId }, SonucGosterGizle);
     }
 
-    function FirmaIrtibatKaydet() {
-        const model = {
-            "basvuruId": degerInt('Basvuru.Id'),
-            "kisi":  degerStr('Basvuru.irtibat.kisi'),
-            "unvan": degerStr('Basvuru.irtibat.unvan'),
-            "telefon": degerStr('Basvuru.irtibat.telefon'),
-            "ePosta": degerStr('Basvuru.irtibat.ePosta'),
-            "adres": degerStr('Basvuru.irtibat.adres'),
-            "yetkiliKisiler": degerStr('Basvuru.irtibat.yetkiliKisiler'),
-        };
-        AjaxPost('/Basvuru/KaydetIrtibat', model, SonucGoster);
+    function SonucGoster(sonuc) {
+        if (sonuc?.basarili) PopupMesajGoster(sonuc.mesaj, true);
+        else PopupMesajGoster(sonuc?.hataStr || sonuc?.mesaj || '', false);
     }
 
-    function FirmaBasvuruKaydet() {
-        const basvuruFirma = {
-            "id": degerInt('Basvuru.Id'),
-            "firmaId":  degerInt('Basvuru.FirmaId'),
-            "donemId": degerInt('Basvuru.DonemId'),
-            "ilId": degerInt('Basvuru.IlId'),
-            "basvuruKonusu": degerStr('Basvuru.BasvuruKonusu'),
-            "sonIkiYildirFaalMi": degerBool('Basvuru.SonIkiYildirFaalMi'),
-            "basvuruSahibiTuru": degerInt('Basvuru.BasvuruSahibiTuru'),
-            "ozelSektorPayi": degerDec('Basvuru.OzelSektorPayi'),
-            "bagliOrtakIsletmeVarMi": degerBool('Basvuru.BagliOrtakIsletmeVarMi'),
-            "bagliOrtakAciklama": degerStr('Basvuru.BagliOrtakAciklama')
-        };
-        AjaxPost('/Basvuru/KaydetFirmaBasvuru', 
-            basvuruFirma, 
-            SonucGoster
-        );
+    function SonucGosterGizle(sonuc) {
+        UygulamaAdresleriListele();
+        uygulamaAdresModal?.hide();
+        SonucGoster(sonuc);
     }
 
-    function YatirimKaydet()
-    {
-        const yatirim = {
-            "basvuruId": degerInt('Basvuru.Id'),
-            "yatirimAdi": degerStr('Basvuru.YatirimAdi'),
-            "yatirimTuru": degerInt('Basvuru.yatirim.yatirimTuru'),
-            "harcamaTurleri": $('input[name="Basvuru.yatirim.harcamaTurleri"]:checked').map(function () { return parseInt(this.value);}).get(),
-            "degerZinciriAsamalari":  $('input[name="Basvuru.DegerZinciriAsamalari"]:checked').map(
-                function ()  {
-                    return {
-                        id: parseInt(this.value)
-                    };
-                }
-            ).get()};
-        AjaxPost('/Basvuru/KaydetYatirim', 
-            yatirim, 
-            SonucGoster
-        );
+    function UygulamaAdresleriListele() {
+        AjaxGet('/Basvuru/UygulamaAdresiListele', BasvuruKimlikleri(), function (response) {
+            RenderUygulamaAdresleri(response.nesne);
+        });
     }
 
-    function FinansKaydet()
-    {
-        const model = {
-            "basvuruId": degerInt('Basvuru.Id'),
-            "toplamYatirimTutari":  degerDec('Basvuru.finans.ToplamYatirimTutari'),
-            "uygunHarcamaTutari": degerDec('Basvuru.finans.UygunHarcamaTutari'),
-            "talepEdilenDestekTutari": degerDec('Basvuru.finans.TalepEdilenDestekTutari'),
-            "basvuruSahibiKatkisi": degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
-            "destekOrani": degerDec('Basvuru.finans.DestekOrani'),
-            "yatiriminAmaci": degerStr('Basvuru.finans.YatiriminAmaci'),
-        };
-        AjaxPost('/Basvuru/KaydetFinans', model, SonucGoster);
+    function adresModalAc(index) {
+        const adres = index >= 0 ? sonUygulamaAdresleri[index] : {};
+        modalSet('adresModalIndex', index >= 0 ? String(index) : '');
+        modalSet('adresModalSiraNo', adres.siraNo);
+        modalSet('adresModalIlce', adres.ilceId);
+        modalSet('adresModalTamAdres', adres.tamAdres);
+        modalSet('adresModalYatirimYeriStatusu', adres.yatirimYeriStatusu);
+        modalSet('adresModalKiraVeyaTahsisSuresi', adres.kiraVeyaTahsisSuresi);
+        modalSet('adresModalKiraTahsisBitisTarihi', adres.kiraTahsisBitisTarihi);
+        modalSet('adresModalYapiRuhsatiDurumu', adres.yapiRuhsatiDurumu);
+        uygulamaAdresModal?.show();
     }
 
-    function MaliKaydet()
-    {
-        const model = {
-            "basvuruId": degerInt('Basvuru.Id'),
-            "oncekiYilNetSatis": degerDec('Basvuru.mali.OncekiYilNetSatis'),
-            "sonYilNetSatis": degerDec('Basvuru.mali.SonYilNetSatis'),
-            "oncekiYilAktifToplami": degerDec('Basvuru.mali.OncekiYilAktifToplami'),
-            "sonYilAktifToplami": degerDec('Basvuru.mali.SonYilAktifToplami'),
-        };
-        AjaxPost('/Basvuru/KaydetMali', model, SonucGoster);
+    function RenderUygulamaAdresleri(uygulamaAdresleri) {
+        const tbody = document.getElementById('uygulamaAdresListesi');
+        if (!tbody) return;
+        sonUygulamaAdresleri = uygulamaAdresleri || [];
+        tbody.innerHTML = '';
+        if (sonUygulamaAdresleri.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = '8';
+            td.className = 'text-muted text-center';
+            td.textContent = adresBosMesaj;
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+        sonUygulamaAdresleri.forEach((adres, index) => {
+            const tr = document.createElement('tr');
+            [adres.siraNo, adres.ilAdi, adres.ilceAdi, adres.tamAdres, adres.yatirimYeriStatusuAd, adres.kiraTahsisBitis, adres.yapiRuhsatiDurumuAd].forEach((value, alanIndex) => {
+                const td = document.createElement('td');
+                td.textContent = value || '';
+                if (alanIndex === 3) td.className = 'adres-tam-adres';
+                tr.appendChild(td);
+            });
+            const actionTd = document.createElement('td');
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'btn btn-sm btn-outline-secondary mr-1';
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            editBtn.addEventListener('click', () => adresModalAc(index));
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-sm btn-outline-danger';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.addEventListener('click', () => {
+                if (confirm(adresSilOnay)) adresSil(adres.id);
+            });
+            actionTd.appendChild(editBtn);
+            actionTd.appendChild(deleteBtn);
+            tr.appendChild(actionTd);
+            tbody.appendChild(tr);
+        });
     }
 
     function antiForgeryToken() {
@@ -943,7 +1218,7 @@
     }
 
     function dosyaSecimYaz(input, hedefId, dosyaAdiInputName) {
-        const dosyaAdi = input.files && input.files.length ? input.files[0].name : 'Henüz dosya seçilmedi.';
+        const dosyaAdi = input.files && input.files.length ? input.files[0].name : belgeMesajlari.noFileSelected;
         const hedef = document.getElementById(hedefId);
         if (hedef) hedef.textContent = dosyaAdi;
         const dosyaAdiInput = document.querySelector(`[name="${dosyaAdiInputName}"]`);
@@ -952,42 +1227,25 @@
 
     function belgePaketiDogrula() {
         const dosya = document.getElementById('belgePaketiDosya');
-        const tumBelgelerSecili = $('.belge-grubu-check').length > 0
-            && $('.belge-grubu-check').length === $('.belge-grubu-check:checked').length;
-        const beyanEvet = $('#belgeBeyaniSelect').val() === 'Evet';
-        const aciklamaDolu = degerStr('Basvuru.BelgePaketiAciklama').length > 0;
-
         if (!dosya || !dosya.files || dosya.files.length === 0) {
-            PopupMesajGoster('Doküman paketi dosyası seçilmelidir.', false);
+            PopupMesajGoster(belgeMesajlari.packageFileRequired, false);
             return false;
         }
-        if (!tumBelgelerSecili) {
-            PopupMesajGoster('Zorunlu belge gruplarının tamamı işaretlenmelidir.', false);
-            return false;
-        }
-        if (!beyanEvet) {
-            PopupMesajGoster('Belge beyanı Evet olmalıdır.', false);
-            return false;
-        }
-        if (!aciklamaDolu) {
-            PopupMesajGoster('Belge açıklaması girilmelidir.', false);
-            return false;
-        }
-
         return true;
     }
 
     function BelgePaketiYukle() {
         if (!belgePaketiDogrula()) return;
-
         const dosya = document.getElementById('belgePaketiDosya').files[0];
         const data = new FormData();
-        data.append('basvuruId', degerInt('Basvuru.Id') || 0);
+        data.append('basvuruId', BasvuruId());
         data.append('aciklama', degerStr('Basvuru.BelgePaketiAciklama'));
-        data.append('belgeBeyani', 'true');
+        data.append('belgeBeyani', $('#belgeBeyaniSelect').val() || '');
+        $('.belge-grubu-check').each(function () {
+            data.append('belgeGruplari', this.value);
+            if (this.checked) data.append('seciliBelgeGruplari', this.value);
+        });
         data.append('dosya', dosya);
-        data.append('__RequestVerificationToken', antiForgeryToken());
-
         DosyaAjaxPost('/Basvuru/BelgePaketiYukle', data, function (sonuc) {
             belgeYuklemeSonucGoster(sonuc, 'Basvuru.BelgePaketiDosyaId', 'Basvuru.BelgePaketiDosyaAdi', 'belgePaketiIndirBtn');
         });
@@ -996,23 +1254,69 @@
     function TaahhutDosyasiYukle() {
         const dosyaInput = document.getElementById('taahhutDosya');
         if (!dosyaInput || !dosyaInput.files || dosyaInput.files.length === 0) {
-            PopupMesajGoster('Taahhüt dosyası seçilmelidir.', false);
+            PopupMesajGoster(belgeMesajlari.commitmentFileRequired, false);
             return;
         }
-        if (degerStr('Basvuru.TaahhutAciklama').length === 0) {
-            PopupMesajGoster('Taahhüt açıklaması girilmelidir.', false);
+        const data = new FormData();
+        data.append('basvuruId', BasvuruId());
+        data.append('aciklama', degerStr('Basvuru.TaahhutAciklama'));
+        data.append('dosya', dosyaInput.files[0]);
+        DosyaAjaxPost('/Basvuru/TaahhutDosyasiYukle', data, function (sonuc) {
+            belgeYuklemeSonucGoster(sonuc, 'Basvuru.TaahhutDosyaId', 'Basvuru.TaahhutDosyaAdi', 'taahhutIndirBtn');
+        });
+    }
+
+    function DenetimDosyasiYukle() {
+        const dosyaInput = document.getElementById('denetimDosya');
+        if (!dosyaInput || !dosyaInput.files || dosyaInput.files.length === 0) {
+            PopupMesajGoster(belgeMesajlari.auditFileRequired, false);
+            return;
+        }
+        const data = new FormData();
+        data.append('basvuruId', BasvuruId());
+        data.append('dosya', dosyaInput.files[0]);
+        DosyaAjaxPost('/Basvuru/DenetimDosyasiYukle', data, function (sonuc) {
+            belgeYuklemeSonucGoster(sonuc, 'Basvuru.mali.DenetimDosyaId', 'Basvuru.mali.DenetimDosyaAdi', 'denetimIndirBtn');
+            const nesne = sonuc?.nesne || sonuc?.Nesne || {};
+            const dosyaAdi = nesne.dosyaAdi || nesne.DosyaAdi || '';
+            if (dosyaAdi) $('#denetimDosyaSecim').text(dosyaAdi);
+        });
+    }
+
+    function BasvuruDosyasiYukle(formAd, dosyaNo, input, nameTargetId, downloadTargetId, afterSuccess) {
+        if (!input || !input.files || input.files.length === 0) {
+            PopupMesajGoster('Dosya seçilmelidir.', false);
             return;
         }
 
         const data = new FormData();
-        data.append('basvuruId', degerInt('Basvuru.Id') || 0);
-        data.append('aciklama', degerStr('Basvuru.TaahhutAciklama'));
-        data.append('dosya', dosyaInput.files[0]);
-        data.append('__RequestVerificationToken', antiForgeryToken());
+        data.append('basvuruId', BasvuruId());
+        data.append('formAd', formAd);
+        data.append('dosyaNo', dosyaNo);
+        data.append('dosya', input.files[0]);
+        DosyaAjaxPost('/Basvuru/BasvuruDosyasiYukle', data, function (sonuc) {
+            if (!sonuc || !sonuc.basarili) {
+                PopupMesajGoster((sonuc && (sonuc.hataStr || sonuc.mesaj)) || belgeMesajlari.uploadFailed, false);
+                return;
+            }
 
-        DosyaAjaxPost('/Basvuru/TaahhutDosyasiYukle', data, function (sonuc) {
-            belgeYuklemeSonucGoster(sonuc, 'Basvuru.TaahhutDosyaId', 'Basvuru.TaahhutDosyaAdi', 'taahhutIndirBtn');
+            const nesne = sonuc.nesne || sonuc.Nesne || {};
+            const dosyaId = nesne.dosyaId || nesne.DosyaId || '';
+            const dosyaAdi = nesne.dosyaAdi || nesne.DosyaAdi || '';
+            const nameTarget = document.getElementById(nameTargetId);
+            if (nameTarget && dosyaAdi) nameTarget.textContent = dosyaAdi;
+            const downloadTarget = document.getElementById(downloadTargetId);
+            if (downloadTarget && dosyaId) {
+                downloadTarget.href = `/Basvuru/DosyaIndir/${dosyaId}`;
+                downloadTarget.classList.remove('d-none');
+            }
+            if (afterSuccess) afterSuccess(sonuc);
+            PopupMesajGoster(sonuc.mesaj || belgeMesajlari.uploadSucceeded, true);
         });
+    }
+
+    function OrtaklikDosyasiYukle(formAd, dosyaNo, input, nameTargetId, downloadTargetId, afterSuccess) {
+        BasvuruDosyasiYukle(formAd, dosyaNo, input, nameTargetId, downloadTargetId, afterSuccess);
     }
 
     function DosyaAjaxPost(url, data, success) {
@@ -1023,25 +1327,20 @@
             processData: false,
             contentType: false,
             dataType: 'json',
-            headers: {
-                'RequestVerificationToken': antiForgeryToken()
-            }
+            headers: { 'RequestVerificationToken': antiForgeryToken() }
         })
-            .done(function (result) {
-                if (success) success(result);
-            })
+            .done(function (result) { if (success) success(result); })
             .fail(function (xhr) {
-                console.error('Dosya yükleme hatası:', xhr);
-                PopupMesajGoster('Dosya yüklenemedi.', false);
+                console.error(belgeMesajlari.uploadErrorConsole, xhr);
+                PopupMesajGoster(belgeMesajlari.uploadFailed, false);
             });
     }
 
     function belgeYuklemeSonucGoster(sonuc, dosyaIdInputName, dosyaAdiInputName, indirLinkId) {
         if (!sonuc || !sonuc.basarili) {
-            PopupMesajGoster((sonuc && (sonuc.hataStr || sonuc.mesaj)) || 'Dosya yüklenemedi.', false);
+            PopupMesajGoster((sonuc && (sonuc.hataStr || sonuc.mesaj)) || belgeMesajlari.uploadFailed, false);
             return;
         }
-
         const nesne = sonuc.nesne || sonuc.Nesne || {};
         const dosyaId = nesne.dosyaId || nesne.DosyaId || '';
         const dosyaAdi = nesne.dosyaAdi || nesne.DosyaAdi || '';
@@ -1054,119 +1353,8 @@
                 indirLink.classList.remove('d-none');
             }
         }
-        PopupMesajGoster(sonuc.mesaj || 'Dosya yüklendi.', true);
-    }
-
-    function PaneliKaydet()
-    {
-        if(active == 1)
-            FirmaBasvuruKaydet()
-        else if(active == 2)
-            FirmaIrtibatKaydet()
-        else if(active == 3)
-            YatirimKaydet()
-        else if(active == 5)
-            FinansKaydet()
-        else if(active == 6)
-            MaliKaydet()
-        else if(active == 7)
-            PopupMesajGoster('Belge yükleme işlemleri ilgili dosya butonları ile yapılır.', true)
-        else
-            alert(active);
-    }
-    
-    function UygulamaAdresleriListele() {
-        const formId = degerInt('Basvuru.Id');
-        AjaxGet('/Basvuru/UygulamaAdresiListele', { basvuruId: formId },
-            function (response) {
-                RenderUygulamaAdresleri(response.nesne);
-            }
-        );
-    }
-
-    var sonUygulamaAdresleri;
-
-    function modalOlustur(element) {
-        if (!element) return null;
-        return {
-            show: () => window.jQuery(element).modal('show'),
-            hide: () => window.jQuery(element).modal('hide')
-        };
-    }
-
-    function adresModalAc(index) {
-        const adres = index >= 0 ? sonUygulamaAdresleri[index] : {};
-        modalSet('adresModalIndex', index >= 0 ? String(index) : '');
-        modalSet('adresModalSiraNo', adres.siraNo);
-        modalSet('adresModalIl', adres.ilId);
-        modalSet('adresModalIlce', adres.ilceId);
-        modalSet('adresModalTamAdres', adres.tamAdres);
-        modalSet('adresModalYatirimYeriStatusu', adres.yatirimYeriStatusu);
-        modalSet('adresModalKiraVeyaTahsisSuresi', adres.kiraVeyaTahsisSuresi);
-        modalSet('adresModalKiraTahsisBitisTarihi', adres.kiraTahsisBitisTarihi);
-        modalSet('adresModalYapiRuhsatiDurumu', adres.yapiRuhsatiDurumu);
-        uygulamaAdresModal.show();
-    }
-
-    function RenderUygulamaAdresleri(uygulamaAdresleri) {
-        const uygulamaAdresListesi = document.getElementById("uygulamaAdresListesi");
-        if (!uygulamaAdresListesi) return;
-        uygulamaAdresleri = uygulamaAdresleri || [];
-        sonUygulamaAdresleri = uygulamaAdresleri;
-        uygulamaAdresListesi.innerHTML = '';
-
-        if (uygulamaAdresleri.length === 0) {
-            const tr = document.createElement('tr');
-            const td = document.createElement('td');
-            td.colSpan = "7"; //at(ro ? "7" : "8");
-            td.className = 'text-muted text-center';
-            td.textContent = adresBosMesaj;
-            tr.appendChild(td);
-            uygulamaAdresListesi.appendChild(tr);
-            return;
-        }
-
-        uygulamaAdresleri.forEach((adres, index) => {
-            const tr = document.createElement('tr');
-            const alanlar = [
-                String(adres.siraNo),
-                adres.ilAdi,
-                adres.ilceAdi,
-                adres.tamAdres,
-                adres.yatirimYeriStatusuAd,
-                adres.kiraTahsisBitis,
-                adres.yapiRuhsatiDurumuAd 
-            ];
-
-            alanlar.forEach((value, alanIndex) => {
-                const td = document.createElement('td');
-                td.textContent = value || '';
-                if (alanIndex === 3) td.className = 'adres-tam-adres';
-                tr.appendChild(td);
-            });
-
-            const actionTd = document.createElement('td');
-            const editBtn = document.createElement('button');
-            const deleteBtn = document.createElement('button');
-
-            editBtn.type = 'button';
-            editBtn.className = 'btn btn-sm btn-outline-secondary mr-1';
-            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-            editBtn.addEventListener('click', () => adresModalAc(index));
-
-            deleteBtn.type = 'button';
-            deleteBtn.className = 'btn btn-sm btn-outline-danger';
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.addEventListener('click', async () => {
-                if (!confirm(adresSilOnay)) return;
-                adresSil(adres.id);
-            });
-
-            actionTd.appendChild(editBtn);
-            actionTd.appendChild(deleteBtn);
-            tr.appendChild(actionTd);
-
-            uygulamaAdresListesi.appendChild(tr);
-        });
+        PopupMesajGoster(sonuc.mesaj || belgeMesajlari.uploadSucceeded, true);
     }
 </script>
+
+

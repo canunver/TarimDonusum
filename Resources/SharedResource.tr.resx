@@ -496,7 +496,7 @@
     <value>5. Yatırım ve Finansman</value>
   </data>
   <data name="Basvuru.Step.6" xml:space="preserve">
-    <value>6. Mali Veriler</value>
+    <value>Mali Veriler</value>
   </data>
   <data name="Basvuru.Section1.Title" xml:space="preserve">
     <value>1. Ön Başvuru Bilgileri</value>
@@ -520,7 +520,7 @@
     <value>5. Yatırım ve Finansman Bilgileri</value>
   </data>
   <data name="Basvuru.Section6.Title" xml:space="preserve">
-    <value>6. Son 2 Yıl Mali Verileri</value>
+    <value>2. Başvuru Sahibinin Kendi Mali Verileri ve Ölçek Kontrolü</value>
   </data>
   <data name="Basvuru.Field.TicaretUnvani" xml:space="preserve">
     <value>Ticaret unvanı</value>
@@ -774,6 +774,9 @@
   <data name="Basvuru.Firma.ModalTitle" xml:space="preserve">
     <value>Yeni Firma</value>
   </data>
+  <data name="Basvuru.Firma.InfoTitle" xml:space="preserve">
+    <value>Firma Bilgileri</value>
+  </data>
   <data name="Basvuru.Firma.ModalInfo" xml:space="preserve">
     <value>Firma bilgileri firma kaydı üzerinde tutulur; başvuru iletişim bilgileri başvuru bazında kalır.</value>
   </data>
@@ -802,7 +805,7 @@
     <value>Vazgeç</value>
   </data>
   <data name="Basvuru.Field.BasvuruTipi" xml:space="preserve">
-    <value>Başvuru Tipi</value>
+    <value>Hukuki tür / şirket türü</value>
   </data>
   <data name="Basvuru.ContactInformation" xml:space="preserve">
     <value>İletişim Bilgileri</value>
@@ -1020,4 +1023,157 @@
   <data name="enumUygulamaAdresiYapiRuhsatiDurumu_5" xml:space="preserve">
     <value>Yapım işi yok</value>
   </data>
+<data name="Basvuru.Common.YesAnswer" xml:space="preserve">
+  <value>Evet</value>
+</data>
+<data name="Basvuru.Common.NoAnswer" xml:space="preserve">
+  <value>Hayır</value>
+</data>
+<data name="Basvuru.Options.RequiredDocumentGroups" xml:space="preserve">
+  <value>Adli sicil kaydı|Gelir tablosu|Bilanço|İflas, konkordato ve tasfiye sürecinin olmadığına dair belge|Ticaret sicil gazetesi (kuruluş ve mevcut)|Noter onaylı imza sirküleri</value>
+</data>
+<data name="Basvuru.Documents.Description" xml:space="preserve">
+  <value>Zorunlu belgeler tek bir doküman paketi olarak yüklenecektir. Ayrıca başvuru rehberi ekinde yer alan beyan ve taahhütler ayrı bir dosya olarak eklenecektir.</value>
+</data>
+<data name="Basvuru.Documents.SelectPackage" xml:space="preserve">
+  <value>Tek doküman paketini seç</value>
+</data>
+<data name="Basvuru.Documents.NoFileSelected" xml:space="preserve">
+  <value>Henüz dosya seçilmedi.</value>
+</data>
+<data name="Basvuru.Documents.PackageFileName" xml:space="preserve">
+  <value>Yüklenen doküman paketi adı</value>
+</data>
+<data name="Basvuru.Documents.PackageUploadNote" xml:space="preserve">
+  <value>Dosya sunucuya yüklendikten sonra dosya adı, dosya id bilgisi ve belge kontrol beyanı başvuru kaydına işlenir.</value>
+</data>
+<data name="Basvuru.Documents.PackageDescription" xml:space="preserve">
+  <value>Belge açıklaması / not</value>
+</data>
+<data name="Basvuru.Documents.UploadPackage" xml:space="preserve">
+  <value>Tek Doküman Paketi Yükle</value>
+</data>
+<data name="Basvuru.Documents.DownloadFile" xml:space="preserve">
+  <value>Dosya indir</value>
+</data>
+<data name="Basvuru.Documents.CommitmentTitle" xml:space="preserve">
+  <value>Taahhüt / Başvuru rehberi eki beyanlar</value>
+</data>
+<data name="Basvuru.Documents.SelectCommitment" xml:space="preserve">
+  <value>Taahhüt dosyasını seç</value>
+</data>
+<data name="Basvuru.Documents.CommitmentFileName" xml:space="preserve">
+  <value>Yüklenen taahhüt / beyan dosyası adı</value>
+</data>
+<data name="Basvuru.Documents.CommitmentDescription" xml:space="preserve">
+  <value>Taahhüt açıklaması / not</value>
+</data>
+<data name="Basvuru.Documents.CommitmentUploadNote" xml:space="preserve">
+  <value>Bu alan, başvuru rehberi ekinde yer alan beyan ve taahhütlerin imzalı/yetkili dosyasının yüklenmesi için ayrılmıştır.</value>
+</data>
+<data name="Basvuru.Documents.UploadCommitment" xml:space="preserve">
+  <value>Taahhüt dosyayı ekle</value>
+</data>
+<data name="Basvuru.Documents.PackageFileRequired" xml:space="preserve">
+  <value>Doküman paketi dosyası seçilmelidir.</value>
+</data>
+<data name="Basvuru.Documents.AllGroupsRequired" xml:space="preserve">
+  <value>Zorunlu belge gruplarının tamamı işaretlenmelidir.</value>
+</data>
+<data name="Basvuru.Documents.DeclarationMustBeYes" xml:space="preserve">
+  <value>Belge beyanı Evet olmalıdır.</value>
+</data>
+<data name="Basvuru.Documents.PackageDescriptionRequired" xml:space="preserve">
+  <value>Belge açıklaması girilmelidir.</value>
+</data>
+<data name="Basvuru.Documents.CommitmentFileRequired" xml:space="preserve">
+  <value>Taahhüt dosyası seçilmelidir.</value>
+</data>
+<data name="Basvuru.Documents.CommitmentDescriptionRequired" xml:space="preserve">
+  <value>Taahhüt açıklaması girilmelidir.</value>
+</data>
+<data name="Basvuru.Documents.UploadErrorConsole" xml:space="preserve">
+  <value>Dosya yükleme hatası:</value>
+</data>
+<data name="Basvuru.Documents.UploadFailed" xml:space="preserve">
+  <value>Dosya yüklenemedi.</value>
+</data>
+<data name="Basvuru.Documents.UploadSucceeded" xml:space="preserve">
+  <value>Dosya yüklendi.</value>
+</data>
+<data name="Basvuru.Documents.SectionSaveInfo" xml:space="preserve">
+  <value>Belge yükleme işlemleri ilgili dosya butonları ile yapılır.</value>
+</data>
+<data name="Basvuru.Mali.BagimsizDenetim" xml:space="preserve">
+  <value>Bağımsız denetim</value>
+</data>
+<data name="Basvuru.Mali.BagimsizDenetimeTabiMi" xml:space="preserve">
+  <value>Bağımsız denetime tabi mi?</value>
+</data>
+<data name="Basvuru.Mali.SelectAuditFile" xml:space="preserve">
+  <value>Dosya Yükle</value>
+</data>
+<data name="Basvuru.Mali.AuditFileName" xml:space="preserve">
+  <value>Bağımsız Denetim Raporu</value>
+</data>
+<data name="Basvuru.Mali.AuditFileUploadNote" xml:space="preserve">
+  <value>Bağımsız denetime tabi olunduğu durumda denetim dosyası bu alandan yüklenir.</value>
+</data>
+<data name="Basvuru.Mali.UploadAuditFile" xml:space="preserve">
+  <value>Dosya Yükle</value>
+</data>
+<data name="Basvuru.Mali.AuditFileRequired" xml:space="preserve">
+  <value>Bağımsız denetim dosyası seçilmelidir.</value>
+</data>
+<data name="Basvuru.Mali.OncekiYilHeader" xml:space="preserve">
+  <value>{0} yılı</value>
+</data>
+<data name="Basvuru.Mali.SonYilHeader" xml:space="preserve">
+  <value>{0} yılı</value>
+</data>
+<data name="Basvuru.Mali.OncekiYilFallback" xml:space="preserve">
+  <value>Önceki yıl</value>
+</data>
+<data name="Basvuru.Mali.SonYilFallback" xml:space="preserve">
+  <value>Son yıl</value>
+</data>
+<data name="Basvuru.Mali.GelirTablosu" xml:space="preserve">
+  <value>Gelir tablosu</value>
+</data>
+<data name="Basvuru.Mali.GelirTablosuKalemi" xml:space="preserve">
+  <value>Gelir tablosu kalemi</value>
+</data>
+<data name="Basvuru.Mali.YillikNetSatisHasilati" xml:space="preserve">
+  <value>Yıllık net satış hasılatı (TL)</value>
+</data>
+<data name="Basvuru.Mali.Bilanco" xml:space="preserve">
+  <value>Bilanço</value>
+</data>
+<data name="Basvuru.Mali.BilancoKalemi" xml:space="preserve">
+  <value>Bilanço kalemi</value>
+</data>
+<data name="Basvuru.Mali.AktifToplami" xml:space="preserve">
+  <value>Aktif toplamı (TL)</value>
+</data>
+<data name="Basvuru.Mali.ScaleDescription" xml:space="preserve">
+  <value>Başvuru sahibinin son iki yıla ait yıllık net satış hasılatı ve aktif toplamı alınır. Tüzel kişi ortak varsa, ortaklık payına göre hesaplanan tutarlar mali ölçek kontrolüne dahil edilir.</value>
+</data>
+<data name="Basvuru.Mali.ScaleLimitWarning" xml:space="preserve">
+  <value>Net satış hasılatı veya aktif toplamından en az biri {0} TL - {1} TL aralığında olmalıdır. (Son 2 yıldan biri sağlasa yeterli)</value>
+</data>
+<data name="Basvuru.Mali.ApplicantOwnFinancialData" xml:space="preserve">
+  <value>Başvuru Sahibinin Kendi Mali Verileri</value>
+</data>
+<data name="Basvuru.Mali.FinancialDataItem" xml:space="preserve">
+  <value>Mali veri</value>
+</data>
+<data name="Basvuru.Mali.ScaleCheckOk" xml:space="preserve">
+  <value>Ölçek koşulu sağlanıyor.</value>
+</data>
+<data name="Basvuru.Mali.ScaleCheckNotOk" xml:space="preserve">
+  <value>Girilen değerler henüz aralığı sağlamıyor.</value>
+</data>
+<data name="Basvuru.Step.Ortaklik" xml:space="preserve">
+  <value>3. Ortaklık ve Yetki</value>
+</data>
 </root>
