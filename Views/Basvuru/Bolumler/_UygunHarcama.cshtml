@@ -1,0 +1,20 @@
+@using TarimDonusum.Models
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool makineEkipmanSecili = b.yatirim.harcamaTurleri.Contains((int)enumHarcamaTuru.MakineEkipman);
+    bool yapimIsleriSecili = b.yatirim.harcamaTurleri.Contains((int)enumHarcamaTuru.YapimIsleri);
+}
+
+<section class="basvuru-panel active" data-panel="10">
+    <h2>@L["Basvuru.Section.UygunHarcama.Title"]</h2>
+    <p class="lead">@L["Basvuru.Pikk.Description"]</p>
+
+    <input type="hidden" id="pikkListesiJson" value="@b.uygunHarcama.pikkListesiJson" />
+    <input type="hidden" id="pikkMakineEkipmanSecili" value="@(makineEkipmanSecili ? "true" : "false")" />
+    <input type="hidden" id="pikkYapimIsleriSecili" value="@(yapimIsleriSecili ? "true" : "false")" />
+
+    <div id="pikkLists"></div>
+</section>

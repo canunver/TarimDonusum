@@ -1,91 +1,83 @@
-﻿@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using System.Text.Json
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
     var b = Model.Basvuru;
     bool ro = Model.SaltOkunur;
     string T(string key) => L[key].Value;
+    string BelgeTuru(int dosyaNo, string varsayilan)
+    {
+        string key = $"Basvuru.Documents.Required.{dosyaNo}";
+        string value = L[key].Value;
+        return value == key ? varsayilan : value;
+    }
     string dosyaYok = T("Basvuru.Documents.NoFileSelected");
     if (b.ZorunluBelgeler.Count == 0)
     {
         b.ZorunluBelgeler =
         [
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 1, dosyaTuru = "Gelir tablosu" },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 2, dosyaTuru = "Bilanço" },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 3, dosyaTuru = "Detaylı mizan" },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 4, dosyaTuru = "Ara dönem raporları" },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 5, dosyaTuru = "İflas, konkordato ve tasfiye sürecinin olmadığına dair belge" },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 6, dosyaTuru = "Ticaret sicil gazetesi, kuruluş ve mevcut durum" },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 7, dosyaTuru = "Noter onaylı imza sirküleri" }
+            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 1, dosyaTuru = T("Basvuru.Documents.Required.1") },
+            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 2, dosyaTuru = T("Basvuru.Documents.Required.2") },
+            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 3, dosyaTuru = T("Basvuru.Documents.Required.3") },
+            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 4, dosyaTuru = T("Basvuru.Documents.Required.4") },
+            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 5, dosyaTuru = T("Basvuru.Documents.Required.5") },
+            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 6, dosyaTuru = T("Basvuru.Documents.Required.6") },
+            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 7, dosyaTuru = T("Basvuru.Documents.Required.7") }
         ];
     }
 }
-            <section class="basvuru-panel active" data-panel="7">
-                <h2>@L["Basvuru.Section7.Title"]</h2>
-                <p>Zorunlu belgeler ayrı dosyalar olarak yüklenecektir.</p>
+<section class="basvuru-panel active" data-panel="7">
+    <h2>@L["Basvuru.Section7.Title"]</h2>
+    <p>@L["Basvuru.Documents.RequiredSeparateDescription"]</p>
 
-                <div class="table-responsive">
-                    <table class="table table-bordered ortak-doc-table">
-                        <thead>
-                            <tr>
-                                <th>Dosya Türü</th>
-                                <th>Dosya Adı</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var belge in b.ZorunluBelgeler)
+    <script type="application/json" id="adliSicilInitialJson">
+        @Html.Raw(JsonSerializer.Serialize(b.AdliSicilKisileri))
+    </script>
+
+    <div class="section-toolbar">
+        <h3>@L["Basvuru.Documents.CriminalRecordTitle"]</h3>
+        @if (!ro)
+        {
+            <button type="button" class="btn btn-outline-primary" id="adliSicilKisiEkleBtn">@L["Basvuru.Documents.AddPerson"]</button>
+        }
+    </div>
+    <div id="adliSicilKisilerTable"></div>
+
+    <h3 class="subhead">@L["Basvuru.Documents.RequiredDocumentsTitle"]</h3>
+    <div class="table-responsive">
+        <table class="table table-bordered ortak-doc-table">
+            <thead>
+                <tr>
+                    <th>@L["Basvuru.Documents.FileType"]</th>
+                    <th>@L["Basvuru.Documents.FileName"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var belge in b.ZorunluBelgeler)
+                {
+                    string inputId = $"zorunluBelge_{belge.dosyaNo}";
+                    string fileNameId = $"zorunluBelgeAdi_{belge.dosyaNo}";
+                    string downloadId = $"zorunluBelgeIndir_{belge.dosyaNo}";
+                    <tr>
+                        <td>@BelgeTuru(belge.dosyaNo, belge.dosyaTuru) <span class="required-mark">*</span></td>
+                        <td id="@fileNameId">@(string.IsNullOrWhiteSpace(belge.dosyaAdi) ? dosyaYok : belge.dosyaAdi)</td>
+                        <td class="text-nowrap">
+                            @if (!ro)
                             {
-                                string inputId = $"zorunluBelge_{belge.dosyaNo}";
-                                string fileNameId = $"zorunluBelgeAdi_{belge.dosyaNo}";
-                                string downloadId = $"zorunluBelgeIndir_{belge.dosyaNo}";
-                                <tr>
-                                    <td>@belge.dosyaTuru <span class="required-mark">*</span></td>
-                                    <td id="@fileNameId">@(string.IsNullOrWhiteSpace(belge.dosyaAdi) ? dosyaYok : belge.dosyaAdi)</td>
-                                    <td class="text-nowrap">
-                                        @if (!ro)
-                                        {
-                                            <label class="btn btn-sm btn-primary mb-0" for="@inputId">Yükle</label>
-                                            <input id="@inputId" type="file" class="document-file-input basvuru-dosya-input" data-form-ad="Basvuru_ZorunluBelge" data-dosya-no="@belge.dosyaNo" data-name-target="@fileNameId" data-download-target="@downloadId" />
-                                        }
-                                        <a class="btn btn-sm btn-outline-primary @(belge.dosyaId.HasValue ? "" : "d-none")"
-                                           id="@downloadId"
-                                           href="@(belge.dosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = belge.dosyaId.Value }) : "#")"
-                                           target="_blank"
-                                           rel="noopener">İndir</a>
-                                    </td>
-                                </tr>
+                                <label class="btn btn-sm btn-primary mb-0" for="@inputId">@L["Basvuru.Documents.Upload"]</label>
+                                <input id="@inputId" type="file" class="document-file-input basvuru-dosya-input" data-form-ad="Basvuru_ZorunluBelge" data-dosya-no="@belge.dosyaNo" data-name-target="@fileNameId" data-download-target="@downloadId" />
                             }
-                        </tbody>
-                    </table>
-                </div>
-
-                <h3>@L["Basvuru.Documents.CommitmentTitle"]</h3>
-                <div class="document-upload-box">
-                    <div class="document-file-row">
-                        <label class="btn btn-primary mb-0" for="taahhutDosya">@L["Basvuru.Documents.SelectCommitment"]</label>
-                        <input id="taahhutDosya" type="file" class="document-file-input" disabled="@ro" />
-                        <span id="taahhutDosyaSecim" class="document-file-name">@(string.IsNullOrWhiteSpace(b.TaahhutDosyaAdi) ? T("Basvuru.Documents.NoFileSelected") : b.TaahhutDosyaAdi)</span>
-                    </div>
-                    <label class="wide-label">@L["Basvuru.Documents.CommitmentFileName"] <span class="required-mark">*</span>
-                        <input name="Basvuru.TaahhutDosyaAdi" value="@b.TaahhutDosyaAdi" readonly />
-                    </label>
-                    <label class="wide-label">@L["Basvuru.Documents.CommitmentDescription"] <span class="required-mark">*</span>
-                        <textarea name="Basvuru.TaahhutAciklama" disabled="@ro">@b.TaahhutAciklama</textarea>
-                    </label>
-                    <div class="document-note">@L["Basvuru.Documents.CommitmentUploadNote"]</div>
-                </div>
-                <div class="document-action-row">
-                    @if (!ro)
-                    {
-                        <button type="button" class="btn btn-primary document-upload-action" id="taahhutYukleBtn">@L["Basvuru.Documents.UploadCommitment"]</button>
-                    }
-                    <a class="btn btn-outline-primary document-download-action @(b.TaahhutDosyaId.HasValue ? "" : "d-none")"
-                       id="taahhutIndirBtn"
-                       href="@(b.TaahhutDosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = b.TaahhutDosyaId.Value }) : "#")"
-                       target="_blank"
-                       rel="noopener">@L["Basvuru.Documents.DownloadFile"]</a>
-                </div>
-                <input type="hidden" name="Basvuru.TaahhutDosyaId" value="@b.TaahhutDosyaId" />
-            </section>
-
+                            <a class="btn btn-sm btn-outline-primary @(belge.dosyaId.HasValue ? "" : "d-none")"
+                               id="@downloadId"
+                               href="@(belge.dosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = belge.dosyaId.Value }) : "#")"
+                               target="_blank"
+                               rel="noopener">@L["Basvuru.Documents.DownloadFile"]</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>

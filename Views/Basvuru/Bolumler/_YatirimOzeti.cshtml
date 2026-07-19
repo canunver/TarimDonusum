@@ -1,0 +1,52 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+}
+
+<section class="basvuru-panel active" data-panel="11">
+    <h2>@L["Basvuru.Section.YatirimOzeti.Title"]</h2>
+    <p class="lead">@L["Basvuru.YatirimOzeti.Description"]</p>
+
+    <input type="hidden" id="yatirimOzetiJson" value="@b.yatirimOzeti.yatirimOzetiJson" />
+
+    <div class="metric-grid yatirim-ozeti-metrics">
+        <div><span>@L["Basvuru.YatirimOzeti.Card.InvestmentBudget"]</span><strong id="invBudgetTotalCard">0 TL</strong></div>
+        <div><span>@L["Basvuru.YatirimOzeti.Card.FinanceTotal"]</span><strong id="financeSourceTotalCard">0 TL</strong></div>
+        <div><span>@L["Basvuru.YatirimOzeti.Card.FinanceGap"]</span><strong id="financeGapCard">0 TL</strong></div>
+        <div><span>@L["Basvuru.YatirimOzeti.Card.AnnualOperatingExpense"]</span><strong id="opexTotalCard">0 TL</strong></div>
+    </div>
+
+    <div class="yatirim-ozeti-section">
+        <h3>@L["Basvuru.YatirimOzeti.Section.Budget"]</h3>
+        <p class="mini">@L["Basvuru.YatirimOzeti.Section.BudgetNote"]</p>
+        <div id="investmentBudgetBox"></div>
+    </div>
+
+    <div class="yatirim-ozeti-section">
+        <div class="section-toolbar">
+            <div>
+                <h3>@L["Basvuru.YatirimOzeti.Section.Production"]</h3>
+                <p class="mini">@L["Basvuru.YatirimOzeti.Section.ProductionNote"]</p>
+            </div>
+            <button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunEkle()" disabled="@ro">@L["Basvuru.YatirimOzeti.AddProduct"]</button>
+        </div>
+        <div id="productionInfoBox"></div>
+    </div>
+
+    <div class="yatirim-ozeti-section">
+        <div class="section-toolbar">
+            <div>
+                <h3>@L["Basvuru.YatirimOzeti.Section.Expense"]</h3>
+                <p class="mini">@L["Basvuru.YatirimOzeti.Section.ExpenseNote"]</p>
+            </div>
+            <div class="toolbar-actions">
+                <button type="button" class="btn btn-outline-secondary" onclick="YatirimOzetiSabitGiderleriYukle()" disabled="@ro">@L["Basvuru.YatirimOzeti.LoadDefaultExpenses"]</button>
+                <button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiGiderEkle()" disabled="@ro">@L["Basvuru.YatirimOzeti.AddExpense"]</button>
+            </div>
+        </div>
+        <div id="operatingExpensesBox"></div>
+    </div>
+</section>

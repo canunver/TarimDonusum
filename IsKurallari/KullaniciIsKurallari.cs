@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using TarimDonusum.Araclar;
@@ -12,10 +13,12 @@ namespace TarimDonusum.IsKurallari
     {
         private readonly string _connectionString;
         private readonly ILogger<KullaniciIsKurallari> _logger;
+        private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public KullaniciIsKurallari(IConfiguration configuration, ILogger<KullaniciIsKurallari> logger)
+        public KullaniciIsKurallari(IConfiguration configuration, ILogger<KullaniciIsKurallari> logger, IStringLocalizer<SharedResource> localizer)
         {
             _logger = logger;
+            _localizer = localizer;
             _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
         }
 
@@ -48,7 +51,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Yeni başvuru kullanıcısı oluşturma işlemi tamamlanamadı.", "Kullanıcı kaydı oluşturulamadı.");
+                BeklenmeyenHata(sonuc, ex, "Yeni başvuru kullanıcısı oluşturma işlemi tamamlanamadı.", "Business.User.CreateFailed");
             }
 
             return sonuc;
@@ -73,7 +76,7 @@ namespace TarimDonusum.IsKurallari
                 if (kullanici == null)
                 {
                     if (sonuc.basarili)
-                        sonuc.HataEkle(kullaniciId > 0 ? "Kullanıcı bulunamadı." : "Kullanıcı kodu veya şifre hatalı.");
+                        HataEkle(sonuc, kullaniciId > 0 ? "Business.User.NotFound" : "Business.User.InvalidCredentials");
 
                     return sonuc;
                 }
@@ -84,7 +87,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Kullanıcı okunamadı. KullaniciId: {KullaniciId}", "Kullanıcı bilgileri okunamadı.", kullaniciId);
+                BeklenmeyenHata(sonuc, ex, "Kullanıcı okunamadı. KullaniciId: {KullaniciId}", "Business.User.ReadFailed", kullaniciId);
             }
 
             return sonuc;
@@ -106,7 +109,7 @@ namespace TarimDonusum.IsKurallari
                 Kullanici? kullanici = await tabKullanici.IlkAktifKullaniciyiOkuAsync();
                 if (kullanici == null)
                 {
-                    sonuc.HataEkle("Test girişi için aktif kullanıcı bulunamadı.");
+                    HataEkle(sonuc, "Business.User.TestActiveUserNotFound");
                     return sonuc;
                 }
 
@@ -117,7 +120,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "İlk aktif kullanıcı okunamadı.", "Test girişi için kullanıcı okunamadı.");
+                BeklenmeyenHata(sonuc, ex, "İlk aktif kullanıcı okunamadı.", "Business.User.TestUserReadFailed");
             }
 
             return sonuc;
@@ -130,7 +133,7 @@ namespace TarimDonusum.IsKurallari
             kullanici.Yetkiler = await tabKullaniciYetki.KullaniciYetkileriniListeleAsync(kullanici.Id);
         }
 
-        private static async Task BenzerKayitKontrolEtAsync(
+        private async Task BenzerKayitKontrolEtAsync(
             SqlConnection connection,
             Kullanici kullanici,
             Sonuc sonuc)
@@ -138,7 +141,7 @@ namespace TarimDonusum.IsKurallari
             TABKullanici tabKullanici = new TABKullanici(connection);
 
             if (await tabKullanici.BenzerKayitVarMiAsync(kullanici.TCKN, kullanici.Eposta, kullanici.Telefon))
-                sonuc.HataEkle("Benzer bir kullanıcı kaydı bulunduğu için kayıt yapılamaz.");
+                sonuc.HataEkle(Metin("Business.User.SimilarRecordExists"));
         }
 
         private async Task<int> YeniBasvuruKullanicisiKaydetAsync(
@@ -168,7 +171,7 @@ namespace TarimDonusum.IsKurallari
                 await transaction.RollbackAsync();
 
                 _logger.LogError(ex, "Yeni başvuru kullanıcısı oluşturulamadı. TCKN: {TCKN}", kullanici.TCKN);
-                sonuc.HataEkle("Kullanıcı kaydı oluşturulamadı.");
+                HataEkle(sonuc, "Business.User.CreateFailed");
                 return 0;
             }
         }
@@ -187,14 +190,25 @@ namespace TarimDonusum.IsKurallari
                 return true;
 
             _logger.LogError("ConnectionStrings:DefaultConnection tanımlı değil.");
-            sonuc.HataEkle("Veritabanı bağlantı ayarı bulunamadı.");
+            HataEkle(sonuc, "Business.Database.ConnectionSettingMissing");
             return false;
         }
 
         private void BeklenmeyenHata(Sonuc sonuc, Exception ex, string logMesaji, string kullaniciMesaji, params object[] logParametreleri)
         {
             _logger.LogError(ex, logMesaji, logParametreleri);
-            sonuc.HataEkle(kullaniciMesaji);
+            HataEkle(sonuc, kullaniciMesaji);
+        }
+
+        private void HataEkle(Sonuc sonuc, string key)
+        {
+            sonuc.HataEkle(Metin(key));
+        }
+
+        private string Metin(string key)
+        {
+            string value = _localizer[key].Value;
+            return string.IsNullOrWhiteSpace(value) || string.Equals(value, key, StringComparison.Ordinal) ? key : value;
         }
 
         private static async Task<int> KullaniciEkleAsync(

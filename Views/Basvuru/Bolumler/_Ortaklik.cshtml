@@ -5,19 +5,20 @@
 @{
     var b = Model.Basvuru;
     bool ro = Model.SaltOkunur;
+    string T(string key) => L[key].Value;
     var ortaklik = b.ortaklik ?? new BasvuruOrtaklik { basvuruId = b.Id };
     ortaklik.basvuruId = b.Id;
     if (ortaklik.bagliOrtakDosyalari.Count == 0)
     {
         ortaklik.bagliOrtakDosyalari =
         [
-            new BasvuruOrtaklikDosya { dosyaNo = 1, dosyaTuru = "Gelir tablosu" },
-            new BasvuruOrtaklikDosya { dosyaNo = 2, dosyaTuru = "Bilanço" },
-            new BasvuruOrtaklikDosya { dosyaNo = 3, dosyaTuru = "Detaylı mizan" },
-            new BasvuruOrtaklikDosya { dosyaNo = 4, dosyaTuru = "Ara dönem raporları" },
-            new BasvuruOrtaklikDosya { dosyaNo = 5, dosyaTuru = "İflas, konkordato ve tasfiye sürecinin olmadığına dair belge" },
-            new BasvuruOrtaklikDosya { dosyaNo = 6, dosyaTuru = "Ticaret sicil gazetesi, kuruluş ve mevcut durum" },
-            new BasvuruOrtaklikDosya { dosyaNo = 7, dosyaTuru = "Noter onaylı imza sirküleri" }
+            new BasvuruOrtaklikDosya { dosyaNo = 1, dosyaTuru = T("Basvuru.Documents.Required.1") },
+            new BasvuruOrtaklikDosya { dosyaNo = 2, dosyaTuru = T("Basvuru.Documents.Required.2") },
+            new BasvuruOrtaklikDosya { dosyaNo = 3, dosyaTuru = T("Basvuru.Documents.Required.3") },
+            new BasvuruOrtaklikDosya { dosyaNo = 4, dosyaTuru = T("Basvuru.Documents.Required.4") },
+            new BasvuruOrtaklikDosya { dosyaNo = 5, dosyaTuru = T("Basvuru.Documents.Required.5") },
+            new BasvuruOrtaklikDosya { dosyaNo = 6, dosyaTuru = T("Basvuru.Documents.Required.6") },
+            new BasvuruOrtaklikDosya { dosyaNo = 7, dosyaTuru = T("Basvuru.Documents.Required.7") }
         ];
     }
     string relatedClass = ortaklik.bagliOrtakIsletmeVarMi == true ? "" : "d-none";
@@ -28,77 +29,77 @@
     {
         donemYil = Model.Donemler?.FirstOrDefault(x => x.id == b.basvuruFirma.donemId)?.yil ?? 0;
     }
-    string oncekiMaliYil = donemYil > 0 ? (donemYil - 2).ToString() : "Önceki Yıl";
-    string sonMaliYil = donemYil > 0 ? (donemYil - 1).ToString() : "Son Yıl";
+    string oncekiMaliYil = donemYil > 0 ? (donemYil - 2).ToString() : T("Basvuru.Mali.PreviousYear");
+    string sonMaliYil = donemYil > 0 ? (donemYil - 1).ToString() : T("Basvuru.Mali.LatestYear");
 }
 <section class="basvuru-panel active" data-panel="9">
-    <h2>3. Ortaklık ve Yetki Bilgileri</h2>
-    <p class="lead">Ortak/pay sahibi satırları üzerinden toplam pay oranı ve özel sektör payı sistem tarafından hesaplanır. Gerçek kişi ortaklar için mali veri istenmez; tüzel kişi ortaklar için mali veriler ayrıca alınır ve ortaklık payına göre mali ölçek kontrolüne dahil edilir.</p>
+    <h2>@L["Basvuru.Ortaklik.Title"]</h2>
+    <p class="lead">@L["Basvuru.Ortaklik.Lead"]</p>
 
     <script type="application/json" id="ortaklikInitialJson">@Html.Raw(initialJson)</script>
 
     <div class="form-grid">
         <label>
-            Bağlı/ortak işletme ilişkisi var mı?
+            @L["Basvuru.Field.BagliOrtakIsletmeVarMi"]
             <select id="hasRelatedEnterprise" name="Basvuru.ortaklik.BagliOrtakIsletmeVarMi" disabled="@ro">
-                <option value="">Seçiniz</option>
-                <option value="true" selected="@(ortaklik.bagliOrtakIsletmeVarMi == true)">Evet</option>
-                <option value="false" selected="@(ortaklik.bagliOrtakIsletmeVarMi == false)">Hayır</option>
+                <option value="">@L["Basvuru.Common.Select"]</option>
+                <option value="true" selected="@(ortaklik.bagliOrtakIsletmeVarMi == true)">@L["Basvuru.Common.YesAnswer"]</option>
+                <option value="false" selected="@(ortaklik.bagliOrtakIsletmeVarMi == false)">@L["Basvuru.Common.NoAnswer"]</option>
             </select>
         </label>
         <label>
-            Özel sektör payı (%) - sistem hesaplar
+            @L["Basvuru.Ortaklik.PrivateShareCalculated"]
             <input id="privateShareCalculated" name="Basvuru.ortaklik.OzelSektorPayi" value="@ortaklik.ozelSektorPayi" readonly />
         </label>
     </div>
 
-    <h3 class="subhead">Ortaklık yapısı detay tablosu</h3>
+    <h3 class="subhead">@L["Basvuru.Ortaklik.PartnersTableTitle"]</h3>
     <div id="partnersTable" class="partners-table-wrap"></div>
     @if (!ro)
     {
-        <button type="button" class="btn btn-outline-primary no-print" id="ortakEkleBtn">+ Ortak / pay sahibi ekle</button>
+        <button type="button" class="btn btn-outline-primary no-print" id="ortakEkleBtn">@L["Basvuru.Ortaklik.AddPartner"]</button>
     }
 
     <div id="partnerAlerts" class="mt-3"></div>
     <div id="legalPartnerFinancials" class="mt-3"></div>
 
     <div id="relatedEnterpriseBox" class="box related-enterprise-box @relatedClass">
-        <h3 class="subhead mt-0">Bağlı / Ortak İşletme Bilgileri</h3>
-        <p class="mini">Bağlı/ortak işletme ilişkisi ayrıca beyan edilmişse bu işletmeye ilişkin temel mali bilgiler ve belgeler de alınır. Tüzel kişi ortakların mali bilgileri ise yukarıdaki ortaklık tablosu üzerinden ayrıca hesaplamaya dahil edilir.</p>
+        <h3 class="subhead mt-0">@L["Basvuru.Ortaklik.RelatedEnterpriseTitle"]</h3>
+        <p class="mini">@L["Basvuru.Ortaklik.RelatedEnterpriseNote"]</p>
         <div class="form-grid">
-            <label>Bağlı/ortak işletme unvanı<input id="relatedTitle" name="Basvuru.ortaklik.BagliOrtakUnvani" value="@ortaklik.bagliOrtakUnvani" disabled="@ro" /></label>
-            <label>Bağlı/ortak işletme VKN/MERSİS<input id="relatedId" name="Basvuru.ortaklik.BagliOrtakKimlikNo" value="@ortaklik.bagliOrtakKimlikNo" disabled="@ro" /></label>
+            <label>@L["Basvuru.Ortaklik.RelatedEnterpriseTitleField"]<input id="relatedTitle" name="Basvuru.ortaklik.BagliOrtakUnvani" value="@ortaklik.bagliOrtakUnvani" disabled="@ro" /></label>
+            <label>@L["Basvuru.Ortaklik.RelatedEnterpriseIdentityField"]<input id="relatedId" name="Basvuru.ortaklik.BagliOrtakKimlikNo" value="@ortaklik.bagliOrtakKimlikNo" disabled="@ro" /></label>
         </div>
         <div class="table-responsive">
             <table class="table table-bordered mali-table">
                 <thead>
                     <tr>
-                        <th>Mali Veri</th>
+                        <th>@L["Basvuru.Mali.FinancialDataItem"]</th>
                         <th>@oncekiMaliYil</th>
                         <th>@sonMaliYil</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Yıllık net satış hasılatı (TL)</td>
+                        <td>@L["Basvuru.Mali.YillikNetSatisHasilati"]</td>
                         <td><input id="relPrevNetSales" class="money-integer" name="Basvuru.ortaklik.BagliOrtakOncekiYilNetSatis" value="@ortaklik.bagliOrtakOncekiYilNetSatis" disabled="@ro" /></td>
                         <td><input id="relLastNetSales" class="money-integer" name="Basvuru.ortaklik.BagliOrtakSonYilNetSatis" value="@ortaklik.bagliOrtakSonYilNetSatis" disabled="@ro" /></td>
                     </tr>
                     <tr>
-                        <td>Aktif toplamı (TL)</td>
+                        <td>@L["Basvuru.Mali.AktifToplami"]</td>
                         <td><input id="relPrevAssets" class="money-integer" name="Basvuru.ortaklik.BagliOrtakOncekiYilAktifToplami" value="@ortaklik.bagliOrtakOncekiYilAktifToplami" disabled="@ro" /></td>
                         <td><input id="relLastAssets" class="money-integer" name="Basvuru.ortaklik.BagliOrtakSonYilAktifToplami" value="@ortaklik.bagliOrtakSonYilAktifToplami" disabled="@ro" /></td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <h4>Zorunlu belgeler - bağlı/ortak işletme</h4>
+        <h4>@L["Basvuru.Ortaklik.RelatedDocumentsTitle"]</h4>
         <div id="relatedDocs" class="table-responsive">
             <table class="table table-bordered ortak-doc-table">
                 <thead>
                     <tr>
-                        <th>Dosya Türü</th>
-                        <th>Dosya Adı</th>
+                        <th>@L["Basvuru.Documents.FileType"]</th>
+                        <th>@L["Basvuru.Documents.FileName"]</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -114,14 +115,14 @@
                             <td class="text-nowrap">
                                 @if (!ro)
                                 {
-                                    <label class="btn btn-sm btn-primary mb-0" for="@inputId">Yükle</label>
+                                    <label class="btn btn-sm btn-primary mb-0" for="@inputId">@L["Basvuru.Documents.Upload"]</label>
                                     <input id="@inputId" type="file" class="document-file-input ortaklik-dosya-input" data-form-ad="Basvuru_BagliBelge" data-dosya-no="@belge.dosyaNo" data-name-target="@fileNameId" data-download-target="@downloadId" />
                                 }
                                 <a class="btn btn-sm btn-outline-primary @(belge.dosyaId.HasValue ? "" : "d-none")"
                                    id="@downloadId"
                                    href="@(belge.dosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = belge.dosyaId.Value }) : "#")"
                                    target="_blank"
-                                   rel="noopener">İndir</a>
+                                   rel="noopener">@L["Basvuru.Common.Download"]</a>
                             </td>
                         </tr>
                     }

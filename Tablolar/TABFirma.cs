@@ -20,7 +20,7 @@ namespace TarimDonusum.Tablolar
 
         public async Task<Firma?> VergiKimlikNoIleOkuAsync(int firmaId, string vergiKimlikNo)
         {
-            string sql = @"SELECT f.Id, f.KullaniciId, f.VergiKimlikNo, f.TicaretUnvani,
+            string sql = @"SELECT f.Id, f.VergiKimlikNo, f.TicaretUnvani,
                     f.TicaretSicilNo, f.KurulusTarihi, f.MersisNo, f.NaceKodu, f.WebSitesi,
                     f.Telefon, f.KepAdresi, f.Eposta, f.FaaliyetKonusu, f.Adres,
                     ISNULL((SELECT
@@ -61,7 +61,6 @@ namespace TarimDonusum.Tablolar
             const string sql = @"
                 SELECT
                     f.Id,
-                    f.KullaniciId,
                     f.VergiKimlikNo,
                     f.TicaretUnvani,
                     f.TicaretSicilNo,
@@ -105,14 +104,14 @@ namespace TarimDonusum.Tablolar
             const string sql = @"
                 INSERT INTO dbo.Firma
                 (
-                    KullaniciId, VergiKimlikNo, TicaretUnvani, TicaretSicilNo,
+                    VergiKimlikNo, TicaretUnvani, TicaretSicilNo,
                     KurulusTarihi, MersisNo, NaceKodu, WebSitesi, Telefon, KepAdresi,
                     Eposta, FaaliyetKonusu, Adres
                 )
                 OUTPUT INSERTED.Id
                 VALUES
                 (
-                    @KullaniciId, @VergiKimlikNo, @TicaretUnvani, @TicaretSicilNo,
+                    @VergiKimlikNo, @TicaretUnvani, @TicaretSicilNo,
                     @KurulusTarihi, @MersisNo, @NaceKodu, @WebSitesi, @Telefon, @KepAdresi,
                     @Eposta, @FaaliyetKonusu, @Adres
                 );";
@@ -172,19 +171,19 @@ namespace TarimDonusum.Tablolar
             return new Firma
             {
                 id = reader.GetInt32(0),
-                vergiKimlikNo = reader.GetString(2),
-                ticaretUnvani = reader.GetString(3),
-                ticaretSicilNo = reader.GetString(4),
-                kurulusTarihi = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
-                mersisNo = reader.GetString(6),
-                naceKodu = reader.GetString(7),
-                webSitesi = reader.GetString(8),
-                telefon = reader.GetString(9),
-                kepAdresi = reader.GetString(10),
-                eposta = reader.GetString(11),
-                faaliyetKonusu = reader.GetString(12),
-                adres = reader.GetString(13),
-                basvuranlar = BasvuranlariOku(reader.GetString(14))
+                vergiKimlikNo = reader.GetString(1),
+                ticaretUnvani = reader.GetString(2),
+                ticaretSicilNo = reader.GetString(3),
+                kurulusTarihi = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+                mersisNo = reader.GetString(5),
+                naceKodu = reader.GetString(6),
+                webSitesi = reader.GetString(7),
+                telefon = reader.GetString(8),
+                kepAdresi = reader.GetString(9),
+                eposta = reader.GetString(10),
+                faaliyetKonusu = reader.GetString(11),
+                adres = reader.GetString(12),
+                basvuranlar = BasvuranlariOku(reader.GetString(13))
             };
         }
 

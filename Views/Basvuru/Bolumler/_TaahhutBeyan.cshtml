@@ -1,0 +1,32 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+    string T(string key) => L[key].Value;
+}
+<section class="basvuru-panel active" data-panel="@((int)TarimDonusum.Models.enumBasvuruBolum.TaahhutBeyan)">
+    <h2>@L["Basvuru.Section.TaahhutBeyan.Title"]</h2>
+    <p class="lead">@L["Basvuru.Section.TaahhutBeyan.Description"]</p>
+
+    <div class="document-upload-box commitment-upload-box">
+        <div class="commitment-file-line">
+            <strong>@L["Basvuru.Documents.CommitmentTitle"]</strong>
+            <span id="taahhutDosyaSecim" class="document-file-name">@(string.IsNullOrWhiteSpace(b.TaahhutDosyaAdi) ? T("Basvuru.Documents.NoFileSelected") : b.TaahhutDosyaAdi)</span>
+            @if (!ro)
+            {
+                <label class="btn btn-primary mb-0" for="taahhutDosya">@L["Basvuru.Documents.SelectCommitment"]</label>
+                <input id="taahhutDosya" type="file" class="document-file-input" accept=".pdf,.jpg,.jpeg,.png" />
+            }
+            <a class="btn btn-outline-primary document-download-action @(b.TaahhutDosyaId.HasValue ? "" : "d-none")"
+               id="taahhutIndirBtn"
+               href="@(b.TaahhutDosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = b.TaahhutDosyaId.Value }) : "#")"
+               target="_blank"
+               rel="noopener">@L["Basvuru.Documents.DownloadFile"]</a>
+        </div>
+        <input name="Basvuru.TaahhutDosyaAdi" type="hidden" value="@b.TaahhutDosyaAdi" />
+        <input name="Basvuru.TaahhutAciklama" type="hidden" value="@b.TaahhutAciklama" />
+        <input type="hidden" name="Basvuru.TaahhutDosyaId" value="@b.TaahhutDosyaId" />
+    </div>
+</section>

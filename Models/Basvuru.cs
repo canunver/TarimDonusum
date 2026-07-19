@@ -74,13 +74,24 @@ namespace TarimDonusum.Models
         Diger = 5
     }
 
+    public enum enumHukukiTurSirketTuru
+    {
+        Tanimsiz = 0,
+        AnonimSirket = 1,
+        LimitedSirket = 2,
+        KollektifSirket = 3,
+        KomanditSirket = 4,
+        UreticiOrgutuKooperatifBirlik = 5,
+        Diger = 6
+    }
+
     public enum enumHarcamaTuru
     {
         Tanimsiz = 0, //"Tanımsız";
         YapimIsleri = 1,
         MakineEkipman = 2,
-        HizmetAlimi = 3,
-        Gorunurluk = 4,
+        Danismanlik = 3,
+        TedarikciGelistirmeHarcamalari = 4,
         YazilimDonanım = 5
     }
 
@@ -146,6 +157,9 @@ namespace TarimDonusum.Models
         public List<BasvuruUygulamaAdresi> YatirimAdresleri { get; set; } = new();
         public BasvuruFinans finans = new();
         public BasvuruMali mali = new BasvuruMali();
+        public BasvuruUygunHarcama uygunHarcama { get; set; } = new();
+        public BasvuruYatirimOzeti yatirimOzeti { get; set; } = new();
+        public BasvuruCevreselSosyal cevreselSosyal { get; set; } = new();
 
         public string BelgePaketiDosyaAdi { get; set; } = "";
         public int? BelgePaketiDosyaId { get; set; }
@@ -156,6 +170,7 @@ namespace TarimDonusum.Models
         public string TaahhutAciklama { get; set; } = "";
         public List<string> BelgeGruplari { get; set; } = new();
         public List<BasvuruOrtaklikDosya> ZorunluBelgeler { get; set; } = new();
+        public List<BasvuruAdliSicilKisi> AdliSicilKisileri { get; set; } = new();
 
         public string DenetciNotu { get; set; } = "";
         public string DenetimSonucu { get; set; } = "";
@@ -179,6 +194,8 @@ namespace TarimDonusum.Models
         public string? basvuruKonusu { get; set; } = "";
         public bool? sonIkiYildirFaalMi { get; set; }
         public enumBasvuruSahibiTuru? basvuruSahibiTuru { get; set; }
+        public enumHukukiTurSirketTuru? hukukiTurSirketTuru { get; set; }
+        public string? yonetimKuruluUyeleriAdliSicilKisiler { get; set; } = "";
         public decimal? ozelSektorPayi { get; set; }
         public bool? bagliOrtakIsletmeVarMi { get; set; }
         public string? bagliOrtakAciklama { get; set; } = "";
@@ -197,6 +214,9 @@ namespace TarimDonusum.Models
                 sonuc.HataEkle("Son 2 yıldır faal mi seçilmelidir.");
 
             if (!basvuruSahibiTuru.HasValue || basvuruSahibiTuru.Value == enumBasvuruSahibiTuru.Tanimsiz)
+                sonuc.HataEkle("Başvuru sahibi türü seçilmelidir.");
+
+            if (!hukukiTurSirketTuru.HasValue || hukukiTurSirketTuru.Value == enumHukukiTurSirketTuru.Tanimsiz)
                 sonuc.HataEkle("Hukuki tür / şirket türü seçilmelidir.");
 
             return sonuc;
@@ -209,6 +229,7 @@ namespace TarimDonusum.Models
         public int basvuruId { get; set; }
         public string? yatirimAdi { get; set; } = "";
         public enumYatirimTuru yatirimTuru { get; set; } = enumYatirimTuru.Tanimsiz;
+        public string? yatiriminAmaci { get; set; }
         public int? degerZinciriId { get; set; }
         public List<DegerZinciriAsama> degerZinciriAsamalari { get; set; } = new();
         public List<int> harcamaTurleri { get; set; } = new();
@@ -229,6 +250,39 @@ namespace TarimDonusum.Models
 
             if (harcamaTurleri == null || harcamaTurleri.Count == 0)
                 sonuc.HataEkle("En az bir talep edilen harcama türü seçilmelidir.");
+
+            if (string.IsNullOrWhiteSpace(yatiriminAmaci))
+                sonuc.HataEkle("Yatırımın amacı, faaliyetleri ve çıktıları girilmelidir.");
+        }
+
+        public void YatirimBilgileriDogrula(Sonuc sonuc)
+        {
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru verilmelidir!");
+
+            if (string.IsNullOrWhiteSpace(yatirimAdi))
+                sonuc.HataEkle("Yatırım adı girilmelidir.");
+
+            if (yatirimTuru == enumYatirimTuru.Tanimsiz)
+                sonuc.HataEkle("Yatırım türü seçilmelidir.");
+
+            if (harcamaTurleri == null || harcamaTurleri.Count == 0)
+                sonuc.HataEkle("En az bir talep edilen harcama türü seçilmelidir.");
+
+            if (string.IsNullOrWhiteSpace(yatiriminAmaci))
+                sonuc.HataEkle("Yatırımın amacı, faaliyetleri ve çıktıları girilmelidir.");
+        }
+
+        public void DegerZinciriDogrula(Sonuc sonuc)
+        {
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru verilmelidir!");
+
+            if (degerZinciriAsamalari == null || degerZinciriAsamalari.Count == 0)
+                sonuc.HataEkle("En az bir değer zinciri aşaması seçilmelidir.");
+
+            if (degerZinciriAsamalari != null && degerZinciriAsamalari.Any(x => (x.yapilacakFaaliyetler?.Length ?? 0) > 500))
+                sonuc.HataEkle("Yapılacak faaliyetler en fazla 500 karakter olmalıdır.");
         }
 
 
@@ -260,7 +314,7 @@ namespace TarimDonusum.Models
         public decimal? bagliOrtakSonYilAktifToplami { get; set; }
         public List<BasvuruOrtaklikDosya> bagliOrtakDosyalari { get; set; } = new();
 
-        internal void Dogrula(Sonuc<int> sonuc)
+        internal void Dogrula(Sonuc sonuc)
         {
             if (basvuruId <= 0)
                 sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
@@ -287,7 +341,7 @@ namespace TarimDonusum.Models
             OrtaklariDogrula(sonuc);
         }
 
-        internal void OrtaklariDogrula(Sonuc<int> sonuc)
+        internal void OrtaklariDogrula(Sonuc sonuc)
         {
             decimal toplamPay = ortaklar.Sum(x => x.payOrani.GetValueOrDefault());
             if (ortaklar.Count > 0 && toplamPay > 100)
@@ -350,14 +404,51 @@ namespace TarimDonusum.Models
         public string dosyaAdi { get; set; } = "";
     }
 
+    public class BasvuruAdliSicilKisi
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public int siraNo { get; set; }
+        public string? tckn { get; set; } = "";
+        public string? ad { get; set; } = "";
+        public string? soyad { get; set; } = "";
+        public string? gorev { get; set; } = "";
+        public string? dosyaAdi { get; set; } = "";
+        public int? dosyaId { get; set; }
+
+        internal void Dogrula(Sonuc sonuc)
+        {
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
+            if (string.IsNullOrWhiteSpace(tckn))
+                sonuc.HataEkle("TCKN girilmelidir.");
+            if (string.IsNullOrWhiteSpace(ad))
+                sonuc.HataEkle("Ad girilmelidir.");
+            if (string.IsNullOrWhiteSpace(soyad))
+                sonuc.HataEkle("Soyad girilmelidir.");
+            if (string.IsNullOrWhiteSpace(gorev))
+                sonuc.HataEkle("Görev seçilmelidir.");
+        }
+    }
+
+    public class BasvuruAdliSicilKayitModel
+    {
+        public int basvuruId { get; set; }
+        public List<BasvuruAdliSicilKisi> kisiler { get; set; } = new();
+    }
+
     public class BasvuruFinans
     {
         public int basvuruId { get; set; }
         public decimal? toplamYatirimTutari { get; set; }
         public decimal? uygunHarcamaTutari { get; set; }
         public decimal? talepEdilenDestekTutari { get; set; }
+        public decimal? talepEdilenFinansmanOrani { get; set; }
+        public decimal? onBasvuruSahibiKatkisi { get; set; }
         public decimal? basvuruSahibiKatkisi { get; set; }
+        public int? talepEdilenVadeSuresiYil { get; set; }
         public decimal? destekOrani { get; set; }
+        public string? digerFinansmanKaynaklariAciklama { get; set; } = "";
         public string? yatiriminAmaci { get; set; }
 
         internal void Dogrula(Sonuc<int> sonuc)
@@ -365,17 +456,50 @@ namespace TarimDonusum.Models
             if (basvuruId < 0)
                 sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
 
-            if (string.IsNullOrEmpty(yatiriminAmaci))
-                sonuc.HataEkle("Yatırımın amacı verilmelidir.");
-
             if (toplamYatirimTutari == null || toplamYatirimTutari.Value <= 0)
                 sonuc.HataEkle("Toplam yatırım tutarı verilmelidir.");
 
-            if (talepEdilenDestekTutari == null || talepEdilenDestekTutari.Value <= 0)
-                sonuc.HataEkle("Talep edilen destek tutarı verilmelidir.");
+            if (talepEdilenFinansmanOrani == null || talepEdilenFinansmanOrani.Value <= 0)
+                sonuc.HataEkle("Talep edilen finansman oranı verilmelidir.");
 
-            if (destekOrani == null || destekOrani.Value <= 0)
-                sonuc.HataEkle("Destek oranı verilmelidir.");
+            if (onBasvuruSahibiKatkisi == null || onBasvuruSahibiKatkisi.Value < 0)
+                sonuc.HataEkle("Ön başvuru sahibi katkısı verilmelidir.");
+
+            if (basvuruSahibiKatkisi == null || basvuruSahibiKatkisi.Value < 0)
+                sonuc.HataEkle("Başvuru sahibi katkısı verilmelidir.");
+
+            if (talepEdilenVadeSuresiYil == null || talepEdilenVadeSuresiYil.Value <= 0)
+                sonuc.HataEkle("Talep edilen vade süresi verilmelidir.");
+        }
+    }
+
+    public class BasvuruUygunHarcama
+    {
+        public int basvuruId { get; set; }
+        public string? pikkListesiJson { get; set; } = "";
+
+        internal void Dogrula(Sonuc<int> sonuc)
+        {
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
+
+            if (!string.IsNullOrWhiteSpace(pikkListesiJson) && pikkListesiJson.Length > 20000)
+                sonuc.HataEkle("PİKK listesi verisi çok uzun.");
+        }
+    }
+
+    public class BasvuruYatirimOzeti
+    {
+        public int basvuruId { get; set; }
+        public string? yatirimOzetiJson { get; set; } = "";
+
+        internal void Dogrula(Sonuc<int> sonuc)
+        {
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
+
+            if (!string.IsNullOrWhiteSpace(yatirimOzetiJson) && yatirimOzetiJson.Length > 50000)
+                sonuc.HataEkle("Yatırım özeti verisi çok uzun.");
         }
     }
 
@@ -431,6 +555,20 @@ namespace TarimDonusum.Models
         public int DosyaId { get; set; }
         public string DosyaAdi { get; set; } = "";
         public string Aciklama { get; set; } = "";
+    }
+
+    public class BasvuruCevreselSosyal
+    {
+        public int basvuruId { get; set; }
+        public string? cevreselSosyalJson { get; set; } = "";
+
+        internal void Dogrula(Sonuc<int> sonuc)
+        {
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
+            if (string.IsNullOrWhiteSpace(cevreselSosyalJson))
+                sonuc.HataEkle("Çevresel-sosyal anket cevapları girilmelidir.");
+        }
     }
 
     public class BasvuruUygulamaAdresi

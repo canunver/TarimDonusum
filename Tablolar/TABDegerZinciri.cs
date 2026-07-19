@@ -109,7 +109,7 @@ namespace TarimDonusum.Tablolar
         internal async Task<Sonuc<List<DegerZinciriAsama>>> AsamalariOku(int degerZinciriId, int basvuruId)
         {
             Sonuc<List<DegerZinciriAsama>> liste = new Sonuc<List<DegerZinciriAsama>>();
-            string sql = @"SELECT dza.Id, dza.DegerZinciriId, dza.SiraNo, dza.Ad, dza.Aciklama, dza.Aktif, bdza.Id
+            string sql = @"SELECT dza.Id, dza.DegerZinciriId, dza.SiraNo, dza.Ad, dza.Aciklama, dza.Aktif, bdza.Id, bdza.YapilacakFaaliyetler
                            FROM dbo.DegerZinciriAsama dza
                            LEFT JOIN dbo.BasvuruDegerZinciriAsama bdza ON dza.Id = bdza.DegerZinciriAsamaId
                                 AND bdza.BasvuruId = @BasvuruId 
@@ -138,7 +138,8 @@ namespace TarimDonusum.Tablolar
                 ad = reader.GetString(3),
                 aciklama = reader.GetString(4),
                 aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(5)) == 1,
-                secili = BoolYap(NullDuzeltInt(reader, 6))
+                secili = BoolYap(NullDuzeltInt(reader, 6)),
+                yapilacakFaaliyetler = NullOkuString(reader, 7)
             };
         }
     }

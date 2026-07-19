@@ -9,12 +9,11 @@
                 <h2>@L["Basvuru.Section5.Title"]</h2>
                 <div class="form-grid">
                     <label>@L["Basvuru.Field.ToplamYatirimTutari"]<input class="money-integer" name="Basvuru.finans.ToplamYatirimTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.toplamYatirimTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.UygunHarcamaTutari"]<input class="money-integer" name="Basvuru.finans.UygunHarcamaTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.uygunHarcamaTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.TalepEdilenDestekTutari"]<input class="money-integer" name="Basvuru.finans.TalepEdilenDestekTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.talepEdilenDestekTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.BasvuruSahibiKatkisi"]<input class="money-integer" name="Basvuru.finans.BasvuruSahibiKatkisi" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.basvuruSahibiKatkisi)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.DestekOrani"]<input name="Basvuru.finans.DestekOrani" type="text" value="@IsimBul.MetneCevirKuruslu(b.finans.destekOrani)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.TalepEdilenFinansmanOrani"]<input name="Basvuru.finans.TalepEdilenFinansmanOrani" type="text" value="@IsimBul.MetneCevirKuruslu(b.finans.talepEdilenFinansmanOrani)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.BasvuruSahibiKatkisiYeni"]<input class="money-integer" name="Basvuru.finans.BasvuruSahibiKatkisi" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.basvuruSahibiKatkisi)" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.TalepEdilenVadeSuresiYil"]<input name="Basvuru.finans.TalepEdilenVadeSuresiYil" type="number" min="1" step="1" value="@b.finans.talepEdilenVadeSuresiYil" disabled="@ro" /></label>
                 </div>
-                <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"]<textarea name="Basvuru.finans.YatiriminAmaci" disabled="@ro">@b.finans.yatiriminAmaci</textarea></label>
+                <label class="wide-label">@L["Basvuru.Field.DigerFinansmanKaynaklariAciklama"]<textarea name="Basvuru.finans.DigerFinansmanKaynaklariAciklama" disabled="@ro">@b.finans.digerFinansmanKaynaklariAciklama</textarea></label>
             </section>
 
 

@@ -4,9 +4,34 @@
 @{
     var b = Model.Basvuru;
     bool ro = Model.SaltOkunur;
+    bool CheckedInt(IEnumerable<int> values, int value) => values.Contains(value);
 }
             <section class="basvuru-panel active" data-panel="4">
                 <h2>@L["Basvuru.Section4.Title"]</h2>
+                <div class="preapp-form">
+                    <div class="preapp-line">
+                        <label for="yatirimAdi">@L["Basvuru.Field.YatirimAdi"]</label>
+                        <input id="yatirimAdi" name="Basvuru.YatirimAdi" value="@b.yatirim.yatirimAdi" disabled="@ro" />
+                    </div>
+                    <div class="preapp-line">
+                        <label for="yatirimTuru">@L["Basvuru.Field.YatirimTuru"]</label>
+                        <select id="yatirimTuru" name="Basvuru.yatirim.yatirimTuru" disabled="@ro">
+                            @foreach (enumYatirimTuru item in Enum.GetValues<enumYatirimTuru>())
+                            {
+                                <option value="@((int)item)" selected="@(b.yatirim.yatirimTuru == item)">
+                                    @IsimBul.EnumAdi(item, L)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <h3>@L["Basvuru.Field.HarcamaTurleri"]</h3>
+                <div class="check-grid">
+                    @foreach (var item in Enum.GetValues<enumHarcamaTuru>().Where(x => (int)x > 0 && (int)x <= 4))
+                    {
+                        <label><input type="checkbox" name="Basvuru.yatirim.harcamaTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.harcamaTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label>
+                    }
+                </div>
                 <div class="adres-toolbar">
                     @if (!ro)
                     {
@@ -33,5 +58,9 @@
                         <tbody id="uygulamaAdresListesi"></tbody>
                     </table>
                 </div>
+                <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"] <span class="required-mark">*</span>
+                    <textarea name="Basvuru.yatirim.YatiriminAmaci" disabled="@ro">@b.finans.yatiriminAmaci</textarea>
+                </label>
+                <p class="section-description">@L["Basvuru.InvestmentPurpose.Help"]</p>
             </section>
 

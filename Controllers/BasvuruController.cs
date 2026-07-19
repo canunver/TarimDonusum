@@ -171,6 +171,32 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetUygunHarcama([FromBody] BasvuruUygunHarcama model)
+        {
+            Sonuc<int> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return RedirectToAction("Index", "Home");
+                sonuc = await _basvuruIsKurallari.KaydetUygunHarcamaAsync(model, kullanici);
+                if (sonuc.basarili)
+                    sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Uygun harcama kaydet action tamamlanamadı.");
+                sonuc = new Sonuc<int>();
+                sonuc.HataEkle("Başvuru kaydedilemedi.");
+                return Json(sonuc);
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> KaydetFirmaBasvuru([FromBody] BasvuruFirma model)
         {
             Sonuc<int> sonuc;
@@ -223,13 +249,13 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> KaydetYatirim([FromBody] BasvuruYatirim model)
+        public async Task<IActionResult> KaydetYatirimBilgileri([FromBody] BasvuruYatirim model)
         {
             Sonuc<int> sonuc;
             try
             {
                 Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
-                sonuc = await _basvuruIsKurallari.KaydetYatirimBilgisiAsync(model, kullanici);
+                sonuc = await _basvuruIsKurallari.KaydetYatirimBilgileriAsync(model, kullanici);
                 if (sonuc.basarili)
                     sonuc.mesaj = L["kayitBasarili"];
             }
@@ -355,6 +381,82 @@ namespace TarimDonusum.Controllers
             catch (Exception ex)
             {
                 Log(LogLevel.Error, BMYEventID.Yok, ex, "Başvuru kaydet action tamamlanamadı.");
+                sonuc = new Sonuc<int>();
+                sonuc.HataEkle("Başvuru kaydedilemedi.");
+                return Json(sonuc);
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetYatirimOzeti([FromBody] BasvuruYatirimOzeti model)
+        {
+            Sonuc<int> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return RedirectToAction("Index", "Home");
+                sonuc = await _basvuruIsKurallari.KaydetYatirimOzetiAsync(model, kullanici);
+                if (sonuc.basarili)
+                    sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Yatırım özeti kaydet action tamamlanamadı.");
+                sonuc = new Sonuc<int>();
+                sonuc.HataEkle("Başvuru kaydedilemedi.");
+                return Json(sonuc);
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetCevreselSosyal([FromBody] BasvuruCevreselSosyal model)
+        {
+            Sonuc<int> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return RedirectToAction("Index", "Home");
+                sonuc = await _basvuruIsKurallari.KaydetCevreselSosyalAsync(model, kullanici);
+                if (sonuc.basarili)
+                    sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Çevresel-sosyal anket kaydet action tamamlanamadı.");
+                sonuc = new Sonuc<int>();
+                sonuc.HataEkle("Başvuru kaydedilemedi.");
+                return Json(sonuc);
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetDegerZinciri([FromBody] BasvuruYatirim model)
+        {
+            Sonuc<int> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                sonuc = await _basvuruIsKurallari.KaydetDegerZinciriAsync(model, kullanici);
+                if (sonuc.basarili)
+                    sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Başvuru değer zinciri kaydet action tamamlanamadı.");
                 sonuc = new Sonuc<int>();
                 sonuc.HataEkle("Başvuru kaydedilemedi.");
                 return Json(sonuc);
@@ -542,6 +644,32 @@ namespace TarimDonusum.Controllers
                 Log(LogLevel.Error, BMYEventID.Yok, ex, "Ortaklık dosyası yükleme action tamamlanamadı.");
                 sonuc = new Sonuc<BasvuruDosyaYuklemeSonucu>();
                 sonuc.HataEkle("Ortaklık dosyası yüklenemedi.");
+            }
+
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetAdliSicilKisileri([FromBody] BasvuruAdliSicilKayitModel model)
+        {
+            Sonuc<List<BasvuruAdliSicilKisi>> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return RedirectToAction("Index", "Home");
+
+                sonuc = await _basvuruIsKurallari.KaydetAdliSicilKisileriAsync(model.basvuruId, model.kisiler, kullanici);
+                if (sonuc.basarili)
+                    sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Adli sicil kişileri kaydet action tamamlanamadı.");
+                sonuc = new Sonuc<List<BasvuruAdliSicilKisi>>();
+                sonuc.HataEkle("Adli sicil kişileri kaydedilemedi.");
             }
 
             return Json(sonuc);

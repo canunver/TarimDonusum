@@ -1,0 +1,42 @@
+@using System.Text.Json
+@using TarimDonusum.IsKurallari
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+    var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+}
+
+<section class="basvuru-panel active" data-panel="12">
+    <h2>@L["Basvuru.CevreselSosyal.Title"]</h2>
+    <p>@L["Basvuru.CevreselSosyal.Description"]</p>
+
+    <input type="hidden" id="cevreselSosyalJson" value="@b.cevreselSosyal.cevreselSosyalJson" />
+    <script type="application/json" id="cevreselSosyalSoruTanimlariJson">
+        @Html.Raw(JsonSerializer.Serialize(CevreselSosyalAnketTanimlari.Tum, jsonOptions))
+    </script>
+
+    <div class="esf-mode-box">
+        <label>
+            @L["Basvuru.CevreselSosyal.ScopeQuestion"] <span class="required-mark">*</span>
+            <select id="cevreselSosyalYatirimKapsami" disabled="@ro">
+                <option value="">@L["Basvuru.Common.Select"]</option>
+                <option value="existing">@L["Basvuru.CevreselSosyal.Scope.Existing"]</option>
+                <option value="planned">@L["Basvuru.CevreselSosyal.Scope.Planned"]</option>
+                <option value="both">@L["Basvuru.CevreselSosyal.Scope.Both"]</option>
+            </select>
+        </label>
+        <div class="esf-sub-note">@L["Basvuru.CevreselSosyal.ScopeNote"]</div>
+    </div>
+
+    <div id="cevreselSosyalAnket"></div>
+
+    <div class="box">
+        <label class="checkbox-line esf-declaration">
+            <input id="cevreselSosyalDogrulukBeyani" type="checkbox" disabled="@ro" />
+            @L["Basvuru.CevreselSosyal.Declaration"]
+        </label>
+    </div>
+</section>

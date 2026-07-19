@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Localization;
 using TarimDonusum.Models;
 using TarimDonusum.Tablolar;
 
@@ -18,10 +19,12 @@ namespace TarimDonusum.IsKurallari
 
         private readonly string _connectionString;
         private readonly ILogger<DosyaYonetimIsKurallari> _logger;
+        private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public DosyaYonetimIsKurallari(IConfiguration configuration, ILogger<DosyaYonetimIsKurallari> logger)
+        public DosyaYonetimIsKurallari(IConfiguration configuration, ILogger<DosyaYonetimIsKurallari> logger, IStringLocalizer<SharedResource> localizer)
         {
             _logger = logger;
+            _localizer = localizer;
             _connectionString = configuration.GetConnectionString("DosyaConnection")
                 ?? configuration.GetConnectionString("DefaultConnection")
                 ?? "";
@@ -39,13 +42,13 @@ namespace TarimDonusum.IsKurallari
             {
                 if (string.IsNullOrWhiteSpace(modulKod))
                 {
-                    sonuc.HataEkle("Modül kodu zorunludur.");
+                    HataEkle(sonuc, "Business.File.ModuleCodeRequired");
                     return sonuc;
                 }
 
                 if (!await yetki.GorebilirAsync(modulKod, formAd, formAnahtar, null))
                 {
-                    sonuc.HataEkle("Dosyaları görüntüleme yetkiniz yok.");
+                    HataEkle(sonuc, "Business.File.ViewFilesUnauthorized");
                     return sonuc;
                 }
 
@@ -55,7 +58,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Dosya listesi okunamadı. ModulKod: {ModulKod}", "Dosya listesi okunamadı.", modulKod);
+                BeklenmeyenHata(sonuc, ex, "Dosya listesi okunamadı. ModulKod: {ModulKod}", "Business.File.ListReadFailed", modulKod);
             }
 
             return sonuc;
@@ -72,7 +75,7 @@ namespace TarimDonusum.IsKurallari
 
                 if (!await yetki.GorebilirAsync(anahtar.ModulKod, anahtar.FormAd, anahtar.FormAnahtar, anahtar.DosyaNo))
                 {
-                    sonuc.HataEkle("Dosyayı görüntüleme yetkiniz yok.");
+                    HataEkle(sonuc, "Business.File.ViewFileUnauthorized");
                     return sonuc;
                 }
 
@@ -82,7 +85,7 @@ namespace TarimDonusum.IsKurallari
 
                 if (dosya == null)
                 {
-                    sonuc.HataEkle("Dosya bulunamadı.");
+                    HataEkle(sonuc, "Business.File.NotFound");
                     return sonuc;
                 }
 
@@ -90,7 +93,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Dosya okunamadı. ModulKod: {ModulKod}, FormAd: {FormAd}, FormAnahtar: {FormAnahtar}, DosyaNo: {DosyaNo}", "Dosya okunamadı.", anahtar.ModulKod, anahtar.FormAd, anahtar.FormAnahtar, anahtar.DosyaNo);
+                BeklenmeyenHata(sonuc, ex, "Dosya okunamadı. ModulKod: {ModulKod}, FormAd: {FormAd}, FormAnahtar: {FormAnahtar}, DosyaNo: {DosyaNo}", "Business.File.ReadFailed", anahtar.ModulKod, anahtar.FormAd, anahtar.FormAnahtar, anahtar.DosyaNo);
             }
 
             return sonuc;
@@ -104,7 +107,7 @@ namespace TarimDonusum.IsKurallari
             {
                 if (dosyaId <= 0)
                 {
-                    sonuc.HataEkle("Dosya seçilmelidir.");
+                    HataEkle(sonuc, "Business.File.FileRequired");
                     return sonuc;
                 }
 
@@ -114,13 +117,13 @@ namespace TarimDonusum.IsKurallari
 
                 if (dosya == null)
                 {
-                    sonuc.HataEkle("Dosya bulunamadı.");
+                    HataEkle(sonuc, "Business.File.NotFound");
                     return sonuc;
                 }
 
                 if (!await yetki.GorebilirAsync(dosya.ModulKod, dosya.FormAd, dosya.FormAnahtar, dosya.DosyaNo))
                 {
-                    sonuc.HataEkle("Dosyayı görüntüleme yetkiniz yok.");
+                    HataEkle(sonuc, "Business.File.ViewFileUnauthorized");
                     return sonuc;
                 }
 
@@ -128,7 +131,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Dosya okunamadı. DosyaId: {DosyaId}", "Dosya okunamadı.", dosyaId);
+                BeklenmeyenHata(sonuc, ex, "Dosya okunamadı. DosyaId: {DosyaId}", "Business.File.ReadFailed", dosyaId);
             }
 
             return sonuc;
@@ -159,7 +162,7 @@ namespace TarimDonusum.IsKurallari
                     {
                         if (!await yetki.EkleyebilirAsync(dosya.ModulKod, dosya.FormAd, dosya.FormAnahtar))
                         {
-                            sonuc.HataEkle("Dosya ekleme yetkiniz yok.");
+                            HataEkle(sonuc, "Business.File.AddUnauthorized");
                             await transaction.RollbackAsync();
                             return sonuc;
                         }
@@ -173,7 +176,7 @@ namespace TarimDonusum.IsKurallari
                         {
                             if (!await yetki.EkleyebilirAsync(dosya.ModulKod, dosya.FormAd, dosya.FormAnahtar))
                             {
-                                sonuc.HataEkle("Dosya ekleme yetkiniz yok.");
+                                HataEkle(sonuc, "Business.File.AddUnauthorized");
                                 await transaction.RollbackAsync();
                                 return sonuc;
                             }
@@ -182,7 +185,7 @@ namespace TarimDonusum.IsKurallari
                         }
                         else if (!await yetki.GuncelleyebilirAsync(dosya.ModulKod, dosya.FormAd, dosya.FormAnahtar, dosyaNo))
                         {
-                            sonuc.HataEkle("Dosya güncelleme yetkiniz yok.");
+                            HataEkle(sonuc, "Business.File.UpdateUnauthorized");
                             await transaction.RollbackAsync();
                             return sonuc;
                         }
@@ -225,7 +228,7 @@ namespace TarimDonusum.IsKurallari
 
                     TABDosya tabDosyaOkuma = new TABDosya(connection);
                     sonuc.nesne = (await tabDosyaOkuma.BilgiGetirAsync(logAnahtari))!;
-                    sonuc.mesaj = yeniKayit ? "Dosya eklendi." : "Dosya güncellendi.";
+                    sonuc.mesaj = yeniKayit ? Metin("Business.File.Added") : Metin("Business.File.Updated");
                 }
                 catch
                 {
@@ -235,7 +238,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Dosya kaydedilemedi. ModulKod: {ModulKod}, FormAd: {FormAd}, FormAnahtar: {FormAnahtar}, DosyaNo: {DosyaNo}", "Dosya kaydedilemedi.", dosya.ModulKod, dosya.FormAd, dosya.FormAnahtar, dosya.DosyaNo);
+                BeklenmeyenHata(sonuc, ex, "Dosya kaydedilemedi. ModulKod: {ModulKod}, FormAd: {FormAd}, FormAnahtar: {FormAnahtar}, DosyaNo: {DosyaNo}", "Business.File.SaveFailed", dosya.ModulKod, dosya.FormAd, dosya.FormAnahtar, dosya.DosyaNo);
             }
 
             return sonuc;
@@ -252,7 +255,7 @@ namespace TarimDonusum.IsKurallari
 
                 if (!await yetki.SilebilirAsync(anahtar.ModulKod, anahtar.FormAd, anahtar.FormAnahtar, anahtar.DosyaNo))
                 {
-                    sonuc.HataEkle("Dosya silme yetkiniz yok.");
+                    HataEkle(sonuc, "Business.File.DeleteUnauthorized");
                     return sonuc;
                 }
 
@@ -267,7 +270,7 @@ namespace TarimDonusum.IsKurallari
                     DosyaBilgisi? mevcut = await tabDosya.BilgiGetirAsync(anahtar);
                     if (mevcut == null)
                     {
-                        sonuc.HataEkle("Dosya bulunamadı.");
+                        HataEkle(sonuc, "Business.File.NotFound");
                         await transaction.RollbackAsync();
                         return sonuc;
                     }
@@ -276,7 +279,7 @@ namespace TarimDonusum.IsKurallari
                     await tabDosya.SilAsync(mevcut.Id);
 
                     await transaction.CommitAsync();
-                    sonuc.mesaj = "Dosya silindi.";
+                    sonuc.mesaj = Metin("Business.File.Deleted");
                 }
                 catch
                 {
@@ -286,7 +289,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Dosya silinemedi. ModulKod: {ModulKod}, FormAd: {FormAd}, FormAnahtar: {FormAnahtar}, DosyaNo: {DosyaNo}", "Dosya silinemedi.", anahtar.ModulKod, anahtar.FormAd, anahtar.FormAnahtar, anahtar.DosyaNo);
+                BeklenmeyenHata(sonuc, ex, "Dosya silinemedi. ModulKod: {ModulKod}, FormAd: {FormAd}, FormAnahtar: {FormAnahtar}, DosyaNo: {DosyaNo}", "Business.File.DeleteFailed", anahtar.ModulKod, anahtar.FormAd, anahtar.FormAnahtar, anahtar.DosyaNo);
             }
 
             return sonuc;
@@ -295,7 +298,7 @@ namespace TarimDonusum.IsKurallari
         private async Task<SqlConnection> BaglantiAcAsync()
         {
             if (string.IsNullOrWhiteSpace(_connectionString))
-                throw new InvalidOperationException("Dosya yönetimi bağlantı cümlesi tanımlı değil.");
+                throw new InvalidOperationException(Metin("Business.File.ConnectionStringMissing"));
 
             SqlConnection connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
@@ -315,35 +318,35 @@ namespace TarimDonusum.IsKurallari
             }
         }
 
-        private static bool AnahtarDogrula(DosyaAnahtari anahtar, Sonuc sonuc)
+        private bool AnahtarDogrula(DosyaAnahtari anahtar, Sonuc sonuc)
         {
             if (string.IsNullOrWhiteSpace(anahtar.ModulKod))
-                sonuc.HataEkle("Modül kodu zorunludur.");
+                HataEkle(sonuc, "Business.File.ModuleCodeRequired");
             if (string.IsNullOrWhiteSpace(anahtar.FormAd))
-                sonuc.HataEkle("Form adı zorunludur.");
+                HataEkle(sonuc, "Business.File.FormNameRequired");
             if (string.IsNullOrWhiteSpace(anahtar.FormAnahtar))
-                sonuc.HataEkle("Form anahtarı zorunludur.");
+                HataEkle(sonuc, "Business.File.FormKeyRequired");
             if (anahtar.DosyaNo <= 0)
-                sonuc.HataEkle("Dosya no zorunludur.");
+                HataEkle(sonuc, "Business.File.FileNoRequired");
 
             AnahtarTemizle(anahtar);
             return sonuc.basarili;
         }
 
-        private static bool DosyaDogrula(DosyaKaydetModel dosya, Sonuc sonuc)
+        private bool DosyaDogrula(DosyaKaydetModel dosya, Sonuc sonuc)
         {
             if (string.IsNullOrWhiteSpace(dosya.ModulKod))
-                sonuc.HataEkle("Modül kodu zorunludur.");
+                HataEkle(sonuc, "Business.File.ModuleCodeRequired");
             if (string.IsNullOrWhiteSpace(dosya.FormAd))
-                sonuc.HataEkle("Form adı zorunludur.");
+                HataEkle(sonuc, "Business.File.FormNameRequired");
             if (string.IsNullOrWhiteSpace(dosya.FormAnahtar))
-                sonuc.HataEkle("Form anahtarı zorunludur.");
+                HataEkle(sonuc, "Business.File.FormKeyRequired");
             if (dosya.DosyaNo < 0)
-                sonuc.HataEkle("Dosya no negatif olamaz.");
+                HataEkle(sonuc, "Business.File.FileNoCannotBeNegative");
             if (string.IsNullOrWhiteSpace(dosya.DosyaAdi))
-                sonuc.HataEkle("Dosya adı zorunludur.");
+                HataEkle(sonuc, "Business.File.FileNameRequired");
             if (dosya.Icerik == null || dosya.Icerik.Length == 0)
-                sonuc.HataEkle("Dosya içeriği zorunludur.");
+                HataEkle(sonuc, "Business.File.ContentRequired");
 
             AnahtarTemizle(dosya);
             dosya.DosyaAdi = dosya.DosyaAdi?.Trim() ?? "";
@@ -366,7 +369,18 @@ namespace TarimDonusum.IsKurallari
         private void BeklenmeyenHata(Sonuc sonuc, Exception ex, string logMesaji, string kullaniciMesaji, params object[] logParametreleri)
         {
             _logger.LogError(ex, logMesaji, logParametreleri);
-            sonuc.HataEkle(kullaniciMesaji);
+            HataEkle(sonuc, kullaniciMesaji);
+        }
+
+        private void HataEkle(Sonuc sonuc, string key)
+        {
+            sonuc.HataEkle(Metin(key));
+        }
+
+        private string Metin(string key)
+        {
+            string value = _localizer[key].Value;
+            return string.IsNullOrWhiteSpace(value) || string.Equals(value, key, StringComparison.Ordinal) ? key : value;
         }
     }
 }

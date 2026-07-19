@@ -1,0 +1,226 @@
+@using System.Globalization
+@using System.Text.Json
+@using TarimDonusum.Models
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    CultureInfo tr = CultureInfo.GetCultureInfo("tr-TR");
+    string R(string key) => L[key].Value;
+    string YoksaTire(string? value) => string.IsNullOrWhiteSpace(value) ? "-" : value.Trim();
+    string Para(decimal? value) => value.HasValue ? string.Format(tr, "{0:N0} TL", value.Value) : "- TL";
+    string Oran(decimal value) => string.Format(tr, "%{0:N2}", value);
+    string EvetHayir(bool? value) => value.HasValue ? (value.Value ? "Evet" : "Hayır") : "-";
+
+    decimal Sayi(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetDecimal(out decimal number)) return number;
+        if (element.ValueKind == JsonValueKind.String)
+        {
+            string text = (element.GetString() ?? "").Replace("TL", "", StringComparison.OrdinalIgnoreCase).Trim();
+            if (decimal.TryParse(text, NumberStyles.Any, tr, out number)) return number;
+            if (decimal.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out number)) return number;
+        }
+        return 0;
+    }
+
+    decimal JsonDecimal(JsonElement root, params string[] path)
+    {
+        JsonElement current = root;
+        foreach (string item in path)
+        {
+            if (current.ValueKind != JsonValueKind.Object || !current.TryGetProperty(item, out current)) return 0;
+        }
+        return Sayi(current);
+    }
+
+    decimal BudgetSatirToplami(JsonElement budgetData, string key)
+    {
+        if (budgetData.ValueKind != JsonValueKind.Object || !budgetData.TryGetProperty(key, out JsonElement row)) return 0;
+        return JsonDecimal(row, "t1") + JsonDecimal(row, "t2");
+    }
+
+    decimal yatirimButcesi = 0;
+    decimal finansmanToplami = 0;
+    decimal yillikIsletmeGideri = 0;
+    string rawYatirimOzeti = b.yatirimOzeti.yatirimOzetiJson ?? "";
+    if (!string.IsNullOrWhiteSpace(rawYatirimOzeti))
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(rawYatirimOzeti);
+            JsonElement root = doc.RootElement;
+            yatirimButcesi = JsonDecimal(root, "totals", "budget", "investment");
+            finansmanToplami = JsonDecimal(root, "totals", "budget", "finance");
+            yillikIsletmeGideri = JsonDecimal(root, "totals", "operatingExpense", "total");
+
+            if ((yatirimButcesi == 0 || finansmanToplami == 0) && root.TryGetProperty("investmentBudgetData", out JsonElement budgetData))
+            {
+                yatirimButcesi = BudgetSatirToplami(budgetData, "A1") + BudgetSatirToplami(budgetData, "A2") + BudgetSatirToplami(budgetData, "A3") + BudgetSatirToplami(budgetData, "A4")
+                    + BudgetSatirToplami(budgetData, "B1") + BudgetSatirToplami(budgetData, "B2") + BudgetSatirToplami(budgetData, "B3") + BudgetSatirToplami(budgetData, "B4")
+                    + BudgetSatirToplami(budgetData, "B5") + BudgetSatirToplami(budgetData, "B6") + BudgetSatirToplami(budgetData, "B7");
+                finansmanToplami = BudgetSatirToplami(budgetData, "D") + BudgetSatirToplami(budgetData, "E") + BudgetSatirToplami(budgetData, "F1") + BudgetSatirToplami(budgetData, "F2") + BudgetSatirToplami(budgetData, "G");
+            }
+
+            if (yillikIsletmeGideri == 0 && root.TryGetProperty("operatingExpenseRows", out JsonElement expenses) && expenses.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement row in expenses.EnumerateArray())
+                {
+                    yillikIsletmeGideri += JsonDecimal(row, "qty") * JsonDecimal(row, "unitPrice");
+                }
+            }
+        }
+        catch
+        {
+            yatirimButcesi = 0;
+            finansmanToplami = 0;
+            yillikIsletmeGideri = 0;
+        }
+    }
+
+    Donem? donem = b.basvuruFirma.donem;
+    if ((donem == null || donem.id <= 0) && b.basvuruFirma.donemId > 0)
+    {
+        donem = Model.Donemler.FirstOrDefault(x => x.id == b.basvuruFirma.donemId);
+    }
+    decimal altLimit = donem?.minimumYatirimTutari ?? 0;
+    decimal ustLimit = donem?.maksimumYatirimTutari ?? 0;
+    bool MaliDegerUygun(decimal? value) => value.HasValue && (altLimit <= 0 || value.Value >= altLimit) && (ustLimit <= 0 || value.Value <= ustLimit);
+    bool maliOlcekUygun = MaliDegerUygun(b.mali.oncekiYilNetSatis)
+        || MaliDegerUygun(b.mali.sonYilNetSatis)
+        || MaliDegerUygun(b.mali.oncekiYilAktifToplami)
+        || MaliDegerUygun(b.mali.sonYilAktifToplami);
+
+    decimal ortaklikPayToplami = b.ortaklik.ortaklar.Sum(x => x.payOrani.GetValueOrDefault());
+    decimal ozelSektorPayi = b.ortaklik.ortaklar.Count > 0
+        ? b.ortaklik.ortaklar.Where(x => string.Equals(x.ozelKamuNiteligi, "Özel", StringComparison.OrdinalIgnoreCase)).Sum(x => x.payOrani.GetValueOrDefault())
+        : b.ortaklik.ozelSektorPayi.GetValueOrDefault();
+
+    string degerZinciriAdi = b.yatirim.degerZinciriAsamalari.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.dz.ad))?.dz.ad ?? "-";
+    string secilenAsamalar = b.yatirim.degerZinciriAsamalari.Count > 0
+        ? string.Join(", ", b.yatirim.degerZinciriAsamalari.Select(x => x.ad).Where(x => !string.IsNullOrWhiteSpace(x)))
+        : "-";
+    string yatirimIli = b.YatirimAdresleri.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.ilAdi))?.ilAdi ?? b.basvuruFirma.il.ad;
+    string yatirimTuru = b.yatirim.yatirimTuru == enumYatirimTuru.Tanimsiz ? "-" : b.yatirim.yatirimTuru.ToString();
+
+    string cevreselKapsam = "-";
+    string kapsamDisiBeyani = "-";
+    if (!string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson))
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(b.cevreselSosyal.cevreselSosyalJson);
+            JsonElement root = doc.RootElement;
+            string mode = root.TryGetProperty("mode", out JsonElement modeEl) ? modeEl.GetString() ?? "" : "";
+            cevreselKapsam = mode switch
+            {
+                "existing" => R("Basvuru.CevreselSosyal.Scope.Existing"),
+                "planned" => R("Basvuru.CevreselSosyal.Scope.Planned"),
+                "both" => R("Basvuru.CevreselSosyal.Scope.Both"),
+                _ => "-"
+            };
+            if (root.TryGetProperty("answers", out JsonElement answers)
+                && answers.ValueKind == JsonValueKind.Object
+                && answers.TryGetProperty("csf_2_1_global_answer", out JsonElement exclusion))
+            {
+                kapsamDisiBeyani = YoksaTire(exclusion.GetString());
+            }
+        }
+        catch
+        {
+            cevreselKapsam = "-";
+            kapsamDisiBeyani = "-";
+        }
+    }
+
+    List<string> eksikler = new();
+    void Eksikse(bool condition, string message)
+    {
+        if (condition) eksikler.Add(message);
+    }
+
+    Eksikse(b.basvuruFirma.donemId <= 0, R("Basvuru.Summary.Error.PeriodRequired"));
+    Eksikse(b.basvuruFirma.ilId <= 0, R("Basvuru.Summary.Error.ProvinceRequired"));
+    Eksikse(b.basvuruFirma.firmaId <= 0, R("Basvuru.Summary.Error.CompanyRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.irtibat.kisi), R("Basvuru.Summary.Error.ContactPersonRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.irtibat.telefon), R("Basvuru.Summary.Error.ContactPhoneRequired"));
+    Eksikse(!b.basvuruFirma.sonIkiYildirFaalMi.HasValue, R("Basvuru.Summary.Error.ActiveTwoYearsRequired"));
+    Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru.Value == enumBasvuruSahibiTuru.Tanimsiz, R("Basvuru.Summary.Error.ApplicantTypeRequired"));
+    Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru.Value == enumHukukiTurSirketTuru.Tanimsiz, R("Basvuru.Summary.Error.LegalTypeRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), R("Basvuru.Summary.Error.InvestmentNameRequired"));
+    Eksikse(b.yatirim.yatirimTuru == enumYatirimTuru.Tanimsiz, R("Basvuru.Summary.Error.InvestmentTypeRequired"));
+    Eksikse(b.YatirimAdresleri.Count == 0, R("Basvuru.Summary.Error.InvestmentAddressRequired"));
+    Eksikse(b.yatirim.harcamaTurleri.Count == 0, R("Basvuru.Summary.Error.ExpenseTypeRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), R("Basvuru.Summary.Error.InvestmentPurposeRequired"));
+    Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, R("Basvuru.Summary.Error.ValueChainRequired"));
+    Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, R("Basvuru.Summary.Error.ValueChainStageRequired"));
+    Eksikse(!maliOlcekUygun, R("Basvuru.Summary.Error.FinancialScaleRequired"));
+    Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, R("Basvuru.Summary.Error.AuditChoiceRequired"));
+    Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, R("Basvuru.Summary.Error.AuditFileRequired"));
+    Eksikse(!b.ortaklik.bagliOrtakIsletmeVarMi.HasValue, R("Basvuru.Summary.Error.RelatedEnterpriseRequired"));
+    Eksikse(b.ortaklik.ortaklar.Count > 0 && Math.Abs(ortaklikPayToplami - 100) > 0.01m, R("Basvuru.Summary.Error.ShareTotalRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.uygunHarcama.pikkListesiJson) && b.yatirim.harcamaTurleri.Any(x => x == 1 || x == 2), R("Basvuru.Summary.Error.PikkRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(rawYatirimOzeti), R("Basvuru.Summary.Error.InvestmentSummaryRequired"));
+    Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.RequiredDocumentsRequired"));
+    Eksikse(b.AdliSicilKisileri.Count == 0, R("Basvuru.Summary.Error.CriminalPeopleRequired"));
+    Eksikse(b.AdliSicilKisileri.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.CriminalFilesRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson), R("Basvuru.Summary.Error.EsfRequired"));
+    Eksikse(kapsamDisiBeyani == "Evet", R("Basvuru.Summary.Error.EsfExclusion"));
+    Eksikse(!b.TaahhutDosyaId.HasValue, R("Basvuru.Summary.Error.CommitmentRequired"));
+}
+
+<section class="basvuru-panel active" data-panel="14">
+    <h2>@L["Basvuru.Section.Ozet.Title"]</h2>
+    <p class="lead">@L["Basvuru.Summary.Lead"]</p>
+
+    <div class="summary-card-grid">
+        <div class="summary-card"><span>@L["Basvuru.Summary.Card.TradeTitle"]</span><strong>@YoksaTire(b.basvuruFirma.firma.ticaretUnvani)</strong></div>
+        <div class="summary-card"><span>@L["Basvuru.Summary.Card.Investment"]</span><strong>@YoksaTire(b.yatirim.yatirimAdi)</strong></div>
+        <div class="summary-card"><span>@L["Basvuru.Summary.Card.ValueChain"]</span><strong>@degerZinciriAdi</strong></div>
+        <div class="summary-card"><span>@L["Basvuru.Summary.Card.FinancialScale"]</span><strong class="@(maliOlcekUygun ? "text-success" : "text-danger")">@(maliOlcekUygun ? L["Basvuru.Summary.Suitable"] : L["Basvuru.Summary.NotSuitable"])</strong></div>
+    </div>
+
+    <div class="summary-check-panel">
+        <h3>@L["Basvuru.Summary.CheckResultTitle"]</h3>
+        @if (eksikler.Count == 0)
+        {
+            <div class="alert alert-success"><strong>@L["Basvuru.Summary.SuccessStrong"]</strong> @L["Basvuru.Summary.SuccessText"]</div>
+        }
+        else
+        {
+            <div class="alert alert-danger">
+                <strong>@L["Basvuru.Summary.MissingFieldsTitle"]</strong>
+                <ul class="summary-error-list">
+                    @foreach (string eksik in eksikler)
+                    {
+                        <li>@eksik</li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+
+    <div class="summary-detail-panel">
+        <h3>@L["Basvuru.Summary.DetailTitle"]</h3>
+        <dl class="summary-detail-list">
+            <dt>@L["Basvuru.Summary.Detail.TaxNo"]</dt><dd>@YoksaTire(b.basvuruFirma.firma.vergiKimlikNo)</dd>
+            <dt>@L["Basvuru.Summary.Detail.MersisNo"]</dt><dd>@YoksaTire(b.basvuruFirma.firma.mersisNo)</dd>
+            <dt>@L["Basvuru.Summary.Detail.InvestmentProvince"]</dt><dd>@YoksaTire(yatirimIli)</dd>
+            <dt>@L["Basvuru.Summary.Detail.InvestmentType"]</dt><dd>@yatirimTuru</dd>
+            <dt>@L["Basvuru.Summary.Detail.SelectedStages"]</dt><dd>@secilenAsamalar</dd>
+            <dt>@L["Basvuru.Summary.Detail.ApplicantLastNetSales"]</dt><dd>@Para(b.mali.sonYilNetSatis)</dd>
+            <dt>@L["Basvuru.Summary.Detail.ApplicantLastAssets"]</dt><dd>@Para(b.mali.sonYilAktifToplami)</dd>
+            <dt>@L["Basvuru.Summary.Detail.ControlLastNetSales"]</dt><dd>@Para(b.mali.sonYilNetSatis)</dd>
+            <dt>@L["Basvuru.Summary.Detail.ControlLastAssets"]</dt><dd>@Para(b.mali.sonYilAktifToplami)</dd>
+            <dt>@L["Basvuru.Summary.Detail.InvestmentBudget"]</dt><dd>@Para(yatirimButcesi)</dd>
+            <dt>@L["Basvuru.Summary.Detail.FinanceTotal"]</dt><dd>@Para(finansmanToplami)</dd>
+            <dt>@L["Basvuru.Summary.Detail.AnnualOperatingExpense"]</dt><dd>@Para(yillikIsletmeGideri)</dd>
+            <dt>@L["Basvuru.Summary.Detail.AuditSubject"]</dt><dd>@EvetHayir(b.mali.bagimsizDenetimeTabiMi)</dd>
+            <dt>@L["Basvuru.Summary.Detail.EsfScope"]</dt><dd>@cevreselKapsam</dd>
+            <dt>@L["Basvuru.Summary.Detail.EsfExclusion"]</dt><dd>@kapsamDisiBeyani</dd>
+            <dt>@L["Basvuru.Summary.Detail.ShareTotal"]</dt><dd>@Oran(ortaklikPayToplami)</dd>
+            <dt>@L["Basvuru.Summary.Detail.PrivateShare"]</dt><dd>@Oran(ozelSektorPayi)</dd>
+        </dl>
+    </div>
+</section>
