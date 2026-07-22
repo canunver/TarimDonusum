@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using System.Security.Cryptography;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
 using TarimDonusum.Tablolar;
@@ -24,7 +25,7 @@ namespace TarimDonusum.IsKurallari
 
         public async Task<Sonuc<int>> YeniBasvuruKullanicisiAsync(Kullanici kullanici)
         {
-            Sonuc<int> sonuc = new Sonuc<int>();
+            Sonuc<int> sonuc = new();
 
             try
             {
@@ -39,7 +40,7 @@ namespace TarimDonusum.IsKurallari
                 if (!sonuc.basarili)
                     return sonuc;
 
-                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
 
                 await BenzerKayitKontrolEtAsync(connection, kullanici, sonuc);
@@ -59,18 +60,18 @@ namespace TarimDonusum.IsKurallari
 
         public async Task<Sonuc<Kullanici>> KullaniciOkuAsync(int kullaniciId, string kulKod = "", string sifre = "")
         {
-            Sonuc<Kullanici> sonuc = new Sonuc<Kullanici>();
+            Sonuc<Kullanici> sonuc = new();
 
             try
             {
                 if (!ConnectionStringKontrolEt(sonuc))
                     return sonuc;
 
-                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
 
-                TABKullanici tabKullanici = new TABKullanici(connection);
-                TABKullaniciYetki tabKullaniciYetki = new TABKullaniciYetki(connection);
+                TABKullanici tabKullanici = new(connection);
+                TABKullaniciYetki tabKullaniciYetki = new(connection);
 
                 Kullanici? kullanici = await tabKullanici.OkuAsync(kullaniciId, kulKod, sifre);
                 if (kullanici == null)
@@ -95,17 +96,17 @@ namespace TarimDonusum.IsKurallari
 
         public async Task<Sonuc<Kullanici>> IlkAktifKullaniciyiOkuAsync()
         {
-            Sonuc<Kullanici> sonuc = new Sonuc<Kullanici>();
+            Sonuc<Kullanici> sonuc = new();
 
             try
             {
                 if (!ConnectionStringKontrolEt(sonuc))
                     return sonuc;
 
-                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
 
-                TABKullanici tabKullanici = new TABKullanici(connection);
+                TABKullanici tabKullanici = new(connection);
                 Kullanici? kullanici = await tabKullanici.IlkAktifKullaniciyiOkuAsync();
                 if (kullanici == null)
                 {
@@ -113,7 +114,7 @@ namespace TarimDonusum.IsKurallari
                     return sonuc;
                 }
 
-                TABKullaniciYetki tabKullaniciYetki = new TABKullaniciYetki(connection);
+                TABKullaniciYetki tabKullaniciYetki = new(connection);
                 await KullaniciYetkileriniYukleAsync(tabKullaniciYetki, kullanici);
 
                 sonuc.nesne = kullanici;
@@ -124,6 +125,155 @@ namespace TarimDonusum.IsKurallari
             }
 
             return sonuc;
+        }
+
+        public async Task<Sonuc<List<Kullanici>>> KullanicilariAraAsync(KullaniciArama arama, Kullanici? islemYapan)
+        {
+            Sonuc<List<Kullanici>> sonuc = new();
+            if (!SistemYoneticisiMi(islemYapan, sonuc)) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                TABKullanici tabKullanici = new(connection);
+                TABKullaniciYetki tabYetki = new(connection);
+                sonuc.nesne = await tabKullanici.AraAsync(arama.AdSoyad, arama.BirimId, arama.KullaniciTipi);
+                foreach (Kullanici kullanici in sonuc.nesne)
+                    kullanici.Yetkiler = await tabYetki.KullaniciYetkileriniListeleAsync(kullanici.Id);
+            }
+            catch (Exception ex) { BeklenmeyenHata(sonuc, ex, "Kullanıcılar aranamadı.", "Kullanıcılar aranamadı."); }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> KullaniciKaydetAsync(KullaniciKayit kayit, Kullanici? islemYapan)
+        {
+            Sonuc<int> sonuc = new();
+            if (!SistemYoneticisiMi(islemYapan, sonuc)) return sonuc;
+            Kullanici k = kayit.Kullanici;
+            k.Ad = k.Ad?.Trim() ?? ""; k.Soyad = k.Soyad?.Trim() ?? "";
+            k.TCKN = k.TCKN?.Trim() ?? ""; k.Eposta = k.Eposta?.Trim() ?? "";
+            k.Telefon = OrtakFonksiyonlar.TelNormalize(k.Telefon);
+            if (string.IsNullOrWhiteSpace(k.Ad) || string.IsNullOrWhiteSpace(k.Soyad)) sonuc.HataEkle("Ad ve soyad girilmelidir.");
+            if (kayit.Yetkiler.Count == 0) sonuc.HataEkle("En az bir kullanıcı tipi seçilmelidir.");
+            if (kayit.Yetkiler.Any(y => y.Rol == KullaniciRol.BasvuruKullanicisi)
+                && kayit.Yetkiler.Count != 1)
+                sonuc.HataEkle("Başvuru kullanıcısı tipi tek başına olmalıdır; başka kullanıcı tipleriyle birlikte seçilemez.");
+            if (kayit.Yetkiler.GroupBy(y => new { y.Rol, y.Birim }).Any(g => g.Count() > 1))
+                sonuc.HataEkle("Aynı kullanıcı tipi ve birim birden fazla eklenemez.");
+            foreach (KullaniciYetki y in kayit.Yetkiler)
+            {
+                if (!Enum.IsDefined(typeof(KullaniciRol), y.Rol)) sonuc.HataEkle("Geçersiz kullanıcı tipi.");
+                if (y.Rol == KullaniciRol.BirimKullanicisi)
+                {
+                    if (!y.Birim.HasValue) sonuc.HataEkle("Birim kullanıcısı için birim seçilmelidir.");
+                    if (!Enum.IsDefined(typeof(KullaniciIslemRolu), y.YetkiKodu) || y.YetkiKodu == 0)
+                        sonuc.HataEkle("Birim kullanıcısı için rol seçilmelidir.");
+                }
+                else { y.Birim = null; y.YetkiKodu = 0; }
+            }
+            if (!sonuc.basarili) return sonuc;
+
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                TABKullanici tabKullanici = new(connection, null, transaction);
+                TABKullaniciYetki tabYetki = new(connection, null, transaction);
+                if (k.Id == 0)
+                {
+                    k.Parola = "Aa1!" + Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+                    Sonuc dogrulama = k.Dogrula(new Sonuc());
+                    SonucHatalariniAktar(dogrulama, sonuc);
+                    if (!sonuc.basarili) { await transaction.RollbackAsync(); return sonuc; }
+                    k.KayitTarihi = DateTime.Now;
+                    k.Id = await tabKullanici.EkleAsync(k);
+                }
+                else
+                {
+                    Kullanici? mevcut = await tabKullanici.OkuAsync(k.Id);
+                    if (mevcut == null) { sonuc.HataEkle("Kullanıcı bulunamadı."); await transaction.RollbackAsync(); return sonuc; }
+                    k.TCKN = mevcut.TCKN; k.Eposta = mevcut.Eposta; k.Telefon = mevcut.Telefon; k.KayitTarihi = mevcut.KayitTarihi;
+                    await tabKullanici.GuncelleAsync(k);
+                    await tabYetki.SilKullaniciYetkileriAsync(k.Id);
+                }
+                foreach (KullaniciYetki y in kayit.Yetkiler)
+                {
+                    y.Id = 0; y.KullaniciId = k.Id; await tabYetki.EkleAsync(y);
+                }
+                await transaction.CommitAsync(); sonuc.nesne = k.Id; sonuc.mesaj = "Kullanıcı kaydedildi.";
+            }
+            catch (Exception ex) { BeklenmeyenHata(sonuc, ex, "Kullanıcı kaydedilemedi.", "Kullanıcı kaydedilemedi."); }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<ParolaBaglantisiSonucu>> ParolaBaglantisiOlusturAsync(int kullaniciId, Kullanici? islemYapan)
+        {
+            Sonuc<ParolaBaglantisiSonucu> sonuc = new();
+            if (!SistemYoneticisiMi(islemYapan, sonuc)) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                TABKullanici tabKullanici = new(connection);
+                Kullanici? kullanici = await tabKullanici.OkuAsync(kullaniciId);
+                if (kullanici == null) { sonuc.HataEkle(Metin("Business.User.NotFound")); return sonuc; }
+
+                string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+                    .Replace("+", "-").Replace("/", "_").TrimEnd('=');
+                TABKullaniciParolaToken tabToken = new(connection);
+                await tabToken.EkleAsync(kullaniciId, TokenHash(token), DateTime.Now.AddHours(2));
+                sonuc.nesne = new ParolaBaglantisiSonucu
+                {
+                    Token = token,
+                    Eposta = kullanici.Eposta,
+                    AdSoyad = $"{kullanici.Ad} {kullanici.Soyad}"
+                };
+            }
+            catch (Exception ex) { BeklenmeyenHata(sonuc, ex, "Parola bağlantısı oluşturulamadı.", "Parola bağlantısı oluşturulamadı."); }
+            return sonuc;
+        }
+
+        public async Task<Sonuc> ParolaBelirleAsync(string token, string parola, string parolaTekrar)
+        {
+            Sonuc sonuc = new();
+            if (string.IsNullOrWhiteSpace(token)) sonuc.HataEkle(Metin("Kullanici.PasswordLink.Invalid"));
+            if (!string.Equals(parola, parolaTekrar, StringComparison.Ordinal)) sonuc.HataEkle(Metin("Kullanici.PasswordLink.Mismatch"));
+            if (!OrtakFonksiyonlar.ParolaGecerliMi(parola)) sonuc.HataEkle(Metin("Kullanici.PasswordLink.Weak"));
+            if (!sonuc.basarili) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                TABKullaniciParolaToken tabToken = new(connection, null, transaction);
+                string hash = TokenHash(token);
+                int? kullaniciId = await tabToken.GecerliKullaniciIdAsync(hash);
+                if (!kullaniciId.HasValue)
+                {
+                    sonuc.HataEkle(Metin("Kullanici.PasswordLink.Invalid"));
+                    await transaction.RollbackAsync();
+                    return sonuc;
+                }
+                TABKullanici tabKullanici = new(connection, null, transaction);
+                await tabKullanici.ParolaDegistirAsync(new Kullanici { Id = kullaniciId.Value, Parola = parola });
+                await tabToken.KullanildiYapAsync(hash);
+                await transaction.CommitAsync();
+                sonuc.mesaj = Metin("Kullanici.PasswordLink.Success");
+            }
+            catch (Exception ex) { BeklenmeyenHata(sonuc, ex, "Parola belirlenemedi.", "Parola belirlenemedi."); }
+            return sonuc;
+        }
+
+        private static string TokenHash(string token)
+        {
+            return Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));
+        }
+
+        private static bool SistemYoneticisiMi(Kullanici? kullanici, Sonuc sonuc)
+        {
+            if (kullanici?.Yetkiler.Any(y => y.Rol == KullaniciRol.SistemYoneticisi) == true) return true;
+            sonuc.HataEkle("Bu işlem için sistem yöneticisi yetkisi gereklidir."); return false;
         }
 
         private static async Task KullaniciYetkileriniYukleAsync(
@@ -138,7 +288,7 @@ namespace TarimDonusum.IsKurallari
             Kullanici kullanici,
             Sonuc sonuc)
         {
-            TABKullanici tabKullanici = new TABKullanici(connection);
+            TABKullanici tabKullanici = new(connection);
 
             if (await tabKullanici.BenzerKayitVarMiAsync(kullanici.TCKN, kullanici.Eposta, kullanici.Telefon))
                 sonuc.HataEkle(Metin("Business.User.SimilarRecordExists"));
@@ -154,8 +304,8 @@ namespace TarimDonusum.IsKurallari
             try
             {
                 int kullaniciId = await KullaniciEkleAsync(connection, transaction, kullanici);
-                KullaniciYetki basvuranYetkisi = await BasvuranYetkisiEkleAsync(connection, transaction, kullanici, kullaniciId);
-                await KullaniciLogEkleAsync(connection, transaction, kullanici, kullaniciId, kullaniciId, "YeniBasvuruKullanicisi", basvuranYetkisi);
+                KullaniciYetki basvuruKullanicisiYetkisi = await BasvuruKullanicisiYetkisiEkleAsync(connection, transaction, kullanici, kullaniciId);
+                await KullaniciLogEkleAsync(connection, transaction, kullanici, kullaniciId, kullaniciId, "YeniBasvuruKullanicisi", basvuruKullanicisiYetkisi);
 
                 await transaction.CommitAsync();
 
@@ -216,30 +366,30 @@ namespace TarimDonusum.IsKurallari
             SqlTransaction transaction,
             Kullanici kullanici)
         {
-            TABKullanici tabKullanici = new TABKullanici(connection, null, transaction);
+            TABKullanici tabKullanici = new(connection, null, transaction);
 
             return await tabKullanici.EkleAsync(kullanici);
         }
 
-        private static async Task<KullaniciYetki> BasvuranYetkisiEkleAsync(
+        private static async Task<KullaniciYetki> BasvuruKullanicisiYetkisiEkleAsync(
             SqlConnection connection,
             SqlTransaction transaction,
             Kullanici kullanici,
             int kullaniciId)
         {
-            TABKullaniciYetki tabKullaniciYetki = new TABKullaniciYetki(connection, null, transaction);
-            KullaniciYetki basvuranYetkisi = new KullaniciYetki
+            TABKullaniciYetki tabKullaniciYetki = new(connection, null, transaction);
+            KullaniciYetki basvuruKullanicisiYetkisi = new()
             {
                 KullaniciId = kullaniciId,
-                Rol = KullaniciRol.Basvuran,
+                Rol = KullaniciRol.BasvuruKullanicisi,
                 YetkiKodu = 11111,
                 Birim = null
             };
 
-            await tabKullaniciYetki.EkleAsync(basvuranYetkisi);
-            kullanici.Yetkiler.Add(basvuranYetkisi);
+            await tabKullaniciYetki.EkleAsync(basvuruKullanicisiYetkisi);
+            kullanici.Yetkiler.Add(basvuruKullanicisiYetkisi);
 
-            return basvuranYetkisi;
+            return basvuruKullanicisiYetkisi;
         }
 
         private static async Task KullaniciLogEkleAsync(
@@ -251,8 +401,8 @@ namespace TarimDonusum.IsKurallari
             string islem,
             KullaniciYetki basvuranYetkisi)
         {
-            TABKullaniciLog tabKullaniciLog = new TABKullaniciLog(connection, null, transaction);
-            KullaniciLog log = new KullaniciLog
+            TABKullaniciLog tabKullaniciLog = new(connection, null, transaction);
+            KullaniciLog log = new()
             {
                 KullaniciId = kullaniciId,
                 IslemYapanKullaniciId = islemYapanKullaniciId,

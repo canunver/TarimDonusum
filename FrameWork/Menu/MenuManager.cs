@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Localization;
 using System.Xml.Linq;
 
+using TarimDonusum.Models;
+
 namespace TarimDonusum.FrameWork.Menu
 {
     public static class MenuManager
@@ -17,6 +19,7 @@ namespace TarimDonusum.FrameWork.Menu
                 Target = item.Target,
                 Type = item.Type,
                 Data = item.Data,
+                Roller = item.Roller.ToList(),
                 Children = item.Children
                     .Select(CloneItem)
                     .ToList()
@@ -51,6 +54,14 @@ namespace TarimDonusum.FrameWork.Menu
         public static List<MenuItem> GetMenuBasvuru(IStringLocalizer<SharedResource> L)
         {
             var menu = CloneMenu(_menuBasvuru.Value);
+            MenuLocalize("MenuBasvuru", menu, L);
+            return menu;
+        }
+
+        public static List<MenuItem> GetMenuBasvuru(IStringLocalizer<SharedResource> L, IEnumerable<KullaniciRol> kullaniciRolleri)
+        {
+            var roller = kullaniciRolleri.ToHashSet();
+            var menu = YetkiyeGoreFiltrele(_menuBasvuru.Value, roller);
             MenuLocalize("MenuBasvuru", menu, L);
             return menu;
         }
@@ -97,10 +108,75 @@ namespace TarimDonusum.FrameWork.Menu
                 Target = (string?)e.Attribute("target"),
                 Type = ReadType(e),
                 Data = e.Element("Data")?.Value,
+                Roller = ReadRoller(e),
                 Children = e.Elements("Item")
                             .Select(ReadItem)
                             .ToList()
             };
+        }
+
+        private static List<MenuItem> YetkiyeGoreFiltrele(List<MenuItem> menu, HashSet<KullaniciRol> kullaniciRolleri)
+        {
+            return menu
+                .Select(item => YetkiyeGoreFiltrele(item, kullaniciRolleri))
+                .Where(item => item != null)
+                .Select(item => item!)
+                .ToList();
+        }
+
+        private static MenuItem? YetkiyeGoreFiltrele(MenuItem item, HashSet<KullaniciRol> kullaniciRolleri)
+        {
+            if (!MenuYetkiliMi(item, kullaniciRolleri))
+                return null;
+
+            var kopya = CloneItem(item);
+            kopya.Children = YetkiyeGoreFiltrele(kopya.Children, kullaniciRolleri);
+
+            if (kopya.Type == MenuItemType.Menu &&
+                kopya.Children.Count == 0 &&
+                string.IsNullOrWhiteSpace(kopya.Url) &&
+                string.IsNullOrWhiteSpace(kopya.Data))
+                return null;
+
+            return kopya;
+        }
+
+        private static bool MenuYetkiliMi(MenuItem item, HashSet<KullaniciRol> kullaniciRolleri)
+        {
+            return item.Roller.Count == 0 || item.Roller.Any(kullaniciRolleri.Contains);
+        }
+
+        private static List<KullaniciRol> ReadRoller(XElement e)
+        {
+            string? roller = (string?)e.Attribute("roles") ??
+                             (string?)e.Attribute("roller") ??
+                             (string?)e.Attribute("rol") ??
+                             (string?)e.Attribute("kullaniciTipleri") ??
+                             (string?)e.Attribute("kullaniciTipi");
+
+            if (string.IsNullOrWhiteSpace(roller))
+                return new List<KullaniciRol>();
+
+            char[] ayiraclar = new[] { ',', ';', '|', ' ' };
+            return roller
+                .Split(ayiraclar, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(ReadRol)
+                .Where(rol => rol.HasValue)
+                .Select(rol => rol!.Value)
+                .Distinct()
+                .ToList();
+        }
+
+        private static KullaniciRol? ReadRol(string rol)
+        {
+            if (int.TryParse(rol, out int rolNo) &&
+                Enum.IsDefined(typeof(KullaniciRol), rolNo))
+                return (KullaniciRol)rolNo;
+
+            if (Enum.TryParse<KullaniciRol>(rol, true, out var enumRol))
+                return enumRol;
+
+            return null;
         }
 
 

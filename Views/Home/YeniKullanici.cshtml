@@ -3,7 +3,6 @@
 @inject IStringLocalizer<TarimDonusum.SharedResource> L
 
 @{
-    Layout = "~/Views/Shared/_HomeLayout.cshtml";
     ViewData["Title"] = L["YeniKullanici.Title"];
     bool epostaDogrulandi = ViewData["EpostaDogrulandi"] is bool epostaDogrulandiDegeri && epostaDogrulandiDegeri;
     bool telefonDogrulandi = ViewData["TelefonDogrulandi"] is bool telefonDogrulandiDegeri && telefonDogrulandiDegeri;

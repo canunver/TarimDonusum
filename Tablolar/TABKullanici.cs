@@ -136,6 +136,35 @@ namespace TarimDonusum.Tablolar
             return liste;
         }
 
+        public async Task<List<Kullanici>> AraAsync(string adSoyad, int? birimId, KullaniciRol? kullaniciTipi)
+        {
+            string sql = @"
+                SELECT DISTINCT K.Id, K.TCKN, K.Ad, K.Soyad, K.DogumTarihi, K.Cinsiyet,
+                    K.Eposta, K.Telefon, K.KayitTarihi, K.Aktif
+                FROM dbo.Kullanici K
+                WHERE 1 = 1 ";
+            if (!string.IsNullOrWhiteSpace(adSoyad))
+                sql += " AND CONCAT(K.Ad, N' ', K.Soyad) LIKE N'%' + @AdSoyad + N'%' ";
+            if (birimId.HasValue)
+                sql += @" AND EXISTS (
+                        SELECT 1 FROM dbo.KullaniciYetki Y
+                        WHERE Y.KullaniciId = K.Id AND Y.Birim = @BirimId) ";
+            if (kullaniciTipi.HasValue)
+                sql += @" AND EXISTS (
+                        SELECT 1 FROM dbo.KullaniciYetki Y
+                        WHERE Y.KullaniciId = K.Id AND Y.Rol = @KullaniciTipi) ";
+            sql += " ORDER BY K.Ad, K.Soyad;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+            if (!string.IsNullOrWhiteSpace(adSoyad)) command.Parameters.AddWithValue("@AdSoyad", adSoyad.Trim());
+            if (birimId.HasValue) command.Parameters.AddWithValue("@BirimId", birimId.Value);
+            if (kullaniciTipi.HasValue) command.Parameters.AddWithValue("@KullaniciTipi", (int)kullaniciTipi.Value);
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+            List<Kullanici> liste = new();
+            while (await reader.ReadAsync()) liste.Add(Oku(reader));
+            return liste;
+        }
+
         public async Task<Kullanici?> IlkAktifKullaniciyiOkuAsync()
         {
             const string sql = @"

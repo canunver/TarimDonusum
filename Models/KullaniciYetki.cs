@@ -16,9 +16,15 @@ namespace TarimDonusum.Models
     public enum KullaniciRol
     {
         SistemYoneticisi = 1,
-        KullaniciYoneticisi = 2,
-        Basvuran = 3,
-        Denetleyen = 4,
-        MerkezKullanicisi = 5
+        BasvuruKullanicisi = 2,
+        BirimKullanicisi = 3
+    }
+
+    public enum KullaniciIslemRolu
+    {
+        Yok = 0,
+        Gorme = 1,
+        Yazma = 2,
+        Onaylama = 3
     }
 }

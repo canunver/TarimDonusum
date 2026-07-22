@@ -180,6 +180,30 @@
   <data name="MenuBasvuru.denetlemeKayitlari" xml:space="preserve">
     <value>Denetleme Kayıtları</value>
   </data>
+  <data name="MenuBasvuru.tanimlar" xml:space="preserve">
+    <value>Tan&#305;mlar</value>
+  </data>
+  <data name="MenuBasvuru.dashboard" xml:space="preserve">
+    <value>G&#246;sterge Paneli</value>
+  </data>
+  <data name="MenuBasvuru.kullanicilar" xml:space="preserve">
+    <value>Kullan&#305;c&#305;lar</value>
+  </data>
+  <data name="MenuBasvuru.birimler" xml:space="preserve">
+    <value>Birimler</value>
+  </data>
+  <data name="MenuBasvuru.iller" xml:space="preserve">
+    <value>&#304;ller</value>
+  </data>
+  <data name="MenuBasvuru.ilceler" xml:space="preserve">
+    <value>&#304;l&#231;eler</value>
+  </data>
+  <data name="MenuBasvuru.degerZincirleri" xml:space="preserve">
+    <value>De&#287;er Zincirleri</value>
+  </data>
+  <data name="MenuBasvuru.donemler" xml:space="preserve">
+    <value>D&#246;nemler</value>
+  </data>
   <data name="Layout.DefaultTitle" xml:space="preserve">
     <value>TKDK Başvuru Portalı</value>
   </data>
@@ -1583,4 +1607,89 @@
   <data name="Basvuru.Ortaklik.NetSalesRevenue" xml:space="preserve"><value>net satış hasılatı</value></data>
   <data name="Basvuru.Ortaklik.TotalAssets" xml:space="preserve"><value>aktif toplamı</value></data>
   <data name="Basvuru.Ortaklik.RequiredEnter" xml:space="preserve"><value>{0} girilmelidir.</value></data>
+  <data name="Birim.Title" xml:space="preserve"><value>Birimler</value></data>
+  <data name="Birim.Heading" xml:space="preserve"><value>Birimler</value></data>
+  <data name="Birim.Description" xml:space="preserve"><value>Kullan&#305;c&#305; birimlerinin merkez/ta&#351;ra bilgisi, il kodu ve g&#246;r&#252;n&#252;m s&#305;ras&#305; buradan y&#246;netilir.</value></data>
+  <data name="Birim.Add" xml:space="preserve"><value>Birim Ekle</value></data>
+  <data name="Birim.Edit" xml:space="preserve"><value>D&#252;zenle</value></data>
+  <data name="Birim.Deactivate" xml:space="preserve"><value>Pasif Yap</value></data>
+  <data name="Birim.ConfirmDeactivate" xml:space="preserve"><value>Bu birim pasif yap&#305;ls&#305;n m&#305;?</value></data>
+  <data name="Birim.Modal.Title" xml:space="preserve"><value>Birim Bilgileri</value></data>
+  <data name="Birim.Field.Order" xml:space="preserve"><value>S&#305;ra No</value></data>
+  <data name="Birim.Field.Name" xml:space="preserve"><value>Birim Ad&#305;</value></data>
+  <data name="Birim.Field.Type" xml:space="preserve"><value>Birim T&#252;r&#252;</value></data>
+  <data name="Birim.Field.ProvinceCode" xml:space="preserve"><value>&#304;l Kodu</value></data>
+  <data name="Birim.Field.Province" xml:space="preserve"><value>&#304;l</value></data>
+  <data name="Birim.Field.Status" xml:space="preserve"><value>Durum</value></data>
+  <data name="Birim.Field.Action" xml:space="preserve"><value>&#304;&#351;lem</value></data>
+  <data name="Birim.Type.Center" xml:space="preserve"><value>Merkez</value></data>
+  <data name="Birim.Type.Provincial" xml:space="preserve"><value>Ta&#351;ra</value></data>
+  <data name="Birim.Status.Active" xml:space="preserve"><value>Aktif</value></data>
+  <data name="Birim.Status.Passive" xml:space="preserve"><value>Pasif</value></data>
+  <data name="Business.Authorization.SystemAdminRequired" xml:space="preserve"><value>Bu i&#351;lem i&#231;in sistem y&#246;neticisi yetkisi gerekir.</value></data>
+  <data name="Business.Unit.ListFailed" xml:space="preserve"><value>Birim listesi okunamad&#305;.</value></data>
+  <data name="Business.Unit.NotFound" xml:space="preserve"><value>Birim bulunamad&#305;.</value></data>
+  <data name="Business.Unit.Saved" xml:space="preserve"><value>Birim kaydedildi.</value></data>
+  <data name="Business.Unit.SaveFailed" xml:space="preserve"><value>Birim kaydedilemedi.</value></data>
+  <data name="Business.Unit.Deactivated" xml:space="preserve"><value>Birim pasif yap&#305;ld&#305;.</value></data>
+  <data name="Business.Unit.DeactivateFailed" xml:space="preserve"><value>Birim pasif yap&#305;lamad&#305;.</value></data>
+  <data name="Business.Unit.NameRequired" xml:space="preserve"><value>Birim ad&#305; girilmelidir.</value></data>
+  <data name="Business.Unit.TypeRequired" xml:space="preserve"><value>Birim t&#252;r&#252; se&#231;ilmelidir.</value></data>
+  <data name="Business.Unit.OrderRequired" xml:space="preserve"><value>S&#305;ra numaras&#305; girilmelidir.</value></data>
+  <data name="Business.Unit.ProvinceRequired" xml:space="preserve"><value>Ta&#351;ra birimi i&#231;in il kodu se&#231;ilmelidir.</value></data>
+  <data name="Business.Unit.ProvinceNotFound" xml:space="preserve"><value>Se&#231;ilen il kodu bulunamad&#305;.</value></data>
+  <data name="Kullanici.Title" xml:space="preserve"><value>Kullan&#305;c&#305; Y&#246;netimi</value></data>
+  <data name="Kullanici.Heading" xml:space="preserve"><value>Kullan&#305;c&#305; Y&#246;netimi</value></data>
+  <data name="Kullanici.Description" xml:space="preserve"><value>Kullan&#305;c&#305; arama, ekleme ve yetki d&#252;zenleme</value></data>
+  <data name="Kullanici.Add" xml:space="preserve"><value>Yeni kullan&#305;c&#305;</value></data>
+  <data name="Kullanici.All" xml:space="preserve"><value>T&#252;m&#252;</value></data>
+  <data name="Kullanici.Search" xml:space="preserve"><value>Ara</value></data>
+  <data name="Kullanici.SearchPrompt" xml:space="preserve"><value>Arama kriterlerini girip Ara tu&#351;una bas&#305;n&#305;z.</value></data>
+  <data name="Kullanici.ModalTitle" xml:space="preserve"><value>Kullan&#305;c&#305;</value></data>
+  <data name="Kullanici.Close" xml:space="preserve"><value>Kapat</value></data>
+  <data name="Kullanici.Save" xml:space="preserve"><value>Kaydet</value></data>
+  <data name="Kullanici.Select" xml:space="preserve"><value>Se&#231;iniz</value></data>
+  <data name="Kullanici.Edit" xml:space="preserve"><value>D&#252;zenle</value></data>
+  <data name="Kullanici.Delete" xml:space="preserve"><value>Sil</value></data>
+  <data name="Kullanici.AddType" xml:space="preserve"><value>Tip ekle</value></data>
+  <data name="Kullanici.TypesAndRoles" xml:space="preserve"><value>Kullan&#305;c&#305; tipleri ve roller</value></data>
+  <data name="Kullanici.UsersFailed" xml:space="preserve"><value>Kullan&#305;c&#305;lar getirilemedi.</value></data>
+  <data name="Kullanici.UnitsFailed" xml:space="preserve"><value>Birimler getirilemedi.</value></data>
+  <data name="Kullanici.NoResults" xml:space="preserve"><value>Arama kriterlerine uygun kullan&#305;c&#305; bulunamad&#305;.</value></data>
+  <data name="Kullanici.Field.FullName" xml:space="preserve"><value>Ad soyad</value></data>
+  <data name="Kullanici.Field.Unit" xml:space="preserve"><value>Birim</value></data>
+  <data name="Kullanici.Field.UserType" xml:space="preserve"><value>Kullan&#305;c&#305; tipi</value></data>
+  <data name="Kullanici.Field.Role" xml:space="preserve"><value>Rol</value></data>
+  <data name="Kullanici.Field.TypeRoleUnit" xml:space="preserve"><value>Kullan&#305;c&#305; tipi / rol / birim</value></data>
+  <data name="Kullanici.Field.Email" xml:space="preserve"><value>E-posta</value></data>
+  <data name="Kullanici.Field.Phone" xml:space="preserve"><value>Telefon</value></data>
+  <data name="Kullanici.Field.Status" xml:space="preserve"><value>Durum</value></data>
+  <data name="Kullanici.Field.TCKN" xml:space="preserve"><value>T.C. kimlik no</value></data>
+  <data name="Kullanici.Field.Name" xml:space="preserve"><value>Ad</value></data>
+  <data name="Kullanici.Field.Surname" xml:space="preserve"><value>Soyad</value></data>
+  <data name="Kullanici.Field.BirthDate" xml:space="preserve"><value>Do&#287;um tarihi</value></data>
+  <data name="Kullanici.Field.Gender" xml:space="preserve"><value>Cinsiyet</value></data>
+  <data name="Kullanici.Field.Password" xml:space="preserve"><value>Parola</value></data>
+  <data name="Kullanici.Gender.Female" xml:space="preserve"><value>Kad&#305;n</value></data>
+  <data name="Kullanici.Gender.Male" xml:space="preserve"><value>Erkek</value></data>
+  <data name="Kullanici.Status.Active" xml:space="preserve"><value>Aktif</value></data>
+  <data name="Kullanici.Status.Passive" xml:space="preserve"><value>Pasif</value></data>
+  <data name="Kullanici.Type.SistemYoneticisi" xml:space="preserve"><value>Sistem kullan&#305;c&#305;s&#305;</value></data>
+  <data name="Kullanici.Type.BasvuruKullanicisi" xml:space="preserve"><value>Ba&#351;vuru kullan&#305;c&#305;s&#305;</value></data>
+  <data name="Kullanici.Type.BirimKullanicisi" xml:space="preserve"><value>Birim kullan&#305;c&#305;s&#305;</value></data>
+  <data name="Kullanici.Role.Gorme" xml:space="preserve"><value>G&#246;rme</value></data>
+  <data name="Kullanici.Role.Yazma" xml:space="preserve"><value>Yazma</value></data>
+  <data name="Kullanici.Role.Onaylama" xml:space="preserve"><value>Onaylama</value></data>
+  <data name="Kullanici.PasswordLink.Send" xml:space="preserve"><value>Parola ba&#287;lant&#305;s&#305; g&#246;nder</value></data>
+  <data name="Kullanici.PasswordLink.Sent" xml:space="preserve"><value>Parola belirleme ba&#287;lant&#305;s&#305; kullan&#305;c&#305;ya g&#246;nderildi.</value></data>
+  <data name="Kullanici.PasswordLink.MailSubject" xml:space="preserve"><value>Parola belirleme ba&#287;lant&#305;s&#305;</value></data>
+  <data name="Kullanici.PasswordLink.MailBody" xml:space="preserve"><value>Merhaba {0},&lt;br/&gt;&lt;br/&gt;Parolan&#305;z&#305; belirlemek i&#231;in &lt;a href=&quot;{1}&quot;&gt;bu ba&#287;lant&#305;ya t&#305;klay&#305;n&lt;/a&gt;. Ba&#287;lant&#305; iki saat ge&#231;erlidir ve yaln&#305;zca bir kez kullan&#305;labilir.</value></data>
+  <data name="Kullanici.PasswordLink.Title" xml:space="preserve"><value>Parola belirle</value></data>
+  <data name="Kullanici.PasswordLink.Description" xml:space="preserve"><value>Hesab&#305;n&#305;z i&#231;in yeni bir parola belirleyin.</value></data>
+  <data name="Kullanici.PasswordLink.PasswordAgain" xml:space="preserve"><value>Parola tekrar</value></data>
+  <data name="Kullanici.PasswordLink.SetPassword" xml:space="preserve"><value>Parolay&#305; kaydet</value></data>
+  <data name="Kullanici.PasswordLink.Invalid" xml:space="preserve"><value>Parola ba&#287;lant&#305;s&#305; ge&#231;ersiz, kullan&#305;lm&#305;&#351; veya s&#252;resi dolmu&#351;.</value></data>
+  <data name="Kullanici.PasswordLink.Mismatch" xml:space="preserve"><value>Parolalar e&#351;le&#351;miyor.</value></data>
+  <data name="Kullanici.PasswordLink.Weak" xml:space="preserve"><value>Parola en az 8 karakter olmal&#305; ve yeterli g&#252;&#231;te olmal&#305;d&#305;r.</value></data>
+  <data name="Kullanici.PasswordLink.Success" xml:space="preserve"><value>Parolan&#305;z ba&#351;ar&#305;yla belirlendi. Giri&#351; yapabilirsiniz.</value></data>
 </root>

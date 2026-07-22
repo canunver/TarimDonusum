@@ -1,0 +1,28 @@
+@model ParolaBelirleViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+@{
+    ViewData["Title"] = L["Kullanici.PasswordLink.Title"];
+}
+
+<div class="container py-5" style="max-width:560px">
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <h1 class="h4 mb-3">@L["Kullanici.PasswordLink.Title"]</h1>
+            <p class="text-muted">@L["Kullanici.PasswordLink.Description"]</p>
+            <form asp-action="ParolaBelirle" method="post" autocomplete="off">
+                @Html.AntiForgeryToken()
+                <input asp-for="Token" type="hidden" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="form-group">
+                    <label asp-for="Parola">@L["Kullanici.Field.Password"]</label>
+                    <input asp-for="Parola" type="password" class="form-control" autocomplete="new-password" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="ParolaTekrar">@L["Kullanici.PasswordLink.PasswordAgain"]</label>
+                    <input asp-for="ParolaTekrar" type="password" class="form-control" autocomplete="new-password" />
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">@L["Kullanici.PasswordLink.SetPassword"]</button>
+            </form>
+        </div>
+    </div>
+</div>

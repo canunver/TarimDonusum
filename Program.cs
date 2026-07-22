@@ -34,6 +34,7 @@ builder.Services.AddControllersWithViews().AddViewLocalization().AddDataAnnotati
 builder.Services.AddSingleton<CaptchaGenerator>();
 builder.Services.AddScoped<KullaniciIsKurallari>();
 builder.Services.AddScoped<BasvuruIsKurallari>();
+builder.Services.AddScoped<TanimIsKurallari>();
 builder.Services.AddScoped<DosyaYonetimIsKurallari>();
 builder.Services.AddScoped<IMailServisi, MailServisi>();
 builder.Services.AddDistributedMemoryCache();

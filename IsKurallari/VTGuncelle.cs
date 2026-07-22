@@ -33,7 +33,7 @@ namespace TarimDonusum.IsKurallari
                 @"CREATE TABLE dbo.KullaniciYetki (
                         Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_KullaniciYetki PRIMARY KEY,
                         KullaniciId INT NOT NULL,
-                        Rol INT NOT NULL,
+                        Rol INT NOT NULL CONSTRAINT CK_KullaniciYetki_Rol CHECK (Rol IN (1, 2)),
                         YetkiKodu INT NOT NULL,
                         Birim INT NULL,
                         CONSTRAINT FK_KullaniciYetki_Kullanici
@@ -473,6 +473,81 @@ namespace TarimDonusum.IsKurallari
                         ON dbo.DosyaBilgisiLog(ModulKod, FormAd, FormAnahtar, DosyaNo);
                     CREATE INDEX IX_DosyaBilgisiLog_IslemTarihi
                         ON dbo.DosyaBilgisiLog(IslemTarihi);
+                "),
+            new(22,
+                @"CREATE TABLE dbo.Birim
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Birim PRIMARY KEY,
+                        BirimAdi NVARCHAR(150) NOT NULL,
+                        BirimTuru INT NOT NULL CONSTRAINT CK_Birim_BirimTuru CHECK (BirimTuru IN (1, 2)),
+                        IlKod INT NULL,
+                        SiraNo INT NOT NULL,
+                        Aktif INT NOT NULL CONSTRAINT DF_Birim_Aktif DEFAULT 1,
+                        CONSTRAINT CK_Birim_TasraIlKod
+                            CHECK ((BirimTuru = 1 AND IlKod IS NULL) OR (BirimTuru = 2 AND IlKod IS NOT NULL)),
+                        CONSTRAINT FK_Birim_IlKod
+                            FOREIGN KEY (IlKod) REFERENCES dbo.Il(Kod)
+                    );
+
+                    CREATE INDEX IX_Birim_SiraNo ON dbo.Birim(SiraNo);
+                    CREATE INDEX IX_Birim_Aktif ON dbo.Birim(Aktif);
+                    CREATE INDEX IX_Birim_IlKod ON dbo.Birim(IlKod);
+                "),
+            new(23,
+                @"IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_KullaniciYetki_Rol')
+                    ALTER TABLE dbo.KullaniciYetki DROP CONSTRAINT CK_KullaniciYetki_Rol;
+
+                  ALTER TABLE dbo.KullaniciYetki WITH CHECK
+                    ADD CONSTRAINT CK_KullaniciYetki_Rol CHECK (Rol IN (1, 2, 3));
+
+                  ALTER TABLE dbo.KullaniciYetki WITH CHECK
+                    ADD CONSTRAINT FK_KullaniciYetki_Birim FOREIGN KEY (Birim) REFERENCES dbo.Birim(Id);
+                "),
+            new(24,
+                @"IF OBJECT_ID(N'dbo.Birim', N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.Birim
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Birim PRIMARY KEY,
+                        BirimAdi NVARCHAR(150) NOT NULL,
+                        BirimTuru INT NOT NULL CONSTRAINT CK_Birim_BirimTuru CHECK (BirimTuru IN (1, 2)),
+                        IlKod INT NULL,
+                        SiraNo INT NOT NULL,
+                        Aktif INT NOT NULL CONSTRAINT DF_Birim_Aktif DEFAULT 1,
+                        CONSTRAINT CK_Birim_TasraIlKod
+                            CHECK ((BirimTuru = 1 AND IlKod IS NULL) OR (BirimTuru = 2 AND IlKod IS NOT NULL)),
+                        CONSTRAINT FK_Birim_IlKod FOREIGN KEY (IlKod) REFERENCES dbo.Il(Kod)
+                    );
+                    CREATE INDEX IX_Birim_SiraNo ON dbo.Birim(SiraNo);
+                    CREATE INDEX IX_Birim_Aktif ON dbo.Birim(Aktif);
+                    CREATE INDEX IX_Birim_IlKod ON dbo.Birim(IlKod);
+                  END;
+
+                  IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_KullaniciYetki_Rol')
+                    ALTER TABLE dbo.KullaniciYetki DROP CONSTRAINT CK_KullaniciYetki_Rol;
+                  ALTER TABLE dbo.KullaniciYetki WITH CHECK
+                    ADD CONSTRAINT CK_KullaniciYetki_Rol CHECK (Rol IN (1, 2, 3));
+
+                  IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_KullaniciYetki_Birim')
+                    ALTER TABLE dbo.KullaniciYetki WITH CHECK
+                      ADD CONSTRAINT FK_KullaniciYetki_Birim FOREIGN KEY (Birim) REFERENCES dbo.Birim(Id);
+                "),
+            new(25,
+                @"IF OBJECT_ID(N'dbo.KullaniciParolaToken', N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.KullaniciParolaToken
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_KullaniciParolaToken PRIMARY KEY,
+                        KullaniciId INT NOT NULL,
+                        TokenHash NVARCHAR(64) NOT NULL,
+                        SonKullanma DATETIME NOT NULL,
+                        Kullanildi INT NOT NULL CONSTRAINT DF_KullaniciParolaToken_Kullanildi DEFAULT 0,
+                        OlusturmaTarihi DATETIME NOT NULL CONSTRAINT DF_KullaniciParolaToken_Olusturma DEFAULT GETDATE(),
+                        CONSTRAINT FK_KullaniciParolaToken_Kullanici FOREIGN KEY (KullaniciId) REFERENCES dbo.Kullanici(Id)
+                    );
+                    CREATE UNIQUE INDEX UX_KullaniciParolaToken_TokenHash ON dbo.KullaniciParolaToken(TokenHash);
+                    CREATE INDEX IX_KullaniciParolaToken_KullaniciId ON dbo.KullaniciParolaToken(KullaniciId);
+                  END;
                 "),
         ];
 

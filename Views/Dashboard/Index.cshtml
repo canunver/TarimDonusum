@@ -1,0 +1,31 @@
+@{ ViewData["Title"] = "Gösterge Paneli"; }
+<div class="basvuru-page">
+ <div class="basvuru-titlebar"><div><h1>Gösterge Paneli</h1><p>Başvuru sürecine ilişkin güncel özet bilgiler</p></div><span id="panelZaman" class="text-muted"></span></div>
+ <div id="panelHata"></div>
+ <div class="card mb-3"><div class="card-body"><div class="form-row align-items-end">
+  <div class="form-group col-md-5 mb-md-0"><label for="panelDonem">Dönem</label><select id="panelDonem" class="form-control"><option value="">Seçiniz</option></select></div>
+  <div class="form-group col-md-5 mb-md-0"><label for="panelBirim">Birim</label><select id="panelBirim" class="form-control"><option value="">Seçiniz</option></select></div>
+  <div class="form-group col-md-2 mb-0"><button type="button" class="btn btn-primary btn-block" onclick="PanelYukle()"><i class="fas fa-sync-alt mr-1"></i>Göster</button></div>
+ </div></div></div>
+ <div id="panelIcerik" style="display:none">
+ <div class="row">
+  <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h3 id="toplam">–</h3><p>Toplam başvuru</p></div><div class="icon"><i class="fas fa-folder-open"></i></div></div></div>
+  <div class="col-lg-3 col-6"><div class="small-box bg-warning"><div class="inner"><h3 id="onBasvuru">–</h3><p>Ön başvuru</p></div><div class="icon"><i class="fas fa-hourglass-half"></i></div></div></div>
+  <div class="col-lg-3 col-6"><div class="small-box bg-primary"><div class="inner"><h3 id="basvuru">–</h3><p>Başvuru</p></div><div class="icon"><i class="fas fa-file-signature"></i></div></div></div>
+  <div class="col-lg-3 col-6"><div class="small-box bg-success"><div class="inner"><h3 id="kabul">–</h3><p>Kabul edilen</p></div><div class="icon"><i class="fas fa-check-circle"></i></div></div></div>
+ </div>
+ <div class="row">
+  <div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">Durum dağılımı</h3></div><div class="card-body" id="durumGrafik"></div></div></div>
+  <div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">Başvuruların yoğun olduğu iller</h3></div><div class="card-body" id="ilGrafik"></div></div></div>
+ </div>
+ </div>
+</div>
+<style>.panel-bar{height:12px;border-radius:8px;background:#e9ecef;overflow:hidden}.panel-bar>span{display:block;height:100%;border-radius:8px}.panel-row{margin-bottom:18px}.panel-row-head{display:flex;justify-content:space-between;margin-bottom:5px}</style>
+@section Scripts {
+<script>
+function PanelBar(container, liste, renk){const max=Math.max(1,...liste.map(x=>x.sayi));$(container).html(liste.map(x=>`<div class="panel-row"><div class="panel-row-head"><span>${$('<div>').text(x.ad).html()}</span><strong>${x.sayi}</strong></div><div class="panel-bar"><span style="width:${x.sayi/max*100}%;background:${renk}"></span></div></div>`).join('')||'<span class="text-muted">Henüz veri bulunmuyor.</span>');}
+function PanelHata(mesaj){$('#panelHata').html(mesaj?`<div class="alert alert-danger">${$('<div>').text(mesaj).html()}</div>`:'');}
+function PanelYukle(){const donemId=Number($('#panelDonem').val()),birimId=Number($('#panelBirim').val());if(!donemId||!birimId){$('#panelIcerik').hide();PanelHata('Dönem ve birim seçilmelidir.');return;}PanelHata('');AjaxGet('/Dashboard/Veriler',{donemId,birimId},r=>{if(!r||!r.basarili){$('#panelIcerik').hide();PanelHata(r?r.hataStr:'Veriler alınamadı.');return;}const d=r.nesne||{};['toplam','onBasvuru','basvuru','kabul'].forEach(k=>$('#'+k).text(d[k]||0));PanelBar('#durumGrafik',[{ad:'Ön başvuru',sayi:d.onBasvuru||0},{ad:'Başvuru',sayi:d.basvuru||0},{ad:'Kabul edilen',sayi:d.kabul||0},{ad:'İptal',sayi:d.iptal||0}],'#17a2b8');PanelBar('#ilGrafik',d.iller||[],'#28a745');$('#panelZaman').text('Son güncelleme: '+new Date().toLocaleString());$('#panelIcerik').show();});}
+$(function(){AjaxGet('/Dashboard/SayfaVerisi',null,r=>{if(!r||!r.basarili){PanelHata(r?r.hataStr:'Filtreler alınamadı.');return;}const d=r.nesne||{},donemler=(d.donemler||[]).sort((a,b)=>(Number(b.basvuruyaAcikMi)-Number(a.basvuruyaAcikMi))||(b.yil-a.yil)),birimler=d.birimler||[];donemler.forEach(x=>$('#panelDonem').append($('<option/>',{value:x.id,text:x.ad})));birimler.forEach(x=>$('#panelBirim').append($('<option/>',{value:x.id,text:x.birimAdi})));if(!birimler.length){PanelHata('Yetkili olduğunuz aktif birim bulunmuyor.');return;}if(!donemler.length){PanelHata('Tanımlı dönem bulunmuyor.');return;}$('#panelDonem').val(String(donemler[0].id));$('#panelBirim').val(String(birimler[0].id));PanelYukle();});});
+</script>
+}

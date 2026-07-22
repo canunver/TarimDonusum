@@ -1,3 +1,6 @@
 ﻿@{
-    Layout = "_Layout";
+    int? kullaniciId = Microsoft.AspNetCore.Http.SessionExtensions.GetInt32(Context.Session, "KULLANICI_ID");
+    Layout = kullaniciId > 0
+        ? "~/Views/Shared/_BasvuruLayout.cshtml"
+        : "~/Views/Shared/_HomeLayout.cshtml";
 }

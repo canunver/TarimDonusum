@@ -2,28 +2,42 @@
 using Microsoft.Extensions.Localization;
 using TarimDonusum.FrameWork;
 using TarimDonusum.FrameWork.Menu;
+using TarimDonusum.IsKurallari;
+using TarimDonusum.Models;
 
 namespace TarimDonusum.Controllers
 {
     public class MenuController : BMYController
     {
+        private readonly BasvuruIsKurallari _basvuruIsKurallari;
+
         public MenuController(
             ILoggerFactory loggerFactory,
-            IStringLocalizer<SharedResource> localizer)
+            IStringLocalizer<SharedResource> localizer,
+            BasvuruIsKurallari basvuruIsKurallari)
             : base(loggerFactory, localizer)
         {
+            _basvuruIsKurallari = basvuruIsKurallari;
         }
 
         [HttpGet]
-        public IActionResult Giris()
+        public async Task<IActionResult> Giris()
         {
-            return Json(MenuManager.GetMenuGiris(L));
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Json(MenuManager.GetMenuGiris(L));
+
+            return Json(MenuManager.GetMenuBasvuru(L, kullanici.Yetkiler.Select(y => y.Rol)));
         }
 
         [HttpGet]
-        public IActionResult Basvuru()
+        public async Task<IActionResult> Basvuru()
         {
-            return Json(MenuManager.GetMenuBasvuru(L));
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Json(MenuManager.GetMenuGiris(L));
+
+            return Json(MenuManager.GetMenuBasvuru(L, kullanici.Yetkiler.Select(y => y.Rol)));
         }
     }
 }

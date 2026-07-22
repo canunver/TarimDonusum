@@ -106,7 +106,7 @@ namespace TarimDonusum.Controllers
                 "Development test girişi yapıldı. KullaniciId: {KullaniciId}",
                 kullaniciSonuc.nesne.Id);
 
-            return RedirectToAction("Index", "Basvuru");
+            return GirisSonrasiYonlendir(kullaniciSonuc.nesne);
         }
 
         [HttpGet]
@@ -637,6 +637,26 @@ namespace TarimDonusum.Controllers
             return Json(LoginCevabi(true, L["Home.Bilgi.DogrulamaKoduGonderildi"].ToString(), kalanSaniye: 180));
         }
 
+        [HttpGet]
+        public IActionResult ParolaBelirle(string token)
+        {
+            return View(new ParolaBelirleViewModel { Token = token ?? "" });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ParolaBelirle(ParolaBelirleViewModel model)
+        {
+            Sonuc sonuc = await _kullaniciIsKurallari.ParolaBelirleAsync(model.Token, model.Parola, model.ParolaTekrar);
+            if (!sonuc.basarili)
+            {
+                foreach (string hata in sonuc.hatalar) ModelState.AddModelError("", hata);
+                return View(model);
+            }
+            TempData["Mesaj"] = sonuc.mesaj;
+            return RedirectToAction(nameof(Index));
+        }
+
         private async Task<Sonuc<Kullanici>> KullaniciOku(string kulKod, string sifre)
         {
             return await _kullaniciIsKurallari.KullaniciOkuAsync(0, kulKod, sifre);
@@ -674,7 +694,21 @@ namespace TarimDonusum.Controllers
             // Burada gerçek login cookie işlemi yapılacak
             // await HttpContext.SignInAsync(...);
 
-            return Json(LoginCevabi(true, L["Home.Bilgi.GirisBasarili"].ToString(), Url.Action("Index", "Basvuru")));
+            return Json(LoginCevabi(true, L["Home.Bilgi.GirisBasarili"].ToString(), GirisSonrasiUrl(kullaniciSonuc.nesne)));
+        }
+
+        private IActionResult GirisSonrasiYonlendir(Kullanici kullanici)
+        {
+            return kullanici.Yetkiler.Any(y => y.Rol == KullaniciRol.BasvuruKullanicisi)
+                ? RedirectToAction("Index", "Basvuru")
+                : RedirectToAction("Index", "Dashboard");
+        }
+
+        private string GirisSonrasiUrl(Kullanici kullanici)
+        {
+            return kullanici.Yetkiler.Any(y => y.Rol == KullaniciRol.BasvuruKullanicisi)
+                ? Url.Action("Index", "Basvuru") ?? "/Basvuru"
+                : Url.Action("Index", "Dashboard") ?? "/Dashboard";
         }
 
         private static object LoginCevabi(bool basarili, string mesaj, string? redirectUrl = null, int kalanSaniye = 0)

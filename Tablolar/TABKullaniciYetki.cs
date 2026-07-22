@@ -142,6 +142,14 @@ namespace TarimDonusum.Tablolar
             return await command.ExecuteNonQueryAsync() > 0;
         }
 
+        public async Task SilKullaniciYetkileriAsync(int kullaniciId)
+        {
+            const string sql = "DELETE FROM dbo.KullaniciYetki WHERE KullaniciId = @KullaniciId;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@KullaniciId", kullaniciId);
+            await command.ExecuteNonQueryAsync();
+        }
+
         private static void ParametreleriEkle(SqlCommand command, KullaniciYetki kullaniciYetki)
         {
             command.Parameters.AddWithValue("@KullaniciId", kullaniciYetki.KullaniciId);

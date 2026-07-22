@@ -1,0 +1,315 @@
+@using System.Text.Json
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    ViewData["Title"] = L["Kullanici.Title"];
+}
+
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div>
+            <h1>@L["Kullanici.Heading"]</h1>
+            <p>@L["Kullanici.Description"]</p>
+        </div>
+        <button class="btn btn-primary" type="button" onclick="KullaniciAc()">
+            <i class="fas fa-user-plus mr-1"></i>@L["Kullanici.Add"]
+        </button>
+    </div>
+
+    @Html.AntiForgeryToken()
+
+    <div class="basvuru-card p-3 mb-3">
+        <div class="form-grid">
+            <label>
+                @L["Kullanici.Field.FullName"]
+                <input id="araAdSoyad" type="text" autocomplete="off"/>
+            </label>
+            <label>
+                @L["Kullanici.Field.Unit"]
+                <select id="araBirim"><option value="">@L["Kullanici.All"]</option></select>
+            </label>
+            <label>
+                @L["Kullanici.Field.UserType"]
+                <select id="araTip"><option value="">@L["Kullanici.All"]</option></select>
+            </label>
+        </div>
+        <button class="btn btn-outline-primary mt-2" type="button" onclick="KullaniciAra()">
+            @L["Kullanici.Search"]
+        </button>
+    </div>
+
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>@L["Kullanici.Field.FullName"]</th>
+                    <th>@L["Kullanici.Field.Email"]</th>
+                    <th>@L["Kullanici.Field.Phone"]</th>
+                    <th>@L["Kullanici.Field.TypeRoleUnit"]</th>
+                    <th>@L["Kullanici.Field.Status"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="kullaniciListe">
+                <tr><td colspan="6" class="text-center text-muted">@L["Kullanici.SearchPrompt"]</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="kullaniciModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content firma-modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@L["Kullanici.ModalTitle"]</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="@L["Kullanici.Close"]">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input id="kId" type="hidden" />
+                <div class="form-grid">
+                    <label>@L["Kullanici.Field.TCKN"]<input id="kTckn" maxlength="11" /></label>
+                    <label>@L["Kullanici.Field.Name"]<input id="kAd" /></label>
+                    <label>@L["Kullanici.Field.Surname"]<input id="kSoyad" /></label>
+                    <label>@L["Kullanici.Field.BirthDate"]<input id="kDogum" type="date" /></label>
+                    <label>
+                        @L["Kullanici.Field.Gender"]
+                        <select id="kCinsiyet">
+                            <option value="K">@L["Kullanici.Gender.Female"]</option>
+                            <option value="E">@L["Kullanici.Gender.Male"]</option>
+                        </select>
+                    </label>
+                    <label>@L["Kullanici.Field.Email"]<input id="kEposta" type="email" /></label>
+                    <label>@L["Kullanici.Field.Phone"]<input id="kTelefon" /></label>
+                    <label>
+                        @L["Kullanici.Field.Status"]
+                        <select id="kAktif">
+                            <option value="true">@L["Kullanici.Status.Active"]</option>
+                            <option value="false">@L["Kullanici.Status.Passive"]</option>
+                        </select>
+                    </label>
+                </div>
+                <hr />
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="m-0">@L["Kullanici.TypesAndRoles"]</h6>
+                    <button class="btn btn-sm btn-outline-primary" type="button" onclick="YetkiEkle()">
+                        @L["Kullanici.AddType"]
+                    </button>
+                </div>
+                <div class="yetki-liste-kaydir"><div id="yetkiListe"></div></div>
+            </div>
+            <div class="modal-footer">
+                <button id="parolaBaglantisiGonder" class="btn btn-outline-secondary mr-auto" type="button"
+                        onclick="ParolaBaglantisiGonder()">
+                    <i class="fas fa-envelope mr-1"></i>@L["Kullanici.PasswordLink.Send"]
+                </button>
+                <button class="btn btn-outline-secondary" type="button" data-dismiss="modal">@L["Kullanici.Close"]</button>
+                <button class="btn btn-primary" type="button" onclick="KullaniciKaydet()">@L["Kullanici.Save"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .yetki-liste-kaydir { overflow-x: auto; padding-bottom: .25rem; }
+    #yetkiListe { min-width: 760px; }
+    .yetki-satir {
+        display: grid;
+        grid-template-columns: 44px minmax(220px, 1fr) minmax(180px, .8fr) minmax(240px, 1fr);
+        gap: 12px;
+        align-items: end;
+        margin-bottom: 12px;
+    }
+    .yetki-satir label { display: flex; flex-direction: column; margin: 0; min-width: 0; }
+    .yetki-satir select { width: 100%; }
+    .yetki-sil-sutun { display: flex; align-items: flex-end; height: 100%; }
+    .yetki-sil { width: 38px; height: 38px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+</style>
+
+@section Scripts {
+<script>
+    let kullanicilar = [];
+    let birimler = [];
+    let kullaniciTipleri = [];
+    let islemRolleri = [];
+
+    const metinler = {
+        select: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.Select"].ToString())),
+        userType: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.Field.UserType"].ToString())),
+        role: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.Field.Role"].ToString())),
+        unit: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.Field.Unit"].ToString())),
+        delete: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.Delete"].ToString())),
+        active: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.Status.Active"].ToString())),
+        passive: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.Status.Passive"].ToString())),
+        edit: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.Edit"].ToString())),
+        usersFailed: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.UsersFailed"].ToString())),
+        noResults: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.NoResults"].ToString())),
+        unitsFailed: @Html.Raw(JsonSerializer.Serialize(L["Kullanici.UnitsFailed"].ToString()))
+    };
+
+    function antiForgeryToken() {
+        return $('[name="__RequestVerificationToken"]').val();
+    }
+
+    function esc(value) {
+        return $('<div/>').text(value == null ? '' : String(value)).html();
+    }
+
+    function Secenekler(liste, secili) {
+        return (liste || []).map(item =>
+            `<option value="${item.value}" ${Number(secili) === Number(item.value) ? 'selected' : ''}>${esc(item.text)}</option>`
+        ).join('');
+    }
+
+    function BirimSecenekleri(secili) {
+        const secenekler = birimler.filter(x => x.aktif).map(birim =>
+            `<option value="${birim.id}" ${Number(secili) === Number(birim.id) ? 'selected' : ''}>${esc(birim.birimAdi)}</option>`
+        ).join('');
+        return `<option value="">${esc(metinler.select)}</option>${secenekler}`;
+    }
+
+    function TipBilgisi(tip) {
+        return kullaniciTipleri.find(x => Number(x.value) === Number(tip));
+    }
+
+    function RolBilgisi(rol) {
+        return islemRolleri.find(x => Number(x.value) === Number(rol));
+    }
+
+    function YetkiEkle(yetki) {
+        const varsayilanTip = kullaniciTipleri.find(x => x.varsayilan) || kullaniciTipleri[0] || { value: 0 };
+        const varsayilanRol = islemRolleri[0] || { value: 0 };
+        yetki = yetki || { rol: varsayilanTip.value, yetkiKodu: varsayilanRol.value, birim: null };
+        const id = `y${Date.now()}${Math.random().toString(16).slice(2)}`;
+
+        $('#yetkiListe').append(`
+            <div class="yetki-satir" id="${id}">
+                <div class="yetki-sil-sutun">
+                    <button type="button" class="btn btn-sm btn-outline-danger yetki-sil"
+                            title="${esc(metinler.delete)}" aria-label="${esc(metinler.delete)}"
+                            onclick="$(this).closest('.yetki-satir').remove()">
+                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <label>
+                    ${esc(metinler.userType)}
+                    <select class="y-tip" onchange="YetkiTipDegisti(this)">
+                        ${Secenekler(kullaniciTipleri, yetki.rol)}
+                    </select>
+                </label>
+                <label class="y-rol-satir">${esc(metinler.role)}<select class="y-rol">${Secenekler(islemRolleri, yetki.yetkiKodu)}</select></label>
+                <label class="y-birim-satir">${esc(metinler.unit)}<select class="y-birim">${BirimSecenekleri(yetki.birim)}</select></label>
+            </div>`);
+        YetkiTipDegisti($(`#${id} .y-tip`)[0]);
+    }
+
+    function YetkiTipDegisti(element) {
+        const satir = $(element).closest('.yetki-satir');
+        const tip = TipBilgisi($(element).val());
+        const birimGerekli = tip && tip.birimGerekli;
+        satir.find('.y-rol-satir,.y-birim-satir').toggle(!!birimGerekli);
+        if (!birimGerekli) satir.find('.y-rol,.y-birim').val('');
+    }
+
+    function KullaniciAra() {
+        const filtre = {
+            adSoyad: ($('#araAdSoyad').val() || '').trim(),
+            birimId: $('#araBirim').val() || null,
+            kullaniciTipi: $('#araTip').val() || null
+        };
+        AjaxGet('/Kullanici/Ara', filtre, KullaniciAramaSonucuYaz);
+    }
+
+    function KullaniciAramaSonucuYaz(sonuc) {
+        if (!sonuc || !sonuc.basarili) {
+            $('#kullaniciListe').html(`<tr><td colspan="6" class="text-center text-danger">${esc(metinler.usersFailed)}</td></tr>`);
+            PopupMesajGoster(sonuc ? sonuc.hataStr : metinler.usersFailed, false);
+            return;
+        }
+        kullanicilar = sonuc.nesne || [];
+        const satirlar = kullanicilar.map(KullaniciSatiri).join('');
+        $('#kullaniciListe').html(satirlar || `<tr><td colspan="6" class="text-center text-muted">${esc(metinler.noResults)}</td></tr>`);
+    }
+
+    function KullaniciSatiri(kullanici) {
+        const yetkiler = (kullanici.yetkiler || []).map(YetkiMetni).join('<br>');
+        return `<tr>
+            <td>${esc(`${kullanici.ad} ${kullanici.soyad}`)}</td><td>${esc(kullanici.eposta)}</td><td>${esc(kullanici.telefon)}</td>
+            <td>${yetkiler}</td><td>${esc(kullanici.aktif ? metinler.active : metinler.passive)}</td>
+            <td><button class="btn btn-sm btn-outline-primary" onclick="KullaniciAc(${kullanici.id})">${esc(metinler.edit)}</button></td>
+        </tr>`;
+    }
+
+    function YetkiMetni(yetki) {
+        const tip = TipBilgisi(yetki.rol);
+        if (!tip) return '';
+        if (!tip.birimGerekli) return esc(tip.text);
+        const rol = RolBilgisi(yetki.yetkiKodu);
+        const birim = birimler.find(x => Number(x.id) === Number(yetki.birim));
+        return esc([tip.text, rol && rol.text, birim && birim.birimAdi].filter(Boolean).join(' / '));
+    }
+
+    function KullaniciAc(id) {
+        const kullanici = kullanicilar.find(x => Number(x.id) === Number(id)) || { id: 0, aktif: true, cinsiyet: 'K', yetkiler: [] };
+        $('#kId').val(kullanici.id); $('#kTckn').val(kullanici.tckn || '').prop('disabled', !!kullanici.id);
+        $('#kAd').val(kullanici.ad || ''); $('#kSoyad').val(kullanici.soyad || '');
+        $('#kDogum').val((kullanici.dogumTarihi || '').slice(0, 10)); $('#kCinsiyet').val(kullanici.cinsiyet || 'K');
+        $('#kEposta').val(kullanici.eposta || '').prop('disabled', !!kullanici.id);
+        $('#kTelefon').val(kullanici.telefon || '').prop('disabled', !!kullanici.id);
+        $('#kAktif').val(String(kullanici.aktif !== false));
+        $('#parolaBaglantisiGonder').toggle(Number(kullanici.id) > 0);
+        $('#yetkiListe').empty(); (kullanici.yetkiler || []).forEach(YetkiEkle);
+        if (!kullanici.yetkiler.length) YetkiEkle();
+        $('#kullaniciModal').modal('show');
+    }
+
+    function KullaniciKaydet() {
+        const yetkiler = $('.yetki-satir').map(function () {
+            const tip = TipBilgisi($(this).find('.y-tip').val());
+            return {
+                rol: Number(tip.value),
+                yetkiKodu: tip.birimGerekli ? Number($(this).find('.y-rol').val()) : 0,
+                birim: tip.birimGerekli ? Number($(this).find('.y-birim').val()) || null : null
+            };
+        }).get();
+        const model = {
+            kullanici: {
+                id: Number($('#kId').val()),
+                tckn: $('#kTckn').val(),
+                ad: $('#kAd').val(),
+                soyad: $('#kSoyad').val(),
+                dogumTarihi: $('#kDogum').val(),
+                cinsiyet: $('#kCinsiyet').val(),
+                eposta: $('#kEposta').val(),
+                telefon: $('#kTelefon').val(),
+                aktif: $('#kAktif').val() === 'true'
+            },
+            yetkiler
+        };
+        AjaxPost('/Kullanici/Kaydet', model, sonuc => {
+            if (!sonuc.basarili) return PopupMesajGoster(sonuc.hataStr, false);
+            PopupMesajGoster(sonuc.mesaj, true);
+            $('#kullaniciModal').modal('hide');
+            KullaniciAra();
+        });
+    }
+
+    function ParolaBaglantisiGonder() {
+        const kullaniciId = Number($('#kId').val());
+        if (!kullaniciId) return;
+        AjaxPost('/Kullanici/ParolaBaglantisiGonder', { id: kullaniciId }, sonuc => {
+            PopupMesajGoster(sonuc.basarili ? sonuc.mesaj : sonuc.hataStr, sonuc.basarili);
+        });
+    }
+
+    $(function () {
+        PopupMesajIlklendir();
+        $('#araAdSoyad').val('');
+        AjaxGet('/Kullanici/SayfaVerisi', null, sonuc => {
+            if (!sonuc || !sonuc.basarili) return PopupMesajGoster(sonuc ? sonuc.hataStr : metinler.unitsFailed, false);
+            birimler = sonuc.nesne.birimler || []; kullaniciTipleri = sonuc.nesne.kullaniciTipleri || []; islemRolleri = sonuc.nesne.roller || [];
+            $('#araBirim').append(birimler.map(b => `<option value="${b.id}">${esc(b.birimAdi)}</option>`));
+            $('#araTip').append(kullaniciTipleri.map(t => `<option value="${t.value}">${esc(t.text)}</option>`));
+        });
+    });
+</script>
+}

@@ -180,6 +180,30 @@
   <data name="MenuBasvuru.denetlemeKayitlari" xml:space="preserve">
     <value>Inspection Records</value>
   </data>
+  <data name="MenuBasvuru.tanimlar" xml:space="preserve">
+    <value>Definitions</value>
+  </data>
+  <data name="MenuBasvuru.dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="MenuBasvuru.kullanicilar" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="MenuBasvuru.birimler" xml:space="preserve">
+    <value>Units</value>
+  </data>
+  <data name="MenuBasvuru.iller" xml:space="preserve">
+    <value>Provinces</value>
+  </data>
+  <data name="MenuBasvuru.ilceler" xml:space="preserve">
+    <value>Districts</value>
+  </data>
+  <data name="MenuBasvuru.degerZincirleri" xml:space="preserve">
+    <value>Value Chains</value>
+  </data>
+  <data name="MenuBasvuru.donemler" xml:space="preserve">
+    <value>Periods</value>
+  </data>
   <data name="Layout.DefaultTitle" xml:space="preserve">
     <value>TKDK Application Portal</value>
   </data>
@@ -1711,4 +1735,89 @@
   <data name="Basvuru.Ortaklik.NetSalesRevenue" xml:space="preserve"><value>net sales revenue</value></data>
   <data name="Basvuru.Ortaklik.TotalAssets" xml:space="preserve"><value>total assets</value></data>
   <data name="Basvuru.Ortaklik.RequiredEnter" xml:space="preserve"><value>{0} must be entered.</value></data>
+  <data name="Birim.Title" xml:space="preserve"><value>Units</value></data>
+  <data name="Birim.Heading" xml:space="preserve"><value>Units</value></data>
+  <data name="Birim.Description" xml:space="preserve"><value>User units, center/provincial status, province code, and display order are managed here.</value></data>
+  <data name="Birim.Add" xml:space="preserve"><value>Add Unit</value></data>
+  <data name="Birim.Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Birim.Deactivate" xml:space="preserve"><value>Deactivate</value></data>
+  <data name="Birim.ConfirmDeactivate" xml:space="preserve"><value>Deactivate this unit?</value></data>
+  <data name="Birim.Modal.Title" xml:space="preserve"><value>Unit Information</value></data>
+  <data name="Birim.Field.Order" xml:space="preserve"><value>Order No</value></data>
+  <data name="Birim.Field.Name" xml:space="preserve"><value>Unit Name</value></data>
+  <data name="Birim.Field.Type" xml:space="preserve"><value>Unit Type</value></data>
+  <data name="Birim.Field.ProvinceCode" xml:space="preserve"><value>Province Code</value></data>
+  <data name="Birim.Field.Province" xml:space="preserve"><value>Province</value></data>
+  <data name="Birim.Field.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Birim.Field.Action" xml:space="preserve"><value>Action</value></data>
+  <data name="Birim.Type.Center" xml:space="preserve"><value>Center</value></data>
+  <data name="Birim.Type.Provincial" xml:space="preserve"><value>Provincial</value></data>
+  <data name="Birim.Status.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Birim.Status.Passive" xml:space="preserve"><value>Passive</value></data>
+  <data name="Business.Authorization.SystemAdminRequired" xml:space="preserve"><value>System administrator permission is required for this action.</value></data>
+  <data name="Business.Unit.ListFailed" xml:space="preserve"><value>The unit list could not be read.</value></data>
+  <data name="Business.Unit.NotFound" xml:space="preserve"><value>The unit could not be found.</value></data>
+  <data name="Business.Unit.Saved" xml:space="preserve"><value>The unit has been saved.</value></data>
+  <data name="Business.Unit.SaveFailed" xml:space="preserve"><value>The unit could not be saved.</value></data>
+  <data name="Business.Unit.Deactivated" xml:space="preserve"><value>The unit has been deactivated.</value></data>
+  <data name="Business.Unit.DeactivateFailed" xml:space="preserve"><value>The unit could not be deactivated.</value></data>
+  <data name="Business.Unit.NameRequired" xml:space="preserve"><value>Unit name must be entered.</value></data>
+  <data name="Business.Unit.TypeRequired" xml:space="preserve"><value>Unit type must be selected.</value></data>
+  <data name="Business.Unit.OrderRequired" xml:space="preserve"><value>Order number must be entered.</value></data>
+  <data name="Business.Unit.ProvinceRequired" xml:space="preserve"><value>Province code must be selected for a provincial unit.</value></data>
+  <data name="Business.Unit.ProvinceNotFound" xml:space="preserve"><value>The selected province code could not be found.</value></data>
+  <data name="Kullanici.Title" xml:space="preserve"><value>User Management</value></data>
+  <data name="Kullanici.Heading" xml:space="preserve"><value>User Management</value></data>
+  <data name="Kullanici.Description" xml:space="preserve"><value>Search, add and manage user permissions</value></data>
+  <data name="Kullanici.Add" xml:space="preserve"><value>New user</value></data>
+  <data name="Kullanici.All" xml:space="preserve"><value>All</value></data>
+  <data name="Kullanici.Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Kullanici.SearchPrompt" xml:space="preserve"><value>Enter search criteria and press Search.</value></data>
+  <data name="Kullanici.ModalTitle" xml:space="preserve"><value>User</value></data>
+  <data name="Kullanici.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Kullanici.Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Kullanici.Select" xml:space="preserve"><value>Select</value></data>
+  <data name="Kullanici.Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Kullanici.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Kullanici.AddType" xml:space="preserve"><value>Add type</value></data>
+  <data name="Kullanici.TypesAndRoles" xml:space="preserve"><value>User types and roles</value></data>
+  <data name="Kullanici.UsersFailed" xml:space="preserve"><value>Users could not be loaded.</value></data>
+  <data name="Kullanici.UnitsFailed" xml:space="preserve"><value>Units could not be loaded.</value></data>
+  <data name="Kullanici.NoResults" xml:space="preserve"><value>No users matched the search criteria.</value></data>
+  <data name="Kullanici.Field.FullName" xml:space="preserve"><value>Full name</value></data>
+  <data name="Kullanici.Field.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Kullanici.Field.UserType" xml:space="preserve"><value>User type</value></data>
+  <data name="Kullanici.Field.Role" xml:space="preserve"><value>Role</value></data>
+  <data name="Kullanici.Field.TypeRoleUnit" xml:space="preserve"><value>User type / role / unit</value></data>
+  <data name="Kullanici.Field.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Kullanici.Field.Phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="Kullanici.Field.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Kullanici.Field.TCKN" xml:space="preserve"><value>Turkish ID number</value></data>
+  <data name="Kullanici.Field.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Kullanici.Field.Surname" xml:space="preserve"><value>Surname</value></data>
+  <data name="Kullanici.Field.BirthDate" xml:space="preserve"><value>Birth date</value></data>
+  <data name="Kullanici.Field.Gender" xml:space="preserve"><value>Gender</value></data>
+  <data name="Kullanici.Field.Password" xml:space="preserve"><value>Password</value></data>
+  <data name="Kullanici.Gender.Female" xml:space="preserve"><value>Female</value></data>
+  <data name="Kullanici.Gender.Male" xml:space="preserve"><value>Male</value></data>
+  <data name="Kullanici.Status.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Kullanici.Status.Passive" xml:space="preserve"><value>Passive</value></data>
+  <data name="Kullanici.Type.SistemYoneticisi" xml:space="preserve"><value>System user</value></data>
+  <data name="Kullanici.Type.BasvuruKullanicisi" xml:space="preserve"><value>Applicant user</value></data>
+  <data name="Kullanici.Type.BirimKullanicisi" xml:space="preserve"><value>Unit user</value></data>
+  <data name="Kullanici.Role.Gorme" xml:space="preserve"><value>View</value></data>
+  <data name="Kullanici.Role.Yazma" xml:space="preserve"><value>Edit</value></data>
+  <data name="Kullanici.Role.Onaylama" xml:space="preserve"><value>Approve</value></data>
+  <data name="Kullanici.PasswordLink.Send" xml:space="preserve"><value>Send password link</value></data>
+  <data name="Kullanici.PasswordLink.Sent" xml:space="preserve"><value>The password setup link was sent to the user.</value></data>
+  <data name="Kullanici.PasswordLink.MailSubject" xml:space="preserve"><value>Password setup link</value></data>
+  <data name="Kullanici.PasswordLink.MailBody" xml:space="preserve"><value>Hello {0},&lt;br/&gt;&lt;br/&gt;&lt;a href=&quot;{1}&quot;&gt;Click here&lt;/a&gt; to set your password. The link is valid for two hours and can only be used once.</value></data>
+  <data name="Kullanici.PasswordLink.Title" xml:space="preserve"><value>Set password</value></data>
+  <data name="Kullanici.PasswordLink.Description" xml:space="preserve"><value>Set a new password for your account.</value></data>
+  <data name="Kullanici.PasswordLink.PasswordAgain" xml:space="preserve"><value>Confirm password</value></data>
+  <data name="Kullanici.PasswordLink.SetPassword" xml:space="preserve"><value>Save password</value></data>
+  <data name="Kullanici.PasswordLink.Invalid" xml:space="preserve"><value>The password link is invalid, used or expired.</value></data>
+  <data name="Kullanici.PasswordLink.Mismatch" xml:space="preserve"><value>Passwords do not match.</value></data>
+  <data name="Kullanici.PasswordLink.Weak" xml:space="preserve"><value>The password must be at least 8 characters and sufficiently strong.</value></data>
+  <data name="Kullanici.PasswordLink.Success" xml:space="preserve"><value>Your password has been set. You can now sign in.</value></data>
 </root>

@@ -1,0 +1,271 @@
+@using System.Text.Json
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    ViewData["Title"] = L["Birim.Title"];
+}
+
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div>
+            <h1>@L["Birim.Heading"]</h1>
+            <p>@L["Birim.Description"]</p>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="BirimModalAc()">
+            <i class="fas fa-plus-circle mr-1"></i>@L["Birim.Add"]
+        </button>
+    </div>
+
+    @Html.AntiForgeryToken()
+
+    <div id="ajaxMesaj"
+         class="alert alert-info alert-dismissible floating-message"
+         style="display:@(TempData["Mesaj"] != null ? "block" : "none")">
+        <span id="ajaxMesajMetin">@TempData["Mesaj"]</span>
+        <button type="button" id="ajaxMesajKapat" class="close" aria-label="@L["Basvuru.Common.Close"]">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>@L["Birim.Field.Order"]</th>
+                    <th>@L["Birim.Field.Name"]</th>
+                    <th>@L["Birim.Field.Type"]</th>
+                    <th>@L["Birim.Field.ProvinceCode"]</th>
+                    <th>@L["Birim.Field.Province"]</th>
+                    <th>@L["Birim.Field.Status"]</th>
+                    <th class="text-right">@L["Birim.Field.Action"]</th>
+                </tr>
+            </thead>
+            <tbody id="birimListe">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="birimModal" tabindex="-1" role="dialog" aria-labelledby="birimModalBaslik" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content firma-modal-content">
+            <div class="modal-header firma-modal-header">
+                <h5 class="modal-title" id="birimModalBaslik">@L["Birim.Modal.Title"]</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="@L["Basvuru.Common.Close"]">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body firma-modal-body">
+                <input type="hidden" id="birimId" />
+                <div class="form-grid">
+                    <label>
+                        @L["Birim.Field.Name"]
+                        <input id="birimAdi" maxlength="150" />
+                    </label>
+                    <label>
+                        @L["Birim.Field.Type"]
+                        <select id="birimTuru" onchange="BirimTuruDegisti()">
+                            <option value="1">@L["Birim.Type.Center"]</option>
+                            <option value="2">@L["Birim.Type.Provincial"]</option>
+                        </select>
+                    </label>
+                    <label id="birimIlKodSatir">
+                        @L["Birim.Field.ProvinceCode"]
+                        <select id="birimIlKod">
+                            <option value="">@L["Basvuru.Common.Select"]</option>
+                        </select>
+                    </label>
+                    <label>
+                        @L["Birim.Field.Order"]
+                        <input id="birimSiraNo" type="number" min="1" step="1" />
+                    </label>
+                    <label>
+                        @L["Birim.Field.Status"]
+                        <select id="birimAktif">
+                            <option value="true">@L["Birim.Status.Active"]</option>
+                            <option value="false">@L["Birim.Status.Passive"]</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger mr-auto" id="birimPasifYap" onclick="BirimPasifYap()">
+                    @L["Birim.Deactivate"]
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@L["Basvuru.Common.Close"]</button>
+                <button type="button" class="btn btn-primary" onclick="BirimKaydet()">@L["Basvuru.Common.Save"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const birimler = [];
+    const iller = [];
+    const birimMetinleri = {
+        select: @Html.Raw(JsonSerializer.Serialize(L["Basvuru.Common.Select"].ToString())),
+        center: @Html.Raw(JsonSerializer.Serialize(L["Birim.Type.Center"].ToString())),
+        provincial: @Html.Raw(JsonSerializer.Serialize(L["Birim.Type.Provincial"].ToString())),
+        active: @Html.Raw(JsonSerializer.Serialize(L["Birim.Status.Active"].ToString())),
+        passive: @Html.Raw(JsonSerializer.Serialize(L["Birim.Status.Passive"].ToString())),
+        edit: @Html.Raw(JsonSerializer.Serialize(L["Birim.Edit"].ToString())),
+        saved: @Html.Raw(JsonSerializer.Serialize(L["Business.Unit.Saved"].ToString())),
+        confirmDeactivate: @Html.Raw(JsonSerializer.Serialize(L["Birim.ConfirmDeactivate"].ToString()))
+    };
+
+    function antiForgeryToken() {
+        return $('[name="__RequestVerificationToken"]').val();
+    }
+
+    function BirimListeYaz(liste) {
+        const tbody = $('#birimListe');
+        tbody.empty();
+
+        (liste || []).forEach(function (birim) {
+            const tur = Number(birim.birimTuru) === 2 ? birimMetinleri.provincial : birimMetinleri.center;
+            const durum = birim.aktif ? birimMetinleri.active : birimMetinleri.passive;
+            const badge = birim.aktif ? 'badge-success' : 'badge-secondary';
+
+            tbody.append(`
+                <tr>
+                    <td>${htmlEncode(birim.siraNo)}</td>
+                    <td>${htmlEncode(birim.birimAdi)}</td>
+                    <td>${htmlEncode(tur)}</td>
+                    <td>${htmlEncode(birim.ilKod || '-')}</td>
+                    <td>${htmlEncode(birim.ilAdi || '-')}</td>
+                    <td><span class="badge ${badge}">${htmlEncode(durum)}</span></td>
+                    <td class="text-right">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="BirimModalAc(${birim.id})">${htmlEncode(birimMetinleri.edit)}</button>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+
+    function IlListesiYaz(liste) {
+        const select = $('#birimIlKod');
+        const secili = select.val();
+
+        select.empty();
+        select.append($('<option/>', { value: '', text: birimMetinleri.select }));
+
+        (liste || [])
+            .slice()
+            .sort((a, b) => String(a.ad || '').localeCompare(String(b.ad || ''), undefined, { sensitivity: 'base' }))
+            .forEach(function (il) {
+                select.append($('<option/>', {
+                    value: il.kod,
+                    text: `${il.kod} - ${il.ad}`
+                }));
+            });
+
+        if (secili)
+            select.val(secili);
+    }
+
+    function BirimModalAc(id) {
+        const birim = (birimler || []).find(x => Number(x.id) === Number(id)) || {
+            id: 0,
+            birimAdi: '',
+            birimTuru: 1,
+            ilKod: '',
+            siraNo: (birimler || []).length + 1,
+            aktif: true
+        };
+
+        $('#birimId').val(birim.id || 0);
+        $('#birimAdi').val(birim.birimAdi || '');
+        $('#birimTuru').val(String(birim.birimTuru || 1));
+        $('#birimIlKod').val(birim.ilKod || '');
+        $('#birimSiraNo').val(birim.siraNo || 1);
+        $('#birimAktif').val(String(birim.aktif !== false));
+        $('#birimPasifYap').toggle(Number(birim.id) > 0 && birim.aktif !== false);
+
+        BirimTuruDegisti();
+        $('#birimModal').modal('show');
+    }
+
+    function BirimTuruDegisti() {
+        const tasraMi = Number($('#birimTuru').val()) === 2;
+        $('#birimIlKodSatir').toggle(tasraMi);
+        if (!tasraMi) $('#birimIlKod').val('');
+    }
+
+    function BirimModelOku() {
+        return {
+            id: Number($('#birimId').val() || 0),
+            birimAdi: $('#birimAdi').val(),
+            birimTuru: Number($('#birimTuru').val() || 1),
+            ilKod: $('#birimIlKod').val() ? Number($('#birimIlKod').val()) : null,
+            siraNo: Number($('#birimSiraNo').val() || 0),
+            aktif: $('#birimAktif').val() === 'true'
+        };
+    }
+
+    function BirimKaydet() {
+        AjaxPost('/Birim/Kaydet', BirimModelOku(), function (sonuc) {
+            if (!sonuc || !sonuc.basarili) {
+                PopupMesajGoster((sonuc && sonuc.hataStr) || '', false);
+                return;
+            }
+
+            PopupMesajGoster(sonuc.mesaj || birimMetinleri.saved, true);
+            $('#birimModal').modal('hide');
+            BirimListele();
+        });
+    }
+
+    function BirimPasifYap() {
+        if (!confirm(birimMetinleri.confirmDeactivate))
+            return;
+
+        AjaxPost('/Birim/PasifYap', { id: Number($('#birimId').val() || 0) }, function (sonuc) {
+            if (!sonuc || !sonuc.basarili) {
+                PopupMesajGoster((sonuc && sonuc.hataStr) || '', false);
+                return;
+            }
+
+            PopupMesajGoster(sonuc.mesaj || '', true);
+            $('#birimModal').modal('hide');
+            BirimListele();
+        });
+    }
+
+    function BirimListele() {
+        AjaxGet('/Birim/Listele', null, function (sonuc) {
+            if (!sonuc || !sonuc.basarili) {
+                PopupMesajGoster((sonuc && sonuc.hataStr) || '', false);
+                return;
+            }
+
+            birimler.splice(0, birimler.length, ...(sonuc.nesne || []));
+            BirimListeYaz(birimler);
+        });
+    }
+
+    function BirimSayfaVerisiYukle() {
+        AjaxGet('/Birim/SayfaVerisi', null, function (sonuc) {
+            if (!sonuc || !sonuc.basarili) {
+                PopupMesajGoster((sonuc && sonuc.hataStr) || '', false);
+                return;
+            }
+
+            birimler.splice(0, birimler.length, ...((sonuc.nesne && sonuc.nesne.birimler) || []));
+            iller.splice(0, iller.length, ...((sonuc.nesne && sonuc.nesne.iller) || []));
+            IlListesiYaz(iller);
+            BirimListeYaz(birimler);
+        });
+    }
+
+    function htmlEncode(value) {
+        return $('<div/>').text(value == null ? '' : String(value)).html();
+    }
+
+    $(function () {
+        PopupMesajIlklendir();
+        IlListesiYaz(iller);
+        BirimSayfaVerisiYukle();
+    });
+</script>
+}
