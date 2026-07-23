@@ -35,6 +35,40 @@ namespace TarimDonusum.Tablolar
             return liste;
         }
 
+        public async Task<List<Il>> IlleriListeleAsync(int degerZinciriId)
+        {
+            const string sql = @"SELECT i.Id,i.Kod,i.Ad,i.Aktif FROM dbo.DegerZinciriIl dzi
+                                 INNER JOIN dbo.Il i ON i.Id=dzi.IlId
+                                 WHERE dzi.DegerZinciriId=@DegerZinciriId ORDER BY i.Ad;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@DegerZinciriId", degerZinciriId);
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+            List<Il> liste = new();
+            while (await reader.ReadAsync())
+                liste.Add(new Il { id=reader.GetInt32(0), kod=reader.GetInt32(1), ad=reader.GetString(2),
+                    aktif=OrtakFonksiyonlar.Int32Yap(reader.GetValue(3)) == 1 });
+            return liste;
+        }
+
+        public async Task<int> EkleAsync(int degerZinciriId, int ilId)
+        {
+            const string sql = @"INSERT INTO dbo.DegerZinciriIl(DegerZinciriId,IlId,Aktif)
+                                 OUTPUT INSERTED.Id VALUES(@DegerZinciriId,@IlId,1);";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@DegerZinciriId", degerZinciriId);
+            command.Parameters.AddWithValue("@IlId", ilId);
+            return Convert.ToInt32(await command.ExecuteScalarAsync());
+        }
+
+        public async Task<bool> SilAsync(int degerZinciriId, int ilId)
+        {
+            const string sql = @"DELETE FROM dbo.DegerZinciriIl WHERE DegerZinciriId=@DegerZinciriId AND IlId=@IlId;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@DegerZinciriId", degerZinciriId);
+            command.Parameters.AddWithValue("@IlId", ilId);
+            return await command.ExecuteNonQueryAsync() > 0;
+        }
+
         private static DegerZinciriIl Oku(SqlDataReader reader)
         {
             return new DegerZinciriIl

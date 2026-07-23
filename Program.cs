@@ -7,6 +7,7 @@ using TarimDonusum.IsKurallari;
 using TarimDonusum.Servisler;
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.DataProtection;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
 
 builder.Services.AddControllersWithViews().AddViewLocalization().AddDataAnnotationsLocalization(); ;
+builder.Services.AddDataProtection();
 builder.Services.AddSingleton<CaptchaGenerator>();
 builder.Services.AddScoped<KullaniciIsKurallari>();
 builder.Services.AddScoped<BasvuruIsKurallari>();

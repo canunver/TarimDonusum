@@ -532,23 +532,9 @@ namespace TarimDonusum.IsKurallari
                     ALTER TABLE dbo.KullaniciYetki WITH CHECK
                       ADD CONSTRAINT FK_KullaniciYetki_Birim FOREIGN KEY (Birim) REFERENCES dbo.Birim(Id);
                 "),
-            new(25,
-                @"IF OBJECT_ID(N'dbo.KullaniciParolaToken', N'U') IS NULL
-                  BEGIN
-                    CREATE TABLE dbo.KullaniciParolaToken
-                    (
-                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_KullaniciParolaToken PRIMARY KEY,
-                        KullaniciId INT NOT NULL,
-                        TokenHash NVARCHAR(64) NOT NULL,
-                        SonKullanma DATETIME NOT NULL,
-                        Kullanildi INT NOT NULL CONSTRAINT DF_KullaniciParolaToken_Kullanildi DEFAULT 0,
-                        OlusturmaTarihi DATETIME NOT NULL CONSTRAINT DF_KullaniciParolaToken_Olusturma DEFAULT GETDATE(),
-                        CONSTRAINT FK_KullaniciParolaToken_Kullanici FOREIGN KEY (KullaniciId) REFERENCES dbo.Kullanici(Id)
-                    );
-                    CREATE UNIQUE INDEX UX_KullaniciParolaToken_TokenHash ON dbo.KullaniciParolaToken(TokenHash);
-                    CREATE INDEX IX_KullaniciParolaToken_KullaniciId ON dbo.KullaniciParolaToken(KullaniciId);
-                  END;
-                "),
+            new(27,
+                @"IF OBJECT_ID(N'dbo.KullaniciParolaToken', N'U') IS NOT NULL
+                    DROP TABLE dbo.KullaniciParolaToken;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

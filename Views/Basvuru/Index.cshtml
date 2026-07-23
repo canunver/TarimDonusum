@@ -11,7 +11,10 @@
             <h1>@L["Basvuru.Index.Heading"]</h1>
             <p>@L["Basvuru.Index.Description"]</p>
         </div>
-        <a class="btn btn-primary" asp-controller="Basvuru" asp-action="Yeni">@L["Basvuru.Index.New"]</a>
+        @if (ViewBag.YeniBasvuruYetkisi == true)
+        {
+            <a class="btn btn-primary" asp-controller="Basvuru" asp-action="Yeni">@L["Basvuru.Index.New"]</a>
+        }
     </div>
 
     <div id="ajaxMesaj"

@@ -6,5 +6,6 @@ namespace TarimDonusum.Models
         public int kod { get; set; } = -1;
         public string ad { get; set; } = "";
         public bool aktif { get; set; } = true;
+        public List<Ilce> ilceler { get; set; } = new();
     }
 }

@@ -50,6 +50,31 @@ namespace TarimDonusum.Tablolar
             return liste;
         }
 
+        public async Task<int> EkleAsync(Il il)
+        {
+            const string sql = @"INSERT INTO dbo.Il (Kod, Ad, Aktif)
+                                 OUTPUT INSERTED.Id VALUES (@Kod, @Ad, @Aktif);";
+            await using SqlCommand command = KomutOlustur(sql);
+            ParametreleriEkle(command, il);
+            return Convert.ToInt32(await command.ExecuteScalarAsync());
+        }
+
+        public async Task<bool> GuncelleAsync(Il il)
+        {
+            const string sql = @"UPDATE dbo.Il SET Kod=@Kod, Ad=@Ad, Aktif=@Aktif WHERE Id=@Id;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@Id", il.id);
+            ParametreleriEkle(command, il);
+            return await command.ExecuteNonQueryAsync() > 0;
+        }
+
+        private static void ParametreleriEkle(SqlCommand command, Il il)
+        {
+            command.Parameters.AddWithValue("@Kod", il.kod);
+            command.Parameters.AddWithValue("@Ad", il.ad.Trim());
+            command.Parameters.AddWithValue("@Aktif", il.aktif ? 1 : 0);
+        }
+
         private static Il Oku(SqlDataReader reader)
         {
             return new Il

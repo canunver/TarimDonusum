@@ -1,0 +1,87 @@
+@{ ViewData["Title"] = "İller ve İlçeler"; }
+
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div><h1>İller ve İlçeler</h1><p>İl ve bağlı ilçeleri tek ekrandan yönetin.</p></div>
+        <button class="btn btn-primary" type="button" onclick="ilAc(0)"><i class="fas fa-plus-circle mr-1"></i>Yeni İl</button>
+    </div>
+    @Html.AntiForgeryToken()
+    <div id="ilListe" class="basvuru-card"></div>
+</div>
+
+<div class="modal fade il-yonetim-modal" id="ilModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document"><div class="modal-content firma-modal-content">
+        <div class="modal-header firma-modal-header"><h5 class="modal-title">İl ve İlçeleri</h5>
+            <button class="close" type="button" data-dismiss="modal"><span>&times;</span></button></div>
+        <div class="modal-body firma-modal-body">
+            <input id="ilId" type="hidden">
+            <div class="form-grid">
+                <label>İl Kodu<input id="ilKod" type="number" min="1"></label>
+                <label>İl Adı<input id="ilAd" maxlength="100"></label>
+                <label>Durum<select id="ilAktif"><option value="true">Aktif</option><option value="false">Pasif</option></select></label>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+                <h6 class="mb-0">İlçeler</h6>
+                <button class="btn btn-sm btn-outline-primary" type="button" onclick="ilceEkle()">Yeni İlçe Satırı</button>
+            </div>
+            <div class="ilce-scroll table-responsive"><table class="table table-sm table-hover mb-0">
+                <thead><tr><th>İlçe Adı</th><th>Durum</th><th class="text-right">İşlem</th></tr></thead>
+                <tbody id="ilceListe"></tbody>
+            </table></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-dismiss="modal">Kapat</button>
+            <button class="btn btn-primary" type="button" onclick="ilKaydet()">Kaydet</button></div>
+    </div></div>
+</div>
+
+@section Scripts {
+<script>
+const ilVerisi = [];
+const enc = v => $('<div/>').text(v == null ? '' : String(v)).html();
+const attr = v => enc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+function listele() {
+    AjaxGet('/Il/Listele', null, s => {
+        if (!s || !s.basarili) return PopupMesajGoster((s && s.hataStr) || '', false);
+        ilVerisi.splice(0, ilVerisi.length, ...(s.nesne || []));
+        $('#ilListe').html(`<div class="table-responsive"><table class="table table-hover mb-0">
+            <thead><tr><th>Kod</th><th>İl</th><th>İlçe Sayısı</th><th>Durum</th><th></th></tr></thead>
+            <tbody>${ilVerisi.map(x => `<tr><td>${enc(x.kod)}</td><td>${enc(x.ad)}</td><td>${(x.ilceler || []).length}</td>
+            <td><span class="badge ${x.aktif ? 'badge-success' : 'badge-secondary'}">${x.aktif ? 'Aktif' : 'Pasif'}</span></td>
+            <td class="text-right"><button class="btn btn-sm btn-outline-primary" onclick="ilAc(${x.id})">Düzenle</button></td></tr>`).join('')}</tbody>
+        </table></div>`);
+    });
+}
+
+function ilAc(id) {
+    const x = ilVerisi.find(i => Number(i.id) === Number(id)) || { id: 0, kod: '', ad: '', aktif: true, ilceler: [] };
+    $('#ilId').val(x.id); $('#ilKod').val(x.kod); $('#ilAd').val(x.ad); $('#ilAktif').val(String(x.aktif));
+    $('#ilceListe').empty(); (x.ilceler || []).forEach(ilceSatiri); $('#ilModal').modal('show');
+}
+
+function ilceSatiri(x) {
+    const id = Number(x.id || x.Id || 0), ad = x.ad || x.Ad || '', aktif = (x.aktif ?? x.Aktif) !== false;
+    const islem = id === 0 ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest('tr').remove()">Sil</button>` : '<span class="text-muted">Silinemez</span>';
+    $('#ilceListe').append(`<tr data-id="${id}"><td><input class="form-control form-control-sm ilce-ad" maxlength="100" value="${attr(ad)}"></td>
+        <td><select class="form-control form-control-sm ilce-aktif"><option value="true"${aktif ? ' selected' : ''}>Aktif</option><option value="false"${!aktif ? ' selected' : ''}>Pasif</option></select></td>
+        <td class="text-right">${islem}</td></tr>`);
+}
+
+function ilceEkle() { ilceSatiri({ id: 0, ad: '', aktif: true }); }
+
+function ilKaydet() {
+    const m = { id: Number($('#ilId').val() || 0), kod: Number($('#ilKod').val() || 0), ad: $('#ilAd').val(),
+        aktif: $('#ilAktif').val() === 'true', ilceler: [] };
+    $('#ilceListe tr').each(function () {
+        m.ilceler.push({ id: Number($(this).data('id') || 0), ilId: m.id, ad: $(this).find('.ilce-ad').val(),
+            aktif: $(this).find('.ilce-aktif').val() === 'true' });
+    });
+    AjaxPost('/Il/Kaydet', m, s => {
+        if (!s || !s.basarili) return PopupMesajGoster((s && s.hataStr) || '', false);
+        $('#ilModal').modal('hide'); PopupMesajGoster(s.mesaj, true); listele();
+    });
+}
+
+$(function () { PopupMesajIlklendir(); listele(); });
+</script>
+}

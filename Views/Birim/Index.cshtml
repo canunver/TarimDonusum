@@ -57,41 +57,44 @@
             </div>
             <div class="modal-body firma-modal-body">
                 <input type="hidden" id="birimId" />
-                <div class="form-grid">
-                    <label>
-                        @L["Birim.Field.Name"]
-                        <input id="birimAdi" maxlength="150" />
-                    </label>
-                    <label>
-                        @L["Birim.Field.Type"]
-                        <select id="birimTuru" onchange="BirimTuruDegisti()">
-                            <option value="1">@L["Birim.Type.Center"]</option>
-                            <option value="2">@L["Birim.Type.Provincial"]</option>
-                        </select>
-                    </label>
-                    <label id="birimIlKodSatir">
-                        @L["Birim.Field.ProvinceCode"]
-                        <select id="birimIlKod">
-                            <option value="">@L["Basvuru.Common.Select"]</option>
-                        </select>
-                    </label>
-                    <label>
-                        @L["Birim.Field.Order"]
-                        <input id="birimSiraNo" type="number" min="1" step="1" />
-                    </label>
-                    <label>
-                        @L["Birim.Field.Status"]
-                        <select id="birimAktif">
-                            <option value="true">@L["Birim.Status.Active"]</option>
-                            <option value="false">@L["Birim.Status.Passive"]</option>
-                        </select>
-                    </label>
+                <div class="form-grid birim-form-grid">
+                    <div class="birim-form-row birim-name-row">
+                        <label>
+                            @L["Birim.Field.Name"]
+                            <input id="birimAdi" maxlength="150" />
+                        </label>
+                    </div>
+                    <div class="birim-form-row birim-type-row">
+                        <label>
+                            @L["Birim.Field.Type"]
+                            <select id="birimTuru" onchange="BirimTuruDegisti()">
+                                <option value="1">@L["Birim.Type.Center"]</option>
+                                <option value="2">@L["Birim.Type.Provincial"]</option>
+                            </select>
+                        </label>
+                        <label id="birimIlKodSatir">
+                            @L["Birim.Field.ProvinceCode"]
+                            <select id="birimIlKod">
+                                <option value="">@L["Basvuru.Common.Select"]</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="birim-form-row birim-status-row">
+                        <label>
+                            @L["Birim.Field.Order"]
+                            <input id="birimSiraNo" type="number" min="1" step="1" />
+                        </label>
+                        <label>
+                            @L["Birim.Field.Status"]
+                            <select id="birimAktif">
+                                <option value="true">@L["Birim.Status.Active"]</option>
+                                <option value="false">@L["Birim.Status.Passive"]</option>
+                            </select>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-danger mr-auto" id="birimPasifYap" onclick="BirimPasifYap()">
-                    @L["Birim.Deactivate"]
-                </button>
                 <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">@L["Basvuru.Common.Close"]</button>
                 <button type="button" class="btn btn-primary" onclick="BirimKaydet()">@L["Basvuru.Common.Save"]</button>
             </div>
@@ -110,8 +113,7 @@
         active: @Html.Raw(JsonSerializer.Serialize(L["Birim.Status.Active"].ToString())),
         passive: @Html.Raw(JsonSerializer.Serialize(L["Birim.Status.Passive"].ToString())),
         edit: @Html.Raw(JsonSerializer.Serialize(L["Birim.Edit"].ToString())),
-        saved: @Html.Raw(JsonSerializer.Serialize(L["Business.Unit.Saved"].ToString())),
-        confirmDeactivate: @Html.Raw(JsonSerializer.Serialize(L["Birim.ConfirmDeactivate"].ToString()))
+        saved: @Html.Raw(JsonSerializer.Serialize(L["Business.Unit.Saved"].ToString()))
     };
 
     function antiForgeryToken() {
@@ -180,7 +182,6 @@
         $('#birimIlKod').val(birim.ilKod || '');
         $('#birimSiraNo').val(birim.siraNo || 1);
         $('#birimAktif').val(String(birim.aktif !== false));
-        $('#birimPasifYap').toggle(Number(birim.id) > 0 && birim.aktif !== false);
 
         BirimTuruDegisti();
         $('#birimModal').modal('show');
@@ -211,22 +212,6 @@
             }
 
             PopupMesajGoster(sonuc.mesaj || birimMetinleri.saved, true);
-            $('#birimModal').modal('hide');
-            BirimListele();
-        });
-    }
-
-    function BirimPasifYap() {
-        if (!confirm(birimMetinleri.confirmDeactivate))
-            return;
-
-        AjaxPost('/Birim/PasifYap', { id: Number($('#birimId').val() || 0) }, function (sonuc) {
-            if (!sonuc || !sonuc.basarili) {
-                PopupMesajGoster((sonuc && sonuc.hataStr) || '', false);
-                return;
-            }
-
-            PopupMesajGoster(sonuc.mesaj || '', true);
             $('#birimModal').modal('hide');
             BirimListele();
         });

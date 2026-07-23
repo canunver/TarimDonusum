@@ -4,6 +4,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.DataProtection;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
 using TarimDonusum.Tablolar;
@@ -12,15 +13,28 @@ namespace TarimDonusum.IsKurallari
 {
     public class KullaniciIsKurallari
     {
+        private const int ParolaBaglantisiGecerlilikDakikasi = 5;
+        private sealed class ParolaTokenIcerik
+        {
+            public int KullaniciId { get; set; }
+            public long ZamanUtc { get; set; }
+            public string LinkKodu { get; set; } = "";
+        }
         private readonly string _connectionString;
         private readonly ILogger<KullaniciIsKurallari> _logger;
         private readonly IStringLocalizer<SharedResource> _localizer;
+        private readonly IDataProtector _parolaTokenKoruyucu;
 
-        public KullaniciIsKurallari(IConfiguration configuration, ILogger<KullaniciIsKurallari> logger, IStringLocalizer<SharedResource> localizer)
+        public KullaniciIsKurallari(
+            IConfiguration configuration,
+            ILogger<KullaniciIsKurallari> logger,
+            IStringLocalizer<SharedResource> localizer,
+            IDataProtectionProvider dataProtectionProvider)
         {
             _logger = logger;
             _localizer = localizer;
             _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
+            _parolaTokenKoruyucu = dataProtectionProvider.CreateProtector("TarimDonusum.ParolaBelirleme.v1");
         }
 
         public async Task<Sonuc<int>> YeniBasvuruKullanicisiAsync(Kullanici kullanici)
@@ -219,10 +233,22 @@ namespace TarimDonusum.IsKurallari
                 Kullanici? kullanici = await tabKullanici.OkuAsync(kullaniciId);
                 if (kullanici == null) { sonuc.HataEkle(Metin("Business.User.NotFound")); return sonuc; }
 
-                string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
-                    .Replace("+", "-").Replace("/", "_").TrimEnd('=');
-                TABKullaniciParolaToken tabToken = new(connection);
-                await tabToken.EkleAsync(kullaniciId, TokenHash(token), DateTime.Now.AddHours(2));
+                ParolaTokenIcerik icerik = new()
+                {
+                    KullaniciId = kullaniciId,
+                    ZamanUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    LinkKodu = Convert.ToHexString(RandomNumberGenerator.GetBytes(24))
+                };
+                string token = _parolaTokenKoruyucu.Protect(JsonSerializer.Serialize(icerik));
+                TABKullaniciLog tabLog = new(connection);
+                await tabLog.EkleAsync(new KullaniciLog
+                {
+                    KullaniciId = kullaniciId,
+                    IslemYapanKullaniciId = islemYapan!.Id,
+                    IslemTarihi = DateTime.Now,
+                    Islem = "ParolaBelirlemeBaglantisiGonderildi",
+                    JsonText = JsonSerializer.Serialize(new { icerik.KullaniciId, icerik.ZamanUtc, icerik.LinkKodu })
+                });
                 sonuc.nesne = new ParolaBaglantisiSonucu
                 {
                     Token = token,
@@ -237,7 +263,8 @@ namespace TarimDonusum.IsKurallari
         public async Task<Sonuc> ParolaBelirleAsync(string token, string parola, string parolaTekrar)
         {
             Sonuc sonuc = new();
-            if (string.IsNullOrWhiteSpace(token)) sonuc.HataEkle(Metin("Kullanici.PasswordLink.Invalid"));
+            ParolaTokenIcerik? icerik = TokenIceriginiOku(token);
+            if (icerik == null || !TokenZamaniGecerliMi(icerik.ZamanUtc)) sonuc.HataEkle(Metin("Kullanici.PasswordLink.Invalid"));
             if (!string.Equals(parola, parolaTekrar, StringComparison.Ordinal)) sonuc.HataEkle(Metin("Kullanici.PasswordLink.Mismatch"));
             if (!OrtakFonksiyonlar.ParolaGecerliMi(parola)) sonuc.HataEkle(Metin("Kullanici.PasswordLink.Weak"));
             if (!sonuc.basarili) return sonuc;
@@ -246,18 +273,29 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
-                TABKullaniciParolaToken tabToken = new(connection, null, transaction);
-                string hash = TokenHash(token);
-                int? kullaniciId = await tabToken.GecerliKullaniciIdAsync(hash);
-                if (!kullaniciId.HasValue)
+                TABKullanici tabKullanici = new(connection, null, transaction);
+                bool kullaniciVar = await tabKullanici.KullaniciSatiriniKilitleAsync(icerik!.KullaniciId);
+                TABKullaniciLog tabLog = new(connection, null, transaction);
+                bool logGecerli = await tabLog.ParolaBaglantisiGecerliMiAsync(
+                    icerik.KullaniciId,
+                    icerik.ZamanUtc,
+                    icerik.LinkKodu,
+                    DateTime.Now.AddMinutes(-ParolaBaglantisiGecerlilikDakikasi));
+                if (!kullaniciVar || !logGecerli)
                 {
                     sonuc.HataEkle(Metin("Kullanici.PasswordLink.Invalid"));
                     await transaction.RollbackAsync();
                     return sonuc;
                 }
-                TABKullanici tabKullanici = new(connection, null, transaction);
-                await tabKullanici.ParolaDegistirAsync(new Kullanici { Id = kullaniciId.Value, Parola = parola });
-                await tabToken.KullanildiYapAsync(hash);
+                await tabKullanici.ParolaDegistirAsync(new Kullanici { Id = icerik.KullaniciId, Parola = parola });
+                await tabLog.EkleAsync(new KullaniciLog
+                {
+                    KullaniciId = icerik.KullaniciId,
+                    IslemYapanKullaniciId = icerik.KullaniciId,
+                    IslemTarihi = DateTime.Now,
+                    Islem = "ParolaBelirlendi",
+                    JsonText = JsonSerializer.Serialize(new { icerik.KullaniciId, icerik.ZamanUtc, icerik.LinkKodu })
+                });
                 await transaction.CommitAsync();
                 sonuc.mesaj = Metin("Kullanici.PasswordLink.Success");
             }
@@ -265,9 +303,20 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        private static string TokenHash(string token)
+        private ParolaTokenIcerik? TokenIceriginiOku(string token)
         {
-            return Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));
+            try
+            {
+                string json = _parolaTokenKoruyucu.Unprotect(token);
+                return JsonSerializer.Deserialize<ParolaTokenIcerik>(json);
+            }
+            catch { return null; }
+        }
+
+        private static bool TokenZamaniGecerliMi(long zamanUtc)
+        {
+            long fark = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - zamanUtc;
+            return fark >= 0 && fark <= ParolaBaglantisiGecerlilikDakikasi * 60;
         }
 
         private static bool SistemYoneticisiMi(Kullanici? kullanici, Sonuc sonuc)

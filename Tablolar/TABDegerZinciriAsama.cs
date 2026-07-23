@@ -35,6 +35,34 @@ namespace TarimDonusum.Tablolar
             return liste;
         }
 
+        public async Task<int> EkleAsync(DegerZinciriAsama model)
+        {
+            const string sql = @"INSERT INTO dbo.DegerZinciriAsama(DegerZinciriId,SiraNo,Ad,Aciklama,Aktif)
+                                 OUTPUT INSERTED.Id VALUES(@DegerZinciriId,@SiraNo,@Ad,@Aciklama,@Aktif);";
+            await using SqlCommand command = KomutOlustur(sql);
+            ParametreEkle(command, model);
+            return Convert.ToInt32(await command.ExecuteScalarAsync());
+        }
+
+        public async Task<bool> GuncelleAsync(DegerZinciriAsama model)
+        {
+            const string sql = @"UPDATE dbo.DegerZinciriAsama SET SiraNo=@SiraNo,Ad=@Ad,Aciklama=@Aciklama,Aktif=@Aktif
+                                 WHERE Id=@Id AND DegerZinciriId=@DegerZinciriId;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@Id", model.id);
+            ParametreEkle(command, model);
+            return await command.ExecuteNonQueryAsync() > 0;
+        }
+
+        private static void ParametreEkle(SqlCommand command, DegerZinciriAsama model)
+        {
+            command.Parameters.AddWithValue("@DegerZinciriId", model.degerZinciriId);
+            command.Parameters.AddWithValue("@SiraNo", model.siraNo);
+            command.Parameters.AddWithValue("@Ad", model.ad);
+            command.Parameters.AddWithValue("@Aciklama", model.aciklama);
+            command.Parameters.AddWithValue("@Aktif", model.aktif ? 1 : 0);
+        }
+
         private static DegerZinciriAsama Oku(SqlDataReader reader)
         {
             return new DegerZinciriAsama

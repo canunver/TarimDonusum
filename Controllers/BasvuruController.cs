@@ -30,6 +30,10 @@ namespace TarimDonusum.Controllers
             ; try
             {
                 Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return RedirectToAction("Index", "Home");
+
+                ViewBag.YeniBasvuruYetkisi = BasvuruKullanicisiMi(kullanici);
                 sonuc = await _basvuruIsKurallari.KullaniciBasvurulariniListeleAsync(kullanici);
             }
             catch (Exception ex)
@@ -47,7 +51,14 @@ namespace TarimDonusum.Controllers
         {
             try
             {
-                return View("Form", await FormViewModelHazirlaAsync(YeniBasvuru()));
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (!BasvuruKullanicisiMi(kullanici))
+                {
+                    TempData["Mesaj"] = "Yeni ön başvuru yalnızca başvuru kullanıcıları tarafından oluşturulabilir.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return View("Form", await FormViewModelHazirlaAsync(YeniBasvuru(), kullanici));
             }
             catch (Exception ex)
             {
@@ -76,7 +87,7 @@ namespace TarimDonusum.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                return View("Form", await FormViewModelHazirlaAsync(sonuc.nesne));
+                return View("Form", await FormViewModelHazirlaAsync(sonuc.nesne, kullanici));
             }
             catch (Exception ex)
             {
@@ -84,6 +95,11 @@ namespace TarimDonusum.Controllers
                 TempData["Mesaj"] = "Başvuru kaydı okunamadı.";
                 return RedirectToAction(nameof(Index));
             }
+        }
+
+        private static bool BasvuruKullanicisiMi(Kullanici? kullanici)
+        {
+            return kullanici?.Yetkiler.Any(y => y.Rol == KullaniciRol.BasvuruKullanicisi) == true;
         }
 
         [OturumKontrol]
@@ -110,7 +126,7 @@ namespace TarimDonusum.Controllers
                     return BadRequest();
                 }
 
-                BasvuruFormViewModel model = await FormViewModelHazirlaAsync(basvuru);
+                BasvuruFormViewModel model = await FormViewModelHazirlaAsync(basvuru, kullanici);
                 BasvuruBolumTanim? bolumTanim = BasvuruBolumleri.Bul(bolum, model.DenetciGorunumu);
                 if (bolumTanim == null)
                     return BadRequest();
@@ -770,11 +786,15 @@ namespace TarimDonusum.Controllers
                 .ToList();
         }
 
-        private async Task<BasvuruFormViewModel> FormViewModelHazirlaAsync(Basvuru basvuru)
+        private async Task<BasvuruFormViewModel> FormViewModelHazirlaAsync(Basvuru basvuru, Kullanici? kullanici)
         {
+            bool basvuruKullanicisi = BasvuruKullanicisiMi(kullanici);
+            bool duzenlenebilirDurum = basvuru.durum == enumBasvuruDurum.OnBasvuruDurumu;
+
             BasvuruFormViewModel model = new BasvuruFormViewModel
             {
                 Basvuru = basvuru,
+                SaltOkunur = !basvuruKullanicisi || !duzenlenebilirDurum,
             };
 
             await ReferansListeleriYukleAsync(model);

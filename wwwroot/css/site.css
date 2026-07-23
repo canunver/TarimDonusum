@@ -149,6 +149,28 @@ body {
   gap: 12px;
 }
 
+.birim-form-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.birim-form-row {
+  display: grid;
+  gap: 12px;
+}
+
+.birim-name-row {
+  grid-template-columns: 1fr;
+}
+
+.birim-type-row {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+}
+
+.birim-status-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .basvuru-form-section {
   padding: 16px 0 18px;
   border-top: 1px solid #d8e0ea;
@@ -779,6 +801,35 @@ body {
   padding: 14px 16px 10px;
 }
 
+.il-yonetim-modal .modal-dialog {
+  width: 90vw;
+  max-width: 800px;
+  margin-top: 5vh;
+  margin-bottom: 5vh;
+}
+
+.il-yonetim-modal .modal-content {
+  max-height: 90vh;
+}
+
+.il-yonetim-modal .modal-body {
+  overflow: hidden;
+}
+
+.il-yonetim-modal .ilce-scroll {
+  max-height: 42vh;
+  overflow-y: auto;
+  border: 1px solid #d8e0ea;
+  border-radius: 6px;
+}
+
+.il-yonetim-modal .ilce-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8fafc;
+}
+
 .firma-modal-body .alert {
   margin-bottom: 10px;
   padding: 8px 10px;
@@ -1282,6 +1333,11 @@ body {
   .check-grid,
   .metric-grid,
   .document-two-column {
+    grid-template-columns: 1fr;
+  }
+
+  .birim-type-row,
+  .birim-status-row {
     grid-template-columns: 1fr;
   }
 

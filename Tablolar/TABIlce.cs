@@ -63,5 +63,31 @@ namespace TarimDonusum.Tablolar
                 Aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(3)) == 1
             };
         }
+
+        public async Task<int> EkleAsync(Ilce ilce)
+        {
+            const string sql = @"INSERT INTO dbo.Ilce (IlId, Ad, Aktif)
+                                 OUTPUT INSERTED.Id VALUES (@IlId, @Ad, @Aktif);";
+            await using SqlCommand command = KomutOlustur(sql);
+            ParametreleriEkle(command, ilce);
+            return Convert.ToInt32(await command.ExecuteScalarAsync());
+        }
+
+        public async Task<bool> GuncelleAsync(Ilce ilce)
+        {
+            const string sql = @"UPDATE dbo.Ilce SET Ad=@Ad, Aktif=@Aktif
+                                 WHERE Id=@Id AND IlId=@IlId;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@Id", ilce.Id);
+            ParametreleriEkle(command, ilce);
+            return await command.ExecuteNonQueryAsync() > 0;
+        }
+
+        private static void ParametreleriEkle(SqlCommand command, Ilce ilce)
+        {
+            command.Parameters.AddWithValue("@IlId", ilce.IlId);
+            command.Parameters.AddWithValue("@Ad", ilce.Ad.Trim());
+            command.Parameters.AddWithValue("@Aktif", ilce.Aktif ? 1 : 0);
+        }
     }
 }

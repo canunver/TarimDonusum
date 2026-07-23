@@ -278,6 +278,14 @@ namespace TarimDonusum.Tablolar
             return await command.ExecuteNonQueryAsync() > 0;
         }
 
+        public async Task<bool> KullaniciSatiriniKilitleAsync(int kullaniciId)
+        {
+            const string sql = "SELECT COUNT(1) FROM dbo.Kullanici WITH (UPDLOCK, HOLDLOCK) WHERE Id = @Id;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@Id", kullaniciId);
+            return Convert.ToInt32(await command.ExecuteScalarAsync()) > 0;
+        }
+
         public async Task<bool> BenzerKayitVarMiAsync(string tckn, string eposta, string telefon)
         {
             const string sql = @"

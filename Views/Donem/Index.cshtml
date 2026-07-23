@@ -1,0 +1,137 @@
+@{
+    ViewData["Title"] = "Dönemler";
+}
+
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div>
+            <h1>Dönemler</h1>
+            <p>Başvuru dönemlerini oluşturun ve düzenleyin.</p>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="DonemModalAc()">
+            <i class="fas fa-plus-circle mr-1"></i>Yeni
+        </button>
+    </div>
+
+    @Html.AntiForgeryToken()
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Yıl</th>
+                    <th>Dönem adı</th>
+                    <th>Başvuru başlangıcı</th>
+                    <th>Başvuru bitişi</th>
+                    <th>Durum</th>
+                    <th class="text-right">İşlem</th>
+                </tr>
+            </thead>
+            <tbody id="donemListe"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="donemModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content firma-modal-content">
+            <div class="modal-header firma-modal-header">
+                <h5 class="modal-title" id="donemModalBaslik">Yeni dönem</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Kapat"><span>&times;</span></button>
+            </div>
+            <div class="modal-body firma-modal-body">
+                <input type="hidden" id="donemId" value="0" />
+                <div class="donem-form-grid">
+                    <label>Yıl<input id="donemYil" type="number" min="2000" max="2200" class="form-control" /></label>
+                    <label>Dönem adı<input id="donemAd" maxlength="150" class="form-control" /></label>
+                    <label>Başvuru başlangıç tarihi<input id="basvuruBaslangic" type="date" class="form-control" /></label>
+                    <label>Başvuru bitiş tarihi<input id="basvuruBitis" type="date" class="form-control" /></label>
+                    <label>Ön başvuru bitiş tarihi<input id="onBasvuruBitis" type="date" class="form-control" /></label>
+                    <label>Başvuru durumu
+                        <select id="basvuruyaAcik" class="form-control"><option value="true">Açık</option><option value="false">Kapalı</option></select>
+                    </label>
+                    <label>Minimum yatırım tutarı<input id="minimumYatirim" type="text" inputmode="numeric" class="form-control money-integer" /></label>
+                    <label>Maksimum yatırım tutarı<input id="maksimumYatirim" type="text" inputmode="numeric" class="form-control money-integer" /></label>
+                    <label>Maksimum destek tutarı<input id="maksimumDestek" type="text" inputmode="numeric" class="form-control money-integer" /></label>
+                    <label>Destek oranı (%)<input id="destekOrani" type="number" min="0" max="100" step="0.01" class="form-control" /></label>
+                    <label class="donem-form-full">Açıklama<textarea id="aciklama" rows="3" class="form-control"></textarea></label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" onclick="DonemKaydet()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .donem-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem 1.25rem;
+    }
+    .donem-form-grid label { margin: 0; }
+    .donem-form-full { grid-column: 1 / -1; }
+    @@media (max-width: 767.98px) {
+        .donem-form-grid { grid-template-columns: 1fr; }
+        .donem-form-full { grid-column: auto; }
+    }
+</style>
+
+@section Scripts {
+<script>
+    const donemler = [];
+    const tarihDegeri = value => value ? String(value).substring(0, 10) : '';
+    const paraDegeri = id => {
+        const deger = paraTamsayiDegeri($(id).val());
+        return deger === '' ? null : Number(deger);
+    };
+    const htmlEncode = value => $('<div/>').text(value == null ? '' : String(value)).html();
+
+    function DonemListeYaz() {
+        const tbody = $('#donemListe').empty();
+        donemler.forEach(d => tbody.append(`<tr>
+            <td>${htmlEncode(d.yil)}</td><td>${htmlEncode(d.ad)}</td>
+            <td>${htmlEncode(tarihDegeri(d.basvuruBaslangicTarihi) || '-')}</td>
+            <td>${htmlEncode(tarihDegeri(d.basvuruBitisTarihi) || '-')}</td>
+            <td><span class="badge ${d.basvuruyaAcikMi ? 'badge-success' : 'badge-secondary'}">${d.basvuruyaAcikMi ? 'Açık' : 'Kapalı'}</span></td>
+            <td class="text-right"><button type="button" class="btn btn-sm btn-outline-primary" onclick="DonemModalAc(${d.id})">Düzenle</button></td>
+        </tr>`));
+    }
+
+    function DonemModalAc(id) {
+        const d = donemler.find(x => Number(x.id) === Number(id)) || { id: 0, yil: new Date().getFullYear(), basvuruyaAcikMi: false };
+        $('#donemModalBaslik').text(d.id ? 'Dönem düzenle' : 'Yeni dönem');
+        $('#donemId').val(d.id || 0); $('#donemYil').val(d.yil || ''); $('#donemAd').val(d.ad || '');
+        $('#basvuruBaslangic').val(tarihDegeri(d.basvuruBaslangicTarihi));
+        $('#onBasvuruBitis').val(tarihDegeri(d.onBasvuruBitisTarihi)); $('#basvuruBitis').val(tarihDegeri(d.basvuruBitisTarihi));
+        $('#minimumYatirim').val(d.minimumYatirimTutari ?? ''); $('#maksimumYatirim').val(d.maksimumYatirimTutari ?? '');
+        $('#maksimumDestek').val(d.maksimumDestekTutari ?? ''); $('#destekOrani').val(d.destekOrani ?? '');
+        $('#basvuruyaAcik').val(String(d.basvuruyaAcikMi === true)); $('#aciklama').val(d.aciklama || '');
+        document.querySelectorAll('#donemModal .money-integer').forEach(paraFormatla);
+        $('#donemModal').modal('show');
+    }
+
+    function DonemKaydet() {
+        AjaxPost('/Donem/Kaydet', {
+            id: Number($('#donemId').val() || 0), yil: Number($('#donemYil').val() || 0), ad: $('#donemAd').val(),
+            basvuruyaAcikMi: $('#basvuruyaAcik').val() === 'true',
+            basvuruBaslangicTarihi: $('#basvuruBaslangic').val() || null, onBasvuruBitisTarihi: $('#onBasvuruBitis').val() || null,
+            basvuruBitisTarihi: $('#basvuruBitis').val() || null, minimumYatirimTutari: paraDegeri('#minimumYatirim'),
+            maksimumYatirimTutari: paraDegeri('#maksimumYatirim'), maksimumDestekTutari: paraDegeri('#maksimumDestek'),
+            destekOrani: $('#destekOrani').val() === '' ? null : Number($('#destekOrani').val()), aciklama: $('#aciklama').val()
+        }, function (sonuc) {
+            if (!sonuc || !sonuc.basarili) { PopupMesajGoster((sonuc && sonuc.hataStr) || 'Dönem kaydedilemedi.', false); return; }
+            $('#donemModal').modal('hide'); PopupMesajGoster(sonuc.mesaj || 'Dönem kaydedildi.', true); DonemListele();
+        });
+    }
+
+    function DonemListele() {
+        AjaxGet('/Donem/Listele', null, function (sonuc) {
+            if (!sonuc || !sonuc.basarili) { PopupMesajGoster((sonuc && sonuc.hataStr) || 'Dönemler alınamadı.', false); return; }
+            donemler.splice(0, donemler.length, ...(sonuc.nesne || [])); DonemListeYaz();
+        });
+    }
+    $(function () { PopupMesajIlklendir(); ParaTamsayiAyarla(); DonemListele(); });
+</script>
+}

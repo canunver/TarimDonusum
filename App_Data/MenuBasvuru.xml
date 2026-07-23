@@ -2,7 +2,7 @@
 <Menu>
   <Item type="Url" id="dashboard" text="Gosterge Paneli" url="/Dashboard" icon="fas fa-chart-pie" roles="SistemYoneticisi,BirimKullanicisi" />
   <Item type="Url" id="kayitlar" text="Basvuru Kayitlari" url="/Basvuru" icon="fas fa-list" roles="BasvuruKullanicisi,SistemYoneticisi" />
-  <Item type="Url" id="yeniOnBasvuru" text="Yeni On Basvuru" url="/Basvuru/Yeni" icon="fas fa-plus-circle" roles="BasvuruKullanicisi,SistemYoneticisi" />
+  <Item type="Url" id="yeniOnBasvuru" text="Yeni On Basvuru" url="/Basvuru/Yeni" icon="fas fa-plus-circle" roles="BasvuruKullanicisi" />
   <Item type="Menu" id="denetleme" text="Denetleme" icon="fas fa-clipboard-check" roles="SistemYoneticisi">
     <Item type="Url" id="denetlemeKayitlari" text="Denetleme Kayitlari" url="/Denetleme" icon="far fa-circle" roles="SistemYoneticisi" />
   </Item>
@@ -10,7 +10,6 @@
     <Item type="Url" id="kullanicilar" text="Kullanicilar" url="/Kullanici" icon="far fa-user" roles="SistemYoneticisi" />
     <Item type="Url" id="birimler" text="Birimler" url="/Birim" icon="fas fa-sitemap" roles="SistemYoneticisi" />
     <Item type="Url" id="iller" text="Iller" url="/Il" icon="far fa-map" roles="SistemYoneticisi" />
-    <Item type="Url" id="ilceler" text="Ilceler" url="/Ilce" icon="far fa-map" roles="SistemYoneticisi" />
     <Item type="Url" id="degerZincirleri" text="Deger Zincirleri" url="/DegerZinciri" icon="fas fa-link" roles="SistemYoneticisi" />
     <Item type="Url" id="donemler" text="Donemler" url="/Donem" icon="far fa-calendar" roles="SistemYoneticisi" />
   </Item>

@@ -58,7 +58,9 @@ namespace TarimDonusum.IsKurallari
                 await connection.OpenAsync();
 
                 TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer);
-                sonuc = await tabBasvuru.KullaniciBasvurulariniListeleAsync(kullanici.Id);
+                sonuc = BasvuruKullanicisiMi(kullanici)
+                    ? await tabBasvuru.KullaniciBasvurulariniListeleAsync(kullanici.Id)
+                    : await tabBasvuru.TumunuListeleAsync();
             }
             catch (Exception ex)
             {
@@ -255,7 +257,9 @@ namespace TarimDonusum.IsKurallari
                     return sonuc;
                 }
 
-                if (kullanici != null && basvuru.basvuruFirma.firmaId > 0)
+                if (kullanici != null &&
+                    BasvuruKullanicisiMi(kullanici) &&
+                    basvuru.basvuruFirma.firmaId > 0)
                 {
                     TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection, _localizer);
                     if (!await tabFirmaKullanici.IliskiVarMiAsync(basvuru.basvuruFirma.firmaId, kullanici.Id))
@@ -328,6 +332,11 @@ namespace TarimDonusum.IsKurallari
         public async Task<Sonuc<int>> FirmaEkleGuncelleAsync(Firma firma, Kullanici? kullanici)
         {
             Sonuc<int> sonuc = new Sonuc<int>();
+            if (!BasvuruKullanicisiMi(kullanici))
+            {
+                BasvuruKullanicisiYetkiHatasiEkle(sonuc);
+                return sonuc;
+            }
 
             if (kullanici == null)
             {
@@ -479,6 +488,12 @@ namespace TarimDonusum.IsKurallari
             Sonuc<int> sonuc = new Sonuc<int>();
             try
             {
+                if (!BasvuruKullanicisiMi(kullanici))
+                {
+                    BasvuruKullanicisiYetkiHatasiEkle(sonuc);
+                    return sonuc;
+                }
+
                 firmaBasvuru.Dogrula(sonuc);
 
                 if (!sonuc.basarili)
@@ -1943,11 +1958,23 @@ namespace TarimDonusum.IsKurallari
 
         private async Task<Basvuru?> BasvuruOnBasvuruYetkiKontrolAsync(SqlConnection connection, int basvuruId, Kullanici kullanici, Sonuc sonuc)
         {
+            if (!BasvuruKullanicisiMi(kullanici))
+            {
+                BasvuruKullanicisiYetkiHatasiEkle(sonuc);
+                return null;
+            }
+
             TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer);
             Basvuru? mevcut = await tabBasvuru.OkuAsync(basvuruId);
             if (mevcut == null)
             {
                 HataEkle(sonuc, "Business.Application.NotFoundOrUnauthorized");
+                return null;
+            }
+
+            if (mevcut.durum != enumBasvuruDurum.OnBasvuruDurumu)
+            {
+                sonuc.HataEkle("Bu kayıt ön başvuru aşamasında olmadığı için güncellenemez.");
                 return null;
             }
 
@@ -1968,6 +1995,16 @@ namespace TarimDonusum.IsKurallari
             }
 
             return mevcut;
+        }
+
+        private static bool BasvuruKullanicisiMi(Kullanici? kullanici)
+        {
+            return kullanici?.Yetkiler.Any(y => y.Rol == KullaniciRol.BasvuruKullanicisi) == true;
+        }
+
+        private static void BasvuruKullanicisiYetkiHatasiEkle(Sonuc sonuc)
+        {
+            sonuc.HataEkle("Ön başvuru kayıt işlemleri yalnızca başvuru kullanıcıları tarafından yapılabilir.");
         }
 
         public async Task<Sonuc<int>> OrtaklikKaydetAsync(Basvuru basvuru, Kullanici kullanici)

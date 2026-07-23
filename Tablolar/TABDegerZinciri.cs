@@ -13,6 +13,54 @@ namespace TarimDonusum.Tablolar
         {
         }
 
+        public async Task<List<DegerZinciri>> YonetimListesiAsync()
+        {
+            const string sql = @"SELECT Id, Ad, Aciklama, Aktif
+                                 FROM dbo.DegerZinciri ORDER BY Ad;
+                                 SELECT Id, DegerZinciriId, SiraNo, Ad, Aciklama, Aktif
+                                 FROM dbo.DegerZinciriAsama ORDER BY DegerZinciriId, SiraNo, Ad;";
+            await using SqlCommand command = KomutOlustur(sql);
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+            List<DegerZinciri> liste = new();
+            while (await reader.ReadAsync())
+                liste.Add(new DegerZinciri {
+                    id = reader.GetInt32(0), ad = reader.GetString(1),
+                    aciklama = reader.GetString(2), aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(3)) == 1
+                });
+            await reader.NextResultAsync();
+            while (await reader.ReadAsync())
+            {
+                DegerZinciri? zincir = liste.FirstOrDefault(x => x.id == reader.GetInt32(1));
+                zincir?.asamalar.Add(AsamaOku(reader));
+            }
+            return liste;
+        }
+
+        public async Task<int> EkleAsync(DegerZinciri model)
+        {
+            const string sql = @"INSERT INTO dbo.DegerZinciri(Ad, Aciklama, Aktif)
+                                 OUTPUT INSERTED.Id VALUES(@Ad,@Aciklama,@Aktif);";
+            await using SqlCommand command = KomutOlustur(sql);
+            ParametreEkle(command, model);
+            return Convert.ToInt32(await command.ExecuteScalarAsync());
+        }
+
+        public async Task<bool> GuncelleAsync(DegerZinciri model)
+        {
+            const string sql = @"UPDATE dbo.DegerZinciri SET Ad=@Ad,Aciklama=@Aciklama,Aktif=@Aktif WHERE Id=@Id;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@Id", model.id);
+            ParametreEkle(command, model);
+            return await command.ExecuteNonQueryAsync() > 0;
+        }
+
+        private static void ParametreEkle(SqlCommand command, DegerZinciri model)
+        {
+            command.Parameters.AddWithValue("@Ad", model.ad);
+            command.Parameters.AddWithValue("@Aciklama", model.aciklama);
+            command.Parameters.AddWithValue("@Aktif", model.aktif ? 1 : 0);
+        }
+
         //public async Task<DegerZinciri?> OkuAsync(int id)
         //{
         //    const string sql = @"

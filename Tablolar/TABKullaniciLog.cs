@@ -48,5 +48,32 @@ namespace TarimDonusum.Tablolar
 
             return id;
         }
+
+        public async Task<bool> ParolaBaglantisiGecerliMiAsync(
+            int kullaniciId, long zamanUtc, string linkKodu, DateTime enErkenTarih)
+        {
+            const string sql = @"
+                SELECT COUNT(1)
+                FROM dbo.KullaniciLog L
+                WHERE L.KullaniciId = @KullaniciId
+                  AND L.Islem = N'ParolaBelirlemeBaglantisiGonderildi'
+                  AND L.IslemTarihi >= @EnErkenTarih
+                  AND TRY_CONVERT(BIGINT, JSON_VALUE(L.JsonText, '$.ZamanUtc')) = @ZamanUtc
+                  AND JSON_VALUE(L.JsonText, '$.LinkKodu') = @LinkKodu
+                  AND NOT EXISTS
+                  (
+                      SELECT 1 FROM dbo.KullaniciLog K
+                      WHERE K.KullaniciId = L.KullaniciId
+                        AND K.Islem = N'ParolaBelirlendi'
+                        AND JSON_VALUE(K.JsonText, '$.LinkKodu') = @LinkKodu
+                        AND K.IslemTarihi >= L.IslemTarihi
+                  );";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@KullaniciId", kullaniciId);
+            command.Parameters.AddWithValue("@ZamanUtc", zamanUtc);
+            command.Parameters.AddWithValue("@LinkKodu", linkKodu);
+            command.Parameters.AddWithValue("@EnErkenTarih", enErkenTarih);
+            return Convert.ToInt32(await command.ExecuteScalarAsync()) > 0;
+        }
     }
 }

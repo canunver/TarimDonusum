@@ -1,0 +1,107 @@
+@{ ViewData["Title"] = "Değer Zincirleri"; }
+
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div><h1>Değer Zincirleri</h1><p>Değer zincirlerini, aşamalarını ve il kısıtlarını yönetin.</p></div>
+        <button class="btn btn-primary" type="button" onclick="zincirAc(0)"><i class="fas fa-plus-circle mr-1"></i>Yeni Değer Zinciri</button>
+    </div>
+    @Html.AntiForgeryToken()
+    <div id="zincirListe" class="basvuru-card"></div>
+</div>
+
+<div class="modal fade" id="zincirModal" tabindex="-1" role="dialog" aria-hidden="true">
+ <div class="modal-dialog modal-xl" role="document"><div class="modal-content firma-modal-content">
+  <div class="modal-header firma-modal-header"><h5 class="modal-title">Değer Zinciri ve Aşamaları</h5>
+   <button class="close" type="button" data-dismiss="modal"><span>&times;</span></button></div>
+  <div class="modal-body firma-modal-body">
+   <input id="zincirId" type="hidden">
+   <div class="dz-form">
+    <label>Ad<input id="zincirAd" class="form-control" maxlength="250"></label>
+    <label>Durum<select id="zincirAktif" class="form-control"><option value="true">Aktif</option><option value="false">Pasif</option></select></label>
+    <label class="dz-full">Açıklama<textarea id="zincirAciklama" class="form-control" rows="2"></textarea></label>
+   </div>
+   <div class="d-flex justify-content-between align-items-center mt-4 mb-2"><h6 class="mb-0">Aşamalar</h6>
+    <button class="btn btn-sm btn-outline-primary" type="button" onclick="asamaEkle()">Yeni Aşama Satırı</button></div>
+   <div class="table-responsive"><table class="table table-sm table-hover mb-0">
+    <thead><tr><th style="width:90px">Sıra</th><th>Ad</th><th>Açıklama</th><th style="width:115px">Durum</th><th style="width:80px"></th></tr></thead>
+    <tbody id="asamaListe"></tbody>
+   </table></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-dismiss="modal">Kapat</button>
+   <button class="btn btn-primary" type="button" onclick="zincirKaydet()">Kaydet</button></div>
+ </div></div>
+</div>
+
+<div class="modal fade" id="ilKisitModal" tabindex="-1" role="dialog" aria-hidden="true">
+ <div class="modal-dialog modal-lg" role="document"><div class="modal-content firma-modal-content">
+  <div class="modal-header firma-modal-header"><div><h5 class="modal-title mb-0">İl Kısıtları</h5><small id="ilKisitBaslik"></small></div>
+   <button class="close" type="button" data-dismiss="modal"><span>&times;</span></button></div>
+  <div class="modal-body firma-modal-body">
+   <div class="input-group mb-3"><select id="ilSecim" class="custom-select"></select>
+    <div class="input-group-append"><button id="ilEkleBtn" class="btn btn-primary" type="button" onclick="ilEkle()">Listeye Ekle</button></div></div>
+   <div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Kod</th><th>İl</th><th></th></tr></thead>
+    <tbody id="ilKisitListe"></tbody></table></div>
+  </div>
+  <div class="modal-footer"><small class="text-muted mr-auto">Değişiklikler anında kaydedilir.</small>
+   <button class="btn btn-outline-secondary" type="button" data-dismiss="modal">Kapat</button></div>
+ </div></div>
+</div>
+
+<style>
+.dz-form{display:grid;grid-template-columns:2fr 1fr;gap:1rem}.dz-form label{margin:0}.dz-full{grid-column:1/-1}
+@@media(max-width:767.98px){.dz-form{grid-template-columns:1fr}.dz-full{grid-column:auto}}
+</style>
+
+@section Scripts {
+<script>
+const zincirler=[], tumIller=[], kisitliIller=[]; let aktifZincirId=0;
+const enc=v=>$('<div/>').text(v==null?'':String(v)).html();
+const attr=v=>enc(v).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+function zincirListele(){
+ AjaxGet('/DegerZinciri/Listele',null,s=>{
+  if(!s||!s.basarili)return PopupMesajGoster((s&&s.hataStr)||'Liste alınamadı.',false);
+  zincirler.splice(0,zincirler.length,...(s.nesne||[])); zincirYaz();
+ });
+}
+function zincirYaz(){
+ $('#zincirListe').html(`<div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Ad</th><th>Aşama</th><th>Durum</th><th></th></tr></thead>
+ <tbody>${zincirler.map(x=>`<tr><td>${enc(x.ad)}</td><td>${(x.asamalar||[]).length}</td>
+ <td><span class="badge ${x.aktif?'badge-success':'badge-secondary'}">${x.aktif?'Aktif':'Pasif'}</span></td>
+ <td class="text-right"><button class="btn btn-sm btn-outline-secondary mr-1" onclick="ilKisitAc(${x.id})">İl Kısıt</button>
+ <button class="btn btn-sm btn-outline-primary" onclick="zincirAc(${x.id})">Düzenle</button></td></tr>`).join('')}</tbody></table></div>`);
+}
+function zincirAc(id){
+ const x=zincirler.find(i=>Number(i.id)===Number(id))||{id:0,kod:'',ad:'',aciklama:'',aktif:true,asamalar:[]};
+ $('#zincirId').val(x.id);$('#zincirAd').val(x.ad);$('#zincirAciklama').val(x.aciklama);$('#zincirAktif').val(String(x.aktif));
+ $('#asamaListe').empty();(x.asamalar||[]).forEach(asamaSatiri);$('#zincirModal').modal('show');
+}
+function asamaSatiri(x){
+ const id=Number(x.id||0), aktif=x.aktif!==false;
+ const islem=id?'<span class="text-muted">Silinemez</span>':`<button class="btn btn-sm btn-outline-danger" type="button" onclick="$(this).closest('tr').remove()">Sil</button>`;
+ $('#asamaListe').append(`<tr data-id="${id}"><td><input class="form-control form-control-sm asama-sira" type="number" min="1" value="${attr(x.siraNo||'')}"></td>
+ <td><input class="form-control form-control-sm asama-ad" maxlength="250" value="${attr(x.ad||'')}"></td>
+ <td><input class="form-control form-control-sm asama-aciklama" value="${attr(x.aciklama||'')}"></td>
+ <td><select class="form-control form-control-sm asama-aktif"><option value="true"${aktif?' selected':''}>Aktif</option><option value="false"${!aktif?' selected':''}>Pasif</option></select></td><td>${islem}</td></tr>`);
+}
+function asamaEkle(){asamaSatiri({id:0,siraNo:$('#asamaListe tr').length+1,aktif:true});}
+function zincirKaydet(){
+ const m={id:Number($('#zincirId').val()||0),ad:$('#zincirAd').val(),aciklama:$('#zincirAciklama').val(),aktif:$('#zincirAktif').val()==='true',asamalar:[]};
+ $('#asamaListe tr').each(function(){m.asamalar.push({id:Number($(this).data('id')||0),degerZinciriId:m.id,siraNo:Number($(this).find('.asama-sira').val()||0),ad:$(this).find('.asama-ad').val(),aciklama:$(this).find('.asama-aciklama').val(),aktif:$(this).find('.asama-aktif').val()==='true'});});
+ AjaxPost('/DegerZinciri/Kaydet',m,s=>{if(!s||!s.basarili)return PopupMesajGoster((s&&s.hataStr)||'Kayıt başarısız.',false);$('#zincirModal').modal('hide');PopupMesajGoster(s.mesaj,true);zincirListele();});
+}
+function ilKisitAc(id){
+ const x=zincirler.find(i=>Number(i.id)===Number(id));aktifZincirId=id;$('#ilKisitBaslik').text(x?x.ad:'');
+ AjaxGet('/DegerZinciri/IlListele',{degerZinciriId:id},s=>{if(!s||!s.basarili)return PopupMesajGoster((s&&s.hataStr)||'',false);kisitliIller.splice(0,kisitliIller.length,...(s.nesne||[]));ilKisitYaz();$('#ilKisitModal').modal('show');});
+}
+function ilKisitYaz(){
+ const secili=new Set(kisitliIller.map(x=>Number(x.id)));
+ $('#ilSecim').html('<option value="">İl seçiniz...</option>'+tumIller.filter(x=>x.aktif&&!secili.has(Number(x.id))).map(x=>`<option value="${x.id}">${enc(x.ad)}</option>`).join(''));
+ $('#ilKisitListe').html(kisitliIller.map(x=>`<tr data-id="${x.id}"><td>${enc(x.kod)}</td><td>${enc(x.ad)}</td><td class="text-right"><button class="btn btn-sm btn-outline-danger" onclick="ilSil(${x.id})">Sil</button></td></tr>`).join(''));
+}
+function ilEkle(){const ilId=Number($('#ilSecim').val()||0),il=tumIller.find(x=>Number(x.id)===ilId);if(!ilId)return PopupMesajGoster('İl seçiniz.',false);$('#ilEkleBtn').prop('disabled',true);
+ AjaxPost('/DegerZinciri/IlEkle',{degerZinciriId:aktifZincirId,ilId:ilId},s=>{$('#ilEkleBtn').prop('disabled',false);if(!s||!s.basarili)return PopupMesajGoster((s&&s.hataStr)||'',false);kisitliIller.push(il);ilKisitYaz();PopupMesajGoster(s.mesaj,true);});}
+function ilSil(ilId){AjaxPost('/DegerZinciri/IlSil',{degerZinciriId:aktifZincirId,ilId:ilId},s=>{if(!s||!s.basarili)return PopupMesajGoster((s&&s.hataStr)||'',false);const i=kisitliIller.findIndex(x=>Number(x.id)===Number(ilId));if(i>=0)kisitliIller.splice(i,1);ilKisitYaz();PopupMesajGoster(s.mesaj,true);});}
+$(function(){PopupMesajIlklendir();AjaxGet('/Il/Listele',null,s=>{if(s&&s.basarili)tumIller.splice(0,tumIller.length,...(s.nesne||[]));});zincirListele();});
+</script>
+}

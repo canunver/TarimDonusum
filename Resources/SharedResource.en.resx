@@ -1811,7 +1811,7 @@
   <data name="Kullanici.PasswordLink.Send" xml:space="preserve"><value>Send password link</value></data>
   <data name="Kullanici.PasswordLink.Sent" xml:space="preserve"><value>The password setup link was sent to the user.</value></data>
   <data name="Kullanici.PasswordLink.MailSubject" xml:space="preserve"><value>Password setup link</value></data>
-  <data name="Kullanici.PasswordLink.MailBody" xml:space="preserve"><value>Hello {0},&lt;br/&gt;&lt;br/&gt;&lt;a href=&quot;{1}&quot;&gt;Click here&lt;/a&gt; to set your password. The link is valid for two hours and can only be used once.</value></data>
+  <data name="Kullanici.PasswordLink.MailBody" xml:space="preserve"><value>Hello {0},&lt;br/&gt;&lt;br/&gt;&lt;a href=&quot;{1}&quot;&gt;Click here&lt;/a&gt; to set your password. The link is valid for five minutes and can only be used once.</value></data>
   <data name="Kullanici.PasswordLink.Title" xml:space="preserve"><value>Set password</value></data>
   <data name="Kullanici.PasswordLink.Description" xml:space="preserve"><value>Set a new password for your account.</value></data>
   <data name="Kullanici.PasswordLink.PasswordAgain" xml:space="preserve"><value>Confirm password</value></data>

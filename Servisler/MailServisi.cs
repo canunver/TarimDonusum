@@ -59,7 +59,7 @@ namespace TarimDonusum.Servisler
             mesaj.SubjectEncoding = Encoding.UTF8;
             mesaj.IsBodyHtml = html;
 
-            if (replyVar)
+            if (replyVar && mesaj.From != null)
                 mesaj.ReplyToList.Add(mesaj.From);
 
             using SmtpClient smtpClient = new SmtpClient(smtpAdres, smtpPort);

@@ -1683,7 +1683,7 @@
   <data name="Kullanici.PasswordLink.Send" xml:space="preserve"><value>Parola ba&#287;lant&#305;s&#305; g&#246;nder</value></data>
   <data name="Kullanici.PasswordLink.Sent" xml:space="preserve"><value>Parola belirleme ba&#287;lant&#305;s&#305; kullan&#305;c&#305;ya g&#246;nderildi.</value></data>
   <data name="Kullanici.PasswordLink.MailSubject" xml:space="preserve"><value>Parola belirleme ba&#287;lant&#305;s&#305;</value></data>
-  <data name="Kullanici.PasswordLink.MailBody" xml:space="preserve"><value>Merhaba {0},&lt;br/&gt;&lt;br/&gt;Parolan&#305;z&#305; belirlemek i&#231;in &lt;a href=&quot;{1}&quot;&gt;bu ba&#287;lant&#305;ya t&#305;klay&#305;n&lt;/a&gt;. Ba&#287;lant&#305; iki saat ge&#231;erlidir ve yaln&#305;zca bir kez kullan&#305;labilir.</value></data>
+  <data name="Kullanici.PasswordLink.MailBody" xml:space="preserve"><value>Merhaba {0},&lt;br/&gt;&lt;br/&gt;Parolan&#305;z&#305; belirlemek i&#231;in &lt;a href=&quot;{1}&quot;&gt;bu ba&#287;lant&#305;ya t&#305;klay&#305;n&lt;/a&gt;. Ba&#287;lant&#305; be&#351; dakika ge&#231;erlidir ve yaln&#305;zca bir kez kullan&#305;labilir.</value></data>
   <data name="Kullanici.PasswordLink.Title" xml:space="preserve"><value>Parola belirle</value></data>
   <data name="Kullanici.PasswordLink.Description" xml:space="preserve"><value>Hesab&#305;n&#305;z i&#231;in yeni bir parola belirleyin.</value></data>
   <data name="Kullanici.PasswordLink.PasswordAgain" xml:space="preserve"><value>Parola tekrar</value></data>
