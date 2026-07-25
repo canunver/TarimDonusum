@@ -1,0 +1,86 @@
+@model TarimDonusum.ViewModels.Home.SifremiUnuttumViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<TarimDonusum.SharedResource> L
+@{
+    ViewData["Title"] = L["ForgotPassword.Title"];
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card card-primary login-card">
+            <div class="card-header">
+                <h3 class="card-title">@L["ForgotPassword.Title"]</h3>
+            </div>
+            <form id="sifremiUnuttumForm" autocomplete="off">
+                @Html.AntiForgeryToken()
+                <div class="card-body">
+                    <p class="text-muted">@L["ForgotPassword.Description"]</p>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="TCKN">@L["ForgotPassword.TCKN"]</label>
+                            <input id="TCKN" name="TCKN" class="form-control" maxlength="11" inputmode="numeric" required />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="DogumTarihi">@L["ForgotPassword.BirthDate"]</label>
+                            <input id="DogumTarihi" name="DogumTarihi" type="date" class="form-control" required />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="Ad">@L["ForgotPassword.Name"]</label>
+                            <input id="Ad" name="Ad" class="form-control" maxlength="100" required />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="Soyad">@L["ForgotPassword.Surname"]</label>
+                            <input id="Soyad" name="Soyad" class="form-control" maxlength="100" required />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="Eposta">@L["ForgotPassword.Email"]</label>
+                            <input id="Eposta" name="Eposta" type="email" class="form-control" maxlength="256" required />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="Telefon">@L["ForgotPassword.Phone"]</label>
+                            <input id="Telefon" name="Telefon" type="tel" class="form-control" maxlength="30" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button id="btnSifreSifirla" type="submit" class="btn btn-primary">
+                        <i class="fas fa-envelope mr-1"></i>@L["ForgotPassword.Send"]
+                    </button>
+                    <a asp-action="Index" class="btn btn-link">@L["ForgotPassword.Back"]</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            PopupMesajIlklendir();
+            $("#sifremiUnuttumForm").on("submit", function (e) {
+                e.preventDefault();
+                var form = this;
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                var $buton = $("#btnSifreSifirla").prop("disabled", true);
+                $.ajax({
+                    url: "@Url.Action("SifreSifirlamaMailiGonder", "Home")",
+                    type: "POST",
+                    data: $(form).serialize(),
+                    dataType: "json"
+                }).done(function (cevap) {
+                    PopupMesajGoster(cevap.mesaj, cevap.basarili);
+                    if (cevap.basarili)
+                        form.reset();
+                }).fail(function () {
+                    PopupMesajGoster("@L["ForgotPassword.SendFailed"]", false);
+                }).always(function () {
+                    $buton.prop("disabled", false);
+                });
+            });
+        });
+    </script>
+}

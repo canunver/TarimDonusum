@@ -45,16 +45,36 @@
                         <td colspan="7" class="text-muted">@L["Basvuru.Index.Empty"]</td>
                     </tr>
                 }
-                @foreach (var item in Model)
+                @foreach (var grup in Model.GroupBy(x => x.BasvuruAnaId))
                 {
+                    var versiyonlar = grup.OrderByDescending(x => x.basvuruFirma.revizyonNo).ThenByDescending(x => x.Id).ToList();
+                    var item = versiyonlar.FirstOrDefault(x => x.basvuruFirma.siraNo == 0) ?? versiyonlar[0];
+                    var duzenleLinkId = $"basvuruDuzenle_{item.BasvuruAnaId}";
                     <tr>
-                        <td>@item.Id</td>
+                        <td>
+                            <select class="form-select form-select-sm basvuru-version-select"
+                                    aria-label="Başvuru versiyonu"
+                                    data-target="@duzenleLinkId"
+                                    data-url="@Url.Action("Duzenle", "Basvuru")">
+                                @foreach (var versiyon in versiyonlar)
+                                {
+                                    if (versiyon.Id == item.Id)
+                                    {
+                                        <option value="@versiyon.Id" selected>V@(versiyon.basvuruFirma.revizyonNo + 1)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@versiyon.Id">V@(versiyon.basvuruFirma.revizyonNo + 1)</option>
+                                    }
+                                }
+                            </select>
+                        </td>
                         <td>@item.basvuruFirma.firma.ticaretUnvani</td>
                         <td>@item.basvuruFirma.firma.vergiKimlikNo</td>
                         <td>@(string.IsNullOrWhiteSpace(item.yatirim.yatirimAdi) ? "-" : item.yatirim.yatirimAdi)</td>
-                        <td><span class="badge bg-secondary">@item.durum</span></td>
+                        <td><span class="badge bg-secondary">@IsimBul.EnumAdi(item.durum, L)</span></td>
                         <td class="text-end">
-                            <a class="btn btn-sm btn-outline-primary" asp-controller="Basvuru" asp-action="Duzenle" asp-route-id="@item.Id">@L["Basvuru.Common.Edit"]</a>
+                            <a id="@duzenleLinkId" class="btn btn-sm btn-outline-primary" asp-controller="Basvuru" asp-action="Duzenle" asp-route-id="@item.Id">@L["Basvuru.Common.Edit"]</a>
                         </td>
                     </tr>
                 }
@@ -69,6 +89,13 @@
         if (typeof PopupMesajIlklendir === 'function') {
             PopupMesajIlklendir();
         }
+
+        $('.basvuru-version-select').on('change', function () {
+            const hedef = document.getElementById(this.dataset.target);
+            if (hedef) {
+                hedef.href = this.dataset.url + '?id=' + encodeURIComponent(this.value);
+            }
+        });
     });
 </script>
 }

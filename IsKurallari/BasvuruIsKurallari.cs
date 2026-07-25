@@ -70,6 +70,28 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<List<Basvuru>>> KullaniciBasvuruVersiyonlariniListeleAsync(Kullanici kullanici)
+        {
+            Sonuc<List<Basvuru>> sonuc = new Sonuc<List<Basvuru>>();
+
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer);
+                sonuc = BasvuruKullanicisiMi(kullanici)
+                    ? await tabBasvuru.KullaniciBasvuruVersiyonlariniListeleAsync(kullanici.Id)
+                    : await tabBasvuru.TumVersiyonlariListeleAsync();
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Başvuru sürümleri listelenemedi. KullaniciId: {KullaniciId}", "Başvuru kayıtları listelenemedi.", kullanici.Id);
+            }
+
+            return sonuc;
+        }
+
         public async Task<Sonuc<Kullanici>> KullaniciOkuAsync(int kullaniciId)
         {
             Sonuc<Kullanici> sonuc = new Sonuc<Kullanici>();
@@ -120,6 +142,26 @@ namespace TarimDonusum.IsKurallari
             catch (Exception ex)
             {
                 BeklenmeyenHata(sonuc, ex, "Tüm başvurular listelenemedi.", "Başvuru kayıtları listelenemedi.");
+            }
+
+            return sonuc;
+        }
+
+        public async Task<Sonuc<List<Basvuru>>> TumVersiyonlariListeleAsync()
+        {
+            Sonuc<List<Basvuru>> sonuc = new Sonuc<List<Basvuru>>();
+
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                TABBasvuru tabBasvuru = new TABBasvuru(connection, _localizer);
+                sonuc = await tabBasvuru.TumVersiyonlariListeleAsync();
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Tüm başvuru sürümleri listelenemedi.", "Başvuru kayıtları listelenemedi.");
             }
 
             return sonuc;
@@ -280,6 +322,378 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc> IncelemeyeGonderAsync(int basvuruId, Kullanici kullanici)
+        {
+            Sonuc sonuc = new();
+            if (basvuruId <= 0)
+            {
+                HataEkle(sonuc, "Business.Application.RecordRequired");
+                return sonuc;
+            }
+
+            Sonuc<Basvuru> okumaSonucu = await OkuAsync(basvuruId, kullanici);
+            if (!okumaSonucu.basarili || okumaSonucu.nesne == null)
+            {
+                SonucHatalariniAktar(okumaSonucu, sonuc);
+                return sonuc;
+            }
+
+            Basvuru basvuru = okumaSonucu.nesne;
+            if (!BasvuruKullanicisiMi(kullanici))
+                BasvuruKullanicisiYetkiHatasiEkle(sonuc);
+            if (basvuru.durum != enumBasvuruDurum.OnBasvuruDurumu)
+                HataEkle(sonuc, "Business.Application.Submit.AlreadySubmitted");
+
+            IncelemeyeGonderimEksikleriniDogrula(basvuru, sonuc);
+            if (!sonuc.basarili) return sonuc;
+
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                TABBasvuru tabBasvuru = new(connection, _localizer, transaction);
+                if (!await tabBasvuru.IncelemeyeGonderAsync(basvuruId))
+                {
+                    HataEkle(sonuc, "Business.Application.Submit.AlreadySubmitted");
+                    await transaction.RollbackAsync();
+                    return sonuc;
+                }
+
+                TABBasvuruLog tabLog = new(connection, _localizer, transaction);
+                await tabLog.EkleAsync(basvuruId, kullanici, "OnBasvuruIncelemeyeGonderildi",
+                    new { EskiDurum = enumBasvuruDurum.OnBasvuruDurumu, YeniDurum = enumBasvuruDurum.BasvuruDurumu });
+                await transaction.CommitAsync();
+                sonuc.mesaj = Metin("Business.Application.Submit.Success");
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex,
+                    "Ön başvuru incelemeye gönderilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}",
+                    "Business.Application.Submit.Failed", basvuruId, kullanici.Id);
+            }
+
+            return sonuc;
+        }
+
+        public async Task<Sonuc> OnBasvuruDenetimiKaydetAsync(Basvuru denetim, Kullanici kullanici, bool sonuclandir)
+        {
+            Sonuc sonuc = new();
+            if (BasvuruKullanicisiMi(kullanici))
+                sonuc.HataEkle("Başvuru kullanıcıları ön başvuru denetimi yapamaz.");
+            if (denetim.Id <= 0)
+                sonuc.HataEkle("Başvuru seçilmelidir.");
+            if (!sonuclandir && string.IsNullOrWhiteSpace(denetim.DenetimGerekcesi))
+                sonuc.HataEkle("Gerekçe girilmelidir.");
+            if (!sonuclandir && (!denetim.DenetimSonucu.HasValue ||
+                denetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.Tanimsiz))
+                sonuc.HataEkle("Denetim sonucu seçilmelidir.");
+            if (!sonuc.basarili) return sonuc;
+
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                TABBasvuru tabBasvuru = new(connection, _localizer, transaction);
+                enumBasvuruDurum? yeniDurum = null;
+                bool kaydedildi;
+                int? yeniRevizyonId = null;
+                if (sonuclandir)
+                {
+                    Basvuru? kayitliDenetim = await tabBasvuru.OnBasvuruDenetimBilgisiOkuAsync(denetim.Id);
+                    if (kayitliDenetim == null ||
+                        string.IsNullOrWhiteSpace(kayitliDenetim.DenetimGerekcesi) ||
+                        !kayitliDenetim.DenetimSonucu.HasValue ||
+                        kayitliDenetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.Tanimsiz)
+                    {
+                        sonuc.HataEkle("Sonuçlandırmadan önce sonuç ve sonuç gerekçesi kaydedilmelidir.");
+                        await transaction.RollbackAsync();
+                        return sonuc;
+                    }
+
+                    denetim.DenetimAnketi = kayitliDenetim.DenetimAnketi;
+                    denetim.DenetimGerekcesi = kayitliDenetim.DenetimGerekcesi;
+                    denetim.DenetimSonucu = kayitliDenetim.DenetimSonucu;
+                }
+
+                if (sonuclandir &&
+                    denetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi)
+                {
+                    kaydedildi = true;
+                    if (kaydedildi)
+                    {
+                        yeniRevizyonId = await tabBasvuru.YeniRevizyonOlusturAsync(denetim.Id);
+                        Sonuc<Dictionary<int, int>> dosyaKopyalama =
+                            await _dosyaYonetimIsKurallari.BasvuruDosyalariniKopyalaAsync(denetim.Id, yeniRevizyonId.Value);
+                        if (!dosyaKopyalama.basarili)
+                        {
+                            SonucHatalariniAktar(dosyaKopyalama, sonuc);
+                            await transaction.RollbackAsync();
+                            return sonuc;
+                        }
+
+                        await tabBasvuru.DosyaReferanslariniGuncelleAsync(
+                            yeniRevizyonId.Value,
+                            dosyaKopyalama.nesne);
+                        kaydedildi = await tabBasvuru.BasvuruAnaDurumGuncelleAsync(
+                            yeniRevizyonId.Value,
+                            enumBasvuruDurum.BasvuruDurumu,
+                            enumBasvuruDurum.OnBasvuruDurumu);
+                        yeniDurum = enumBasvuruDurum.OnBasvuruDurumu;
+                    }
+                }
+                else if (sonuclandir)
+                {
+                    yeniDurum = denetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.KabulEdildi
+                        ? enumBasvuruDurum.KabulEdildiDurumu
+                        : enumBasvuruDurum.ReddedildiDurumu;
+                    kaydedildi = await tabBasvuru.BasvuruAnaDurumGuncelleAsync(
+                        denetim.Id,
+                        enumBasvuruDurum.BasvuruDurumu,
+                        yeniDurum.Value);
+                }
+                else
+                {
+                    kaydedildi = await tabBasvuru.OnBasvuruDenetimTaslagiKaydetAsync(denetim);
+                }
+
+                if (!kaydedildi)
+                {
+                    sonuc.HataEkle("Başvuru inceleme aşamasında değil veya durumu daha önce değiştirilmiş.");
+                    await transaction.RollbackAsync();
+                    return sonuc;
+                }
+
+                await new TABBasvuruLog(connection, _localizer, transaction).EkleAsync(
+                    denetim.Id,
+                    kullanici,
+                    yeniRevizyonId.HasValue
+                        ? "OnBasvuruDuzeltmeIcinIadeEdildi"
+                        : sonuclandir ? "OnBasvuruDenetimiTamamlandi" : "OnBasvuruDenetimTaslagiKaydedildi",
+                    new
+                    {
+                        denetim.DenetimAnketi,
+                        denetim.DenetimGerekcesi,
+                        denetim.DenetimSonucu,
+                        YeniDurum = yeniDurum,
+                        YeniRevizyonBasvuruId = yeniRevizyonId
+                    });
+                if (yeniRevizyonId.HasValue)
+                {
+                    await new TABBasvuruLog(connection, _localizer, transaction).EkleAsync(
+                        yeniRevizyonId.Value,
+                        kullanici,
+                        "DuzeltmeRevizyonuOlusturuldu",
+                        new { KaynakBasvuruId = denetim.Id, YeniBasvuruId = yeniRevizyonId.Value });
+                }
+                await transaction.CommitAsync();
+                sonuc.mesaj = yeniRevizyonId.HasValue
+                    ? "Ön başvuru düzeltme için iade edildi ve yeni revizyon oluşturuldu."
+                    : sonuclandir
+                        ? "Ön başvuru denetimi sonuçlandırıldı."
+                        : "Ön başvuru denetimi kaydedildi.";
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex,
+                    "Ön başvuru denetimi kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}",
+                    "Ön başvuru denetimi kaydedilemedi.", denetim.Id, kullanici.Id);
+            }
+
+            return sonuc;
+        }
+
+        private void IncelemeyeGonderimEksikleriniDogrula(Basvuru b, Sonuc sonuc)
+        {
+            void Eksikse(bool kosul, string kaynak)
+            {
+                if (kosul) HataEkle(sonuc, kaynak);
+            }
+
+            Donem? donem = b.basvuruFirma.donem;
+            decimal altLimit = donem?.minimumYatirimTutari ?? 0;
+            decimal ustLimit = donem?.maksimumYatirimTutari ?? 0;
+            bool MaliDegerUygun(decimal? deger) =>
+                deger.HasValue && (altLimit <= 0 || deger.Value >= altLimit) && (ustLimit <= 0 || deger.Value <= ustLimit);
+            bool maliOlcekUygun = MaliDegerUygun(b.mali.oncekiYilNetSatis)
+                || MaliDegerUygun(b.mali.sonYilNetSatis)
+                || MaliDegerUygun(b.mali.oncekiYilAktifToplami)
+                || MaliDegerUygun(b.mali.sonYilAktifToplami);
+
+            decimal ortaklikPayToplami = b.ortaklik.ortaklar.Sum(x => x.payOrani.GetValueOrDefault());
+            bool cevreselKapsamDisi = false;
+            if (!string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson))
+            {
+                try
+                {
+                    using JsonDocument doc = JsonDocument.Parse(b.cevreselSosyal.cevreselSosyalJson);
+                    if (doc.RootElement.TryGetProperty("answers", out JsonElement answers)
+                        && answers.TryGetProperty("csf_2_1_global_answer", out JsonElement cevap))
+                    {
+                        cevreselKapsamDisi = string.Equals(cevap.GetString(), "Evet", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(cevap.GetString(), "Yes", StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+                catch
+                {
+                    HataEkle(sonuc, "Basvuru.Summary.Error.EsfRequired");
+                }
+            }
+
+            Eksikse(b.basvuruFirma.donemId <= 0, "Basvuru.Summary.Error.PeriodRequired");
+            Eksikse(b.basvuruFirma.ilId <= 0, "Basvuru.Summary.Error.ProvinceRequired");
+            Eksikse(b.basvuruFirma.firmaId <= 0, "Basvuru.Summary.Error.CompanyRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.irtibat.kisi), "Basvuru.Summary.Error.ContactPersonRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.irtibat.telefon), "Basvuru.Summary.Error.ContactPhoneRequired");
+            Eksikse(!b.basvuruFirma.sonIkiYildirFaalMi.HasValue, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
+            Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru == enumBasvuruSahibiTuru.Tanimsiz, "Basvuru.Summary.Error.ApplicantTypeRequired");
+            Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru == enumHukukiTurSirketTuru.Tanimsiz, "Basvuru.Summary.Error.LegalTypeRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), "Basvuru.Summary.Error.InvestmentNameRequired");
+            Eksikse(b.yatirim.yatirimTuru == enumYatirimTuru.Tanimsiz, "Basvuru.Summary.Error.InvestmentTypeRequired");
+            Eksikse(b.YatirimAdresleri.Count == 0, "Basvuru.Summary.Error.InvestmentAddressRequired");
+            Eksikse(b.yatirim.harcamaTurleri.Count == 0, "Basvuru.Summary.Error.ExpenseTypeRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), "Basvuru.Summary.Error.InvestmentPurposeRequired");
+            Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, "Basvuru.Summary.Error.ValueChainRequired");
+            Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, "Basvuru.Summary.Error.ValueChainStageRequired");
+            Eksikse(!maliOlcekUygun, "Basvuru.Summary.Error.FinancialScaleRequired");
+            Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, "Basvuru.Summary.Error.AuditChoiceRequired");
+            Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, "Basvuru.Summary.Error.AuditFileRequired");
+            Eksikse(!b.ortaklik.bagliOrtakIsletmeVarMi.HasValue, "Basvuru.Summary.Error.RelatedEnterpriseRequired");
+            Eksikse(b.ortaklik.ortaklar.Count > 0 && Math.Abs(ortaklikPayToplami - 100) > 0.01m, "Basvuru.Summary.Error.ShareTotalRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.uygunHarcama.pikkListesiJson) && b.yatirim.harcamaTurleri.Any(x => x == 1 || x == 2), "Basvuru.Summary.Error.PikkRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirimOzeti.yatirimOzetiJson), "Basvuru.Summary.Error.InvestmentSummaryRequired");
+            Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.RequiredDocumentsRequired");
+            Eksikse(b.AdliSicilKisileri.Count == 0, "Basvuru.Summary.Error.CriminalPeopleRequired");
+            Eksikse(b.AdliSicilKisileri.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.CriminalFilesRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson), "Basvuru.Summary.Error.EsfRequired");
+            Eksikse(cevreselKapsamDisi, "Basvuru.Summary.Error.EsfExclusion");
+            Eksikse(!b.TaahhutDosyaId.HasValue, "Basvuru.Summary.Error.CommitmentRequired");
+        }
+
+#if false
+        public async Task<Sonuc> IncelemeyeGonderAsync(int basvuruId, Kullanici kullanici)
+        {
+            Sonuc sonuc = new();
+            if (basvuruId <= 0)
+            {
+                HataEkle(sonuc, "Business.Application.RecordRequired");
+                return sonuc;
+            }
+
+            Sonuc<Basvuru> okumaSonucu = await OkuAsync(basvuruId, kullanici);
+            if (!okumaSonucu.basarili || okumaSonucu.nesne == null)
+            {
+                SonucHatalariniAktar(okumaSonucu, sonuc);
+                return sonuc;
+            }
+
+            Basvuru basvuru = okumaSonucu.nesne;
+            if (!BasvuruKullanicisiMi(kullanici))
+                BasvuruKullanicisiYetkiHatasiEkle(sonuc);
+            if (basvuru.durum != enumBasvuruDurum.OnBasvuruDurumu)
+                HataEkle(sonuc, "Business.Application.Submit.AlreadySubmitted");
+
+            IncelemeyeGonderimEksikleriniDogrula(basvuru, sonuc);
+            if (!sonuc.basarili) return sonuc;
+
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                TABBasvuru tabBasvuru = new(connection, _localizer, transaction);
+                if (!await tabBasvuru.IncelemeyeGonderAsync(basvuruId))
+                {
+                    HataEkle(sonuc, "Business.Application.Submit.AlreadySubmitted");
+                    await transaction.RollbackAsync();
+                    return sonuc;
+                }
+
+                TABBasvuruLog tabLog = new(connection, _localizer, transaction);
+                await tabLog.EkleAsync(basvuruId, kullanici, "OnBasvuruIncelemeyeGonderildi",
+                    new { EskiDurum = enumBasvuruDurum.OnBasvuruDurumu, YeniDurum = enumBasvuruDurum.BasvuruDurumu });
+                await transaction.CommitAsync();
+                sonuc.mesaj = Metin("Business.Application.Submit.Success");
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex,
+                    "Ön başvuru incelemeye gönderilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}",
+                    "Business.Application.Submit.Failed", basvuruId, kullanici.Id);
+            }
+
+            return sonuc;
+        }
+
+        private void IncelemeyeGonderimEksikleriniDogrula(Basvuru b, Sonuc sonuc)
+        {
+            void Eksikse(bool kosul, string kaynak)
+            {
+                if (kosul) HataEkle(sonuc, kaynak);
+            }
+
+            Donem? donem = b.basvuruFirma.donem;
+            decimal altLimit = donem?.minimumYatirimTutari ?? 0;
+            decimal ustLimit = donem?.maksimumYatirimTutari ?? 0;
+            bool MaliDegerUygun(decimal? deger) =>
+                deger.HasValue && (altLimit <= 0 || deger.Value >= altLimit) && (ustLimit <= 0 || deger.Value <= ustLimit);
+            bool maliOlcekUygun = MaliDegerUygun(b.mali.oncekiYilNetSatis)
+                || MaliDegerUygun(b.mali.sonYilNetSatis)
+                || MaliDegerUygun(b.mali.oncekiYilAktifToplami)
+                || MaliDegerUygun(b.mali.sonYilAktifToplami);
+            decimal ortaklikPayToplami = b.ortaklik.ortaklar.Sum(x => x.payOrani.GetValueOrDefault());
+
+            bool cevreselKapsamDisi = false;
+            if (!string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson))
+            {
+                try
+                {
+                    using JsonDocument doc = JsonDocument.Parse(b.cevreselSosyal.cevreselSosyalJson);
+                    if (doc.RootElement.TryGetProperty("answers", out JsonElement answers)
+                        && answers.TryGetProperty("csf_2_1_global_answer", out JsonElement cevap))
+                    {
+                        cevreselKapsamDisi = string.Equals(cevap.GetString(), "Evet", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(cevap.GetString(), "Yes", StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+                catch
+                {
+                    HataEkle(sonuc, "Basvuru.Summary.Error.EsfRequired");
+                }
+            }
+
+            Eksikse(b.basvuruFirma.donemId <= 0, "Basvuru.Summary.Error.PeriodRequired");
+            Eksikse(b.basvuruFirma.ilId <= 0, "Basvuru.Summary.Error.ProvinceRequired");
+            Eksikse(b.basvuruFirma.firmaId <= 0, "Basvuru.Summary.Error.CompanyRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.irtibat.kisi), "Basvuru.Summary.Error.ContactPersonRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.irtibat.telefon), "Basvuru.Summary.Error.ContactPhoneRequired");
+            Eksikse(!b.basvuruFirma.sonIkiYildirFaalMi.HasValue, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
+            Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru == enumBasvuruSahibiTuru.Tanimsiz, "Basvuru.Summary.Error.ApplicantTypeRequired");
+            Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru == enumHukukiTurSirketTuru.Tanimsiz, "Basvuru.Summary.Error.LegalTypeRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), "Basvuru.Summary.Error.InvestmentNameRequired");
+            Eksikse(b.yatirim.yatirimTuru == enumYatirimTuru.Tanimsiz, "Basvuru.Summary.Error.InvestmentTypeRequired");
+            Eksikse(b.YatirimAdresleri.Count == 0, "Basvuru.Summary.Error.InvestmentAddressRequired");
+            Eksikse(b.yatirim.harcamaTurleri.Count == 0, "Basvuru.Summary.Error.ExpenseTypeRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), "Basvuru.Summary.Error.InvestmentPurposeRequired");
+            Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, "Basvuru.Summary.Error.ValueChainRequired");
+            Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, "Basvuru.Summary.Error.ValueChainStageRequired");
+            Eksikse(!maliOlcekUygun, "Basvuru.Summary.Error.FinancialScaleRequired");
+            Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, "Basvuru.Summary.Error.AuditChoiceRequired");
+            Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, "Basvuru.Summary.Error.AuditFileRequired");
+            Eksikse(!b.ortaklik.bagliOrtakIsletmeVarMi.HasValue, "Basvuru.Summary.Error.RelatedEnterpriseRequired");
+            Eksikse(b.ortaklik.ortaklar.Count > 0 && Math.Abs(ortaklikPayToplami - 100) > 0.01m, "Basvuru.Summary.Error.ShareTotalRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.uygunHarcama.pikkListesiJson) && b.yatirim.harcamaTurleri.Any(x => x == 1 || x == 2), "Basvuru.Summary.Error.PikkRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirimOzeti.yatirimOzetiJson), "Basvuru.Summary.Error.InvestmentSummaryRequired");
+            Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.RequiredDocumentsRequired");
+            Eksikse(b.AdliSicilKisileri.Count == 0, "Basvuru.Summary.Error.CriminalPeopleRequired");
+            Eksikse(b.AdliSicilKisileri.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.CriminalFilesRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson), "Basvuru.Summary.Error.EsfRequired");
+            Eksikse(cevreselKapsamDisi, "Basvuru.Summary.Error.EsfExclusion");
+            Eksikse(!b.TaahhutDosyaId.HasValue, "Basvuru.Summary.Error.CommitmentRequired");
+        }
+#endif
+
         public async Task<Sonuc<Firma>> FirmaVergiNoIleOkuAsync(Kullanici? kullanici, int firmaId, string vergiKimlikNo)
         {
             Sonuc<Firma> sonuc = new Sonuc<Firma>();
@@ -387,7 +801,7 @@ namespace TarimDonusum.IsKurallari
                     });
 
                     TABFirmaLog tabFirmaLog = new TABFirmaLog(connection, null, transaction);
-                    await tabFirmaLog.EkleAsync(firma, "YeniKayit");
+                    await tabFirmaLog.EkleAsync(firma, "YeniKayit", kullaniciId);
 
                     await transaction.CommitAsync();
                 }
@@ -1727,7 +2141,7 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
+                Basvuru? mevcut = await BasvuruGoruntulemeYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
                 if (!sonuc.basarili || mevcut == null)
                     return sonuc;
 
@@ -1749,6 +2163,11 @@ namespace TarimDonusum.IsKurallari
             if (kullanici == null)
             {
                 HataEkle(sonuc, "Business.User.InfoMissing");
+                return sonuc;
+            }
+            if (adres == null)
+            {
+                HataEkle(sonuc, "Adres Gelmedi");
                 return sonuc;
             }
 
@@ -1819,7 +2238,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "Uygulama adresi kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Uygulama adresi kaydedilemedi.", adres.basvuruId, kullanici.Id);
+                BeklenmeyenHata(sonuc, ex, "Uygulama adresi kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Uygulama adresi kaydedilemedi.", adres==null?"NULL": adres.basvuruId, kullanici.Id);
             }
 
             return sonuc;
@@ -1978,6 +2397,12 @@ namespace TarimDonusum.IsKurallari
                 return null;
             }
 
+            if (mevcut.basvuruFirma.siraNo != 0)
+            {
+                sonuc.HataEkle("Bu başvuru sürümü arşivlenmiştir ve salt okunurdur.");
+                return null;
+            }
+
             //if (!string.Equals(mevcut.Durum, Basvuru.OnBasvuruDurumu, StringComparison.OrdinalIgnoreCase))
             //{
             //    sonuc.HataEkle("Bu kayıt ön başvuru aşamasında olmadığı için başvuru kullanıcı ekranından güncellenemez.");
@@ -1990,6 +2415,33 @@ namespace TarimDonusum.IsKurallari
                 if (!await tabFirmaKullanici.IliskiVarMiAsync(mevcut.basvuruFirma.firmaId, kullanici.Id))
                 {
                     HataEkle(sonuc, "Business.Application.CompanyUserNotRelated");
+                    return null;
+                }
+            }
+
+            return mevcut;
+        }
+
+        private async Task<Basvuru?> BasvuruGoruntulemeYetkiKontrolAsync(
+            SqlConnection connection,
+            int basvuruId,
+            Kullanici kullanici,
+            Sonuc sonuc)
+        {
+            TABBasvuru tabBasvuru = new(connection, _localizer);
+            Basvuru? mevcut = await tabBasvuru.OkuAsync(basvuruId);
+            if (mevcut == null)
+            {
+                HataEkle(sonuc, "Business.Application.NotFoundOrUnauthorized");
+                return null;
+            }
+
+            if (BasvuruKullanicisiMi(kullanici) && mevcut.basvuruFirma.firmaId > 0)
+            {
+                TABFirmaKullanici tabFirmaKullanici = new(connection);
+                if (!await tabFirmaKullanici.IliskiVarMiAsync(mevcut.basvuruFirma.firmaId, kullanici.Id))
+                {
+                    HataEkle(sonuc, "Business.Application.ViewUnauthorized");
                     return null;
                 }
             }

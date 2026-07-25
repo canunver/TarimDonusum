@@ -83,6 +83,28 @@ namespace TarimDonusum.Controllers
             return View();
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Cikis()
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [OturumKontrol]
+        public async Task<IActionResult> ParolaDegistir(string parola, string parolaTekrar)
+        {
+            int kullaniciId = HttpContext.Session.GetInt32("KULLANICI_ID") ?? 0;
+            Sonuc sonuc = await _kullaniciIsKurallari.ParolaDegistirAsync(kullaniciId, parola, parolaTekrar);
+            return Json(new
+            {
+                basarili = sonuc.basarili,
+                mesaj = sonuc.basarili ? sonuc.mesaj : string.Join(" ", sonuc.hatalar)
+            });
+        }
+
         [HttpGet]
         public async Task<IActionResult> TestBasvuru()
         {
@@ -635,6 +657,74 @@ namespace TarimDonusum.Controllers
 
             HttpContext.Session.SetString("LOGIN_VERIFY_EXPIRE", DateTime.Now.AddMinutes(3).ToString("O"));
             return Json(LoginCevabi(true, L["Home.Bilgi.DogrulamaKoduGonderildi"].ToString(), kalanSaniye: 180));
+        }
+
+        [HttpGet]
+        private IActionResult SifremiUnuttumKopya()
+        {
+            return View(new SifremiUnuttumViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        private async Task<IActionResult> SifreSifirlamaMailiGonderKopya(SifremiUnuttumViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return Json(new { basarili = false, mesaj = L["ForgotPassword.InvalidData"].ToString() });
+
+            Sonuc<ParolaBaglantisiSonucu> sonuc =
+                await _kullaniciIsKurallari.SifremiUnuttumBaglantisiOlusturAsync(model);
+            if (!sonuc.basarili || sonuc.nesne == null)
+                return Json(new { basarili = false, mesaj = L["ForgotPassword.InvalidData"].ToString() });
+
+            string link = Url.Action(nameof(ParolaBelirle), "Home",
+                new { token = sonuc.nesne.Token }, Request.Scheme) ?? "";
+            string mailHatasi = await _mailServisi.MailAtAsync(
+                "",
+                sonuc.nesne.Eposta,
+                L["Kullanici.PasswordLink.MailSubject"].ToString(),
+                string.Format(L["Kullanici.PasswordLink.MailBody"].ToString(), sonuc.nesne.AdSoyad, link),
+                true,
+                false);
+
+            if (!string.IsNullOrWhiteSpace(mailHatasi))
+                return Json(new { basarili = false, mesaj = L["ForgotPassword.SendFailed"].ToString() });
+
+            return Json(new { basarili = true, mesaj = L["ForgotPassword.Sent"].ToString() });
+        }
+
+        [HttpGet]
+        public IActionResult SifremiUnuttum()
+        {
+            return View(new SifremiUnuttumViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SifreSifirlamaMailiGonder(SifremiUnuttumViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return Json(new { basarili = false, mesaj = L["ForgotPassword.InvalidData"].ToString() });
+
+            Sonuc<ParolaBaglantisiSonucu> sonuc =
+                await _kullaniciIsKurallari.SifremiUnuttumBaglantisiOlusturAsync(model);
+            if (!sonuc.basarili || sonuc.nesne == null)
+                return Json(new { basarili = false, mesaj = L["ForgotPassword.InvalidData"].ToString() });
+
+            string link = Url.Action(nameof(ParolaBelirle), "Home",
+                new { token = sonuc.nesne.Token }, Request.Scheme) ?? "";
+            string mailHatasi = await _mailServisi.MailAtAsync(
+                "",
+                sonuc.nesne.Eposta,
+                L["Kullanici.PasswordLink.MailSubject"].ToString(),
+                string.Format(L["Kullanici.PasswordLink.MailBody"].ToString(), sonuc.nesne.AdSoyad, link),
+                true,
+                false);
+
+            if (!string.IsNullOrWhiteSpace(mailHatasi))
+                return Json(new { basarili = false, mesaj = L["ForgotPassword.SendFailed"].ToString() });
+
+            return Json(new { basarili = true, mesaj = L["ForgotPassword.Sent"].ToString() });
         }
 
         [HttpGet]

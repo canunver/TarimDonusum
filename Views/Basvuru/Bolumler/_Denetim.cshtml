@@ -1,18 +1,60 @@
-﻿@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
     var b = Model.Basvuru;
-    bool ro = Model.SaltOkunur;
+    bool tamamlanabilir = b.durum == enumBasvuruDurum.BasvuruDurumu;
+    bool denetimKayitli =
+        !string.IsNullOrWhiteSpace(b.DenetimGerekcesi) &&
+        b.DenetimSonucu.HasValue &&
+        b.DenetimSonucu != enumOnBasvuruDenetimSonucu.Tanimsiz;
 }
-                <section class="basvuru-panel active" data-panel="8">
-                    <h2>@L["Basvuru.Section8.Title"]</h2>
-                    <div class="metric-grid">
-                        <div><span>@L["Basvuru.Common.Application"]</span><strong>@b.Id</strong></div>
-                        <div><span>@L["Basvuru.Field.Durum"]</span><strong>@IsimBul.EnumAdi(@b.durum, L)</strong></div>
-                        <div><span>@L["Basvuru.Field.BelgeGruplariShort"]</span><strong>b.BelgeGruplari.Count / belgeler.Length</strong></div>
-                    </div>
-                    <label class="wide-label">@L["Basvuru.Field.DenetciNotu"]<textarea name="Basvuru.DenetciNotu" disabled>@b.DenetciNotu</textarea></label>
-                    <label class="wide-label">@L["Basvuru.Field.DenetimSonucu"]<input name="Basvuru.DenetimSonucu" value="@b.DenetimSonucu" disabled /></label>
-                </section>
 
+<section class="basvuru-panel active"
+         data-panel="@((int)enumBasvuruBolum.Denetim)"
+         data-result-required="@L["Basvuru.Review.ResultRequired"]"
+         data-fields-required="@L["Basvuru.Review.FieldsRequired"]"
+         data-finalize-confirm="@L["Basvuru.Review.FinalizeConfirm"]">
+    <h2>@L["Basvuru.Review.Title"]</h2>
+    <div class="denetim-checklist-note">
+        @L["Basvuru.Review.ChecklistNote"]
+    </div>
+    <input id="denetimAnketi" type="hidden" value="@b.DenetimAnketi" />
+
+    <div class="denetim-result-card">
+        <label class="denetim-result-field">
+            <span>@L["Basvuru.Review.Result"]: <span class="required-mark">*</span></span>
+            <select id="denetimSonucu" disabled="@(!tamamlanabilir)">
+                <option value="">@L["Basvuru.Common.Select"]</option>
+                <option value="@((int)enumOnBasvuruDenetimSonucu.Reddedildi)"
+                        selected="@(b.DenetimSonucu == enumOnBasvuruDenetimSonucu.Reddedildi)">@L["Basvuru.Review.Rejected"]</option>
+                <option value="@((int)enumOnBasvuruDenetimSonucu.KabulEdildi)"
+                        selected="@(b.DenetimSonucu == enumOnBasvuruDenetimSonucu.KabulEdildi)">@L["Basvuru.Review.Accepted"]</option>
+                <option value="@((int)enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi)"
+                        selected="@(b.DenetimSonucu == enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi)">@L["Basvuru.Review.Returned"]</option>
+            </select>
+        </label>
+
+        <label class="denetim-reason-field">
+            <span>@L["Basvuru.Review.Reason"]: <span class="required-mark">*</span></span>
+            <textarea id="denetimGerekcesi" maxlength="2000"
+                      disabled="@(!tamamlanabilir)">@b.DenetimGerekcesi</textarea>
+        </label>
+    </div>
+
+    @if (tamamlanabilir)
+    {
+        <div class="denetim-actions">
+            <button type="button" id="denetimKaydetBtn" class="btn btn-outline-primary btn-lg">@L["Basvuru.Common.Save"]</button>
+            <button type="button"
+                    id="denetimSonuclandirBtn"
+                    class="btn btn-success btn-lg @(!denetimKayitli ? "d-none" : "")"
+                    disabled="@(!denetimKayitli)">@L["Basvuru.Review.Finalize"]</button>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mt-3 mb-0">@L["Basvuru.Review.Readonly"]</div>
+    }
+</section>

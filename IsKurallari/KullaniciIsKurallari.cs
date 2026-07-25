@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.DataProtection;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
 using TarimDonusum.Tablolar;
+using TarimDonusum.ViewModels.Home;
 
 namespace TarimDonusum.IsKurallari
 {
@@ -260,6 +261,148 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        private async Task<Sonuc<ParolaBaglantisiSonucu>> SifremiUnuttumBaglantisiOlusturKopyaAsync(
+            SifremiUnuttumViewModel model)
+        {
+            Sonuc<ParolaBaglantisiSonucu> sonuc = new();
+            try
+            {
+                if (!ConnectionStringKontrolEt(sonuc))
+                    return sonuc;
+
+                Kullanici arama = new()
+                {
+                    TCKN = model.TCKN?.Trim() ?? "",
+                    Ad = model.Ad?.Trim() ?? "",
+                    Soyad = model.Soyad?.Trim() ?? "",
+                    DogumTarihi = model.DogumTarihi ?? default,
+                    Eposta = model.Eposta?.Trim() ?? "",
+                    Telefon = OrtakFonksiyonlar.TelNormalize(model.Telefon)
+                };
+
+                if (!OrtakFonksiyonlar.TCKNGecerliMi(arama.TCKN) ||
+                    string.IsNullOrWhiteSpace(arama.Ad) ||
+                    string.IsNullOrWhiteSpace(arama.Soyad) ||
+                    arama.DogumTarihi == default ||
+                    !OrtakFonksiyonlar.EPostaGecerliMi(arama.Eposta) ||
+                    !OrtakFonksiyonlar.TelefonNoGecerliMi(arama.Telefon))
+                {
+                    sonuc.HataEkle(Metin("ForgotPassword.InvalidData"));
+                    return sonuc;
+                }
+
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                TABKullanici tabKullanici = new(connection);
+                Kullanici? kullanici = await tabKullanici.SifreSifirlamaBilgileriyleOkuAsync(arama);
+                if (kullanici == null)
+                {
+                    sonuc.HataEkle(Metin("ForgotPassword.InvalidData"));
+                    return sonuc;
+                }
+
+                ParolaTokenIcerik icerik = new()
+                {
+                    KullaniciId = kullanici.Id,
+                    ZamanUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    LinkKodu = Convert.ToHexString(RandomNumberGenerator.GetBytes(24))
+                };
+                string token = _parolaTokenKoruyucu.Protect(JsonSerializer.Serialize(icerik));
+                TABKullaniciLog tabLog = new(connection);
+                await tabLog.EkleAsync(new KullaniciLog
+                {
+                    KullaniciId = kullanici.Id,
+                    IslemYapanKullaniciId = kullanici.Id,
+                    IslemTarihi = DateTime.Now,
+                    Islem = "ParolaBelirlemeBaglantisiGonderildi",
+                    JsonText = JsonSerializer.Serialize(new { icerik.KullaniciId, icerik.ZamanUtc, icerik.LinkKodu })
+                });
+                sonuc.nesne = new ParolaBaglantisiSonucu
+                {
+                    Token = token,
+                    Eposta = kullanici.Eposta,
+                    AdSoyad = $"{kullanici.Ad} {kullanici.Soyad}"
+                };
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Şifre sıfırlama bağlantısı oluşturulamadı.",
+                    "ForgotPassword.SendFailed");
+            }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<ParolaBaglantisiSonucu>> SifremiUnuttumBaglantisiOlusturAsync(
+            SifremiUnuttumViewModel model)
+        {
+            Sonuc<ParolaBaglantisiSonucu> sonuc = new();
+            try
+            {
+                if (!ConnectionStringKontrolEt(sonuc))
+                    return sonuc;
+
+                Kullanici arama = new()
+                {
+                    TCKN = model.TCKN?.Trim() ?? "",
+                    Ad = model.Ad?.Trim() ?? "",
+                    Soyad = model.Soyad?.Trim() ?? "",
+                    DogumTarihi = model.DogumTarihi ?? default,
+                    Eposta = model.Eposta?.Trim() ?? "",
+                    Telefon = OrtakFonksiyonlar.TelNormalize(model.Telefon)
+                };
+
+                if (!OrtakFonksiyonlar.TCKNGecerliMi(arama.TCKN) ||
+                    string.IsNullOrWhiteSpace(arama.Ad) ||
+                    string.IsNullOrWhiteSpace(arama.Soyad) ||
+                    arama.DogumTarihi == default ||
+                    !OrtakFonksiyonlar.EPostaGecerliMi(arama.Eposta) ||
+                    !OrtakFonksiyonlar.TelefonNoGecerliMi(arama.Telefon))
+                {
+                    sonuc.HataEkle(Metin("ForgotPassword.InvalidData"));
+                    return sonuc;
+                }
+
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                TABKullanici tabKullanici = new(connection);
+                Kullanici? kullanici = await tabKullanici.SifreSifirlamaBilgileriyleOkuAsync(arama);
+                if (kullanici == null)
+                {
+                    sonuc.HataEkle(Metin("ForgotPassword.InvalidData"));
+                    return sonuc;
+                }
+
+                ParolaTokenIcerik icerik = new()
+                {
+                    KullaniciId = kullanici.Id,
+                    ZamanUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    LinkKodu = Convert.ToHexString(RandomNumberGenerator.GetBytes(24))
+                };
+                string token = _parolaTokenKoruyucu.Protect(JsonSerializer.Serialize(icerik));
+                TABKullaniciLog tabLog = new(connection);
+                await tabLog.EkleAsync(new KullaniciLog
+                {
+                    KullaniciId = kullanici.Id,
+                    IslemYapanKullaniciId = kullanici.Id,
+                    IslemTarihi = DateTime.Now,
+                    Islem = "ParolaBelirlemeBaglantisiGonderildi",
+                    JsonText = JsonSerializer.Serialize(new { icerik.KullaniciId, icerik.ZamanUtc, icerik.LinkKodu })
+                });
+                sonuc.nesne = new ParolaBaglantisiSonucu
+                {
+                    Token = token,
+                    Eposta = kullanici.Eposta,
+                    AdSoyad = $"{kullanici.Ad} {kullanici.Soyad}"
+                };
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Şifre sıfırlama bağlantısı oluşturulamadı.",
+                    "ForgotPassword.SendFailed");
+            }
+            return sonuc;
+        }
+
         public async Task<Sonuc> ParolaBelirleAsync(string token, string parola, string parolaTekrar)
         {
             Sonuc sonuc = new();
@@ -300,6 +443,48 @@ namespace TarimDonusum.IsKurallari
                 sonuc.mesaj = Metin("Kullanici.PasswordLink.Success");
             }
             catch (Exception ex) { BeklenmeyenHata(sonuc, ex, "Parola belirlenemedi.", "Parola belirlenemedi."); }
+            return sonuc;
+        }
+
+        public async Task<Sonuc> ParolaDegistirAsync(int kullaniciId, string parola, string parolaTekrar)
+        {
+            Sonuc sonuc = new();
+            if (kullaniciId <= 0) sonuc.HataEkle(Metin("Kullanici.ChangePassword.SessionInvalid"));
+            if (!string.Equals(parola, parolaTekrar, StringComparison.Ordinal)) sonuc.HataEkle(Metin("Kullanici.PasswordLink.Mismatch"));
+            if (!OrtakFonksiyonlar.ParolaGecerliMi(parola)) sonuc.HataEkle(Metin("Kullanici.PasswordLink.Weak"));
+            if (!sonuc.basarili) return sonuc;
+
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                TABKullanici tabKullanici = new(connection, null, transaction);
+                if (!await tabKullanici.KullaniciSatiriniKilitleAsync(kullaniciId))
+                {
+                    sonuc.HataEkle(Metin("Business.User.NotFound"));
+                    await transaction.RollbackAsync();
+                    return sonuc;
+                }
+
+                await tabKullanici.ParolaDegistirAsync(new Kullanici { Id = kullaniciId, Parola = parola });
+                TABKullaniciLog tabLog = new(connection, null, transaction);
+                await tabLog.EkleAsync(new KullaniciLog
+                {
+                    KullaniciId = kullaniciId,
+                    IslemYapanKullaniciId = kullaniciId,
+                    IslemTarihi = DateTime.Now,
+                    Islem = "ParolaDegistirildi",
+                    JsonText = JsonSerializer.Serialize(new { KullaniciId = kullaniciId })
+                });
+                await transaction.CommitAsync();
+                sonuc.mesaj = Metin("Kullanici.ChangePassword.Success");
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Parola değiştirilemedi. KullaniciId: {KullaniciId}", "Kullanici.ChangePassword.Failed", kullaniciId);
+            }
+
             return sonuc;
         }
 

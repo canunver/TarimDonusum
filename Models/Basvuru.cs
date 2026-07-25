@@ -62,6 +62,7 @@ namespace TarimDonusum.Models
         IptalDurumu = 9, //"İptal";
         BasvuruDurumu = 3, //"Başvuru";
         KabulEdildiDurumu = 5, //"Kabul Edildi";
+        ReddedildiDurumu = 7, //"Reddedildi";
     }
 
     public enum enumBasvuruSahibiTuru
@@ -83,6 +84,14 @@ namespace TarimDonusum.Models
         KomanditSirket = 4,
         UreticiOrgutuKooperatifBirlik = 5,
         Diger = 6
+    }
+
+    public enum enumOnBasvuruDenetimSonucu : int
+    {
+        Tanimsiz = 0,
+        Reddedildi = 1,
+        KabulEdildi = 2,
+        DuzeltmeIcinIadeEdildi = 3
     }
 
     public enum enumHarcamaTuru
@@ -172,8 +181,9 @@ namespace TarimDonusum.Models
         public List<BasvuruOrtaklikDosya> ZorunluBelgeler { get; set; } = new();
         public List<BasvuruAdliSicilKisi> AdliSicilKisileri { get; set; } = new();
 
-        public string DenetciNotu { get; set; } = "";
-        public string DenetimSonucu { get; set; } = "";
+        public string DenetimAnketi { get; set; } = "";
+        public string DenetimGerekcesi { get; set; } = "";
+        public enumOnBasvuruDenetimSonucu? DenetimSonucu { get; set; }
     }
 
     public class BasvuruFirma
@@ -181,7 +191,7 @@ namespace TarimDonusum.Models
         public int basvuruAnaId { get; set; } = 0;
         public int id { get; set; } = 0;
         public int revizyonNo { get; set; } = 0;
-        public int siraNo { get; set; } = 1;
+        public int siraNo { get; set; } = 0;
 
         [JsonPropertyName("donem")]
         public Donem donem { get; set; } = new Donem();
@@ -605,7 +615,13 @@ namespace TarimDonusum.Models
             if (string.IsNullOrWhiteSpace(tamAdres))
                 sonuc.HataEkle("Tam adres girilmelidir.");
 
-            if (!kiraTahsisBitisTarihi.HasValue)
+            bool kiraTahsisBilgisiGerekli =
+                yatirimYeriStatusu == enumUygulamaAdresiYatirimYeriStatusu.Kira ||
+                yatirimYeriStatusu == enumUygulamaAdresiYatirimYeriStatusu.Tahsis ||
+                yatirimYeriStatusu == enumUygulamaAdresiYatirimYeriStatusu.IrtifakHakki ||
+                yatirimYeriStatusu == enumUygulamaAdresiYatirimYeriStatusu.OrganizeSanayi_IhtisasAlaniTahsisi;
+
+            if (kiraTahsisBilgisiGerekli && !kiraTahsisBitisTarihi.HasValue)
                 sonuc.HataEkle("Kira/tahsis bitiş tarihi girilmelidir.");
         }
     }

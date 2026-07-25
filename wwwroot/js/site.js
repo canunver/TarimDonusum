@@ -251,6 +251,66 @@ function CookieYaz(ad, deger, gun) {
         "; path=/";
 }
 
+function KullaniciTemasiUygula(tema) {
+    var izinliTemalar = [
+        "sidebar-dark-primary",
+        "sidebar-dark-success",
+        "sidebar-dark-info",
+        "sidebar-light-primary"
+    ];
+
+    if (izinliTemalar.indexOf(tema) < 0)
+        return;
+
+    $(".main-sidebar")
+        .removeClass(izinliTemalar.join(" "))
+        .addClass(tema);
+
+    var temaGovdeSiniflari = izinliTemalar.map(function (izinliTema) {
+        return "kullanici-tema-" + izinliTema;
+    });
+
+    $("body")
+        .removeClass(temaGovdeSiniflari.join(" "))
+        .addClass("kullanici-tema-" + tema);
+
+    $(".tema-sec")
+        .removeClass("active")
+        .filter('[data-tema="' + tema + '"]')
+        .addClass("active");
+
+    if (window.kullaniciTemaCookieAdi)
+        CookieYaz(window.kullaniciTemaCookieAdi, tema, 365);
+
+    window.kullaniciTemasi = tema;
+}
+
+$(document)
+    .on("click.kullaniciTema", ".tema-menu-ac", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var $altMenu = $(this).next(".tema-alt-menu");
+        var acik = !$altMenu.hasClass("show");
+        $altMenu.toggleClass("show", acik);
+        $(this).attr("aria-expanded", acik ? "true" : "false");
+    })
+    .on("click.kullaniciTema", ".tema-sec", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        KullaniciTemasiUygula($(this).data("tema"));
+    })
+    .on("shown.bs.dropdown", ".user-menu-dropdown", function () {
+        $(".tema-sec")
+            .removeClass("active")
+            .filter('[data-tema="' + window.kullaniciTemasi + '"]')
+            .addClass("active");
+    })
+    .on("hidden.bs.dropdown", ".user-menu-dropdown", function () {
+        $(this).find(".tema-alt-menu").removeClass("show");
+        $(this).find(".tema-menu-ac").attr("aria-expanded", "false");
+    });
+
 function MenuRender(menu) {
     var aktifUrl = NormalizeUrl(window.location.pathname + window.location.search);
     var acikMenuler = [];

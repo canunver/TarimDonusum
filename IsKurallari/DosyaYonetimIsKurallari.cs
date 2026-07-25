@@ -64,6 +64,82 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<Dictionary<int, int>>> BasvuruDosyalariniKopyalaAsync(int kaynakBasvuruId, int hedefBasvuruId)
+        {
+            Sonuc<Dictionary<int, int>> sonuc = new();
+            if (kaynakBasvuruId <= 0 || hedefBasvuruId <= 0)
+            {
+                sonuc.HataEkle("Dosya kopyalama için kaynak ve hedef başvuru seçilmelidir.");
+                return sonuc;
+            }
+
+            try
+            {
+                await using SqlConnection connection = await BaglantiAcAsync();
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                try
+                {
+                    const string kaynakSql = @"
+                        SELECT Id
+                        FROM dbo.DosyaBilgisi
+                        WHERE ModulKod = N'Basvuru' AND FormAnahtar = @KaynakAnahtar
+                        ORDER BY Id;";
+                    List<int> kaynakDosyaIdleri = [];
+                    await using (SqlCommand kaynakCommand = new(kaynakSql, connection, transaction))
+                    {
+                        kaynakCommand.Parameters.AddWithValue("@KaynakAnahtar", kaynakBasvuruId.ToString());
+                        await using SqlDataReader reader = await kaynakCommand.ExecuteReaderAsync();
+                        while (await reader.ReadAsync())
+                            kaynakDosyaIdleri.Add(reader.GetInt32(0));
+                    }
+
+                    foreach (int kaynakDosyaId in kaynakDosyaIdleri)
+                    {
+                        const string bilgiSql = @"
+                            INSERT INTO dbo.DosyaBilgisi
+                                (ModulKod, FormAd, FormAnahtar, DosyaNo, DosyaAdi, Buyukluk, IlkYuklemeTarihi, STarihi, Aciklama)
+                            OUTPUT INSERTED.Id
+                            SELECT ModulKod, FormAd, @HedefAnahtar, DosyaNo, DosyaAdi, Buyukluk, GETDATE(), GETDATE(), Aciklama
+                            FROM dbo.DosyaBilgisi
+                            WHERE Id = @KaynakDosyaId;";
+                        int hedefDosyaId;
+                        await using (SqlCommand bilgiCommand = new(bilgiSql, connection, transaction))
+                        {
+                            bilgiCommand.Parameters.AddWithValue("@HedefAnahtar", hedefBasvuruId.ToString());
+                            bilgiCommand.Parameters.AddWithValue("@KaynakDosyaId", kaynakDosyaId);
+                            hedefDosyaId = Convert.ToInt32(await bilgiCommand.ExecuteScalarAsync());
+                        }
+
+                        const string icerikSql = @"
+                            INSERT INTO dbo.DosyaIcerik (DosyaId, PaketNo, PaketIcerik)
+                            SELECT @HedefDosyaId, PaketNo, PaketIcerik
+                            FROM dbo.DosyaIcerik
+                            WHERE DosyaId = @KaynakDosyaId;";
+                        await using SqlCommand icerikCommand = new(icerikSql, connection, transaction);
+                        icerikCommand.Parameters.AddWithValue("@HedefDosyaId", hedefDosyaId);
+                        icerikCommand.Parameters.AddWithValue("@KaynakDosyaId", kaynakDosyaId);
+                        await icerikCommand.ExecuteNonQueryAsync();
+                        sonuc.nesne[kaynakDosyaId] = hedefDosyaId;
+                    }
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex,
+                    "Başvuru dosyaları kopyalanamadı. KaynakBasvuruId: {KaynakBasvuruId}, HedefBasvuruId: {HedefBasvuruId}",
+                    "Başvuru dosyaları kopyalanamadı.", kaynakBasvuruId, hedefBasvuruId);
+            }
+
+            return sonuc;
+        }
+
         public async Task<Sonuc<Dosya>> DosyaGetirAsync(DosyaAnahtari anahtar, IDosyaYetkiKontrol yetki)
         {
             Sonuc<Dosya> sonuc = new Sonuc<Dosya>();

@@ -34,7 +34,7 @@ namespace TarimDonusum.Controllers
                     return RedirectToAction("Index", "Home");
 
                 ViewBag.YeniBasvuruYetkisi = BasvuruKullanicisiMi(kullanici);
-                sonuc = await _basvuruIsKurallari.KullaniciBasvurulariniListeleAsync(kullanici);
+                sonuc = await _basvuruIsKurallari.KullaniciBasvuruVersiyonlariniListeleAsync(kullanici);
             }
             catch (Exception ex)
             {
@@ -770,7 +770,24 @@ namespace TarimDonusum.Controllers
             }
             return Json(sonuc);
         }
-        
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> IncelemeyeGonder(int basvuruId)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Unauthorized(new { basarili = false, mesaj = L["Business.Session.Expired"].ToString() });
+
+            Sonuc sonuc = await _basvuruIsKurallari.IncelemeyeGonderAsync(basvuruId, kullanici);
+            return Json(new
+            {
+                basarili = sonuc.basarili,
+                mesaj = sonuc.basarili ? sonuc.mesaj : string.Join(" ", sonuc.hatalar)
+            });
+        }
+
         private List<string> ModelStateHatalariniOku()
         {
             return ModelState
@@ -789,12 +806,15 @@ namespace TarimDonusum.Controllers
         private async Task<BasvuruFormViewModel> FormViewModelHazirlaAsync(Basvuru basvuru, Kullanici? kullanici)
         {
             bool basvuruKullanicisi = BasvuruKullanicisiMi(kullanici);
-            bool duzenlenebilirDurum = basvuru.durum == enumBasvuruDurum.OnBasvuruDurumu;
+            bool duzenlenebilirDurum =
+                basvuru.durum == enumBasvuruDurum.OnBasvuruDurumu &&
+                basvuru.basvuruFirma.siraNo == 0;
 
             BasvuruFormViewModel model = new BasvuruFormViewModel
             {
                 Basvuru = basvuru,
                 SaltOkunur = !basvuruKullanicisi || !duzenlenebilirDurum,
+                DenetciGorunumu = kullanici != null && !basvuruKullanicisi,
             };
 
             await ReferansListeleriYukleAsync(model);

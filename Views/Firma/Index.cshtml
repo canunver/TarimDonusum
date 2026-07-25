@@ -1,0 +1,161 @@
+@{
+    ViewData["Title"] = "Firmalar";
+}
+
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div><h1>Firmalar</h1><p>Firma bilgilerini ve firma başvuranlarını yönetin.</p></div>
+        <button class="btn btn-primary" type="button" onclick="FirmaAc(0)">
+            <i class="fas fa-plus mr-1"></i>Yeni firma
+        </button>
+    </div>
+    @Html.AntiForgeryToken()
+    <div class="basvuru-card p-3 mb-3">
+        <label class="w-100">
+            Firma adı, vergi kimlik no veya MERSİS no
+            <input id="firmaArama" class="form-control" autocomplete="off" />
+        </label>
+        <button class="btn btn-outline-primary mt-2" type="button" onclick="FirmaAra()">Ara</button>
+    </div>
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Firma</th><th>Vergi kimlik no</th><th>MERSİS no</th><th>İletişim</th><th></th></tr></thead>
+            <tbody id="firmaListe">
+                <tr><td colspan="5" class="text-center text-muted">Firmaları görmek için arama yapın.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="firmaModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content firma-modal-content">
+    <div class="modal-header"><h5 class="modal-title">Firma bilgileri</h5><button class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body">
+        <input id="fId" type="hidden" />
+        <div class="form-grid">
+            <label>Vergi kimlik no<input id="fVergi" maxlength="20" /></label>
+            <label>Ticaret unvanı<input id="fUnvan" maxlength="250" /></label>
+            <label>Ticaret sicil no<input id="fSicil" maxlength="100" /></label>
+            <label>Kuruluş tarihi<input id="fKurulus" type="date" /></label>
+            <label>MERSİS no<input id="fMersis" maxlength="50" /></label>
+            <label>NACE kodu<input id="fNace" maxlength="50" /></label>
+            <label>Web sitesi<input id="fWeb" maxlength="250" /></label>
+            <label>Telefon<input id="fTelefon" maxlength="30" /></label>
+            <label>KEP adresi<input id="fKep" maxlength="250" /></label>
+            <label>E-posta<input id="fEposta" type="email" maxlength="256" /></label>
+        </div>
+        <label class="w-100 mt-2">Faaliyet konusu<textarea id="fFaaliyet" rows="3"></textarea></label>
+        <label class="w-100">Adres<textarea id="fAdres" rows="3"></textarea></label>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button><button class="btn btn-primary" onclick="FirmaKaydet()">Kaydet</button></div>
+</div></div></div>
+
+<div class="modal fade" id="basvuranModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content firma-modal-content">
+    <div class="modal-header"><h5 class="modal-title">Firma başvuranları</h5><button class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body">
+        <input id="bFirmaId" type="hidden" />
+        <div class="input-group mb-3">
+            <input id="basvuranArama" class="form-control" placeholder="Ad soyad ile kullanıcı ara" />
+            <div class="input-group-append"><button class="btn btn-outline-primary" onclick="BasvuranAra()">Ara</button></div>
+        </div>
+        <div id="basvuranAramaSonuc" class="mb-3"></div>
+        <h6>Firmadaki kullanıcılar</h6>
+        <div id="firmaBasvuranlari"></div>
+    </div>
+</div></div></div>
+
+<div class="modal fade" id="logModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content firma-modal-content">
+    <div class="modal-header"><h5 class="modal-title">Firma işlem geçmişi</h5><button class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body table-responsive"><table class="table table-sm"><thead><tr><th>Tarih</th><th>İşlemi yapan</th><th>İşlem</th><th>Detay</th></tr></thead><tbody id="logListe"></tbody></table></div>
+</div></div></div>
+
+@section Scripts {
+<script>
+    let firmalar = [];
+    const esc = value => $('<div/>').text(value == null ? '' : String(value)).html();
+    const hata = sonuc => PopupMesajGoster(sonuc && sonuc.hataStr ? sonuc.hataStr : 'İşlem tamamlanamadı.', false);
+
+    function FirmaAra() {
+        const aramaMetni = ($('#firmaArama').val() || '').trim();
+        if (!aramaMetni) return PopupMesajGoster('Arama metni girilmelidir.', false);
+        AjaxGet('/Firma/Ara', { aramaMetni }, sonuc => {
+            if (!sonuc || !sonuc.basarili) return hata(sonuc);
+            firmalar = sonuc.nesne || [];
+            $('#firmaListe').html(firmalar.map(f => `<tr>
+                <td>${esc(f.ticaretUnvani)}</td><td>${esc(f.vergiKimlikNo)}</td><td>${esc(f.mersisNo)}</td>
+                <td>${esc(f.telefon)}<br>${esc(f.eposta)}</td>
+                <td class="text-nowrap">
+                    <button class="btn btn-sm btn-outline-primary" onclick="FirmaAc(${f.id})">Düzenle</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="BasvuranlarAc(${f.id})">Başvuranlar</button>
+                    <button class="btn btn-sm btn-outline-dark" onclick="LogAc(${f.id})">Log</button>
+                </td></tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted">Firma bulunamadı.</td></tr>');
+        });
+    }
+
+    function FirmaAc(id) {
+        if (!id) return FirmaFormaYaz({ id: 0 });
+        AjaxGet('/Firma/Oku', { id }, sonuc => sonuc && sonuc.basarili ? FirmaFormaYaz(sonuc.nesne) : hata(sonuc));
+    }
+    function FirmaFormaYaz(f) {
+        $('#fId').val(f.id || 0); $('#fVergi').val(f.vergiKimlikNo || ''); $('#fUnvan').val(f.ticaretUnvani || '');
+        $('#fSicil').val(f.ticaretSicilNo || ''); $('#fKurulus').val((f.kurulusTarihi || '').slice(0,10));
+        $('#fMersis').val(f.mersisNo || ''); $('#fNace').val(f.naceKodu || ''); $('#fWeb').val(f.webSitesi || '');
+        $('#fTelefon').val(f.telefon || ''); $('#fKep').val(f.kepAdresi || ''); $('#fEposta').val(f.eposta || '');
+        $('#fFaaliyet').val(f.faaliyetKonusu || ''); $('#fAdres').val(f.adres || ''); $('#firmaModal').modal('show');
+    }
+    function FirmaKaydet() {
+        const model = { id:Number($('#fId').val()), vergiKimlikNo:$('#fVergi').val(), ticaretUnvani:$('#fUnvan').val(),
+            ticaretSicilNo:$('#fSicil').val(), kurulusTarihi:$('#fKurulus').val() || null, mersisNo:$('#fMersis').val(),
+            naceKodu:$('#fNace').val(), webSitesi:$('#fWeb').val(), telefon:$('#fTelefon').val(), kepAdresi:$('#fKep').val(),
+            eposta:$('#fEposta').val(), faaliyetKonusu:$('#fFaaliyet').val(), adres:$('#fAdres').val() };
+        AjaxPost('/Firma/Kaydet', model, sonuc => {
+            if (!sonuc || !sonuc.basarili) return hata(sonuc);
+            PopupMesajGoster(sonuc.mesaj, true); $('#firmaModal').modal('hide');
+            if (($('#firmaArama').val() || '').trim()) FirmaAra();
+        });
+    }
+
+    function BasvuranlarAc(firmaId) {
+        $('#bFirmaId').val(firmaId); $('#basvuranArama').val(''); $('#basvuranAramaSonuc').empty();
+        BasvuranlariYenile(); $('#basvuranModal').modal('show');
+    }
+    function BasvuranlariYenile() {
+        AjaxGet('/Firma/Oku', { id:Number($('#bFirmaId').val()) }, sonuc => {
+            if (!sonuc || !sonuc.basarili) return hata(sonuc);
+            const liste = (sonuc.nesne.basvuranlar || []).filter(x => x.aktif);
+            $('#firmaBasvuranlari').html(liste.map(x => `<div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2">
+                <span>${esc(x.adSoyad)}<small class="d-block text-muted">${esc(x.eposta)} · ${esc(x.telefon)}</small></span>
+                <button class="btn btn-sm btn-outline-danger" title="Firmadan çıkar" onclick="BasvuranCikar(${x.kullaniciId})"><i class="fas fa-trash-alt"></i></button>
+            </div>`).join('') || '<div class="text-muted">Firmaya bağlı aktif başvuran yok.</div>');
+        });
+    }
+    function BasvuranAra() {
+        const aramaMetni = ($('#basvuranArama').val() || '').trim();
+        if (!aramaMetni) return PopupMesajGoster('Kullanıcı arama metni girilmelidir.', false);
+        AjaxGet('/Firma/BasvuranAra', { aramaMetni }, sonuc => {
+            if (!sonuc || !sonuc.basarili) return hata(sonuc);
+            $('#basvuranAramaSonuc').html((sonuc.nesne || []).map(x => `<div class="d-flex justify-content-between border rounded p-2 mb-1">
+                <span>${esc(x.ad + ' ' + x.soyad)} <small class="text-muted">${esc(x.eposta)}</small></span>
+                <button class="btn btn-sm btn-outline-success" onclick="BasvuranEkle(${x.id})">Ekle</button>
+            </div>`).join('') || '<div class="text-muted">Kullanıcı bulunamadı.</div>');
+        });
+    }
+    function BasvuranEkle(kullaniciId) { BasvuranDegistir('/Firma/BasvuranEkle', kullaniciId); }
+    function BasvuranCikar(kullaniciId) { BasvuranDegistir('/Firma/BasvuranCikar', kullaniciId); }
+    function BasvuranDegistir(url, kullaniciId) {
+        AjaxPost(url + `?firmaId=${Number($('#bFirmaId').val())}&kullaniciId=${kullaniciId}`, null, sonuc => {
+            if (!sonuc || !sonuc.basarili) return hata(sonuc);
+            PopupMesajGoster(sonuc.mesaj, true); BasvuranlariYenile();
+        });
+    }
+    function LogAc(firmaId) {
+        AjaxGet('/Firma/Loglar', { firmaId }, sonuc => {
+            if (!sonuc || !sonuc.basarili) return hata(sonuc);
+            $('#logListe').html((sonuc.nesne || []).map(x => `<tr><td>${esc(new Date(x.islemTarihi).toLocaleString('tr-TR'))}</td>
+                <td>${esc(x.kullaniciAdSoyad)}</td><td>${esc(x.islem)}</td><td><code>${esc(x.jsonText)}</code></td></tr>`).join('')
+                || '<tr><td colspan="4" class="text-center text-muted">Log kaydı yok.</td></tr>');
+            $('#logModal').modal('show');
+        });
+    }
+    $(function(){ PopupMesajIlklendir(); $('#firmaArama').val(''); });
+</script>
+}

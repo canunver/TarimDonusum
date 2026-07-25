@@ -21,11 +21,16 @@ namespace TarimDonusum.Controllers
             _basvuruIsKurallari = basvuruIsKurallari;
         }
 
+        [OturumKontrol]
         public async Task<IActionResult> Index()
         {
             try
             {
-                Sonuc<List<Basvuru>> sonuc = await _basvuruIsKurallari.TumunuListeleAsync();
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (BasvuruKullanicisiMi(kullanici))
+                    return Forbid();
+
+                Sonuc<List<Basvuru>> sonuc = await _basvuruIsKurallari.TumVersiyonlariListeleAsync();
                 if (!sonuc.basarili)
                     TempData["Mesaj"] = HataMesaji(sonuc, "Başvuru kayıtları listelenemedi.");
 
@@ -39,10 +44,15 @@ namespace TarimDonusum.Controllers
             }
         }
 
+        [OturumKontrol]
         public async Task<IActionResult> Basvuru(int id, int bolum = 1)
         {
             try
             {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (BasvuruKullanicisiMi(kullanici))
+                    return Forbid();
+
                 Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id);
                 if (!sonuc.basarili || sonuc.nesne == null)
                 {
@@ -80,6 +90,26 @@ namespace TarimDonusum.Controllers
                 TempData["Mesaj"] = "Başvuru kaydı okunamadı.";
                 return RedirectToAction(nameof(Index));
             }
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OnBasvuruDenetimiKaydet([FromBody] Basvuru denetim, [FromQuery] bool sonuclandir = false)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Json(new { basarili = false, mesaj = "Oturum süresi doldu." });
+            if (BasvuruKullanicisiMi(kullanici))
+                return Forbid();
+
+            Sonuc sonuc = await _basvuruIsKurallari.OnBasvuruDenetimiKaydetAsync(denetim, kullanici, sonuclandir);
+            return Json(sonuc);
+        }
+
+        private static bool BasvuruKullanicisiMi(Kullanici? kullanici)
+        {
+            return kullanici?.Yetkiler.Any(x => x.Rol == KullaniciRol.BasvuruKullanicisi) == true;
         }
 
         private static string HataMesaji(Sonuc sonuc, string varsayilanMesaj)

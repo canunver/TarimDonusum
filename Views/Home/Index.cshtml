@@ -160,6 +160,10 @@
                     <i class="fas fa-check"></i> @L["Home.Button.DogrulaGirisYap"]
                 </button>
 
+                <a class="btn btn-link" asp-controller="Home" asp-action="SifremiUnuttum">
+                    @L["ForgotPassword.Link"]
+                </a>
+
                 @if (Env.IsDevelopment())
                 {
                     <a class="btn btn-outline-info float-right" asp-controller="Home" asp-action="TestBasvuru">

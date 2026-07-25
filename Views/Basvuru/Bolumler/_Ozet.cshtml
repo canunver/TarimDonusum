@@ -182,10 +182,35 @@
     </div>
 
     <div class="summary-check-panel">
-        <h3>@L["Basvuru.Summary.CheckResultTitle"]</h3>
+        @if (eksikler.Count > 0 || b.durum == enumBasvuruDurum.OnBasvuruDurumu)
+        {
+            <h3>@L["Basvuru.Summary.CheckResultTitle"]</h3>
+        }
         @if (eksikler.Count == 0)
         {
-            <div class="alert alert-success"><strong>@L["Basvuru.Summary.SuccessStrong"]</strong> @L["Basvuru.Summary.SuccessText"]</div>
+            @if (b.durum == enumBasvuruDurum.OnBasvuruDurumu)
+            {
+                <div class="alert summary-success-message"><strong>@L["Basvuru.Summary.SuccessStrong"]</strong> @L["Basvuru.Summary.SuccessText"]</div>
+                @if (!Model.SaltOkunur)
+                {
+                    <div class="summary-submit-action">
+                        <button type="button"
+                                id="incelemeyeGonderBtn"
+                                class="btn btn-success btn-lg py-3"
+                                data-url="@Url.Action("IncelemeyeGonder", "Basvuru")"
+                                data-confirm="@L["Basvuru.Summary.SubmitConfirm"]"
+                                data-basvuru-id="@b.Id"
+                                data-failed-message="@L["Business.Application.Submit.Failed"]">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            @L["Basvuru.Summary.SubmitButton"]
+                        </button>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">@L["Basvuru.Summary.SubmittedReadonly"]</div>
+            }
         }
         else
         {

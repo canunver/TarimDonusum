@@ -2,6 +2,7 @@
 <Menu>
   <Item type="Url" id="dashboard" text="Gosterge Paneli" url="/Dashboard" icon="fas fa-chart-pie" roles="SistemYoneticisi,BirimKullanicisi" />
   <Item type="Url" id="kayitlar" text="Basvuru Kayitlari" url="/Basvuru" icon="fas fa-list" roles="BasvuruKullanicisi,SistemYoneticisi" />
+  <Item type="Url" id="firmalar" text="Firmalar" url="/Firma" icon="fas fa-building" />
   <Item type="Url" id="yeniOnBasvuru" text="Yeni On Basvuru" url="/Basvuru/Yeni" icon="fas fa-plus-circle" roles="BasvuruKullanicisi" />
   <Item type="Menu" id="denetleme" text="Denetleme" icon="fas fa-clipboard-check" roles="SistemYoneticisi">
     <Item type="Url" id="denetlemeKayitlari" text="Denetleme Kayitlari" url="/Denetleme" icon="far fa-circle" roles="SistemYoneticisi" />

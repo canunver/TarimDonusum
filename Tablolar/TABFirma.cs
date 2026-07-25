@@ -99,6 +99,32 @@ namespace TarimDonusum.Tablolar
             return OkuFirma(reader);
         }
 
+        public async Task<List<Firma>> AraAsync(string aramaMetni, int? kullaniciId)
+        {
+            const string sql = @"
+                SELECT f.Id, f.VergiKimlikNo, f.TicaretUnvani, f.TicaretSicilNo,
+                    f.KurulusTarihi, f.MersisNo, f.NaceKodu, f.WebSitesi,
+                    f.Telefon, f.KepAdresi, f.Eposta, f.FaaliyetKonusu, f.Adres,
+                    N'[]' AS BasvuranlarJson
+                FROM dbo.Firma f
+                WHERE (@KullaniciId IS NULL OR EXISTS
+                    (SELECT 1 FROM dbo.FirmaKullanici fk
+                     WHERE fk.FirmaId = f.Id AND fk.KullaniciId = @KullaniciId AND fk.Aktif = 1))
+                  AND (f.TicaretUnvani LIKE N'%' + @AramaMetni + N'%'
+                       OR f.VergiKimlikNo LIKE N'%' + @AramaMetni + N'%'
+                       OR f.MersisNo LIKE N'%' + @AramaMetni + N'%')
+                ORDER BY f.TicaretUnvani;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@AramaMetni", aramaMetni.Trim());
+            command.Parameters.AddWithValue("@KullaniciId", (object?)kullaniciId ?? DBNull.Value);
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+            List<Firma> liste = new();
+            while (await reader.ReadAsync())
+                liste.Add(OkuFirma(reader));
+            return liste;
+        }
+
         public async Task<int> EkleAsync(Firma firma)
         {
             const string sql = @"

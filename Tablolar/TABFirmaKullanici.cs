@@ -71,5 +71,17 @@ namespace TarimDonusum.Tablolar
 
             await command.ExecuteNonQueryAsync();
         }
+
+        public async Task PasifYapAsync(int firmaId, int kullaniciId)
+        {
+            const string sql = @"
+                UPDATE dbo.FirmaKullanici
+                SET Aktif = 0
+                WHERE FirmaId = @FirmaId AND KullaniciId = @KullaniciId AND Aktif = 1;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@FirmaId", firmaId);
+            command.Parameters.AddWithValue("@KullaniciId", kullaniciId);
+            await command.ExecuteNonQueryAsync();
+        }
     }
 }

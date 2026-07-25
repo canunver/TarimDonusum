@@ -171,6 +171,9 @@
   <data name="MenuBasvuru.kayitlar" xml:space="preserve">
     <value>Başvuru Kayıtları</value>
   </data>
+  <data name="MenuBasvuru.firmalar" xml:space="preserve">
+    <value>Firmalar</value>
+  </data>
   <data name="MenuBasvuru.yeniOnBasvuru" xml:space="preserve">
     <value>Yeni Ön Başvuru</value>
   </data>
@@ -216,6 +219,28 @@
   <data name="Layout.InstitutionName" xml:space="preserve">
     <value>TKDK - Tarım ve Kırsal Kalkınmayı Destekleme Kurumu</value>
   </data>
+  <data name="Layout.ThemeSelection" xml:space="preserve"><value>Tema Seçimi</value></data>
+  <data name="Layout.Theme.Navy" xml:space="preserve"><value>Lacivert</value></data>
+  <data name="Layout.Theme.Green" xml:space="preserve"><value>Yeşil</value></data>
+  <data name="Layout.Theme.Blue" xml:space="preserve"><value>Mavi</value></data>
+  <data name="Layout.Theme.Light" xml:space="preserve"><value>Açık</value></data>
+  <data name="Layout.Logout" xml:space="preserve"><value>Çıkış</value></data>
+  <data name="Basvuru.Summary.SubmitButton" xml:space="preserve"><value>Ön Başvuruyu İncelemeye Gönder</value></data>
+  <data name="Basvuru.Summary.SubmitConfirm" xml:space="preserve"><value>Ön başvuruyu incelemeye göndermek istediğinize emin misiniz? Gönderimden sonra bilgiler değiştirilemez.</value></data>
+  <data name="Basvuru.Summary.SubmittedReadonly" xml:space="preserve"><value>Ön başvuru incelemeye gönderildi. Başvuru artık salt okunur durumdadır.</value></data>
+  <data name="Business.Application.Submit.AlreadySubmitted" xml:space="preserve"><value>Ön başvuru daha önce gönderilmiş veya artık düzenlenebilir durumda değil.</value></data>
+  <data name="Business.Application.Submit.Success" xml:space="preserve"><value>Ön başvuru incelemeye başarıyla gönderildi.</value></data>
+  <data name="Business.Application.Submit.Failed" xml:space="preserve"><value>Ön başvuru incelemeye gönderilemedi. Lütfen tekrar deneyin.</value></data>
+  <data name="Layout.ChangePassword" xml:space="preserve"><value>Şifremi değiştir</value></data>
+  <data name="Layout.NewPassword" xml:space="preserve"><value>Yeni şifre</value></data>
+  <data name="Layout.NewPasswordAgain" xml:space="preserve"><value>Yeni şifre tekrar</value></data>
+  <data name="Layout.PasswordRule" xml:space="preserve"><value>Şifre en az 8 karakter olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir.</value></data>
+  <data name="Layout.Close" xml:space="preserve"><value>Kapat</value></data>
+  <data name="Layout.Cancel" xml:space="preserve"><value>İptal</value></data>
+  <data name="Layout.Save" xml:space="preserve"><value>Kaydet</value></data>
+  <data name="Kullanici.ChangePassword.SessionInvalid" xml:space="preserve"><value>Oturum bilgisi geçersiz. Lütfen yeniden giriş yapın.</value></data>
+  <data name="Kullanici.ChangePassword.Success" xml:space="preserve"><value>Şifreniz başarıyla değiştirildi.</value></data>
+  <data name="Kullanici.ChangePassword.Failed" xml:space="preserve"><value>Şifre değiştirilemedi. Lütfen tekrar deneyin.</value></data>
   <data name="YeniKullanici.Title" xml:space="preserve">
     <value>Yeni Kullanıcı</value>
   </data>
@@ -862,10 +887,10 @@
     <value>Bu bölüm yeni form akışına göre ayrıldı; alan detayları eklenecek.</value>
   </data>
   <data name="Basvuru.Step.8" xml:space="preserve">
-    <value>8. Denetçi</value>
+    <value>Ön Başvuru İnceleme Sonuç Listesi</value>
   </data>
   <data name="Basvuru.Section8.Title" xml:space="preserve">
-    <value>8. Denetçi Değerlendirmesi</value>
+    <value>Ön Başvuru İnceleme Sonuç Listesi</value>
   </data>
   <data name="Basvuru.Field.BasvuruDonemi" xml:space="preserve">
     <value>Başvuru dönemi</value>
@@ -1692,4 +1717,22 @@
   <data name="Kullanici.PasswordLink.Mismatch" xml:space="preserve"><value>Parolalar e&#351;le&#351;miyor.</value></data>
   <data name="Kullanici.PasswordLink.Weak" xml:space="preserve"><value>Parola en az 8 karakter olmal&#305; ve yeterli g&#252;&#231;te olmal&#305;d&#305;r.</value></data>
   <data name="Kullanici.PasswordLink.Success" xml:space="preserve"><value>Parolan&#305;z ba&#351;ar&#305;yla belirlendi. Giri&#351; yapabilirsiniz.</value></data>
+  <data name="enumBasvuruDurum_0" xml:space="preserve"><value>Tanımsız</value></data>
+  <data name="enumBasvuruDurum_1" xml:space="preserve"><value>Ön Başvuru</value></data>
+  <data name="enumBasvuruDurum_3" xml:space="preserve"><value>İncelemede</value></data>
+  <data name="enumBasvuruDurum_5" xml:space="preserve"><value>Kabul Edildi</value></data>
+  <data name="enumBasvuruDurum_7" xml:space="preserve"><value>Reddedildi</value></data>
+  <data name="enumBasvuruDurum_9" xml:space="preserve"><value>İptal</value></data>
+  <data name="Basvuru.Review.Title" xml:space="preserve"><value>Ön Başvuru İnceleme Sonuç Listesi</value></data>
+  <data name="Basvuru.Review.ChecklistNote" xml:space="preserve"><value>Sonuç listesi belirlendiğinde soru, cevap ve açıklama alanları bu bölümde gösterilecektir.</value></data>
+  <data name="Basvuru.Review.Result" xml:space="preserve"><value>Ön Başvuru değerlendirmesinin Sonucu</value></data>
+  <data name="Basvuru.Review.Reason" xml:space="preserve"><value>Ön Başvuru değerlendirmesinin Sonuç Gerekçesi</value></data>
+  <data name="Basvuru.Review.Rejected" xml:space="preserve"><value>Reddedildi</value></data>
+  <data name="Basvuru.Review.Accepted" xml:space="preserve"><value>Kabul edildi</value></data>
+  <data name="Basvuru.Review.Returned" xml:space="preserve"><value>Düzeltme için iade edildi</value></data>
+  <data name="Basvuru.Review.Finalize" xml:space="preserve"><value>Sonuçlandır</value></data>
+  <data name="Basvuru.Review.Readonly" xml:space="preserve"><value>Bu denetim sonuçlandırılmıştır ve salt okunurdur.</value></data>
+  <data name="Basvuru.Review.ResultRequired" xml:space="preserve"><value>Denetim sonucu seçilmelidir.</value></data>
+  <data name="Basvuru.Review.FinalizeConfirm" xml:space="preserve"><value>Denetim sonucu kaydedilecek ve başvurunun durumu değiştirilecektir. Devam edilsin mi?</value></data>
+  <data name="Basvuru.Review.FieldsRequired" xml:space="preserve"><value>Sonuç ve sonuç gerekçesi birlikte girilmelidir.</value></data>
 </root>

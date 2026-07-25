@@ -535,6 +535,24 @@ namespace TarimDonusum.IsKurallari
             new(27,
                 @"IF OBJECT_ID(N'dbo.KullaniciParolaToken', N'U') IS NOT NULL
                     DROP TABLE dbo.KullaniciParolaToken;"),
+            new(28,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'DenetimAnketi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD DenetimAnketi NVARCHAR(MAX) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'DenetimGerekcesi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD DenetimGerekcesi NVARCHAR(2000) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'DenetimSonucu') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD DenetimSonucu INT NULL;"),
+            new(29,
+                @";WITH Sirali AS
+                  (
+                      SELECT Id,
+                             ROW_NUMBER() OVER
+                                 (PARTITION BY BasvuruAnaId ORDER BY RevizyonNo DESC, Id DESC) - 1 AS YeniSiraNo
+                      FROM dbo.Basvuru
+                  )
+                  UPDATE B SET SiraNo = S.YeniSiraNo
+                  FROM dbo.Basvuru B
+                  INNER JOIN Sirali S ON S.Id = B.Id;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

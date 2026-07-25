@@ -192,6 +192,58 @@ namespace TarimDonusum.Tablolar
             return Oku(reader);
         }
 
+        private async Task<Kullanici?> SifreSifirlamaBilgileriyleOkuKopyaAsync(Kullanici arama)
+        {
+            const string sql = @"
+                SELECT Id, TCKN, Ad, Soyad, DogumTarihi, Cinsiyet,
+                    Eposta, Telefon, KayitTarihi, Aktif
+                FROM dbo.Kullanici
+                WHERE Aktif = 1
+                  AND TCKN = @TCKN
+                  AND Ad = @Ad
+                  AND Soyad = @Soyad
+                  AND CAST(DogumTarihi AS date) = @DogumTarihi
+                  AND Eposta = @Eposta
+                  AND Telefon = @Telefon;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@TCKN", arama.TCKN);
+            command.Parameters.AddWithValue("@Ad", arama.Ad);
+            command.Parameters.AddWithValue("@Soyad", arama.Soyad);
+            command.Parameters.AddWithValue("@DogumTarihi", arama.DogumTarihi.Date);
+            command.Parameters.AddWithValue("@Eposta", arama.Eposta);
+            command.Parameters.AddWithValue("@Telefon", arama.Telefon);
+
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+            return await reader.ReadAsync() ? Oku(reader) : null;
+        }
+
+        public async Task<Kullanici?> SifreSifirlamaBilgileriyleOkuAsync(Kullanici arama)
+        {
+            const string sql = @"
+                SELECT Id, TCKN, Ad, Soyad, DogumTarihi, Cinsiyet,
+                    Eposta, Telefon, KayitTarihi, Aktif
+                FROM dbo.Kullanici
+                WHERE Aktif = 1
+                  AND TCKN = @TCKN
+                  AND Ad = @Ad
+                  AND Soyad = @Soyad
+                  AND CAST(DogumTarihi AS date) = @DogumTarihi
+                  AND Eposta = @Eposta
+                  AND Telefon = @Telefon;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@TCKN", arama.TCKN);
+            command.Parameters.AddWithValue("@Ad", arama.Ad);
+            command.Parameters.AddWithValue("@Soyad", arama.Soyad);
+            command.Parameters.AddWithValue("@DogumTarihi", arama.DogumTarihi.Date);
+            command.Parameters.AddWithValue("@Eposta", arama.Eposta);
+            command.Parameters.AddWithValue("@Telefon", arama.Telefon);
+
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+            return await reader.ReadAsync() ? Oku(reader) : null;
+        }
+
         public async Task<bool> GuncelleAsync(Kullanici kullanici)
         {
             const string sql = @"
