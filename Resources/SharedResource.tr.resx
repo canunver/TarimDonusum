@@ -800,19 +800,19 @@
     <value>Zorunlu Belgeler - Belge yükleme</value>
   </data>
   <data name="Basvuru.Section7.Title" xml:space="preserve">
-    <value>9. Zorunlu Belgeler</value>
+    <value>10. Zorunlu Belgeler</value>
   </data>
   <data name="Basvuru.Step.UygunHarcama" xml:space="preserve">
-    <value>Uygun Harcama - PİKK ön listesi</value>
+    <value>Uygun Harcama Ön Listesi</value>
   </data>
   <data name="Basvuru.Section.UygunHarcama.Title" xml:space="preserve">
-    <value>6. Uygun Harcama</value>
+    <value>6. Uygun Harcama Ön Listesi</value>
   </data>
   <data name="Basvuru.Pikk.Description" xml:space="preserve">
     <value>Makine-ekipman veya yapım işi talep edildiyse ilgili ön liste doldurulmadan başvuru gönderilemez. Yapım işleri için yalnızca bina/yapım işi ön listesi alınır.</value>
   </data>
   <data name="Basvuru.Pikk.NoList" xml:space="preserve">
-    <value>Makine ekipman veya yapım işi harcaması seçilmediği için PİKK ön listesi gerekmez.</value>
+    <value>Makine ekipman veya yapım işi harcaması seçilmediği için uygun harcama ön listesi gerekmez.</value>
   </data>
   <data name="Basvuru.Pikk.EquipmentTitle" xml:space="preserve">
     <value>Makine-Ekipman Harcaması Ön Listesi</value>
@@ -857,22 +857,22 @@
     <value>Yapım işi harcaması seçildiği için en az bir bina/yapım işi satırında ad ve kullanım amacı girilmelidir.</value>
   </data>
   <data name="Basvuru.Step.YatirimOzeti" xml:space="preserve">
-    <value>Yatırım Özeti - Bütçe, üretim, gider</value>
+    <value>Yatırım Özeti Tablosu</value>
   </data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
-    <value>8. Yatırım Özeti</value>
+    <value>8. Yatırım Özeti Tablosu</value>
   </data>
   <data name="Basvuru.Step.CevreselSosyal" xml:space="preserve">
     <value>Çevresel-Sosyal - Ek V</value>
   </data>
   <data name="Basvuru.Section.CevreselSosyal.Title" xml:space="preserve">
-    <value>10. Çevresel-Sosyal</value>
+    <value>11. Çevresel-Sosyal</value>
   </data>
   <data name="Basvuru.Step.TaahhutBeyan" xml:space="preserve">
     <value>Taahhüt/Beyan - Beyan dokümanı</value>
   </data>
   <data name="Basvuru.Section.TaahhutBeyan.Title" xml:space="preserve">
-    <value>11. Taahhüt/Beyan</value>
+    <value>12. Taahhüt/Beyan</value>
   </data>
   <data name="Basvuru.Section.TaahhutBeyan.Description" xml:space="preserve">
     <value>Başvuru rehberi eki beyan ve taahhüt dokümanı bu bölümden yüklenir.</value>
@@ -881,7 +881,7 @@
     <value>Özet - Ön kontrol</value>
   </data>
   <data name="Basvuru.Section.Ozet.Title" xml:space="preserve">
-    <value>12. Özet</value>
+    <value>13. Özet</value>
   </data>
   <data name="Basvuru.Section.Placeholder" xml:space="preserve">
     <value>Bu bölüm yeni form akışına göre ayrıldı; alan detayları eklenecek.</value>
@@ -1381,7 +1381,7 @@
   <data name="Basvuru.Documents.FileType" xml:space="preserve"><value>Dosya Türü</value></data>
   <data name="Basvuru.Documents.FileName" xml:space="preserve"><value>Dosya Adı</value></data>
   <data name="Basvuru.Documents.Upload" xml:space="preserve"><value>Yükle</value></data>
-  <data name="Basvuru.CevreselSosyal.Title" xml:space="preserve"><value>10. Çevresel ve Sosyal Veri Formu</value></data>
+  <data name="Basvuru.CevreselSosyal.Title" xml:space="preserve"><value>11. Çevresel ve Sosyal Veri Formu</value></data>
   <data name="Basvuru.CevreselSosyal.Description" xml:space="preserve"><value>Yeni Ek V soru setine göre düzenlenmiştir. Form, yatırımın niteliğine göre sadece ilgili alanları açar; dokümandaki gri/kapsam dışı hücreler kullanıcıya gösterilmez.</value></data>
   <data name="Basvuru.CevreselSosyal.ScopeQuestion" xml:space="preserve"><value>Başvuru konusu yatırım aşağıdakilerden hangisini kapsamaktadır?</value></data>
   <data name="Basvuru.CevreselSosyal.Scope.Existing" xml:space="preserve"><value>Mevcut tesisin modernizasyonu</value></data>
@@ -1735,4 +1735,14 @@
   <data name="Basvuru.Review.ResultRequired" xml:space="preserve"><value>Denetim sonucu seçilmelidir.</value></data>
   <data name="Basvuru.Review.FinalizeConfirm" xml:space="preserve"><value>Denetim sonucu kaydedilecek ve başvurunun durumu değiştirilecektir. Devam edilsin mi?</value></data>
   <data name="Basvuru.Review.FieldsRequired" xml:space="preserve"><value>Sonuç ve sonuç gerekçesi birlikte girilmelidir.</value></data>
+  <data name="Basvuru.Step.DbCtp" xml:space="preserve"><value>DB C-TP Teknik Proje</value></data>
+  <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve"><value>9. DB C-TP Teknik Proje</value></data>
+  <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve"><value>Yatırımın teknik ön bilgileri, üretim ve kapasite verileri, girdi ihtiyacı, yenilenebilir enerji, makine-ekipman ve bina/yapı listeleri bu bölümde girilir.</value></data>
+  <data name="Basvuru.Summary.Error.DbCtpRequired" xml:space="preserve"><value>DB C-TP Teknik Proje bölümü doldurulmalıdır.</value></data>
+  <data name="Basvuru.Summary.Error.DeclarationsRequired" xml:space="preserve"><value>Taahhüt ve beyan bölümündeki tüm beyanlar onaylanmalıdır.</value></data>
+  <data name="Basvuru.Step.SystemResults" xml:space="preserve"><value>Sistem Sonuçları</value></data>
+  <data name="Basvuru.Step.ExpertResults" xml:space="preserve"><value>Uzman Sonuçları</value></data>
+  <data name="Basvuru.Step.Decision" xml:space="preserve"><value>Karar</value></data>
+  <data name="Basvuru.Review.SystemResultsNote" xml:space="preserve"><value>Bu liste, kayıtlı bir sistem sonucu yoksa başvuru verilerinden ilk açılışta oluşturulur. Kaydettikten sonra kayıtlı sonuçlar gösterilir.</value></data>
+  <data name="Basvuru.Review.ExpertResultsNote" xml:space="preserve"><value>Uzman değerlendirmesini girip kaydediniz. Sonraki açılışlarda kayıtlı değerlendirme gösterilir.</value></data>
 </root>

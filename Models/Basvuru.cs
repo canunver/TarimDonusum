@@ -168,6 +168,7 @@ namespace TarimDonusum.Models
         public BasvuruMali mali = new BasvuruMali();
         public BasvuruUygunHarcama uygunHarcama { get; set; } = new();
         public BasvuruYatirimOzeti yatirimOzeti { get; set; } = new();
+        public BasvuruDbCtpTeknikProje dbCtpTeknikProje { get; set; } = new();
         public BasvuruCevreselSosyal cevreselSosyal { get; set; } = new();
 
         public string BelgePaketiDosyaAdi { get; set; } = "";
@@ -177,13 +178,22 @@ namespace TarimDonusum.Models
         public string TaahhutDosyaAdi { get; set; } = "";
         public int? TaahhutDosyaId { get; set; }
         public string TaahhutAciklama { get; set; } = "";
+        public string TaahhutBeyanlarJson { get; set; } = "";
         public List<string> BelgeGruplari { get; set; } = new();
         public List<BasvuruOrtaklikDosya> ZorunluBelgeler { get; set; } = new();
         public List<BasvuruAdliSicilKisi> AdliSicilKisileri { get; set; } = new();
 
         public string DenetimAnketi { get; set; } = "";
+        public string SistemDenetimAnketi { get; set; } = "";
         public string DenetimGerekcesi { get; set; } = "";
         public enumOnBasvuruDenetimSonucu? DenetimSonucu { get; set; }
+    }
+
+    public class DenetimListesiKayit
+    {
+        public int basvuruId { get; set; }
+        public string listeTuru { get; set; } = "";
+        public string json { get; set; } = "";
     }
 
     public class BasvuruFirma
@@ -494,7 +504,7 @@ namespace TarimDonusum.Models
                 sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
 
             if (!string.IsNullOrWhiteSpace(pikkListesiJson) && pikkListesiJson.Length > 20000)
-                sonuc.HataEkle("PİKK listesi verisi çok uzun.");
+                sonuc.HataEkle("Uygun harcama ön listesi verisi çok uzun.");
         }
     }
 
@@ -510,6 +520,22 @@ namespace TarimDonusum.Models
 
             if (!string.IsNullOrWhiteSpace(yatirimOzetiJson) && yatirimOzetiJson.Length > 50000)
                 sonuc.HataEkle("Yatırım özeti verisi çok uzun.");
+        }
+    }
+
+    public class BasvuruDbCtpTeknikProje
+    {
+        public int basvuruId { get; set; }
+        public string? dbCtpTeknikProjeJson { get; set; } = "";
+
+        internal void Dogrula(Sonuc<int> sonuc)
+        {
+            if (basvuruId <= 0)
+                sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
+            if (string.IsNullOrWhiteSpace(dbCtpTeknikProjeJson))
+                sonuc.HataEkle("DB C-TP Teknik Proje bilgileri girilmelidir.");
+            if (!string.IsNullOrWhiteSpace(dbCtpTeknikProjeJson) && dbCtpTeknikProjeJson.Length > 100000)
+                sonuc.HataEkle("DB C-TP Teknik Proje verisi çok uzun.");
         }
     }
 
@@ -557,6 +583,21 @@ namespace TarimDonusum.Models
         public string TaahhutAciklama { get; set; } = "";
         public string BelgeBeyani { get; set; } = "";
         public List<string> BelgeGruplari { get; set; } = new();
+    }
+
+    public class BasvuruTaahhutBeyanlar
+    {
+        public int basvuruId { get; set; }
+        public string? taahhutBeyanlarJson { get; set; } = "";
+
+        internal void Dogrula(Sonuc<int> sonuc)
+        {
+            if (basvuruId <= 0) sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
+            if (string.IsNullOrWhiteSpace(taahhutBeyanlarJson))
+                sonuc.HataEkle("Taahhüt ve beyanlar onaylanmalıdır.");
+            if (!string.IsNullOrWhiteSpace(taahhutBeyanlarJson) && taahhutBeyanlarJson.Length > 20000)
+                sonuc.HataEkle("Taahhüt ve beyan verisi çok uzun.");
+        }
     }
 
     public class BasvuruDosyaYuklemeSonucu

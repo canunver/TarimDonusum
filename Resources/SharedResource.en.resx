@@ -800,19 +800,19 @@
     <value>Required Documents - Document upload</value>
   </data>
   <data name="Basvuru.Section7.Title" xml:space="preserve">
-    <value>9. Required Documents</value>
+    <value>10. Required Documents</value>
   </data>
   <data name="Basvuru.Step.UygunHarcama" xml:space="preserve">
-    <value>Eligible Expense - Preliminary PIKK list</value>
+    <value>Eligible Expense Preliminary List</value>
   </data>
   <data name="Basvuru.Section.UygunHarcama.Title" xml:space="preserve">
-    <value>6. Eligible Expense</value>
+    <value>6. Eligible Expense Preliminary List</value>
   </data>
   <data name="Basvuru.Pikk.Description" xml:space="preserve">
     <value>If machinery-equipment or construction work is requested, the related preliminary list must be completed before submitting the application. For construction works, only the building/construction preliminary list is collected.</value>
   </data>
   <data name="Basvuru.Pikk.NoList" xml:space="preserve">
-    <value>No PIKK preliminary list is required because machinery-equipment or construction work expense was not selected.</value>
+    <value>No eligible expense preliminary list is required because machinery-equipment or construction work expense was not selected.</value>
   </data>
   <data name="Basvuru.Pikk.EquipmentTitle" xml:space="preserve">
     <value>Machinery-Equipment Expense Preliminary List</value>
@@ -857,22 +857,22 @@
     <value>Because construction work expense is selected, at least one building/construction row must include a name and intended use.</value>
   </data>
   <data name="Basvuru.Step.YatirimOzeti" xml:space="preserve">
-    <value>Investment Summary - Budget, production, cost</value>
+    <value>Investment Summary Table</value>
   </data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
-    <value>8. Investment Summary</value>
+    <value>8. Investment Summary Table</value>
   </data>
   <data name="Basvuru.Step.CevreselSosyal" xml:space="preserve">
     <value>Environmental-Social - Annex V</value>
   </data>
   <data name="Basvuru.Section.CevreselSosyal.Title" xml:space="preserve">
-    <value>10. Environmental-Social</value>
+    <value>11. Environmental-Social</value>
   </data>
   <data name="Basvuru.Step.TaahhutBeyan" xml:space="preserve">
     <value>Commitment/Declaration - Declaration document</value>
   </data>
   <data name="Basvuru.Section.TaahhutBeyan.Title" xml:space="preserve">
-    <value>11. Commitment/Declaration</value>
+    <value>12. Commitment/Declaration</value>
   </data>
   <data name="Basvuru.Section.TaahhutBeyan.Description" xml:space="preserve">
     <value>The declaration and commitment document from the application guide annex is uploaded in this section.</value>
@@ -881,7 +881,7 @@
     <value>Summary - Pre-check</value>
   </data>
   <data name="Basvuru.Section.Ozet.Title" xml:space="preserve">
-    <value>12. Summary</value>
+    <value>13. Summary</value>
   </data>
   <data name="Basvuru.Section.Placeholder" xml:space="preserve">
     <value>This section has been separated according to the new form flow; field details will be added.</value>
@@ -1352,7 +1352,7 @@
     <value>Upload</value>
   </data>
   <data name="Basvuru.CevreselSosyal.Title" xml:space="preserve">
-    <value>10. Environmental and Social Data Form</value>
+    <value>11. Environmental and Social Data Form</value>
   </data>
   <data name="Basvuru.CevreselSosyal.Description" xml:space="preserve">
     <value>Prepared according to the new Annex V question set. The form opens only the relevant fields based on the nature of the investment; grey/out-of-scope cells in the document are not shown to the user.</value>
@@ -1877,4 +1877,14 @@
   <data name="ForgotPassword.InvalidData" xml:space="preserve"><value>Please check that your details are correct and try again.</value></data>
   <data name="ForgotPassword.Sent" xml:space="preserve"><value>A password reset link has been sent to your email address.</value></data>
   <data name="ForgotPassword.SendFailed" xml:space="preserve"><value>The password reset email could not be sent. Please try again later.</value></data>
+  <data name="Basvuru.Step.DbCtp" xml:space="preserve"><value>DB C-TP Technical Project</value></data>
+  <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve"><value>9. DB C-TP Technical Project</value></data>
+  <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve"><value>Enter the investment's technical overview, production and capacity data, input requirements, renewable energy, machinery-equipment, and building/structure lists.</value></data>
+  <data name="Basvuru.Summary.Error.DbCtpRequired" xml:space="preserve"><value>The DB C-TP Technical Project section must be completed.</value></data>
+  <data name="Basvuru.Summary.Error.DeclarationsRequired" xml:space="preserve"><value>All declarations in the commitment and declaration section must be accepted.</value></data>
+  <data name="Basvuru.Step.SystemResults" xml:space="preserve"><value>System Results</value></data>
+  <data name="Basvuru.Step.ExpertResults" xml:space="preserve"><value>Expert Results</value></data>
+  <data name="Basvuru.Step.Decision" xml:space="preserve"><value>Decision</value></data>
+  <data name="Basvuru.Review.SystemResultsNote" xml:space="preserve"><value>If no saved system result exists, this list is generated from the application data on first load. Saved results are shown thereafter.</value></data>
+  <data name="Basvuru.Review.ExpertResultsNote" xml:space="preserve"><value>Enter and save the expert assessment. The saved assessment is shown on subsequent visits.</value></data>
 </root>

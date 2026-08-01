@@ -9,6 +9,14 @@
 <section class="basvuru-panel active" data-panel="@((int)TarimDonusum.Models.enumBasvuruBolum.TaahhutBeyan)">
     <h2>@L["Basvuru.Section.TaahhutBeyan.Title"]</h2>
     <p class="lead">@L["Basvuru.Section.TaahhutBeyan.Description"]</p>
+    <input type="hidden" id="taahhutBeyanlarJson" value="@b.TaahhutBeyanlarJson" />
+
+    <div class="commitment-declarations">
+        <label><input id="dogrulukBeyani" type="checkbox" disabled="@ro" /> Başvuru bilgilerinin ve yüklenen belgelerin doğru ve eksiksiz olduğunu beyan ederim.</label>
+        <label><input id="cifteFinansmanBeyani" type="checkbox" disabled="@ro" /> Aynı yatırım veya aynı harcama kalemleri için çifte finansman bulunmadığını beyan ederim.</label>
+        <label><input id="bankaVeriPaylasimRizasi" type="checkbox" disabled="@ro" /> Ziraat Bankası ve ilgili finansal kurumlarla ön finansal/kambiyo uygunluk kontrolü için gerekli veri paylaşımına açık rıza verdiğimi kabul ederim.</label>
+        <label><input id="izlemeDenetimKabulu" type="checkbox" disabled="@ro" /> İzleme, raporlama, kontrol, denetim, yerinde inceleme ve belge doğrulama süreçlerini kabul ederim.</label>
+    </div>
 
     <div class="document-upload-box commitment-upload-box">
         <div class="commitment-file-line">

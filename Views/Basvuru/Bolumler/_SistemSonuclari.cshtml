@@ -1,0 +1,20 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+@{ var b = Model.Basvuru; bool duzenlenebilir = b.durum == enumBasvuruDurum.BasvuruDurumu; }
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.SistemSonuclari)" data-list-type="sistem" data-editable="@duzenlenebilir.ToString().ToLowerInvariant()">
+    <h2>@L["Basvuru.Step.SystemResults"]</h2>
+    <div class="alert alert-info">@L["Basvuru.Review.SystemResultsNote"]</div>
+    <input type="hidden" class="denetim-listesi-json" value="@b.SistemDenetimAnketi" />
+    <div class="table-responsive"><table class="table table-bordered denetim-listesi-table" style="table-layout:fixed; min-width:1200px;">
+        <colgroup>
+            <col style="width:5%" />
+            <col style="width:15%" />
+            <col style="width:27%" />
+            <col style="width:16%" />
+            <col style="width:10%" />
+            <col style="width:27%" />
+        </colgroup>
+        <thead><tr><th>No</th><th>Konu</th><th>Soru</th><th>Beklenen Belge / Kaynak</th><th>Sonuç</th><th>Açıklama / Not</th></tr></thead><tbody></tbody>
+    </table></div>
+</section>

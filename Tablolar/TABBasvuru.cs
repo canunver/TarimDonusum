@@ -66,6 +66,7 @@ namespace TarimDonusum.Tablolar
                     B.YatiriminAmaci,
                     B.PikkListesiJson,
                     B.YatirimOzetiJson,
+                    B.DbCtpTeknikProjeJson,
                     B.CevreselSosyalJson,
                     B.IrtibatKisi,
                     B.IrtibatUnvan,
@@ -88,7 +89,9 @@ namespace TarimDonusum.Tablolar
                     B.TaahhutDosyaAdi,
                     B.TaahhutDosyaId,
                     B.TaahhutAciklama,
+                    B.TaahhutBeyanlarJson,
                     B.DenetimAnketi,
+                    B.SistemDenetimAnketi,
                     B.DenetimGerekcesi,
                     B.DenetimSonucu,
 
@@ -336,6 +339,19 @@ namespace TarimDonusum.Tablolar
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task DbCtpTeknikProjeKaydetAsync(BasvuruDbCtpTeknikProje teknikProje)
+        {
+            const string sql = @"
+                UPDATE dbo.Basvuru
+                SET DbCtpTeknikProjeJson = @DbCtpTeknikProjeJson
+                WHERE Id = @Id;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@DbCtpTeknikProjeJson", DbNull(teknikProje.dbCtpTeknikProjeJson));
+            command.Parameters.AddWithValue("@Id", teknikProje.basvuruId);
+            await command.ExecuteNonQueryAsync();
+        }
+
         public async Task CevreselSosyalKaydetAsync(BasvuruCevreselSosyal cevreselSosyal)
         {
             const string sql = @"
@@ -506,6 +522,18 @@ namespace TarimDonusum.Tablolar
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task TaahhutBeyanlariKaydetAsync(BasvuruTaahhutBeyanlar beyanlar)
+        {
+            const string sql = @"
+                UPDATE dbo.Basvuru SET
+                    TaahhutBeyanlarJson = @TaahhutBeyanlarJson
+                WHERE Id = @Id;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@Id", beyanlar.basvuruId);
+            command.Parameters.AddWithValue("@TaahhutBeyanlarJson", DbNull(beyanlar.taahhutBeyanlarJson));
+            await command.ExecuteNonQueryAsync();
+        }
+
         public async Task<bool> IncelemeyeGonderAsync(int basvuruId)
         {
             const string sql = @"
@@ -527,8 +555,7 @@ namespace TarimDonusum.Tablolar
         {
             const string sql = @"
                 UPDATE B
-                SET B.DenetimAnketi = @DenetimAnketi,
-                    B.DenetimGerekcesi = @DenetimGerekcesi,
+                SET B.DenetimGerekcesi = @DenetimGerekcesi,
                     B.DenetimSonucu = @DenetimSonucu
                 FROM dbo.Basvuru B
                 INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
@@ -550,7 +577,6 @@ namespace TarimDonusum.Tablolar
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@BasvuruId", basvuru.Id);
-            command.Parameters.AddWithValue("@DenetimAnketi", DbNull(basvuru.DenetimAnketi));
             command.Parameters.AddWithValue("@DenetimGerekcesi", DbNull(basvuru.DenetimGerekcesi));
             command.Parameters.AddWithValue("@DenetimSonucu", (int)basvuru.DenetimSonucu!.Value);
             command.Parameters.AddWithValue("@MevcutDurum", (int)enumBasvuruDurum.BasvuruDurumu);
@@ -562,8 +588,7 @@ namespace TarimDonusum.Tablolar
         {
             const string sql = @"
                 UPDATE B
-                SET B.DenetimAnketi = @DenetimAnketi,
-                    B.DenetimGerekcesi = @DenetimGerekcesi,
+                SET B.DenetimGerekcesi = @DenetimGerekcesi,
                     B.DenetimSonucu = @DenetimSonucu
                 FROM dbo.Basvuru B
                 INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
@@ -572,13 +597,29 @@ namespace TarimDonusum.Tablolar
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@BasvuruId", basvuru.Id);
-            command.Parameters.AddWithValue("@DenetimAnketi", DbNull(basvuru.DenetimAnketi));
             command.Parameters.AddWithValue("@DenetimGerekcesi", DbNull(basvuru.DenetimGerekcesi));
             command.Parameters.AddWithValue("@DenetimSonucu",
                 basvuru.DenetimSonucu.HasValue && basvuru.DenetimSonucu != enumOnBasvuruDenetimSonucu.Tanimsiz
                     ? (int)basvuru.DenetimSonucu.Value
                     : DBNull.Value);
             command.Parameters.AddWithValue("@MevcutDurum", (int)enumBasvuruDurum.BasvuruDurumu);
+            return await command.ExecuteNonQueryAsync() == 1;
+        }
+
+        public async Task<bool> DenetimListesiKaydetAsync(int basvuruId, string json, bool sistemListesi)
+        {
+            string kolon = sistemListesi ? "SistemDenetimAnketi" : "DenetimAnketi";
+            string sql = $@"
+                UPDATE B SET B.{kolon} = @Json
+                FROM dbo.Basvuru B
+                INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
+                WHERE B.Id = @BasvuruId
+                  AND BA.Durum = @Durum
+                  AND B.SiraNo = 0;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@BasvuruId", basvuruId);
+            command.Parameters.AddWithValue("@Json", json);
+            command.Parameters.AddWithValue("@Durum", (int)enumBasvuruDurum.BasvuruDurumu);
             return await command.ExecuteNonQueryAsync() == 1;
         }
 
@@ -610,12 +651,12 @@ namespace TarimDonusum.Tablolar
                 FROM sys.columns
                 WHERE object_id = OBJECT_ID(N'dbo.Basvuru')
                   AND name NOT IN (N'Id', N'RevizyonNo', N'SiraNo',
-                                   N'DenetimAnketi', N'DenetimGerekcesi', N'DenetimSonucu');
+                                   N'DenetimAnketi', N'SistemDenetimAnketi', N'DenetimGerekcesi', N'DenetimSonucu');
 
                 SET @KopyalamaSql = N'
                     INSERT INTO dbo.Basvuru (' + @Kolonlar + N', RevizyonNo, SiraNo,
-                                             DenetimAnketi, DenetimGerekcesi, DenetimSonucu)
-                    SELECT ' + @Kolonlar + N', @RevizyonNo, 0, NULL, NULL, NULL
+                                             DenetimAnketi, SistemDenetimAnketi, DenetimGerekcesi, DenetimSonucu)
+                    SELECT ' + @Kolonlar + N', @RevizyonNo, 0, NULL, NULL, NULL, NULL
                     FROM dbo.Basvuru
                     WHERE Id = @KaynakId;
                     SET @YeniId = CONVERT(INT, SCOPE_IDENTITY());';
@@ -675,7 +716,7 @@ namespace TarimDonusum.Tablolar
         public async Task<Basvuru?> OnBasvuruDenetimBilgisiOkuAsync(int basvuruId)
         {
             const string sql = @"
-                SELECT B.DenetimAnketi, B.DenetimGerekcesi, B.DenetimSonucu
+                SELECT B.DenetimAnketi, B.SistemDenetimAnketi, B.DenetimGerekcesi, B.DenetimSonucu
                 FROM dbo.Basvuru B
                 INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
                 WHERE B.Id = @BasvuruId
@@ -689,12 +730,13 @@ namespace TarimDonusum.Tablolar
             if (!await reader.ReadAsync())
                 return null;
 
-            int? sonuc = NullOkuInt(reader, 2);
+            int? sonuc = NullOkuInt(reader, 3);
             return new Basvuru
             {
                 Id = basvuruId,
                 DenetimAnketi = NullOkuString(reader, 0) ?? "",
-                DenetimGerekcesi = NullOkuString(reader, 1) ?? "",
+                SistemDenetimAnketi = NullOkuString(reader, 1) ?? "",
+                DenetimGerekcesi = NullOkuString(reader, 2) ?? "",
                 DenetimSonucu = sonuc.HasValue ? (enumOnBasvuruDenetimSonucu)sonuc.Value : null
             };
         }
@@ -864,6 +906,8 @@ namespace TarimDonusum.Tablolar
             basvuru.uygunHarcama.pikkListesiJson = NullOkuString(reader, kol++);
             basvuru.yatirimOzeti.basvuruId = basvuru.Id;
             basvuru.yatirimOzeti.yatirimOzetiJson = NullOkuString(reader, kol++);
+            basvuru.dbCtpTeknikProje.basvuruId = basvuru.Id;
+            basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson = NullOkuString(reader, kol++);
             basvuru.cevreselSosyal.basvuruId = basvuru.Id;
             basvuru.cevreselSosyal.cevreselSosyalJson = NullOkuString(reader, kol++);
 
@@ -890,7 +934,9 @@ namespace TarimDonusum.Tablolar
             basvuru.TaahhutDosyaAdi = NullOkuString(reader, kol++) ?? "";
             basvuru.TaahhutDosyaId = NullOkuInt(reader, kol++);
             basvuru.TaahhutAciklama = NullOkuString(reader, kol++) ?? "";
+            basvuru.TaahhutBeyanlarJson = NullOkuString(reader, kol++) ?? "";
             basvuru.DenetimAnketi = NullOkuString(reader, kol++) ?? "";
+            basvuru.SistemDenetimAnketi = NullOkuString(reader, kol++) ?? "";
             basvuru.DenetimGerekcesi = NullOkuString(reader, kol++) ?? "";
             int? denetimSonucu = NullOkuInt(reader, kol++);
             basvuru.DenetimSonucu = denetimSonucu.HasValue

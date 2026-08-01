@@ -1,5 +1,6 @@
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @using TarimDonusum.Models
+@using System.Text.Json
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
@@ -9,18 +10,77 @@
         !string.IsNullOrWhiteSpace(b.DenetimGerekcesi) &&
         b.DenetimSonucu.HasValue &&
         b.DenetimSonucu != enumOnBasvuruDenetimSonucu.Tanimsiz;
+    int sistemToplam = 17, sistemCevaplanan = 0, sistemOlumsuz = 0;
+    int uzmanToplam = 76, uzmanCevaplanan = 0, uzmanHayir = 0;
+    try
+    {
+        using JsonDocument sistemBelgesi = JsonDocument.Parse(string.IsNullOrWhiteSpace(b.SistemDenetimAnketi) ? "[]" : b.SistemDenetimAnketi);
+        if (sistemBelgesi.RootElement.ValueKind == JsonValueKind.Array)
+        {
+            sistemToplam = sistemBelgesi.RootElement.GetArrayLength();
+            foreach (JsonElement satir in sistemBelgesi.RootElement.EnumerateArray())
+            {
+                string cevap = satir.TryGetProperty("sonuc", out JsonElement sonuc) ? sonuc.GetString() ?? "" : "";
+                if (!string.IsNullOrWhiteSpace(cevap)) sistemCevaplanan++;
+                if (string.Equals(cevap, "Eksik", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(cevap, "Hayır", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(cevap, "H", StringComparison.OrdinalIgnoreCase)) sistemOlumsuz++;
+            }
+        }
+    }
+    catch { }
+    try
+    {
+        using JsonDocument uzmanBelgesi = JsonDocument.Parse(string.IsNullOrWhiteSpace(b.DenetimAnketi) ? "[]" : b.DenetimAnketi);
+        if (uzmanBelgesi.RootElement.ValueKind == JsonValueKind.Array)
+        {
+            uzmanToplam = uzmanBelgesi.RootElement.GetArrayLength();
+            foreach (JsonElement satir in uzmanBelgesi.RootElement.EnumerateArray())
+            {
+                string cevap = satir.TryGetProperty("sonuc", out JsonElement sonuc) ? sonuc.GetString() ?? "" : "";
+                if (!string.IsNullOrWhiteSpace(cevap)) uzmanCevaplanan++;
+                if (string.Equals(cevap, "H", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(cevap, "Hayır", StringComparison.OrdinalIgnoreCase)) uzmanHayir++;
+            }
+        }
+    }
+    catch { }
 }
 
 <section class="basvuru-panel active"
-         data-panel="@((int)enumBasvuruBolum.Denetim)"
+         data-panel="@((int)enumBasvuruBolum.Karar)"
+         data-editable="@tamamlanabilir.ToString().ToLowerInvariant()"
          data-result-required="@L["Basvuru.Review.ResultRequired"]"
          data-fields-required="@L["Basvuru.Review.FieldsRequired"]"
          data-finalize-confirm="@L["Basvuru.Review.FinalizeConfirm"]">
-    <h2>@L["Basvuru.Review.Title"]</h2>
-    <div class="denetim-checklist-note">
-        @L["Basvuru.Review.ChecklistNote"]
+    <h2>@L["Basvuru.Step.Decision"]</h2>
+
+    <div class="row mb-4 text-center">
+        <div class="col-sm-6 col-xl-3 mb-3">
+            <div class="card h-100 border-info"><div class="card-body">
+                <div class="font-weight-bold">Tamlık Cevaplanan</div>
+                <div class="display-4 font-weight-bold text-info mt-2">@sistemCevaplanan/@sistemToplam</div>
+            </div></div>
+        </div>
+        <div class="col-sm-6 col-xl-3 mb-3">
+            <div class="card h-100 border-danger"><div class="card-body">
+                <div class="font-weight-bold">Tamlık Hayır</div>
+                <div class="display-4 font-weight-bold text-danger mt-2">@sistemOlumsuz</div>
+            </div></div>
+        </div>
+        <div class="col-sm-6 col-xl-3 mb-3">
+            <div class="card h-100 border-primary"><div class="card-body">
+                <div class="font-weight-bold">Uygunluk Cevaplanan</div>
+                <div class="display-4 font-weight-bold text-primary mt-2">@uzmanCevaplanan/@uzmanToplam</div>
+            </div></div>
+        </div>
+        <div class="col-sm-6 col-xl-3 mb-3">
+            <div class="card h-100 border-danger"><div class="card-body">
+                <div class="font-weight-bold">Uygunluk Hayır</div>
+                <div class="display-4 font-weight-bold text-danger mt-2">@uzmanHayir</div>
+            </div></div>
+        </div>
     </div>
-    <input id="denetimAnketi" type="hidden" value="@b.DenetimAnketi" />
 
     <div class="denetim-result-card">
         <label class="denetim-result-field">
@@ -46,7 +106,6 @@
     @if (tamamlanabilir)
     {
         <div class="denetim-actions">
-            <button type="button" id="denetimKaydetBtn" class="btn btn-outline-primary btn-lg">@L["Basvuru.Common.Save"]</button>
             <button type="button"
                     id="denetimSonuclandirBtn"
                     class="btn btn-success btn-lg @(!denetimKayitli ? "d-none" : "")"

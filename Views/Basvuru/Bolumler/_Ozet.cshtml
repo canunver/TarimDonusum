@@ -38,7 +38,7 @@
     decimal BudgetSatirToplami(JsonElement budgetData, string key)
     {
         if (budgetData.ValueKind != JsonValueKind.Object || !budgetData.TryGetProperty(key, out JsonElement row)) return 0;
-        return JsonDecimal(row, "t1") + JsonDecimal(row, "t2");
+        return JsonDecimal(row, "amount");
     }
 
     decimal yatirimButcesi = 0;
@@ -60,7 +60,7 @@
                 yatirimButcesi = BudgetSatirToplami(budgetData, "A1") + BudgetSatirToplami(budgetData, "A2") + BudgetSatirToplami(budgetData, "A3") + BudgetSatirToplami(budgetData, "A4")
                     + BudgetSatirToplami(budgetData, "B1") + BudgetSatirToplami(budgetData, "B2") + BudgetSatirToplami(budgetData, "B3") + BudgetSatirToplami(budgetData, "B4")
                     + BudgetSatirToplami(budgetData, "B5") + BudgetSatirToplami(budgetData, "B6") + BudgetSatirToplami(budgetData, "B7");
-                finansmanToplami = BudgetSatirToplami(budgetData, "D") + BudgetSatirToplami(budgetData, "E") + BudgetSatirToplami(budgetData, "F1") + BudgetSatirToplami(budgetData, "F2") + BudgetSatirToplami(budgetData, "G");
+                finansmanToplami = BudgetSatirToplami(budgetData, "D") + BudgetSatirToplami(budgetData, "E") + BudgetSatirToplami(budgetData, "F") + BudgetSatirToplami(budgetData, "G");
             }
 
             if (yillikIsletmeGideri == 0 && root.TryGetProperty("operatingExpenseRows", out JsonElement expenses) && expenses.ValueKind == JsonValueKind.Array)
@@ -161,6 +161,8 @@
     Eksikse(!b.ortaklik.bagliOrtakIsletmeVarMi.HasValue, R("Basvuru.Summary.Error.RelatedEnterpriseRequired"));
     Eksikse(b.ortaklik.ortaklar.Count > 0 && Math.Abs(ortaklikPayToplami - 100) > 0.01m, R("Basvuru.Summary.Error.ShareTotalRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.uygunHarcama.pikkListesiJson) && b.yatirim.harcamaTurleri.Any(x => x == 1 || x == 2), R("Basvuru.Summary.Error.PikkRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.dbCtpTeknikProje.dbCtpTeknikProjeJson), R("Basvuru.Summary.Error.DbCtpRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.TaahhutBeyanlarJson), R("Basvuru.Summary.Error.DeclarationsRequired"));
     Eksikse(string.IsNullOrWhiteSpace(rawYatirimOzeti), R("Basvuru.Summary.Error.InvestmentSummaryRequired"));
     Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.RequiredDocumentsRequired"));
     Eksikse(b.AdliSicilKisileri.Count == 0, R("Basvuru.Summary.Error.CriminalPeopleRequired"));

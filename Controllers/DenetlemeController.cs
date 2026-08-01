@@ -59,6 +59,7 @@ namespace TarimDonusum.Controllers
                     TempData["Mesaj"] = HataMesaji(sonuc, "Başvuru kaydı okunamadı.");
                     return RedirectToAction(nameof(Index));
                 }
+                _basvuruIsKurallari.DenetimListeleriniIlkDegerle(sonuc.nesne);
 
                 Sonuc<List<Donem>> donemSonuc = await _basvuruIsKurallari.DonemleriListeleAsync();
                 Sonuc<List<Il>> ilSonuc = await _basvuruIsKurallari.IlleriListeleAsync();
@@ -105,6 +106,17 @@ namespace TarimDonusum.Controllers
 
             Sonuc sonuc = await _basvuruIsKurallari.OnBasvuruDenetimiKaydetAsync(denetim, kullanici, sonuclandir);
             return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DenetimListesiKaydet([FromBody] DenetimListesiKayit model)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return Json(new { basarili = false, mesaj = "Oturum süresi doldu." });
+            if (BasvuruKullanicisiMi(kullanici)) return Forbid();
+            return Json(await _basvuruIsKurallari.DenetimListesiKaydetAsync(model, kullanici));
         }
 
         private static bool BasvuruKullanicisiMi(Kullanici? kullanici)

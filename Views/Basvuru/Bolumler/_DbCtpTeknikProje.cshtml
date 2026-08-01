@@ -1,0 +1,65 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+}
+
+<section class="basvuru-panel active" data-panel="@((int)TarimDonusum.Models.enumBasvuruBolum.DbCtpTeknikProje)">
+    <h2>@L["Basvuru.Section.DbCtp.Title"]</h2>
+    <p class="lead">@L["Basvuru.Section.DbCtp.Description"]</p>
+    <input type="hidden" id="dbCtpTeknikProjeJson" value="@b.dbCtpTeknikProje.dbCtpTeknikProjeJson" />
+    <input type="hidden" id="dbCtpAnaYatirimAdi" value="@b.yatirim.yatirimAdi" />
+    <input type="hidden" id="dbCtpAnaBasvuruSahibi" value="@b.basvuruFirma.firma.ticaretUnvani" />
+    <input type="hidden" id="dbCtpAnaYatirimAmaci" value="@b.yatirim.yatiriminAmaci" />
+
+    <div class="alert alert-warning">
+        Bu bölümdeki bilgiler; ana başvuru formu, yatırım özeti ve talep edilen harcama türleriyle tutarlı olmalıdır.
+    </div>
+
+    <div id="dbCtpSummaryCards" class="metric-grid yatirim-ozeti-metrics">
+        <div><span>Ürün/Kapasite satırı</span><strong id="dbCtpProductCount">0</strong></div>
+        <div><span>Makine-ekipman satırı</span><strong id="dbCtpMachineryCount">0</strong></div>
+        <div><span>Bina/yapı satırı</span><strong id="dbCtpBuildingCount">0</strong></div>
+        <div><span>Teknik proje durumu</span><strong id="dbCtpStatus">Eksik</strong></div>
+    </div>
+
+    <div class="yatirim-ozeti-section">
+        <h3>Tablo 1: Yatırıma Ait Ön Bilgiler</h3>
+        <div class="form-grid">
+            <label>Yatırımın adı<input id="dbCtpInvestmentName" readonly /></label>
+            <label>Başvuru sahibinin adı<input id="dbCtpApplicantName" readonly /></label>
+            <label>Teknik proje referansı / versiyon<input id="dbCtpVersion" disabled="@ro" /></label>
+        </div>
+        <label class="wide-label">Yatırımın amacı<textarea id="dbCtpInvestmentPurpose" readonly></textarea></label>
+    </div>
+
+    <div class="yatirim-ozeti-section">
+        <div class="section-toolbar"><h3>Mevcut İşletmede Üretilen Ürünler ve Yıllık Üretim/İşleme Kapasiteleri</h3><button type="button" class="btn btn-outline-primary" onclick="DbCtpSatirEkle('existingProducts')" disabled="@ro">Satır ekle</button></div>
+        <div id="dbCtpExistingProducts"></div>
+    </div>
+    <div class="yatirim-ozeti-section">
+        <div class="section-toolbar"><h3>Yatırım Sonrası Üretilecek Ürünler ve Yıllık Üretim/İşleme Kapasiteleri</h3><button type="button" class="btn btn-outline-primary" onclick="DbCtpSatirEkle('plannedProducts')" disabled="@ro">Satır ekle</button></div>
+        <div id="dbCtpPlannedProducts"></div>
+    </div>
+    <div class="yatirim-ozeti-section">
+        <div class="section-toolbar"><h3>Yatırım Sonrası Girdi Tedarik İhtiyacı</h3><button type="button" class="btn btn-outline-primary" onclick="DbCtpSatirEkle('inputs')" disabled="@ro">Satır ekle</button></div>
+        <div id="dbCtpInputs"></div>
+    </div>
+    <div class="yatirim-ozeti-section">
+        <h3>Yenilenebilir Enerji Bilgileri</h3>
+        <div class="section-toolbar"><h4>Panel ve karakteristik güç</h4><button type="button" class="btn btn-outline-primary" onclick="DbCtpSatirEkle('solarRows')" disabled="@ro">Satır ekle</button></div>
+        <div id="dbCtpSolarRows"></div>
+        <div class="section-toolbar mt-3"><h4>Kurulu güç</h4><button type="button" class="btn btn-outline-primary" onclick="DbCtpSatirEkle('installedRows')" disabled="@ro">Satır ekle</button></div>
+        <div id="dbCtpInstalledRows"></div>
+    </div>
+    <div class="yatirim-ozeti-section">
+        <div class="section-toolbar"><h3>Tablo 2: Üretim/Süreçte Yer Alan Makine-Ekipmanlar</h3><button type="button" class="btn btn-outline-primary" onclick="DbCtpSatirEkle('machineryRows')" disabled="@ro">Satır ekle</button></div>
+        <div id="dbCtpMachineryRows"></div>
+    </div>
+    <div class="yatirim-ozeti-section">
+        <div class="section-toolbar"><h3>Tablo 3: Mevcut-Yeni Bina/Yapı Listesi</h3><button type="button" class="btn btn-outline-primary" onclick="DbCtpSatirEkle('buildingRows')" disabled="@ro">Satır ekle</button></div>
+        <div id="dbCtpBuildingRows"></div>
+    </div>
+</section>

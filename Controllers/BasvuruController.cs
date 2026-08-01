@@ -127,6 +127,8 @@ namespace TarimDonusum.Controllers
                 }
 
                 BasvuruFormViewModel model = await FormViewModelHazirlaAsync(basvuru, kullanici);
+                if (model.DenetciGorunumu)
+                    _basvuruIsKurallari.DenetimListeleriniIlkDegerle(model.Basvuru);
                 BasvuruBolumTanim? bolumTanim = BasvuruBolumleri.Bul(bolum, model.DenetciGorunumu);
                 if (bolumTanim == null)
                     return BadRequest();
@@ -434,6 +436,30 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetDbCtpTeknikProje([FromBody] BasvuruDbCtpTeknikProje model)
+        {
+            Sonuc<int> sonuc;
+            try
+            {
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                    return RedirectToAction("Index", "Home");
+                sonuc = await _basvuruIsKurallari.KaydetDbCtpTeknikProjeAsync(model, kullanici);
+                if (sonuc.basarili)
+                    sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "DB C-TP Teknik Proje kaydet action tamamlanamadı.");
+                sonuc = new Sonuc<int>();
+                sonuc.HataEkle("Başvuru kaydedilemedi.");
+            }
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> KaydetCevreselSosyal([FromBody] BasvuruCevreselSosyal model)
         {
             Sonuc<int> sonuc;
@@ -575,6 +601,18 @@ namespace TarimDonusum.Controllers
                 sonuc.HataEkle("Doküman paketi yüklenemedi.");
             }
 
+            return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetTaahhutBeyanlari([FromBody] BasvuruTaahhutBeyanlar model)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return RedirectToAction("Index", "Home");
+            Sonuc<int> sonuc = await _basvuruIsKurallari.KaydetTaahhutBeyanlariAsync(model, kullanici);
+            if (sonuc.basarili) sonuc.mesaj = L["kayitBasarili"];
             return Json(sonuc);
         }
 

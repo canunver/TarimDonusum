@@ -223,6 +223,7 @@ namespace TarimDonusum.IsKurallari
                         DigerFinansmanKaynaklariAciklama NVARCHAR(MAX) NULL,
                         PikkListesiJson NVARCHAR(MAX) NULL,
                         YatirimOzetiJson NVARCHAR(MAX) NULL,
+                        DbCtpTeknikProjeJson NVARCHAR(MAX) NULL,
                         CevreselSosyalJson NVARCHAR(MAX) NULL,
                         IrtibatKisi NVARCHAR(150) NULL,
                         IrtibatUnvan NVARCHAR(100) NULL,
@@ -244,6 +245,7 @@ namespace TarimDonusum.IsKurallari
                         TaahhutDosyaAdi NVARCHAR(260) NULL,
                         TaahhutDosyaId INT NULL,
                         TaahhutAciklama NVARCHAR(1000) NULL,
+                        TaahhutBeyanlarJson NVARCHAR(MAX) NULL,
                         CONSTRAINT FK_Basvuru_BasvuruAna
                             FOREIGN KEY (BasvuruAnaId) REFERENCES dbo.BasvuruAna(Id)
                     );
@@ -553,6 +555,18 @@ namespace TarimDonusum.IsKurallari
                   UPDATE B SET SiraNo = S.YeniSiraNo
                   FROM dbo.Basvuru B
                   INNER JOIN Sirali S ON S.Id = B.Id;"),
+            new(30,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'DbCtpTeknikProjeJson') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD DbCtpTeknikProjeJson NVARCHAR(MAX) NULL;"),
+            new(31,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'TaahhutBeyanlarJson') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD TaahhutBeyanlarJson NVARCHAR(MAX) NULL;"),
+            new(32,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'TaahhutBeyanlarJson') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD TaahhutBeyanlarJson NVARCHAR(MAX) NULL;"),
+            new(33,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'SistemDenetimAnketi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD SistemDenetimAnketi NVARCHAR(MAX) NULL;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)
