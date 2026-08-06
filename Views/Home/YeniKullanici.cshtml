@@ -307,16 +307,16 @@
 
 @section Scripts {
     <script>
-        const txtParolaGuvenlikSeviyesi = "@L["YeniKullanici.ParolaGuvenlikSeviyesi"]";
-        const txtZayif = "@L["YeniKullanici.ParolaZayif"]";
-        const txtOrta = "@L["YeniKullanici.ParolaOrta"]";
-        const txtGuclu = "@L["YeniKullanici.ParolaGuclu"]";
-        const txtParolalarEslesiyor = "@L["YeniKullanici.ParolalarEslesiyor"]";
-        const txtParolalarEslesmiyor = "@L["YeniKullanici.ParolalarEslesmiyor"]";
-        const txtEpostaDogrulandi = "@L["YeniKullanici.EpostaDogrulandi"]";
-        const txtEpostaBekliyor = "@L["YeniKullanici.EpostaBekliyor"]";
-        const txtTelefonDogrulandi = "@L["YeniKullanici.TelefonDogrulandi"]";
-        const txtTelefonBekliyor = "@L["YeniKullanici.TelefonBekliyor"]";
+        const txtParolaGuvenlikSeviyesi = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.ParolaGuvenlikSeviyesi"].Value));
+        const txtZayif = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.ParolaZayif"].Value));
+        const txtOrta = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.ParolaOrta"].Value));
+        const txtGuclu = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.ParolaGuclu"].Value));
+        const txtParolalarEslesiyor = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.ParolalarEslesiyor"].Value));
+        const txtParolalarEslesmiyor = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.ParolalarEslesmiyor"].Value));
+        const txtEpostaDogrulandi = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.EpostaDogrulandi"].Value));
+        const txtEpostaBekliyor = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.EpostaBekliyor"].Value));
+        const txtTelefonDogrulandi = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.TelefonDogrulandi"].Value));
+        const txtTelefonBekliyor = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.TelefonBekliyor"].Value));
         let epostaDogrulandi = @epostaDogrulandi.ToString().ToLowerInvariant();
         let telefonDogrulandi = @telefonDogrulandi.ToString().ToLowerInvariant();
         const txtKodSuresiBitti = "Süre doldu";

@@ -2,8 +2,36 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TarimDonusum.Araclar
 {
+
+    public enum ENUMMetinEkleYon
+    {
+        SAG, SOL
+    }
+
     public static class OrtakFonksiyonlar
     {
+        public static Tablo NewTablo()
+        {
+            return new TabloAspose();
+        }
+
+        public static string CharEkle(string sGelen, char ekle, int uzunluk, ENUMMetinEkleYon yon, bool kirp)
+        {
+            int len = sGelen.Length;
+            if (len == uzunluk) return sGelen;
+            if (len > uzunluk) return sGelen.Substring(0, uzunluk);
+            if (yon == ENUMMetinEkleYon.SOL)
+                return sGelen.PadLeft(uzunluk, ekle);
+            else
+                return sGelen.PadRight(uzunluk, ekle);
+        }
+
+        public static string MetinYap(int iGelen, int uzunluk)
+        {
+            string tut = iGelen.ToString();
+            return CharEkle(tut, '0', uzunluk, ENUMMetinEkleYon.SOL, true);
+        }
+
         public static int Int32Yap(object? deger, int varsayilanDeger = 0)
         {
             if (deger == null || deger == DBNull.Value)
@@ -167,6 +195,11 @@ namespace TarimDonusum.Araclar
         private static bool OzelKarakterMi(char karakter)
         {
             return !char.IsLetterOrDigit(karakter);
+        }
+
+        internal static string ExcelTur()
+        {
+            return "xlsx";
         }
     }
 }

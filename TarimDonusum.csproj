@@ -13,13 +13,27 @@
     <PackageReference Include="Serilog.Sinks.EventLog" Version="4.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="SkiaSharp" Version="4.148.0" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="IsKurallari\" />
     <Folder Include="Logs\" />
+    <Folder Include="lib\" />
     <Folder Include="wwwroot\img\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Sablonlar\**\*" Exclude="Sablonlar\**\~$*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Aspose.Cells">
+      <HintPath>lib\Aspose.Cells.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
 
   <Target Name="CheckResourceEncoding" BeforeTargets="BeforeBuild">
     <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Araclar\CheckResourceEncoding.ps1&quot;" />

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using System.Globalization;
 using System.Reflection;
+using System.Text.Json;
 using TarimDonusum.Araclar;
 using TarimDonusum.FrameWork;
 using TarimDonusum.FrameWork.Logging;
@@ -13,14 +15,17 @@ namespace TarimDonusum.Controllers
     public class BasvuruController : BMYController
     {
         private readonly BasvuruIsKurallari _basvuruIsKurallari;
+        private readonly IWebHostEnvironment _environment;
 
         public BasvuruController(
             ILoggerFactory loggerFactory,
             IStringLocalizer<SharedResource> localizer,
-            BasvuruIsKurallari basvuruIsKurallari)
+            BasvuruIsKurallari basvuruIsKurallari,
+            IWebHostEnvironment environment)
             : base(loggerFactory, localizer)
         {
             _basvuruIsKurallari = basvuruIsKurallari;
+            _environment = environment;
         }
 
         [OturumKontrol]
@@ -96,6 +101,836 @@ namespace TarimDonusum.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
+
+        [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> ProjeButcesiYazdir(int id)
+        {
+            if (id <= 0)
+                return BadRequest("Proje bütçesi yazdırılmadan önce başvuru kaydedilmelidir.");
+
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Unauthorized();
+
+            Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
+            if (!sonuc.basarili || sonuc.nesne == null)
+                return NotFound(sonuc.hatalar.Count > 0 ? string.Join(" ", sonuc.hatalar) : "Başvuru bulunamadı.");
+
+            string sablonDosya = Path.Combine(_environment.ContentRootPath, "Sablonlar", "ProjeButcesi.xltx");
+            if (!System.IO.File.Exists(sablonDosya))
+                return NotFound("Proje bütçesi şablonu bulunamadı.");
+
+            string geciciDosya = Path.Combine(Path.GetTempPath(), $"proje-butcesi-{Guid.NewGuid():N}.xlsx");
+
+            try
+            {
+                Tablo tablo = OrtakFonksiyonlar.NewTablo();
+                tablo.DosyaAc(sablonDosya, geciciDosya);
+
+                Dictionary<string, decimal> tutarlar = ProjeButcesiTutarlari(sonuc.nesne.yatirimOzeti.yatirimOzetiJson);
+                Dictionary<string, int> satirlar = new()
+                {
+                    ["A1"] = 3, ["A2"] = 4, ["A3"] = 5, ["A4"] = 6,
+                    ["B1"] = 8, ["B2"] = 9, ["B3"] = 10, ["B4"] = 11,
+                    ["B5"] = 12, ["B6"] = 13, ["B7"] = 14,
+                    ["D"] = 16, ["E"] = 17, ["F"] = 18, ["G"] = 19
+                };
+
+                foreach ((string anahtar, int satir) in satirlar)
+                    tablo.HucreDegerYaz(satir, 8, tutarlar.GetValueOrDefault(anahtar));
+
+                tablo.HucreFormulYaz(20, 8, "ROUNDUP(SUM(I17:I20),2)");
+                tablo.CalculateFormula();
+                tablo.DosyaSaklaTamYol();
+                tablo.DosyaKapat();
+
+                byte[] dosyaIcerigi = System.IO.File.ReadAllBytes(geciciDosya);
+                return File(
+                    dosyaIcerigi,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"ProjeButcesi-{id}.xlsx");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(geciciDosya))
+                    System.IO.File.Delete(geciciDosya);
+            }
+        }
+
+        private static Dictionary<string, decimal> ProjeButcesiTutarlari(string? yatirimOzetiJson)
+        {
+            Dictionary<string, decimal> tutarlar = new(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(yatirimOzetiJson))
+                return tutarlar;
+
+            using JsonDocument belge = JsonDocument.Parse(yatirimOzetiJson);
+            if (!belge.RootElement.TryGetProperty("investmentBudgetData", out JsonElement butce) ||
+                butce.ValueKind != JsonValueKind.Object)
+                return tutarlar;
+
+            foreach (JsonProperty satir in butce.EnumerateObject())
+            {
+                if (satir.Value.ValueKind == JsonValueKind.Object &&
+                    satir.Value.TryGetProperty("amount", out JsonElement tutar))
+                    tutarlar[satir.Name] = ProjeButcesiTutari(tutar);
+            }
+
+            return tutarlar;
+        }
+
+        private static decimal ProjeButcesiTutari(JsonElement tutar)
+        {
+            if (tutar.ValueKind == JsonValueKind.Number && tutar.TryGetDecimal(out decimal sayi))
+                return sayi;
+
+            string metin = tutar.ValueKind == JsonValueKind.String ? tutar.GetString() ?? "" : "";
+            metin = metin.Replace("TL", "", StringComparison.OrdinalIgnoreCase).Trim();
+            if (decimal.TryParse(metin, NumberStyles.Any, CultureInfo.GetCultureInfo("tr-TR"), out sayi))
+                return sayi;
+            return decimal.TryParse(metin, NumberStyles.Any, CultureInfo.InvariantCulture, out sayi) ? sayi : 0;
+        }
+
+        [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> YatirimOzetiYazdir(int id)
+        {
+            if (id <= 0)
+                return BadRequest("Yatırım özeti yazdırılmadan önce başvuru kaydedilmelidir.");
+
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Unauthorized();
+
+            Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
+            if (!sonuc.basarili || sonuc.nesne == null)
+                return NotFound(sonuc.hatalar.Count > 0 ? string.Join(" ", sonuc.hatalar) : "Başvuru bulunamadı.");
+
+            string sablonDosya = Path.Combine(_environment.ContentRootPath, "Sablonlar", "YatirimOzeti.xltx");
+            if (!System.IO.File.Exists(sablonDosya))
+                return NotFound("Yatırım özeti şablonu bulunamadı.");
+
+            string geciciDosya = Path.Combine(Path.GetTempPath(), $"yatirim-ozeti-{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                Tablo tablo = OrtakFonksiyonlar.NewTablo();
+                tablo.DosyaAc(sablonDosya, geciciDosya);
+
+                int formatSheet = -1, formatSatir1 = -1, formatSutun1 = -1, formatSatir2 = -1, formatSutun2 = -1;
+                int hedefSheet = -1, hedefSatir = -1, hedefSutun = -1, hedefSatir2 = -1, hedefSutun2 = -1;
+                tablo.HucreAdAdresCoz("FormatSatir", ref formatSheet, ref formatSatir1, ref formatSutun1, ref formatSatir2, ref formatSutun2);
+                tablo.HucreAdAdresCoz("BaslaSatir", ref hedefSheet, ref hedefSatir, ref hedefSutun, ref hedefSatir2, ref hedefSutun2);
+
+                if (formatSheet < 0 || hedefSheet < 0)
+                    throw new InvalidOperationException("Yatırım özeti şablonunda FormatSatir veya BaslaSatir isimli bölgesi bulunamadı.");
+
+                const int urunSatirSayisi = 5;
+                const int urunSutunSayisi = 14;
+                formatSatir2 = Math.Max(formatSatir2, formatSatir1 + urunSatirSayisi - 1);
+                formatSutun2 = Math.Max(formatSutun2, formatSutun1 + urunSutunSayisi - 1);
+                tablo.AktifSheetDegistir(formatSheet);
+                double formatIlkSatirYuksekligi = tablo.SatirGercekYukseklikAl(formatSatir1);
+
+                List<YatirimOzetiUrunu> urunler = YatirimOzetiUrunleri(sonuc.nesne.yatirimOzeti.yatirimOzetiJson);
+                for (int urunNo = 0; urunNo < urunler.Count; urunNo++)
+                {
+                    int urunBaslangicSatiri = hedefSatir + (urunNo * urunSatirSayisi);
+                    tablo.HucreKopyala(
+                        formatSheet, formatSatir1, formatSutun1, formatSatir2, formatSutun2,
+                        hedefSheet, urunBaslangicSatiri, hedefSutun);
+
+                    tablo.AktifSheetDegistir(hedefSheet);
+                    tablo.SatirGercekYukseklikAyarla(urunBaslangicSatiri, urunBaslangicSatiri, formatIlkSatirYuksekligi);
+                    YatirimOzetiUrunu urun = urunler[urunNo];
+                    tablo.HucreDegerYaz(urunBaslangicSatiri, hedefSutun, urunNo + 1);
+                    tablo.HucreDegerYaz(urunBaslangicSatiri, hedefSutun + 1, urun.Ad);
+                    tablo.HucreDegerYaz(urunBaslangicSatiri, hedefSutun + 2, urun.Birim);
+
+                    string[] gostergeler = ["capacity", "production", "sales", "price"];
+                    for (int gostergeNo = 0; gostergeNo < gostergeler.Length; gostergeNo++)
+                    {
+                        List<decimal> degerler = urun.Veriler.GetValueOrDefault(gostergeler[gostergeNo]) ?? [];
+                        for (int yil = 0; yil < Math.Min(11, degerler.Count); yil++)
+                            tablo.HucreDegerYaz(urunBaslangicSatiri + gostergeNo + 1, hedefSutun + yil + 3, degerler[yil]);
+                    }
+                }
+
+                tablo.AktifSheetDegistir(formatSheet);
+                tablo.SatirSil(formatSatir1, formatSatir2);
+                tablo.DosyaSaklaTamYol();
+                tablo.DosyaKapat();
+                byte[] dosyaIcerigi = System.IO.File.ReadAllBytes(geciciDosya);
+                return File(
+                    dosyaIcerigi,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"YatirimOzeti-{id}.xlsx");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(geciciDosya))
+                    System.IO.File.Delete(geciciDosya);
+            }
+        }
+
+        private static List<YatirimOzetiUrunu> YatirimOzetiUrunleri(string? yatirimOzetiJson)
+        {
+            List<YatirimOzetiUrunu> urunler = [];
+            if (string.IsNullOrWhiteSpace(yatirimOzetiJson))
+                return urunler;
+
+            using JsonDocument belge = JsonDocument.Parse(yatirimOzetiJson);
+            if (!belge.RootElement.TryGetProperty("productionRows", out JsonElement satirlar) ||
+                satirlar.ValueKind != JsonValueKind.Array)
+                return urunler;
+
+            foreach (JsonElement satir in satirlar.EnumerateArray())
+            {
+                string ad = satir.TryGetProperty("name", out JsonElement adElement) ? adElement.GetString() ?? "" : "";
+                string birim = satir.TryGetProperty("unit", out JsonElement birimElement) ? birimElement.GetString() ?? "" : "";
+                Dictionary<string, List<decimal>> veriler = new(StringComparer.OrdinalIgnoreCase);
+
+                if (satir.TryGetProperty("data", out JsonElement veriElement) && veriElement.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (string gosterge in new[] { "capacity", "production", "sales", "price" })
+                    {
+                        List<decimal> degerler = [];
+                        if (veriElement.TryGetProperty(gosterge, out JsonElement dizi) && dizi.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (JsonElement deger in dizi.EnumerateArray())
+                                degerler.Add(ProjeButcesiTutari(deger));
+                        }
+                        veriler[gosterge] = degerler;
+                    }
+                }
+
+                urunler.Add(new YatirimOzetiUrunu(ad, birim, veriler));
+            }
+
+            return urunler;
+        }
+
+        private sealed record YatirimOzetiUrunu(
+            string Ad,
+            string Birim,
+            Dictionary<string, List<decimal>> Veriler);
+
+        [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> IsletmeGideriYazdir(int id)
+        {
+            if (id <= 0)
+                return BadRequest("İşletme giderleri yazdırılmadan önce başvuru kaydedilmelidir.");
+
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Unauthorized();
+
+            Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
+            if (!sonuc.basarili || sonuc.nesne == null)
+                return NotFound(sonuc.hatalar.Count > 0 ? string.Join(" ", sonuc.hatalar) : "Başvuru bulunamadı.");
+
+            string sablonDosya = Path.Combine(_environment.ContentRootPath, "Sablonlar", "IsletmeGideri.xltx");
+            if (!System.IO.File.Exists(sablonDosya))
+                return NotFound("İşletme gideri şablonu bulunamadı.");
+
+            string geciciDosya = Path.Combine(Path.GetTempPath(), $"isletme-giderleri-{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                Tablo tablo = OrtakFonksiyonlar.NewTablo();
+                tablo.DosyaAc(sablonDosya, geciciDosya);
+
+                int formatSheet = -1, formatSatir = -1, formatSutun = -1, formatSatir2 = -1, formatSutun2 = -1;
+                int hedefSheet = -1, hedefSatir = -1, hedefSutun = -1, hedefSatir2 = -1, hedefSutun2 = -1;
+                tablo.HucreAdAdresCoz("FormatSatir", ref formatSheet, ref formatSatir, ref formatSutun, ref formatSatir2, ref formatSutun2);
+                tablo.HucreAdAdresCoz("BaslaSatir", ref hedefSheet, ref hedefSatir, ref hedefSutun, ref hedefSatir2, ref hedefSutun2);
+                if (formatSheet < 0 || hedefSheet < 0)
+                    throw new InvalidOperationException("İşletme gideri şablonunda FormatSatir veya BaslaSatir isimli bölgesi bulunamadı.");
+
+                const int sonSutunOfseti = 11;
+                tablo.AktifSheetDegistir(formatSheet);
+                double[] formatYukseklikleri =
+                [
+                    tablo.SatirGercekYukseklikAl(formatSatir),
+                    tablo.SatirGercekYukseklikAl(formatSatir + 1),
+                    tablo.SatirGercekYukseklikAl(formatSatir + 2)
+                ];
+
+                List<IsletmeGideriSatiri> giderler = IsletmeGiderleri(sonuc.nesne.yatirimOzeti.yatirimOzetiJson);
+                decimal genelToplam = giderler.Sum(x => x.Toplam);
+                decimal genelSabit = giderler.Sum(x => x.SabitTutar);
+                decimal genelDegisken = giderler.Sum(x => x.DegiskenTutar);
+                int yazilacakSatir = hedefSatir;
+
+                foreach (IGrouping<string, IsletmeGideriSatiri> grup in giderler.GroupBy(x => x.Grup))
+                {
+                    decimal grupToplam = grup.Sum(x => x.Toplam);
+                    decimal grupSabit = grup.Sum(x => x.SabitTutar);
+                    decimal grupDegisken = grup.Sum(x => x.DegiskenTutar);
+                    decimal grupPayi = genelToplam == 0 ? 0 : grupToplam / genelToplam * 100;
+
+                    IsletmeGideriFormatSatiriKopyala(tablo, formatSheet, formatSatir, formatSutun, hedefSheet, yazilacakSatir, hedefSutun, sonSutunOfseti, formatYukseklikleri[0]);
+                    tablo.AktifSheetDegistir(hedefSheet);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 1, grup.Key);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 5, grupToplam);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 8, grupPayi);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 9, grupSabit);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 10, grupDegisken);
+                    yazilacakSatir++;
+
+                    foreach (IsletmeGideriSatiri gider in grup)
+                    {
+                        IsletmeGideriFormatSatiriKopyala(tablo, formatSheet, formatSatir + 1, formatSutun, hedefSheet, yazilacakSatir, hedefSutun, sonSutunOfseti, formatYukseklikleri[1]);
+                        tablo.AktifSheetDegistir(hedefSheet);
+                        tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 1, gider.Unsur);
+                        tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 2, gider.Miktar);
+                        tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 3, gider.Birim);
+                        tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 4, gider.BirimFiyat);
+                        tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 5, gider.Toplam);
+                        tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 6, gider.SabitYuzde);
+                        tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 7, gider.DegiskenYuzde);
+                        tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 8, genelToplam == 0 ? 0 : gider.Toplam / genelToplam * 100);
+                        tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 9, gider.SabitTutar);
+                        tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 10, gider.DegiskenTutar);
+                        yazilacakSatir++;
+                    }
+                }
+
+                IsletmeGideriFormatSatiriKopyala(tablo, formatSheet, formatSatir + 2, formatSutun, hedefSheet, yazilacakSatir, hedefSutun, sonSutunOfseti, formatYukseklikleri[2]);
+                tablo.AktifSheetDegistir(hedefSheet);
+                tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 1, "TOPLAM İŞLETME GİDERLERİ");
+                tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 5, genelToplam);
+                tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 8, genelToplam == 0 ? 0 : 100);
+                tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 9, genelSabit);
+                tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 10, genelDegisken);
+
+                tablo.AktifSheetDegistir(formatSheet);
+                tablo.SatirSil(formatSatir, formatSatir + 2);
+                tablo.DosyaSaklaTamYol();
+                tablo.DosyaKapat();
+
+                byte[] dosyaIcerigi = System.IO.File.ReadAllBytes(geciciDosya);
+                return File(
+                    dosyaIcerigi,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"IsletmeGiderleri-{id}.xlsx");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(geciciDosya))
+                    System.IO.File.Delete(geciciDosya);
+            }
+        }
+
+        private static void IsletmeGideriFormatSatiriKopyala(
+            Tablo tablo, int kaynakSheet, int kaynakSatir, int kaynakSutun,
+            int hedefSheet, int hedefSatir, int hedefSutun, int sonSutunOfseti, double yukseklik)
+        {
+            tablo.HucreKopyala(
+                kaynakSheet, kaynakSatir, kaynakSutun, kaynakSatir, kaynakSutun + sonSutunOfseti,
+                hedefSheet, hedefSatir, hedefSutun);
+            tablo.AktifSheetDegistir(hedefSheet);
+            tablo.SatirGercekYukseklikAyarla(hedefSatir, hedefSatir, yukseklik);
+        }
+
+        private static List<IsletmeGideriSatiri> IsletmeGiderleri(string? yatirimOzetiJson)
+        {
+            List<IsletmeGideriSatiri> giderler = [];
+            if (string.IsNullOrWhiteSpace(yatirimOzetiJson))
+                return giderler;
+
+            using JsonDocument belge = JsonDocument.Parse(yatirimOzetiJson);
+            if (!belge.RootElement.TryGetProperty("operatingExpenseRows", out JsonElement satirlar) ||
+                satirlar.ValueKind != JsonValueKind.Array)
+                return giderler;
+
+            foreach (JsonElement satir in satirlar.EnumerateArray())
+            {
+                string grup = JsonMetin(satir, "group");
+                string unsur = JsonMetin(satir, "item");
+                decimal miktar = JsonSayi(satir, "qty");
+                string birim = JsonMetin(satir, "unit");
+                decimal birimFiyat = JsonSayi(satir, "unitPrice");
+                decimal sabitYuzde = JsonSayi(satir, "fixedPct");
+                decimal degiskenYuzde = JsonSayi(satir, "variablePct");
+                decimal toplam = miktar * birimFiyat;
+
+                giderler.Add(new IsletmeGideriSatiri(
+                    grup, unsur, miktar, birim, birimFiyat, toplam,
+                    sabitYuzde, degiskenYuzde,
+                    toplam * sabitYuzde / 100,
+                    toplam * degiskenYuzde / 100));
+            }
+
+            return giderler;
+        }
+
+        private static string JsonMetin(JsonElement nesne, string alan)
+        {
+            return nesne.TryGetProperty(alan, out JsonElement deger) && deger.ValueKind == JsonValueKind.String
+                ? deger.GetString() ?? ""
+                : "";
+        }
+
+        private static decimal JsonSayi(JsonElement nesne, string alan)
+        {
+            return nesne.TryGetProperty(alan, out JsonElement deger) ? ProjeButcesiTutari(deger) : 0;
+        }
+
+        private sealed record IsletmeGideriSatiri(
+            string Grup,
+            string Unsur,
+            decimal Miktar,
+            string Birim,
+            decimal BirimFiyat,
+            decimal Toplam,
+            decimal SabitYuzde,
+            decimal DegiskenYuzde,
+            decimal SabitTutar,
+            decimal DegiskenTutar);
+
+        [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> OnBasvuruTamlikYazdir(int id)
+        {
+            if (id <= 0)
+                return BadRequest("Tamlık kontrolü yazdırılmadan önce başvuru kaydedilmelidir.");
+
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Unauthorized();
+
+            Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
+            if (!sonuc.basarili || sonuc.nesne == null)
+                return NotFound(sonuc.hatalar.Count > 0 ? string.Join(" ", sonuc.hatalar) : "Başvuru bulunamadı.");
+
+            Basvuru basvuru = sonuc.nesne;
+            _basvuruIsKurallari.DenetimListeleriniIlkDegerle(basvuru);
+            List<TamlikKontrolSatiri> kontrolSatirlari = TamlikKontrolSatirlari(basvuru.SistemDenetimAnketi);
+
+            string sablonDosya = Path.Combine(_environment.ContentRootPath, "Sablonlar", "OnBasvuruTamlik.xltx");
+            if (!System.IO.File.Exists(sablonDosya))
+                return NotFound("Ön başvuru tamlık kontrolü şablonu bulunamadı.");
+
+            string geciciDosya = Path.Combine(Path.GetTempPath(), $"on-basvuru-tamlik-{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                Tablo tablo = OrtakFonksiyonlar.NewTablo();
+                tablo.DosyaAc(sablonDosya, geciciDosya);
+
+                int formatSheet = -1, formatSatir = -1, formatSutun = -1, formatSatir2 = -1, formatSutun2 = -1;
+                int hedefSheet = -1, hedefSatir = -1, hedefSutun = -1, hedefSatir2 = -1, hedefSutun2 = -1;
+                tablo.HucreAdAdresCoz("FormatSatir", ref formatSheet, ref formatSatir, ref formatSutun, ref formatSatir2, ref formatSutun2);
+                tablo.HucreAdAdresCoz("BaslaSatir", ref hedefSheet, ref hedefSatir, ref hedefSutun, ref hedefSatir2, ref hedefSutun2);
+                if (formatSheet < 0 || hedefSheet < 0)
+                    throw new InvalidOperationException("Tamlık kontrolü şablonunda FormatSatir veya BaslaSatir isimli bölgesi bulunamadı.");
+
+                tablo.AktifSheetDegistir(formatSheet);
+                int formatMinimumYuksekligi = tablo.SatirYukseklikAl(formatSatir);
+
+                for (int index = 0; index < kontrolSatirlari.Count; index++)
+                {
+                    int yazilacakSatir = hedefSatir + index;
+                    tablo.HucreKopyala(
+                        formatSheet, formatSatir, formatSutun, formatSatir, formatSutun + 5,
+                        hedefSheet, yazilacakSatir, hedefSutun);
+
+                    tablo.AktifSheetDegistir(hedefSheet);
+                    TamlikKontrolSatiri kontrol = kontrolSatirlari[index];
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun, kontrol.No);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 1, kontrol.Konu);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 2, kontrol.Soru);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 3, kontrol.Kaynak);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 4, kontrol.Sonuc);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 5, kontrol.Aciklama);
+                    tablo.SatirYukseklikAyarla(yazilacakSatir, yazilacakSatir, -1, 0, formatMinimumYuksekligi);
+                }
+
+                tablo.AktifSheetDegistir(formatSheet);
+                tablo.SatirSil(formatSatir, formatSatir);
+                tablo.DosyaSaklaTamYol();
+                tablo.DosyaKapat();
+
+                byte[] dosyaIcerigi = System.IO.File.ReadAllBytes(geciciDosya);
+                return File(
+                    dosyaIcerigi,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"OnBasvuruTamlik-{id}.xlsx");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(geciciDosya))
+                    System.IO.File.Delete(geciciDosya);
+            }
+        }
+
+        private static List<TamlikKontrolSatiri> TamlikKontrolSatirlari(string? json)
+        {
+            List<TamlikKontrolSatiri> satirlar = [];
+            if (string.IsNullOrWhiteSpace(json))
+                return satirlar;
+
+            using JsonDocument belge = JsonDocument.Parse(json);
+            if (belge.RootElement.ValueKind != JsonValueKind.Array)
+                return satirlar;
+
+            foreach (JsonElement satir in belge.RootElement.EnumerateArray())
+            {
+                int no = satir.TryGetProperty("no", out JsonElement noElement) && noElement.TryGetInt32(out int deger) ? deger : 0;
+                string sonuc = JsonMetin(satir, "sonuc");
+                satirlar.Add(new TamlikKontrolSatiri(
+                    no,
+                    JsonMetin(satir, "konu"),
+                    JsonMetin(satir, "soru"),
+                    JsonMetin(satir, "kaynak"),
+                    string.Equals(sonuc, "Tam", StringComparison.OrdinalIgnoreCase) ? "E" : "H",
+                    JsonMetin(satir, "aciklama")));
+            }
+
+            return satirlar;
+        }
+
+        private sealed record TamlikKontrolSatiri(
+            int No,
+            string Konu,
+            string Soru,
+            string Kaynak,
+            string Sonuc,
+            string Aciklama);
+
+        [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> OnBasvuruUygunlukYazdir(int id)
+        {
+            if (id <= 0)
+                return BadRequest("Uygunluk kontrolü yazdırılmadan önce başvuru kaydedilmelidir.");
+
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Unauthorized();
+
+            Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
+            if (!sonuc.basarili || sonuc.nesne == null)
+                return NotFound(sonuc.hatalar.Count > 0 ? string.Join(" ", sonuc.hatalar) : "Başvuru bulunamadı.");
+
+            Basvuru basvuru = sonuc.nesne;
+            _basvuruIsKurallari.DenetimListeleriniIlkDegerle(basvuru);
+            List<TamlikKontrolSatiri> kontrolSatirlari = UygunlukKontrolSatirlari(basvuru.DenetimAnketi);
+
+            string sablonDosya = Path.Combine(_environment.ContentRootPath, "Sablonlar", "OnBasvuruUygunluk.xltx");
+            if (!System.IO.File.Exists(sablonDosya))
+                return NotFound("Ön başvuru uygunluk kontrolü şablonu bulunamadı.");
+
+            string geciciDosya = Path.Combine(Path.GetTempPath(), $"on-basvuru-uygunluk-{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                Tablo tablo = OrtakFonksiyonlar.NewTablo();
+                tablo.DosyaAc(sablonDosya, geciciDosya);
+
+                int formatSheet = -1, formatSatir = -1, formatSutun = -1, formatSatir2 = -1, formatSutun2 = -1;
+                int hedefSheet = -1, hedefSatir = -1, hedefSutun = -1, hedefSatir2 = -1, hedefSutun2 = -1;
+                tablo.HucreAdAdresCoz("FormatSatir", ref formatSheet, ref formatSatir, ref formatSutun, ref formatSatir2, ref formatSutun2);
+                tablo.HucreAdAdresCoz("BaslaSatir", ref hedefSheet, ref hedefSatir, ref hedefSutun, ref hedefSatir2, ref hedefSutun2);
+                if (formatSheet < 0 || hedefSheet < 0)
+                    throw new InvalidOperationException("Uygunluk kontrolü şablonunda FormatSatir veya BaslaSatir isimli bölgesi bulunamadı.");
+
+                tablo.AktifSheetDegistir(formatSheet);
+                int formatMinimumYuksekligi = tablo.SatirYukseklikAl(formatSatir);
+
+                for (int index = 0; index < kontrolSatirlari.Count; index++)
+                {
+                    int yazilacakSatir = hedefSatir + index;
+                    tablo.HucreKopyala(
+                        formatSheet, formatSatir, formatSutun, formatSatir, formatSutun + 5,
+                        hedefSheet, yazilacakSatir, hedefSutun);
+
+                    tablo.AktifSheetDegistir(hedefSheet);
+                    TamlikKontrolSatiri kontrol = kontrolSatirlari[index];
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun, kontrol.No);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 1, kontrol.Konu);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 2, kontrol.Soru);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 3, kontrol.Kaynak);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 4, kontrol.Sonuc);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 5, kontrol.Aciklama);
+                    tablo.SatirYukseklikAyarla(yazilacakSatir, yazilacakSatir, -1, 0, formatMinimumYuksekligi);
+                }
+
+                tablo.AktifSheetDegistir(formatSheet);
+                tablo.SatirSil(formatSatir, formatSatir);
+                tablo.DosyaSaklaTamYol();
+                tablo.DosyaKapat();
+
+                byte[] dosyaIcerigi = System.IO.File.ReadAllBytes(geciciDosya);
+                return File(
+                    dosyaIcerigi,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"OnBasvuruUygunluk-{id}.xlsx");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(geciciDosya))
+                    System.IO.File.Delete(geciciDosya);
+            }
+        }
+
+        private static List<TamlikKontrolSatiri> UygunlukKontrolSatirlari(string? json)
+        {
+            List<TamlikKontrolSatiri> satirlar = [];
+            if (string.IsNullOrWhiteSpace(json))
+                return satirlar;
+
+            using JsonDocument belge = JsonDocument.Parse(json);
+            if (belge.RootElement.ValueKind != JsonValueKind.Array)
+                return satirlar;
+
+            foreach (JsonElement satir in belge.RootElement.EnumerateArray())
+            {
+                int no = satir.TryGetProperty("no", out JsonElement noElement) && noElement.TryGetInt32(out int deger) ? deger : 0;
+                satirlar.Add(new TamlikKontrolSatiri(
+                    no,
+                    JsonMetin(satir, "konu"),
+                    JsonMetin(satir, "soru"),
+                    JsonMetin(satir, "kaynak"),
+                    JsonMetin(satir, "sonuc"),
+                    JsonMetin(satir, "aciklama")));
+            }
+
+            return satirlar;
+        }
+
+        [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> OnBilgilerYazdir(int id)
+        {
+            if (id <= 0)
+                return BadRequest("Ön bilgiler yazdırılmadan önce başvuru kaydedilmelidir.");
+
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Unauthorized();
+
+            Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
+            if (!sonuc.basarili || sonuc.nesne == null)
+                return NotFound(sonuc.hatalar.Count > 0 ? string.Join(" ", sonuc.hatalar) : "Başvuru bulunamadı.");
+
+            string sablonDosya = Path.Combine(_environment.ContentRootPath, "Sablonlar", "OnBilgiler.xltx");
+            if (!System.IO.File.Exists(sablonDosya))
+                return NotFound("Ön bilgiler şablonu bulunamadı.");
+
+            string geciciDosya = Path.Combine(Path.GetTempPath(), $"on-bilgiler-{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                Tablo tablo = OrtakFonksiyonlar.NewTablo();
+                tablo.DosyaAc(sablonDosya, geciciDosya);
+
+                Basvuru basvuru = sonuc.nesne;
+                tablo.HucreAdBulYaz("YatrimAd", basvuru.yatirim.yatirimAdi ?? "");
+                tablo.HucreAdBulYaz("SahipAd", basvuru.basvuruFirma.firma.ticaretUnvani ?? "");
+                tablo.HucreAdBulYaz("YatirimAmaci", basvuru.yatirim.yatiriminAmaci ?? "");
+
+                using JsonDocument belge = JsonDocument.Parse(
+                    string.IsNullOrWhiteSpace(basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson)
+                        ? "{}"
+                        : basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson);
+                JsonElement kok = belge.RootElement;
+
+                OnBilgiListesiYaz(tablo, kok, "existingProducts", "BaslaSatirMevcut", ["product", "capacity"]);
+                OnBilgiListesiYaz(tablo, kok, "plannedProducts", "BaslaSatirUretilecek", ["product", "capacity"]);
+                OnBilgiListesiYaz(tablo, kok, "inputs", "BaslaSatirGirdiler", ["input", "need"]);
+                OnBilgiListesiYaz(tablo, kok, "solarRows", "BaslaSatirEnerjiSayi", ["type", "panels", "panelPower", "totalPower"]);
+                OnBilgiListesiYaz(tablo, kok, "installedRows", "BaslaSatirEnerjiGuc", ["type", "power"]);
+
+                tablo.DosyaSaklaTamYol();
+                tablo.DosyaKapat();
+
+                byte[] dosyaIcerigi = System.IO.File.ReadAllBytes(geciciDosya);
+                return File(
+                    dosyaIcerigi,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"OnBilgiler-{id}.xlsx");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(geciciDosya))
+                    System.IO.File.Delete(geciciDosya);
+            }
+        }
+
+        private static void OnBilgiListesiYaz(
+            Tablo tablo,
+            JsonElement kok,
+            string listeAlani,
+            string baslangicBolgesi,
+            string[] alanlar)
+        {
+            List<string[]> satirlar = [];
+            if (kok.ValueKind == JsonValueKind.Object &&
+                kok.TryGetProperty(listeAlani, out JsonElement liste) &&
+                liste.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement kayit in liste.EnumerateArray())
+                {
+                    string[] degerler = alanlar.Select(alan => JsonDegerMetni(kayit, alan)).ToArray();
+                    if (degerler.Any(deger => !string.IsNullOrWhiteSpace(deger)))
+                        satirlar.Add(degerler);
+                }
+            }
+
+            if (satirlar.Count == 0)
+                return;
+
+            int sheetNo = -1, baslaSatir = -1, baslaSutun = -1, satir2 = -1, sutun2 = -1;
+            tablo.HucreAdAdresCoz(baslangicBolgesi, ref sheetNo, ref baslaSatir, ref baslaSutun, ref satir2, ref sutun2);
+            if (sheetNo < 0)
+                throw new InvalidOperationException($"Ön bilgiler şablonunda {baslangicBolgesi} isimli bölgesi bulunamadı.");
+
+            tablo.AktifSheetDegistir(sheetNo);
+            double formatYuksekligi = tablo.SatirGercekYukseklikAl(baslaSatir);
+
+            for (int index = 0; index < satirlar.Count; index++)
+            {
+                int hedefSatir = baslaSatir + index;
+                if (index > 0)
+                {
+                    tablo.SatirAc(sheetNo, hedefSatir, 1);
+                    tablo.HucreKopyala(
+                        sheetNo, baslaSatir, baslaSutun, baslaSatir, baslaSutun + 3,
+                        sheetNo, hedefSatir, baslaSutun);
+                    tablo.SatirGercekYukseklikAyarla(hedefSatir, hedefSatir, formatYuksekligi);
+                }
+
+                string[] degerler = satirlar[index];
+                for (int sutun = 0; sutun < degerler.Length; sutun++)
+                    tablo.HucreDegerYaz(hedefSatir, baslaSutun + sutun, degerler[sutun]);
+            }
+        }
+
+        private static string JsonDegerMetni(JsonElement nesne, string alan)
+        {
+            if (!nesne.TryGetProperty(alan, out JsonElement deger))
+                return "";
+
+            return deger.ValueKind switch
+            {
+                JsonValueKind.String => deger.GetString() ?? "",
+                JsonValueKind.Number => deger.GetRawText(),
+                JsonValueKind.True => "Evet",
+                JsonValueKind.False => "Hayır",
+                _ => ""
+            };
+        }
+
+        [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> MakineEkipmanYazdir(int id)
+        {
+            if (id <= 0)
+                return BadRequest("Makine-ekipman raporu yazdırılmadan önce başvuru kaydedilmelidir.");
+
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Unauthorized();
+
+            Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
+            if (!sonuc.basarili || sonuc.nesne == null)
+                return NotFound(sonuc.hatalar.Count > 0 ? string.Join(" ", sonuc.hatalar) : "Başvuru bulunamadı.");
+
+            string sablonDosya = Path.Combine(_environment.ContentRootPath, "Sablonlar", "MakineEkipman.xltx");
+            if (!System.IO.File.Exists(sablonDosya))
+                return NotFound("Makine-ekipman şablonu bulunamadı.");
+
+            List<MakineEkipmanSatiri> makineler = MakineEkipmanSatirlari(
+                sonuc.nesne.dbCtpTeknikProje.dbCtpTeknikProjeJson);
+            string geciciDosya = Path.Combine(Path.GetTempPath(), $"makine-ekipman-{Guid.NewGuid():N}.xlsx");
+
+            try
+            {
+                Tablo tablo = OrtakFonksiyonlar.NewTablo();
+                tablo.DosyaAc(sablonDosya, geciciDosya);
+
+                int formatSheet = -1, formatSatir = -1, formatSutun = -1, formatSatir2 = -1, formatSutun2 = -1;
+                int hedefSheet = -1, hedefSatir = -1, hedefSutun = -1, hedefSatir2 = -1, hedefSutun2 = -1;
+                tablo.HucreAdAdresCoz("FormatSatir", ref formatSheet, ref formatSatir, ref formatSutun, ref formatSatir2, ref formatSutun2);
+                tablo.HucreAdAdresCoz("BaslaSatir", ref hedefSheet, ref hedefSatir, ref hedefSutun, ref hedefSatir2, ref hedefSutun2);
+                if (formatSheet < 0 || hedefSheet < 0)
+                    throw new InvalidOperationException("Makine-ekipman şablonunda FormatSatir veya BaslaSatir isimli bölgesi bulunamadı.");
+
+                tablo.AktifSheetDegistir(formatSheet);
+                int formatMinimumYuksekligi = tablo.SatirYukseklikAl(formatSatir);
+
+                for (int index = 0; index < makineler.Count; index++)
+                {
+                    int yazilacakSatir = hedefSatir + index;
+                    tablo.HucreKopyala(
+                        formatSheet, formatSatir, formatSutun, formatSatir, formatSutun + 9,
+                        hedefSheet, yazilacakSatir, hedefSutun);
+
+                    tablo.AktifSheetDegistir(hedefSheet);
+                    MakineEkipmanSatiri makine = makineler[index];
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun, index + 1);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 1, makine.Ad);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 2, makine.Adet);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 3, makine.KullanimAmaci);
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 4, makine.Durum == "Mevcut" ? "X" : "");
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 5, makine.Durum == "Yeni" ? "X" : "");
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 6, makine.YatirimdaKullanilacak == "Evet" ? "X" : "");
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 7, makine.YatirimdaKullanilacak == "Hayır" ? "X" : "");
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 8, makine.DestekTalebi == "Evet" ? "X" : "");
+                    tablo.HucreDegerYaz(yazilacakSatir, hedefSutun + 9, makine.DestekTalebi == "Hayır" ? "X" : "");
+                    tablo.SatirYukseklikAyarla(yazilacakSatir, yazilacakSatir, -1, 0, formatMinimumYuksekligi);
+                }
+
+                tablo.AktifSheetDegistir(formatSheet);
+                tablo.SatirSil(formatSatir, formatSatir);
+                tablo.DosyaSaklaTamYol();
+                tablo.DosyaKapat();
+
+                byte[] dosyaIcerigi = System.IO.File.ReadAllBytes(geciciDosya);
+                return File(
+                    dosyaIcerigi,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"MakineEkipman-{id}.xlsx");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(geciciDosya))
+                    System.IO.File.Delete(geciciDosya);
+            }
+        }
+
+        private static List<MakineEkipmanSatiri> MakineEkipmanSatirlari(string? json)
+        {
+            List<MakineEkipmanSatiri> satirlar = [];
+            if (string.IsNullOrWhiteSpace(json))
+                return satirlar;
+
+            using JsonDocument belge = JsonDocument.Parse(json);
+            if (!belge.RootElement.TryGetProperty("machineryRows", out JsonElement makineler) ||
+                makineler.ValueKind != JsonValueKind.Array)
+                return satirlar;
+
+            foreach (JsonElement makine in makineler.EnumerateArray())
+            {
+                MakineEkipmanSatiri satir = new(
+                    JsonDegerMetni(makine, "name"),
+                    JsonDegerMetni(makine, "qty"),
+                    JsonDegerMetni(makine, "purpose"),
+                    JsonDegerMetni(makine, "assetStatus"),
+                    JsonDegerMetni(makine, "useInInvestment"),
+                    JsonDegerMetni(makine, "supportRequested"));
+                if (!string.IsNullOrWhiteSpace(satir.Ad) || !string.IsNullOrWhiteSpace(satir.KullanimAmaci))
+                    satirlar.Add(satir);
+            }
+
+            return satirlar;
+        }
+
+        private sealed record MakineEkipmanSatiri(
+            string Ad,
+            string Adet,
+            string KullanimAmaci,
+            string Durum,
+            string YatirimdaKullanilacak,
+            string DestekTalebi);
 
         private static bool BasvuruKullanicisiMi(Kullanici? kullanici)
         {
