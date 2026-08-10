@@ -1745,4 +1745,36 @@
   <data name="Basvuru.Step.Decision" xml:space="preserve"><value>Karar</value></data>
   <data name="Basvuru.Review.SystemResultsNote" xml:space="preserve"><value>Bu liste, kayıtlı bir sistem sonucu yoksa başvuru verilerinden ilk açılışta oluşturulur. Kaydettikten sonra kayıtlı sonuçlar gösterilir.</value></data>
   <data name="Basvuru.Review.ExpertResultsNote" xml:space="preserve"><value>Uzman değerlendirmesini girip kaydediniz. Sonraki açılışlarda kayıtlı değerlendirme gösterilir.</value></data>
+  <data name="Basvuru.Message.ListFailed" xml:space="preserve"><value>Başvuru kayıtları listelenemedi.</value></data>
+  <data name="Basvuru.Message.NewApplicantOnly" xml:space="preserve"><value>Yeni ön başvuru yalnızca başvuru kullanıcıları tarafından oluşturulabilir.</value></data>
+  <data name="Basvuru.Message.NewScreenFailed" xml:space="preserve"><value>Yeni başvuru ekranı açılamadı.</value></data>
+  <data name="Basvuru.Message.ReadFailed" xml:space="preserve"><value>Başvuru kaydı okunamadı.</value></data>
+  <data name="Basvuru.Message.SaveFailed" xml:space="preserve"><value>Başvuru kaydedilemedi.</value></data>
+  <data name="Basvuru.Message.OwnerReadFailed" xml:space="preserve"><value>Başvuru sahibi bilgileri okunamadı.</value></data>
+  <data name="Basvuru.Message.AddressListFailed" xml:space="preserve"><value>Uygulama adresleri listelenemedi.</value></data>
+  <data name="Basvuru.Message.AddressDeleteFailed" xml:space="preserve"><value>Uygulama adresi silinemedi.</value></data>
+  <data name="Basvuru.Message.PartnershipSaveFailed" xml:space="preserve"><value>Ortaklık bilgileri kaydedilemedi.</value></data>
+  <data name="Basvuru.Message.StakeholderSaveFailed" xml:space="preserve"><value>Ortak/pay sahibi bilgileri kaydedilemedi.</value></data>
+  <data name="Basvuru.Message.SessionExpired" xml:space="preserve"><value>Oturum süresi doldu.</value></data>
+  <data name="Basvuru.Message.DocumentPackageUploadFailed" xml:space="preserve"><value>Doküman paketi yüklenemedi.</value></data>
+  <data name="Basvuru.Message.CommitmentUploadFailed" xml:space="preserve"><value>Taahhüt dosyası yüklenemedi.</value></data>
+  <data name="Basvuru.Message.AuditUploadFailed" xml:space="preserve"><value>Bağımsız denetim dosyası yüklenemedi.</value></data>
+  <data name="Basvuru.Message.PartnershipFileUploadFailed" xml:space="preserve"><value>Ortaklık dosyası yüklenemedi.</value></data>
+  <data name="Basvuru.Message.CriminalRecordSaveFailed" xml:space="preserve"><value>Adli sicil kişileri kaydedilemedi.</value></data>
+  <data name="Basvuru.Message.FileDownloadFailed" xml:space="preserve"><value>Dosya indirilemedi.</value></data>
+  <data name="Basvuru.Message.CompanyNotFound" xml:space="preserve"><value>Firma bulunamadı.</value></data>
+  <data name="Basvuru.Message.CompanyQueryFailed" xml:space="preserve"><value>Firma sorgulama işlemi tamamlanamadı.</value></data>
+  <data name="Basvuru.Message.CompanySaveFailed" xml:space="preserve"><value>Firma kaydedilemedi.</value></data>
+  <data name="Basvuru.Report.SaveFirst.ProjeButcesi" xml:space="preserve"><value>Proje bütçesi yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
+  <data name="Basvuru.Report.SaveFirst.YatirimOzeti" xml:space="preserve"><value>Yatırım özeti yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
+  <data name="Basvuru.Report.SaveFirst.IsletmeGideri" xml:space="preserve"><value>İşletme giderleri yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
+  <data name="Basvuru.Report.SaveFirst.OnBasvuruTamlik" xml:space="preserve"><value>Tamlık kontrolü yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
+  <data name="Basvuru.Report.SaveFirst.OnBasvuruUygunluk" xml:space="preserve"><value>Uygunluk kontrolü yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
+  <data name="Basvuru.Report.SaveFirst.OnBilgiler" xml:space="preserve"><value>Ön bilgiler yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
+  <data name="Basvuru.Report.SaveFirst.MakineEkipman" xml:space="preserve"><value>Makine-ekipman raporu yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
+  <data name="Basvuru.Report.SaveFirst.BinaListesi" xml:space="preserve"><value>Bina/yapı listesi yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
+  <data name="Basvuru.Report.TemplateNotFound" xml:space="preserve"><value>Rapor şablonu bulunamadı: {0}</value></data>
+  <data name="Basvuru.Message.AddressSaved" xml:space="preserve"><value>Uygulama adresi kaydedildi.</value></data>
+  <data name="Basvuru.Message.AddressSaveFailed" xml:space="preserve"><value>Uygulama adresi kaydedilemedi.</value></data>
+  <data name="Basvuru.Message.AddressDeleted" xml:space="preserve"><value>Uygulama adresi silindi.</value></data>
 </root>

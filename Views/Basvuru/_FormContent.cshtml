@@ -71,24 +71,30 @@
                 <option value="@((int)bolum.Bolum)" selected="@(bolum.Bolum == ilkBolum.Bolum)" disabled="@devreDisi">@L[bolum.BaslikResourceKey]</option>
             }
         </select>
-        <button type="button" class="btn btn-outline-secondary nav-prev">@L["Basvuru.Common.Previous"]</button>
-        <button type="button" class="btn btn-primary" id="basvuruKaydetBtn" onclick="PaneliKaydet()">@L["Basvuru.Common.Save"]</button>
-        <button type="button" class="btn btn-outline-primary nav-next">@L["Basvuru.Common.Next"]</button>
-        <div class="btn-group ml-2">
-            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled="@(b.Id <= 0)">
-                <i class="fas fa-print mr-1"></i>Yazdır
-            </button>
-            <div class="dropdown-menu">
-                <a class="dropdown-item" asp-controller="Basvuru" asp-action="ProjeButcesiYazdir" asp-route-id="@b.Id">Proje Bütçesi</a>
-                <a class="dropdown-item" asp-controller="Basvuru" asp-action="YatirimOzetiYazdir" asp-route-id="@b.Id">Yatırım Özeti</a>
-                <a class="dropdown-item" asp-controller="Basvuru" asp-action="IsletmeGideriYazdir" asp-route-id="@b.Id">İşletme Giderleri</a>
-                <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBasvuruTamlikYazdir" asp-route-id="@b.Id">Tamlık Kontrolü</a>
-                <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBasvuruUygunlukYazdir" asp-route-id="@b.Id">Ön Başvuru Uygunluk</a>
-                <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBilgilerYazdir" asp-route-id="@b.Id">Ön Bilgiler</a>
-                <a class="dropdown-item" asp-controller="Basvuru" asp-action="MakineEkipmanYazdir" asp-route-id="@b.Id">Makine-Ekipman</a>
+        <div class="basvuru-step-actions">
+            <button type="button" class="btn btn-outline-secondary nav-prev">@L["Basvuru.Common.Previous"]</button>
+            <button type="button" class="btn btn-primary" id="basvuruKaydetBtn" onclick="PaneliKaydet()">@L["Basvuru.Common.Save"]</button>
+            <button type="button" class="btn btn-outline-primary nav-next">@L["Basvuru.Common.Next"]</button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled="@(b.Id <= 0)">
+                    <i class="fas fa-print mr-1"></i>Yazdır
+                </button>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="ProjeButcesiYazdir" asp-route-id="@b.Id">Proje Bütçesi</a>
+                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="YatirimOzetiYazdir" asp-route-id="@b.Id">Yatırım Özeti</a>
+                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="IsletmeGideriYazdir" asp-route-id="@b.Id">İşletme Giderleri</a>
+                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBilgilerYazdir" asp-route-id="@b.Id">Ön Bilgiler</a>
+                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="MakineEkipmanYazdir" asp-route-id="@b.Id">Makine-Ekipman</a>
+                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="BinaListesiYazdir" asp-route-id="@b.Id">Bina/Yapı Listesi</a>
+                    @if (Model.DenetciGorunumu)
+                    {
+                        <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBasvuruTamlikYazdir" asp-route-id="@b.Id">Tamlık Kontrolü</a>
+                        <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBasvuruUygunlukYazdir" asp-route-id="@b.Id">Ön Başvuru Uygunluk</a>
+                    }
+                </div>
             </div>
+            <button type="button" class="btn btn-outline-info icon-action" id="stepHelpBtn" title="@T("Basvuru.Common.Help")">?</button>
         </div>
-        <button type="button" class="btn btn-outline-info icon-action" id="stepHelpBtn" title="@T("Basvuru.Common.Help")">?</button>
     </div>
     <input type="hidden" name="Basvuru.Id" value="@b.Id" />
     <div class="basvuru-shell">
@@ -1767,11 +1773,11 @@
 
     function FirmaKaydetModal() {
         const firma = {
-            id: modalValue('modalFirmaId'),
+            id: Number(modalValue('modalFirmaId')) || 0,
             vergiKimlikNo: modalValue('modalVergiKimlikNo'),
             ticaretUnvani: modalValue('modalTicaretUnvani'),
             ticaretSicilNo: modalValue('modalTicaretSicilNo'),
-            kurulusTarihi: modalValue('modalKurulusTarihi'),
+            kurulusTarihi: modalValue('modalKurulusTarihi') || null,
             mersisNo: modalValue('modalMersisNo'),
             naceKodu: modalValue('modalNaceKodu'),
             webSitesi: modalValue('modalWebSitesi'),

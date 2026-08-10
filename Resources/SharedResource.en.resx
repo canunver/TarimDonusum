@@ -1887,4 +1887,36 @@
   <data name="Basvuru.Step.Decision" xml:space="preserve"><value>Decision</value></data>
   <data name="Basvuru.Review.SystemResultsNote" xml:space="preserve"><value>If no saved system result exists, this list is generated from the application data on first load. Saved results are shown thereafter.</value></data>
   <data name="Basvuru.Review.ExpertResultsNote" xml:space="preserve"><value>Enter and save the expert assessment. The saved assessment is shown on subsequent visits.</value></data>
+  <data name="Basvuru.Message.ListFailed" xml:space="preserve"><value>Application records could not be listed.</value></data>
+  <data name="Basvuru.Message.NewApplicantOnly" xml:space="preserve"><value>Only applicant users can create a new pre-application.</value></data>
+  <data name="Basvuru.Message.NewScreenFailed" xml:space="preserve"><value>The new application screen could not be opened.</value></data>
+  <data name="Basvuru.Message.ReadFailed" xml:space="preserve"><value>The application record could not be read.</value></data>
+  <data name="Basvuru.Message.SaveFailed" xml:space="preserve"><value>The application could not be saved.</value></data>
+  <data name="Basvuru.Message.OwnerReadFailed" xml:space="preserve"><value>The applicant details could not be read.</value></data>
+  <data name="Basvuru.Message.AddressListFailed" xml:space="preserve"><value>Implementation addresses could not be listed.</value></data>
+  <data name="Basvuru.Message.AddressDeleteFailed" xml:space="preserve"><value>The implementation address could not be deleted.</value></data>
+  <data name="Basvuru.Message.PartnershipSaveFailed" xml:space="preserve"><value>Partnership details could not be saved.</value></data>
+  <data name="Basvuru.Message.StakeholderSaveFailed" xml:space="preserve"><value>Partner/shareholder details could not be saved.</value></data>
+  <data name="Basvuru.Message.SessionExpired" xml:space="preserve"><value>Your session has expired.</value></data>
+  <data name="Basvuru.Message.DocumentPackageUploadFailed" xml:space="preserve"><value>The document package could not be uploaded.</value></data>
+  <data name="Basvuru.Message.CommitmentUploadFailed" xml:space="preserve"><value>The commitment file could not be uploaded.</value></data>
+  <data name="Basvuru.Message.AuditUploadFailed" xml:space="preserve"><value>The independent audit file could not be uploaded.</value></data>
+  <data name="Basvuru.Message.PartnershipFileUploadFailed" xml:space="preserve"><value>The partnership file could not be uploaded.</value></data>
+  <data name="Basvuru.Message.CriminalRecordSaveFailed" xml:space="preserve"><value>Criminal record persons could not be saved.</value></data>
+  <data name="Basvuru.Message.FileDownloadFailed" xml:space="preserve"><value>The file could not be downloaded.</value></data>
+  <data name="Basvuru.Message.CompanyNotFound" xml:space="preserve"><value>Company not found.</value></data>
+  <data name="Basvuru.Message.CompanyQueryFailed" xml:space="preserve"><value>The company query could not be completed.</value></data>
+  <data name="Basvuru.Message.CompanySaveFailed" xml:space="preserve"><value>The company could not be saved.</value></data>
+  <data name="Basvuru.Report.SaveFirst.ProjeButcesi" xml:space="preserve"><value>The application must be saved before printing the project budget.</value></data>
+  <data name="Basvuru.Report.SaveFirst.YatirimOzeti" xml:space="preserve"><value>The application must be saved before printing the investment summary.</value></data>
+  <data name="Basvuru.Report.SaveFirst.IsletmeGideri" xml:space="preserve"><value>The application must be saved before printing operating expenses.</value></data>
+  <data name="Basvuru.Report.SaveFirst.OnBasvuruTamlik" xml:space="preserve"><value>The application must be saved before printing the completeness check.</value></data>
+  <data name="Basvuru.Report.SaveFirst.OnBasvuruUygunluk" xml:space="preserve"><value>The application must be saved before printing the eligibility check.</value></data>
+  <data name="Basvuru.Report.SaveFirst.OnBilgiler" xml:space="preserve"><value>The application must be saved before printing the preliminary information.</value></data>
+  <data name="Basvuru.Report.SaveFirst.MakineEkipman" xml:space="preserve"><value>The application must be saved before printing the machinery-equipment report.</value></data>
+  <data name="Basvuru.Report.SaveFirst.BinaListesi" xml:space="preserve"><value>The application must be saved before printing the building/structure list.</value></data>
+  <data name="Basvuru.Report.TemplateNotFound" xml:space="preserve"><value>Report template not found: {0}</value></data>
+  <data name="Basvuru.Message.AddressSaved" xml:space="preserve"><value>The implementation address was saved.</value></data>
+  <data name="Basvuru.Message.AddressSaveFailed" xml:space="preserve"><value>The implementation address could not be saved.</value></data>
+  <data name="Basvuru.Message.AddressDeleted" xml:space="preserve"><value>The implementation address was deleted.</value></data>
 </root>
