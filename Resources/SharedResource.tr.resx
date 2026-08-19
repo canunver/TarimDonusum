@@ -133,7 +133,7 @@
     <value>Sisteme Giriş</value>
   </data>
   <data name="Home.KulKod" xml:space="preserve">
-    <value>TC Kimlik No/ePosta Adrsi</value>
+    <value>TC Kimlik No/ePosta Adresi</value>
   </data>
   <data name="Home.Sifre" xml:space="preserve">
     <value>Parola</value>
@@ -1045,7 +1045,7 @@
     <value>Sisteme Giriş</value>
   </data>
   <data name="Home.UserId" xml:space="preserve">
-    <value>TC Kimlik No/ePosta Adrsi</value>
+    <value>TC Kimlik No/ePosta Adresi</value>
   </data>
   <data name="Home.ApplicationForm" xml:space="preserve">
     <value>Başvuru Formu</value>
