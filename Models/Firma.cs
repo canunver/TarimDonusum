@@ -33,8 +33,8 @@ namespace TarimDonusum.Models
             if (string.IsNullOrWhiteSpace(vergiKimlikNo))
                 sonuc.HataEkle("Vergi kimlik no girilmelidir.");
 
-            if (vergiKimlikNo?.Length > 20)
-                sonuc.HataEkle("Vergi kimlik no en fazla 20 karakter olmalıdır.");
+            else if (!Araclar.OrtakFonksiyonlar.VKNGecerliMi(vergiKimlikNo))
+                sonuc.HataEkle("Vergi kimlik no 10 haneli ve geçerli olmalıdır.");
 
             if (string.IsNullOrWhiteSpace(ticaretUnvani))
                 sonuc.HataEkle("Firma adı girilmelidir.");

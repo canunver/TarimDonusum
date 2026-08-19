@@ -22,12 +22,14 @@ namespace TarimDonusum.Tablolar
                     BasvuruyaAcikMi,
                     BasvuruBaslangicTarihi,
                     BasvuruBitisTarihi,
+                    OnBasvuruBaslangicTarihi,
                     OnBasvuruBitisTarihi,
+                    OnBasvuruCevrimKuru,
+                    BasvuruCevrimKuru,
                     MinimumYatirimTutari,
                     MaksimumYatirimTutari,
                     MaksimumDestekTutari,
                     DestekOrani,
-                    Aciklama,
                     Aciklama
                 FROM dbo.Donem
                 WHERE Id = @Id;";
@@ -52,7 +54,10 @@ namespace TarimDonusum.Tablolar
                     BasvuruyaAcikMi,
                     BasvuruBaslangicTarihi,
                     BasvuruBitisTarihi,
+                    OnBasvuruBaslangicTarihi,
                     OnBasvuruBitisTarihi,
+                    OnBasvuruCevrimKuru,
+                    BasvuruCevrimKuru,
                     MinimumYatirimTutari,
                     MaksimumYatirimTutari,
                     MaksimumDestekTutari,
@@ -78,12 +83,12 @@ namespace TarimDonusum.Tablolar
             const string sql = @"
                 INSERT INTO dbo.Donem
                     (Yil, Ad, BasvuruyaAcikMi, BasvuruBaslangicTarihi, BasvuruBitisTarihi,
-                     OnBasvuruBitisTarihi, MinimumYatirimTutari, MaksimumYatirimTutari,
+                     OnBasvuruBaslangicTarihi, OnBasvuruBitisTarihi, OnBasvuruCevrimKuru, BasvuruCevrimKuru, MinimumYatirimTutari, MaksimumYatirimTutari,
                      MaksimumDestekTutari, DestekOrani, Aciklama)
                 OUTPUT INSERTED.Id
                 VALUES
                     (@Yil, @Ad, @BasvuruyaAcikMi, @BasvuruBaslangicTarihi, @BasvuruBitisTarihi,
-                     @OnBasvuruBitisTarihi, @MinimumYatirimTutari, @MaksimumYatirimTutari,
+                     @OnBasvuruBaslangicTarihi, @OnBasvuruBitisTarihi, @OnBasvuruCevrimKuru, @BasvuruCevrimKuru, @MinimumYatirimTutari, @MaksimumYatirimTutari,
                      @MaksimumDestekTutari, @DestekOrani, @Aciklama);";
 
             await using SqlCommand command = KomutOlustur(sql);
@@ -98,7 +103,10 @@ namespace TarimDonusum.Tablolar
                 SET Yil = @Yil, Ad = @Ad, BasvuruyaAcikMi = @BasvuruyaAcikMi,
                     BasvuruBaslangicTarihi = @BasvuruBaslangicTarihi,
                     BasvuruBitisTarihi = @BasvuruBitisTarihi,
+                    OnBasvuruBaslangicTarihi = @OnBasvuruBaslangicTarihi,
                     OnBasvuruBitisTarihi = @OnBasvuruBitisTarihi,
+                    OnBasvuruCevrimKuru = @OnBasvuruCevrimKuru,
+                    BasvuruCevrimKuru = @BasvuruCevrimKuru,
                     MinimumYatirimTutari = @MinimumYatirimTutari,
                     MaksimumYatirimTutari = @MaksimumYatirimTutari,
                     MaksimumDestekTutari = @MaksimumDestekTutari,
@@ -118,7 +126,10 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@BasvuruyaAcikMi", donem.basvuruyaAcikMi ? 1 : 0);
             command.Parameters.AddWithValue("@BasvuruBaslangicTarihi", (object?)donem.basvuruBaslangicTarihi ?? DBNull.Value);
             command.Parameters.AddWithValue("@BasvuruBitisTarihi", (object?)donem.basvuruBitisTarihi ?? DBNull.Value);
+            command.Parameters.AddWithValue("@OnBasvuruBaslangicTarihi", (object?)donem.onBasvuruBaslangicTarihi ?? DBNull.Value);
             command.Parameters.AddWithValue("@OnBasvuruBitisTarihi", (object?)donem.onBasvuruBitisTarihi ?? DBNull.Value);
+            command.Parameters.AddWithValue("@OnBasvuruCevrimKuru", (object?)donem.onBasvuruCevrimKuru ?? DBNull.Value);
+            command.Parameters.AddWithValue("@BasvuruCevrimKuru", (object?)donem.basvuruCevrimKuru ?? DBNull.Value);
             command.Parameters.AddWithValue("@MinimumYatirimTutari", (object?)donem.minimumYatirimTutari ?? DBNull.Value);
             command.Parameters.AddWithValue("@MaksimumYatirimTutari", (object?)donem.maksimumYatirimTutari ?? DBNull.Value);
             command.Parameters.AddWithValue("@MaksimumDestekTutari", (object?)donem.maksimumDestekTutari ?? DBNull.Value);
@@ -136,7 +147,10 @@ namespace TarimDonusum.Tablolar
             d.basvuruyaAcikMi = BoolYap(NullDuzeltInt(reader, kol++));
             d.basvuruBaslangicTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             d.basvuruBitisTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
+            d.onBasvuruBaslangicTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             d.onBasvuruBitisTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
+            d.onBasvuruCevrimKuru = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
+            d.basvuruCevrimKuru = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
             d.minimumYatirimTutari = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
             d.maksimumYatirimTutari = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
             d.maksimumDestekTutari = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;

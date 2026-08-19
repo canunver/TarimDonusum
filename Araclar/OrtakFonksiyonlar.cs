@@ -99,6 +99,29 @@ namespace TarimDonusum.Araclar
             return rakamlar[9] == onuncuRakam && rakamlar[10] == onBirinciRakam;
         }
 
+        public static bool VKNGecerliMi(string? vkn)
+        {
+            if (string.IsNullOrWhiteSpace(vkn))
+                return false;
+
+            string deger = vkn.Trim();
+            if (deger.Length != 10 || !deger.All(char.IsDigit) || deger.All(x => x == deger[0]))
+                return false;
+
+            int toplam = 0;
+            for (int i = 0; i < 9; i++)
+            {
+                int basamak = (deger[i] - '0' + 9 - i) % 10;
+                int katki = basamak == 9
+                    ? 9
+                    : (basamak * (1 << (9 - i))) % 9;
+                toplam += katki;
+            }
+
+            int kontrolBasamagi = (10 - (toplam % 10)) % 10;
+            return deger[9] - '0' == kontrolBasamagi;
+        }
+
         public static bool EPostaGecerliMi(string? eposta)
         {
             if (string.IsNullOrWhiteSpace(eposta))

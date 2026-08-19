@@ -13,17 +13,13 @@
                         <label for="yatirimAdi">@L["Basvuru.Field.YatirimAdi"]</label>
                         <input id="yatirimAdi" name="Basvuru.YatirimAdi" value="@b.yatirim.yatirimAdi" disabled="@ro" />
                     </div>
-                    <div class="preapp-line">
-                        <label for="yatirimTuru">@L["Basvuru.Field.YatirimTuru"]</label>
-                        <select id="yatirimTuru" name="Basvuru.yatirim.yatirimTuru" disabled="@ro">
-                            @foreach (enumYatirimTuru item in Enum.GetValues<enumYatirimTuru>())
-                            {
-                                <option value="@((int)item)" selected="@(b.yatirim.yatirimTuru == item)">
-                                    @IsimBul.EnumAdi(item, L)
-                                </option>
-                            }
-                        </select>
-                    </div>
+                </div>
+                <h3>@L["Basvuru.Field.YatirimTuru"]</h3>
+                <div class="check-grid">
+                    @foreach (enumYatirimTuru item in Enum.GetValues<enumYatirimTuru>().Where(x => x != enumYatirimTuru.Tanimsiz))
+                    {
+                        <label><input type="checkbox" name="Basvuru.yatirim.yatirimTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.yatirimTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label>
+                    }
                 </div>
                 <h3>@L["Basvuru.Field.HarcamaTurleri"]</h3>
                 <div class="check-grid">
@@ -48,7 +44,7 @@
                                 <th>@L["Basvuru.Field.TamAdres"]</th>
                                 <th>@L["Basvuru.Field.YatirimYeriStatusu"]</th>
                                 <th>@L["Basvuru.Field.KiraTahsis"]</th>
-                                <th>@L["Basvuru.Field.YapiRuhsatiDurumu"]</th>
+                                <th class="yapi-ruhsati-kolonu">@L["Basvuru.Field.YapiRuhsatiDurumu"]</th>
                                 @if (!ro)
                                 {
                                     <th>@L["Basvuru.Common.Actions"]</th>
@@ -58,9 +54,10 @@
                         <tbody id="uygulamaAdresListesi"></tbody>
                     </table>
                 </div>
-                <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"] <span class="required-mark">*</span>
-                    <textarea name="Basvuru.yatirim.YatiriminAmaci" disabled="@ro">@b.finans.yatiriminAmaci</textarea>
-                </label>
+                <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"] <span class="required-mark">*</span><textarea name="Basvuru.yatirim.YatiriminAmaci" disabled="@ro">@b.yatirim.yatiriminAmaci</textarea></label>
+                <label class="wide-label">@L["Basvuru.Field.YatirimFaaliyetleri"] <span class="required-mark">*</span><textarea name="Basvuru.yatirim.YatirimFaaliyetleri" disabled="@ro">@b.yatirim.yatirimFaaliyetleri</textarea></label>
+                <label class="wide-label">@L["Basvuru.Field.YatirimGirdileri"] <span class="required-mark">*</span><textarea name="Basvuru.yatirim.YatirimGirdileri" disabled="@ro">@b.yatirim.yatirimGirdileri</textarea></label>
+                <label class="wide-label">@L["Basvuru.Field.YatirimCiktilari"] <span class="required-mark">*</span><textarea name="Basvuru.yatirim.YatirimCiktilari" disabled="@ro">@b.yatirim.yatirimCiktilari</textarea></label>
                 <p class="section-description">@L["Basvuru.InvestmentPurpose.Help"]</p>
             </section>
 

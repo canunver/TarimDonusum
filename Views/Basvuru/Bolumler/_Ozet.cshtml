@@ -102,7 +102,9 @@
         ? string.Join(", ", b.yatirim.degerZinciriAsamalari.Select(x => x.ad).Where(x => !string.IsNullOrWhiteSpace(x)))
         : "-";
     string yatirimIli = b.YatirimAdresleri.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.ilAdi))?.ilAdi ?? b.basvuruFirma.il.ad;
-    string yatirimTuru = b.yatirim.yatirimTuru == enumYatirimTuru.Tanimsiz ? "-" : b.yatirim.yatirimTuru.ToString();
+    string yatirimTuru = b.yatirim.yatirimTurleri.Count == 0
+        ? "-"
+        : string.Join(", ", b.yatirim.yatirimTurleri.Select(x => IsimBul.EnumAdi((enumYatirimTuru)x, L)));
 
     string cevreselKapsam = "-";
     string kapsamDisiBeyani = "-";
@@ -149,22 +151,27 @@
     Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru.Value == enumBasvuruSahibiTuru.Tanimsiz, R("Basvuru.Summary.Error.ApplicantTypeRequired"));
     Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru.Value == enumHukukiTurSirketTuru.Tanimsiz, R("Basvuru.Summary.Error.LegalTypeRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), R("Basvuru.Summary.Error.InvestmentNameRequired"));
-    Eksikse(b.yatirim.yatirimTuru == enumYatirimTuru.Tanimsiz, R("Basvuru.Summary.Error.InvestmentTypeRequired"));
+    Eksikse(b.yatirim.yatirimTurleri.Count == 0, R("Basvuru.Summary.Error.InvestmentTypeRequired"));
     Eksikse(b.YatirimAdresleri.Count == 0, R("Basvuru.Summary.Error.InvestmentAddressRequired"));
     Eksikse(b.yatirim.harcamaTurleri.Count == 0, R("Basvuru.Summary.Error.ExpenseTypeRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), R("Basvuru.Summary.Error.InvestmentPurposeRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri), R("Basvuru.Summary.Error.InvestmentActivitiesRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimGirdileri), R("Basvuru.Summary.Error.InvestmentInputsRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari), R("Basvuru.Summary.Error.InvestmentOutputsRequired"));
     Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, R("Basvuru.Summary.Error.ValueChainRequired"));
     Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, R("Basvuru.Summary.Error.ValueChainStageRequired"));
     Eksikse(!maliOlcekUygun, R("Basvuru.Summary.Error.FinancialScaleRequired"));
+    Eksikse(b.basvuruFirma.donem.destekOrani.GetValueOrDefault() > 0
+        && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > b.basvuruFirma.donem.destekOrani.GetValueOrDefault(), R("Basvuru.Finance.RateLimitError").Replace("{0}", b.basvuruFirma.donem.destekOrani.GetValueOrDefault().ToString("0.##")));
+    Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, R("Basvuru.Finance.InvestmentDurationRequired"));
     Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, R("Basvuru.Summary.Error.AuditChoiceRequired"));
     Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, R("Basvuru.Summary.Error.AuditFileRequired"));
-    Eksikse(!b.ortaklik.bagliOrtakIsletmeVarMi.HasValue, R("Basvuru.Summary.Error.RelatedEnterpriseRequired"));
-    Eksikse(b.ortaklik.ortaklar.Count > 0 && Math.Abs(ortaklikPayToplami - 100) > 0.01m, R("Basvuru.Summary.Error.ShareTotalRequired"));
-    Eksikse(string.IsNullOrWhiteSpace(b.uygunHarcama.pikkListesiJson) && b.yatirim.harcamaTurleri.Any(x => x == 1 || x == 2), R("Basvuru.Summary.Error.PikkRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.dbCtpTeknikProje.dbCtpTeknikProjeJson), R("Basvuru.Summary.Error.DbCtpRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.TaahhutBeyanlarJson), R("Basvuru.Summary.Error.DeclarationsRequired"));
     Eksikse(string.IsNullOrWhiteSpace(rawYatirimOzeti), R("Basvuru.Summary.Error.InvestmentSummaryRequired"));
     Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.RequiredDocumentsRequired"));
+    Eksikse(b.ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "T\u00FCzel Ki\u015Fi", StringComparison.OrdinalIgnoreCase))
+        && b.ortaklik.bagliOrtakDosyalari.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.RequiredDocumentsRequired"));
     Eksikse(b.AdliSicilKisileri.Count == 0, R("Basvuru.Summary.Error.CriminalPeopleRequired"));
     Eksikse(b.AdliSicilKisileri.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.CriminalFilesRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson), R("Basvuru.Summary.Error.EsfRequired"));

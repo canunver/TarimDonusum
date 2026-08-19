@@ -171,6 +171,13 @@ namespace TarimDonusum.IsKurallari
                 if (donem.basvuruBaslangicTarihi.HasValue && donem.basvuruBitisTarihi.HasValue &&
                     donem.basvuruBaslangicTarihi.Value.Date > donem.basvuruBitisTarihi.Value.Date)
                     sonuc.HataEkle("Başvuru başlangıç tarihi bitiş tarihinden sonra olamaz.");
+                if (donem.onBasvuruBaslangicTarihi.HasValue && donem.onBasvuruBitisTarihi.HasValue &&
+                    donem.onBasvuruBaslangicTarihi.Value.Date > donem.onBasvuruBitisTarihi.Value.Date)
+                    sonuc.HataEkle("Ön başvuru başlangıç tarihi bitiş tarihinden sonra olamaz.");
+                if (donem.onBasvuruCevrimKuru.HasValue && donem.onBasvuruCevrimKuru <= 0)
+                    sonuc.HataEkle("Ön başvuru çevrim kuru sıfırdan büyük olmalıdır.");
+                if (donem.basvuruCevrimKuru.HasValue && donem.basvuruCevrimKuru <= 0)
+                    sonuc.HataEkle("Başvuru çevrim kuru sıfırdan büyük olmalıdır.");
                 if (!sonuc.basarili)
                     return sonuc;
 

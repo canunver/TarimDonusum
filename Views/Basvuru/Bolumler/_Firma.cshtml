@@ -1,3 +1,4 @@
+@using System.Text.Json
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
@@ -10,19 +11,6 @@
     string evetMetni = evetHayir.Length > 0 ? evetHayir[0] : T("Basvuru.Common.YesAnswer");
     string hayirMetni = evetHayir.Length > 1 ? evetHayir[1] : T("Basvuru.Common.NoAnswer");
     string kurulusTarihi = b.basvuruFirma.firma.kurulusTarihi?.ToString("yyyy-MM-dd") ?? "";
-    string KisiAdi(TarimDonusum.Models.BasvuruAdliSicilKisi kisi)
-    {
-        return string.Join(" ", new[] { kisi.ad, kisi.soyad }.Where(x => !string.IsNullOrWhiteSpace(x))).Trim();
-    }
-    string temsilIlzamKisileri = string.Join(", ", b.AdliSicilKisileri
-        .Where(x => string.Equals(x.gorev, "Temsil ve ilzama yetkili", StringComparison.OrdinalIgnoreCase))
-        .Select(KisiAdi)
-        .Where(x => !string.IsNullOrWhiteSpace(x)));
-    string adliSicilEkKisileri = string.Join(", ", b.AdliSicilKisileri
-        .Where(x => string.Equals(x.gorev, "Yönetim kurulu üye", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(x.gorev, "Adli Sicil Kontrolüne Tabi Ek Kişi", StringComparison.OrdinalIgnoreCase))
-        .Select(KisiAdi)
-        .Where(x => !string.IsNullOrWhiteSpace(x)));
 }
 
 <section class="basvuru-panel active" data-bolum="Firma">
@@ -67,10 +55,12 @@
                 @L["Basvuru.Field.VergiKimlikNo"]
                 <span class="company-inline">
                     <input type="hidden" id="firmaId" name="Basvuru.FirmaId" value="@b.basvuruFirma.firma.id" />
-                    <input id="vergiKimlikNo" name="Basvuru.VergiKimlikNo" value="@b.basvuruFirma.firma.vergiKimlikNo" disabled="@ro" />
+                    <input id="vergiKimlikNo" name="Basvuru.VergiKimlikNo" value="@b.basvuruFirma.firma.vergiKimlikNo" inputmode="numeric" maxlength="10" disabled="@ro" />
                     @if (!ro)
                     {
-                        <button type="button" class="btn btn-outline-primary icon-action" id="firmaSorgulaBtn" title="@T("Basvuru.Firma.Query")">?</button>
+                        <button type="button" class="btn btn-outline-primary icon-action" id="firmaSecBtn" title="@L["Basvuru.Firma.SelectTitle"]" aria-label="@L["Basvuru.Firma.SelectTitle"]">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </button>
                         <button type="button" class="btn btn-outline-success icon-action" id="firmaYeniBtn" title="@T("Basvuru.Firma.ModalTitle")">+</button>
                         <button type="button" class="btn btn-outline-secondary icon-action" id="firmaDuzenleBtn" title="@T("Basvuru.Common.Edit")">
                             <i class="fas fa-edit"></i>
@@ -143,14 +133,19 @@
             <label>@L["Basvuru.Field.IrtibatEposta"]<input id="irtibatEposta" name="Basvuru.irtibat.ePosta" type="email" value="@b.irtibat.ePosta" disabled="@ro" /></label>
         </div>
         <label class="wide-label">@L["Basvuru.Field.IletisimAdresi"]<textarea id="iletisimAdresi" name="Basvuru.irtibat.adres" disabled="@ro">@b.irtibat.adres</textarea></label>
-        <label class="wide-label">
-            @L["Basvuru.Field.TemsilIlzamKisilerReadonly"]
-            <textarea id="yetkiliKisiler" readonly placeholder="@T("Basvuru.Placeholder.TemsilIlzamFromCriminalRecord")">@temsilIlzamKisileri</textarea>
-        </label>
-        <label class="wide-label">
-            @L["Basvuru.Field.YonetimKuruluAdliSicilKisilerReadonly"]
-            <textarea id="yonetimKuruluUyeleriAdliSicilKisiler" readonly placeholder="@T("Basvuru.Placeholder.BoardMembersFromCriminalRecord")">@adliSicilEkKisileri</textarea>
-        </label>
+
+        <script type="application/json" id="adliSicilInitialJson">
+            @Html.Raw(JsonSerializer.Serialize(b.AdliSicilKisileri))
+        </script>
+
+        <div class="section-toolbar mt-4">
+            <h3>@L["Basvuru.Documents.CriminalRecordTitle"]</h3>
+            @if (!ro)
+            {
+                <button type="button" class="btn btn-outline-primary" id="adliSicilKisiEkleBtn">@L["Basvuru.Documents.AddPerson"]</button>
+            }
+        </div>
+        <div id="adliSicilKisilerTable"></div>
 
     </div>
 </section>

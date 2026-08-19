@@ -567,6 +567,49 @@ namespace TarimDonusum.IsKurallari
             new(33,
                 @"IF COL_LENGTH(N'dbo.Basvuru', N'SistemDenetimAnketi') IS NULL
                     ALTER TABLE dbo.Basvuru ADD SistemDenetimAnketi NVARCHAR(MAX) NULL;"),
+            new(34,
+                @"IF OBJECT_ID(N'dbo.BasvuruYatirimTuru', N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruYatirimTuru
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruYatirimTuru PRIMARY KEY,
+                        BasvuruId INT NOT NULL,
+                        YatirimTuru INT NOT NULL,
+                        CONSTRAINT FK_BasvuruYatirimTuru_Basvuru FOREIGN KEY (BasvuruId) REFERENCES dbo.Basvuru(Id)
+                    );
+                    CREATE UNIQUE INDEX UX_BasvuruYatirimTuru_BasvuruYatirimTuru ON dbo.BasvuruYatirimTuru(BasvuruId, YatirimTuru);
+                    INSERT INTO dbo.BasvuruYatirimTuru(BasvuruId, YatirimTuru)
+                    SELECT Id, YatirimTuru FROM dbo.Basvuru WHERE YatirimTuru IS NOT NULL AND YatirimTuru > 0;
+                  END;"),
+            new(35,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'YatirimFaaliyetleri') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD YatirimFaaliyetleri NVARCHAR(MAX) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'YatirimGirdileri') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD YatirimGirdileri NVARCHAR(MAX) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'YatirimCiktilari') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD YatirimCiktilari NVARCHAR(MAX) NULL;"),
+            new(36,
+                @"IF COL_LENGTH(N'dbo.Donem', N'OnBasvuruBaslangicTarihi') IS NULL
+                    ALTER TABLE dbo.Donem ADD OnBasvuruBaslangicTarihi DATETIME NULL;
+                  IF COL_LENGTH(N'dbo.Donem', N'OnBasvuruCevrimKuru') IS NULL
+                    ALTER TABLE dbo.Donem ADD OnBasvuruCevrimKuru DECIMAL(18,6) NULL;
+                  IF COL_LENGTH(N'dbo.Donem', N'BasvuruCevrimKuru') IS NULL
+                    ALTER TABLE dbo.Donem ADD BasvuruCevrimKuru DECIMAL(18,6) NULL;"),
+            new(37,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'YatirimSuresiAy') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD YatirimSuresiAy INT NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OdemeSuresiAy') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD OdemeSuresiAy INT NULL;"),
+            new(38,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'OdemesizDonemAy') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD OdemesizDonemAy INT NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OdemeSuresiAy') IS NOT NULL
+                    EXEC(N'UPDATE dbo.Basvuru SET OdemesizDonemAy = OdemeSuresiAy WHERE OdemesizDonemAy IS NULL;');"),
+            new(39,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'OdemeSuresiAy') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD OdemeSuresiAy INT NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OdemesizDonemAy') IS NOT NULL
+                    EXEC(N'UPDATE dbo.Basvuru SET OdemeSuresiAy = OdemesizDonemAy WHERE OdemeSuresiAy IS NULL;');"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

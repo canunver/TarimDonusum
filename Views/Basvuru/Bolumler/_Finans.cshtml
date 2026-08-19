@@ -4,16 +4,30 @@
 @{
     var b = Model.Basvuru;
     bool ro = Model.SaltOkunur;
+    decimal? hesaplananFinansmanTutari = b.finans.toplamYatirimTutari.HasValue && b.finans.talepEdilenFinansmanOrani.HasValue
+        ? Math.Round(b.finans.toplamYatirimTutari.Value * b.finans.talepEdilenFinansmanOrani.Value / 100m, 2)
+        : b.finans.talepEdilenDestekTutari;
+    decimal? hesaplananOzKaynak = b.finans.toplamYatirimTutari.HasValue && hesaplananFinansmanTutari.HasValue
+        ? b.finans.toplamYatirimTutari.Value - hesaplananFinansmanTutari.Value
+        : b.finans.basvuruSahibiKatkisi;
 }
             <section class="basvuru-panel active" data-panel="5">
                 <h2>@L["Basvuru.Section5.Title"]</h2>
                 <div class="form-grid">
-                    <label>@L["Basvuru.Field.ToplamYatirimTutari"]<input class="money-integer" name="Basvuru.finans.ToplamYatirimTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.toplamYatirimTutari)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.TalepEdilenFinansmanOrani"]<input name="Basvuru.finans.TalepEdilenFinansmanOrani" type="text" value="@IsimBul.MetneCevirKuruslu(b.finans.talepEdilenFinansmanOrani)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.BasvuruSahibiKatkisiYeni"]<input class="money-integer" name="Basvuru.finans.BasvuruSahibiKatkisi" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.basvuruSahibiKatkisi)" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.TalepEdilenVadeSuresiYil"]<input name="Basvuru.finans.TalepEdilenVadeSuresiYil" type="number" min="1" step="1" value="@b.finans.talepEdilenVadeSuresiYil" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.ToplamYatirimTutari"]<input class="money-integer" name="Basvuru.finans.ToplamYatirimTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.toplamYatirimTutari)" oninput="FinansTutarlariniHesapla()" onchange="FinansTutarlariniHesapla()" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.TalepEdilenFinansmanOrani"]<input name="Basvuru.finans.TalepEdilenFinansmanOrani" type="number" min="1" max="@b.basvuruFirma.donem.destekOrani?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" step="1" value="@b.finans.talepEdilenFinansmanOrani?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" oninput="FinansTutarlariniHesapla()" onchange="FinansTutarlariniHesapla()" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.TalepEdilenFinansmanTutari"]<input class="money-integer" name="Basvuru.finans.TalepEdilenDestekTutari" type="text" value="@IsimBul.MetneCevirKurussuz(hesaplananFinansmanTutari)" readonly /></label>
+                    <label>@L["Basvuru.Field.OzKaynakTutari"]<input class="money-integer" name="Basvuru.finans.BasvuruSahibiKatkisi" type="text" value="@IsimBul.MetneCevirKurussuz(hesaplananOzKaynak)" readonly /></label>
+                    <label>@L["Basvuru.Field.TalepEdilenVadeSuresiAy"]<input name="Basvuru.finans.TalepEdilenVadeSuresiAy" type="number" min="1" step="1" value="@b.finans.talepEdilenVadeSuresiAy" disabled="@ro" /></label>
+                    <label>@L["Basvuru.Field.YatirimSuresiAy"]<input name="Basvuru.finans.YatirimSuresiAy" type="number" min="1" step="1" value="@b.finans.yatirimSuresiAy" disabled="@ro" /></label>
                 </div>
-                <label class="wide-label">@L["Basvuru.Field.DigerFinansmanKaynaklariAciklama"]<textarea name="Basvuru.finans.DigerFinansmanKaynaklariAciklama" disabled="@ro">@b.finans.digerFinansmanKaynaklariAciklama</textarea></label>
+                <div class="alert alert-info mt-3 mb-0">
+                    <ol class="mb-0 pl-3">
+                        <li>@L["Basvuru.Finance.InvestmentDurationHelp"]</li>
+                        <li>@L["Basvuru.Finance.GracePeriod24Help"]</li>
+                        <li>@L["Basvuru.Finance.GracePeriod12Help"]</li>
+                    </ol>
+                </div>
             </section>
 
 

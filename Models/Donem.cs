@@ -8,7 +8,10 @@ namespace TarimDonusum.Models
         public bool basvuruyaAcikMi { get; set; }
         public DateTime? basvuruBaslangicTarihi { get; set; }
         public DateTime? basvuruBitisTarihi { get; set; }
+        public DateTime? onBasvuruBaslangicTarihi { get; set; }
         public DateTime? onBasvuruBitisTarihi { get; set; }
+        public decimal? onBasvuruCevrimKuru { get; set; }
+        public decimal? basvuruCevrimKuru { get; set; }
         public decimal? minimumYatirimTutari { get; set; }
         public decimal? maksimumYatirimTutari { get; set; }
         public decimal? maksimumDestekTutari { get; set; }

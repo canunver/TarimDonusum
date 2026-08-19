@@ -63,14 +63,22 @@
     <div class="alert alert-info">@L["Basvuru.Flow.Note"]</div>
 
     <div class="basvuru-stepbar">
-        <label for="basvuruStepSelect">@L["Basvuru.Common.Steps"]</label>
-        <select id="basvuruStepSelect" class="form-control">
-            @foreach (BasvuruBolumTanim bolum in bolumler)
+        <nav class="basvuru-steps" aria-label="@L["Basvuru.Common.Steps"]">
+            @for (int index = 0; index < bolumler.Count; index++)
             {
+                BasvuruBolumTanim bolum = bolumler[index];
                 bool devreDisi = kilitli && bolum.Bolum != enumBasvuruBolum.Firma;
-                <option value="@((int)bolum.Bolum)" selected="@(bolum.Bolum == ilkBolum.Bolum)" disabled="@devreDisi">@L[bolum.BaslikResourceKey]</option>
+                bool aktif = bolum.Bolum == ilkBolum.Bolum;
+                <button type="button"
+                        class="basvuru-step @(aktif ? "active" : "")"
+                        data-step="@((int)bolum.Bolum)"
+                        disabled="@devreDisi"
+                        aria-current="@(aktif ? "step" : null)">
+                    <span class="basvuru-step-number">@(index + 1)</span>
+                    <span class="basvuru-step-title">@L[bolum.BaslikResourceKey]</span>
+                </button>
             }
-        </select>
+        </nav>
         <div class="basvuru-step-actions">
             <button type="button" class="btn btn-outline-secondary nav-prev">@L["Basvuru.Common.Previous"]</button>
             <button type="button" class="btn btn-primary" id="basvuruKaydetBtn" onclick="PaneliKaydet()">@L["Basvuru.Common.Save"]</button>
@@ -113,6 +121,29 @@
 </div>
 @if (!ro)
 {
+    <div class="modal fade firma-modal" id="firmaSecModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content firma-modal-content">
+                <div class="modal-header firma-modal-header">
+                    <h5 class="modal-title">@L["Basvuru.Firma.SelectTitle"]</h5>
+                    <button type="button" class="close firma-sec-modal-kapat" data-dismiss="modal" aria-label="@T("Basvuru.Common.Close")"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <input id="firmaSecArama" class="form-control" autocomplete="off" placeholder="@L["Basvuru.Firma.SearchPlaceholder"]" />
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-outline-primary" id="firmaSecAraBtn"><i class="fas fa-search mr-1"></i>@L["Basvuru.Common.Search"]</button>
+                        </div>
+                    </div>
+                    <div id="firmaSecListe" class="table-responsive"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary firma-sec-modal-kapat" data-dismiss="modal">@L["Basvuru.Common.Close"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade firma-modal" id="firmaModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content firma-modal-content">
@@ -127,7 +158,7 @@
                     <div class="firma-modal-fields">
                         <div class="form-grid">
                             <input type="hidden" id="modalFirmaId" />
-                            <label>@L["Basvuru.Field.VergiKimlikNo"]<input id="modalVergiKimlikNo" /></label>
+                            <label>@L["Basvuru.Field.VergiKimlikNo"]<input id="modalVergiKimlikNo" inputmode="numeric" maxlength="10" /></label>
                             <label>@L["Basvuru.Field.TicaretUnvani"]<input id="modalTicaretUnvani" /></label>
                             <label>@L["Basvuru.Field.TicaretSicilNo"]<input id="modalTicaretSicilNo" /></label>
                             <label>@L["Basvuru.Field.KurulusTarihi"]<input id="modalKurulusTarihi" type="date" /></label>
@@ -166,7 +197,7 @@
                         <div class="form-grid">
                             <label>@L["Basvuru.Field.SiraNo"]<input id="adresModalSiraNo" type="number" min="1" step="1" /></label>
                             <label>@L["Basvuru.Field.Il"]<input id="adresModalIl" value="@basvuruIlAdi" readonly /></label>
-                            <label>
+                            <label id="adresModalYapiRuhsatiAlani">
                                 @L["Basvuru.Field.Ilce"]
                                 <select id="adresModalIlce">
                                     <option value="">@L["Basvuru.Common.Select"]</option>
@@ -187,7 +218,7 @@
                             </label>
                             <label>@L["Basvuru.Field.KiraVeyaTahsisSuresi"]<input id="adresModalKiraVeyaTahsisSuresi" type="number" min="0" step="1" /></label>
                             <label>@L["Basvuru.Field.KiraTahsisBitisTarihi"]<input id="adresModalKiraTahsisBitisTarihi" type="date" /></label>
-                            <label>
+                            <label id="adresModalYapiRuhsatiAlani">
                                 @L["Basvuru.Field.YapiRuhsatiDurumu"]
                                 <select id="adresModalYapiRuhsatiDurumu">
                                     @foreach (var item in Enum.GetValues < TarimDonusum.Models.enumUygulamaAdresiYapiRuhsatiDurumu>())
@@ -222,7 +253,7 @@
                     <div class="firma-modal-fields">
                         <div class="form-grid">
                             <label>@L["Basvuru.Ortaklik.PartnerNameTitle"]<input id="ortakAdUnvan" /></label>
-                            <label>@L["Basvuru.Ortaklik.Identity"]<input id="ortakTcknVkn" /></label>
+                            <label>@L["Basvuru.Ortaklik.Identity"]<input id="ortakTcknVkn" inputmode="numeric" maxlength="11" /></label>
                             <label>
                                 @L["Basvuru.Ortaklik.PersonType"]
                                 <select id="ortakKisiTuru">
@@ -230,7 +261,7 @@
                                     <option value="Tüzel Kişi">@L["Basvuru.Ortaklik.LegalEntity"]</option>
                                 </select>
                             </label>
-                            <label>@L["Basvuru.Ortaklik.ShareRate"]<input id="ortakPayOrani" type="number" min="0" max="100" step="0.01" /></label>
+                            <label>@L["Basvuru.Ortaklik.ShareRate"]<input id="ortakPayOrani" type="number" min="25" max="100" step="0.01" /></label>
                             <label>
                                 @L["Basvuru.Ortaklik.PrivatePublicType"]
                                 <select id="ortakOzelKamuNiteligi">
@@ -238,7 +269,6 @@
                                     <option value="Kamu">@L["Basvuru.Ortaklik.PublicSector"]</option>
                                 </select>
                             </label>
-                            <label>@L["Basvuru.Ortaklik.BeneficialOwner"]<input id="ortakNihaiFaydalaniciBilgisi" /></label>
                         </div>
                         <div class="document-upload-box mt-3" id="ortakUboKycBox">
                             <div class="document-file-row">
@@ -252,7 +282,7 @@
                         <div id="ortakTuzelMaliAlanlari" class="legal-partner-modal-fields">
                             <h6>@L["Basvuru.Ortaklik.LegalFinancialTitle"]</h6>
                             <div class="form-grid">
-                                <label>@L["Basvuru.Ortaklik.IncludedRatePercent"]<input id="ortakHesabaDahilOran" type="number" min="0" max="100" step="0.01" /></label>
+                                <label>@L["Basvuru.Ortaklik.IncludedRatePercent"]<input id="ortakHesabaDahilOran" type="number" min="0" max="100" step="0.01" readonly /></label>
                                 <label>@oncekiMaliYil @L["Basvuru.Ortaklik.NetSalesShort"]<input id="ortakOncekiYilNetSatis" class="money-integer" /></label>
                                 <label>@sonMaliYil @L["Basvuru.Ortaklik.NetSalesShort"]<input id="ortakSonYilNetSatis" class="money-integer" /></label>
                                 <label>@oncekiMaliYil @L["Basvuru.Ortaklik.AssetsShort"]<input id="ortakOncekiYilAktifToplami" class="money-integer" /></label>
@@ -283,7 +313,7 @@
                     <input id="adliSicilModalIndex" type="hidden" />
                     <div class="firma-modal-fields">
                         <div class="form-grid">
-                            <label>@L["Basvuru.Field.Tckn"]<input id="adliSicilTckn" /></label>
+                            <label>@L["Basvuru.Field.Tckn"]<input id="adliSicilTckn" inputmode="numeric" maxlength="11" /></label>
                             <label>@L["Basvuru.Field.Ad"]<input id="adliSicilAd" /></label>
                             <label>@L["Basvuru.Field.Soyad"]<input id="adliSicilSoyad" /></label>
                             <label>
@@ -414,6 +444,7 @@
         savePersonFirst: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Criminal.SavePersonFirst"))),
         requiredFields: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Criminal.RequiredFields"))),
         duplicateTckn: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Criminal.DuplicateTckn"))),
+        invalidTckn: @Html.Raw(JsonSerializer.Serialize(T("Validation.Tckn.Invalid"))),
         empty: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Criminal.Empty")))
     };
     const cevreselSosyalMetinleri = {
@@ -460,6 +491,7 @@
     let dirty = false;
     var uygulamaAdresModal;
     var firmaModal;
+    var firmaSecModal;
     var ortakModal;
     var adliSicilModal;
     var sonUygulamaAdresleri = [];
@@ -475,29 +507,46 @@
     document.addEventListener('DOMContentLoaded', () => {
         uygulamaAdresModal = modalOlustur(document.getElementById('uygulamaAdresModal'));
         firmaModal = modalOlustur(document.getElementById('firmaModal'));
+        firmaSecModal = modalOlustur(document.getElementById('firmaSecModal'));
         ortakModal = modalOlustur(document.getElementById('ortakModal'));
         adliSicilModal = modalOlustur(document.getElementById('adliSicilModal'));
 
         document.querySelectorAll('.firma-modal-kapat').forEach(btn => btn.addEventListener('click', () => firmaModal?.hide()));
+        document.querySelectorAll('.firma-sec-modal-kapat').forEach(btn => btn.addEventListener('click', () => firmaSecModal?.hide()));
         document.querySelectorAll('.uygulama-adres-modal-kapat').forEach(btn => btn.addEventListener('click', () => uygulamaAdresModal?.hide()));
         document.querySelectorAll('.ortak-modal-kapat').forEach(btn => btn.addEventListener('click', () => ortakModal?.hide()));
         document.querySelectorAll('.adli-sicil-modal-kapat').forEach(btn => btn.addEventListener('click', () => adliSicilModal?.hide()));
 
-        const stepSelect = document.getElementById('basvuruStepSelect');
-        stepSelect?.addEventListener('change', () => BasvuruBolumGoster(Number(stepSelect.value)));
+        document.querySelectorAll('.basvuru-step').forEach(step =>
+            step.addEventListener('click', () => BasvuruBolumGoster(Number(step.dataset.step))));
         document.querySelectorAll('.nav-prev').forEach(btn => btn.addEventListener('click', () => BasvuruBolumGoster(KomsuBolum(-1))));
         document.querySelectorAll('.nav-next').forEach(btn => btn.addEventListener('click', () => BasvuruBolumGoster(KomsuBolum(1))));
         document.querySelectorAll('.footer-prev').forEach(btn => btn.addEventListener('click', () => BasvuruBolumGoster(KomsuBolum(-1))));
         document.getElementById('footerPrimaryBtn')?.addEventListener('click', FooterBirincilAksiyon);
+        SadeceRakamAlaniIlklendir(document.getElementById('modalVergiKimlikNo'), 10);
+        SadeceRakamAlaniIlklendir(document.getElementById('adliSicilTckn'), 11);
+        SadeceRakamAlaniIlklendir(document.getElementById('ortakTcknVkn'), 11);
 
         document.getElementById('firmaKaydetBtn')?.addEventListener('click', FirmaKaydetModal);
+        document.getElementById('firmaSecAraBtn')?.addEventListener('click', FirmaSecAra);
+        document.getElementById('firmaSecArama')?.addEventListener('keydown', event => {
+            if (event.key === 'Enter') { event.preventDefault(); FirmaSecAra(); }
+        });
         document.getElementById('adresKaydetBtn')?.addEventListener('click', UygulamaAdresiModalKaydet);
+        document.querySelectorAll('[name="Basvuru.finans.ToplamYatirimTutari"], [name="Basvuru.finans.TalepEdilenFinansmanOrani"]').forEach(input => {
+            input.addEventListener('input', FinansTutarlariniHesapla);
+            input.addEventListener('change', FinansTutarlariniHesapla);
+        });
+        document.querySelectorAll('input[name="Basvuru.yatirim.harcamaTurleri"]').forEach(input =>
+            input.addEventListener('change', YapiRuhsatiAlanlariniGuncelle));
         document.getElementById('ortakKaydetBtn')?.addEventListener('click', OrtakModalKaydet);
         document.getElementById('ortakUboKycDosya')?.addEventListener('change', OrtakModalUboKycDosyasiYukle);
         document.getElementById('adliSicilKaydetBtn')?.addEventListener('click', AdliSicilModalKaydet);
         document.getElementById('adliSicilDosya')?.addEventListener('change', AdliSicilDosyasiYukle);
 
         BasvuruBolumIlklendir(active);
+        YapiRuhsatiAlanlariniGuncelle();
+        FinansTutarlariniHesapla();
         BasvuruAksiyonButonlariGuncelle();
     });
 
@@ -581,8 +630,12 @@
     }
 
     function BasvuruStepSec(bolum) {
-        const stepSelect = document.getElementById('basvuruStepSelect');
-        if (stepSelect) stepSelect.value = String(bolum);
+        document.querySelectorAll('.basvuru-step').forEach(step => {
+            const secili = Number(step.dataset.step) === bolum;
+            step.classList.toggle('active', secili);
+            if (secili) step.setAttribute('aria-current', 'step');
+            else step.removeAttribute('aria-current');
+        });
         BasvuruAksiyonButonlariGuncelle();
     }
 
@@ -800,8 +853,21 @@
     }
 
     function FirmaBolumuIlklendir() {
-        document.getElementById('firmaSorgulaBtn')?.addEventListener('click', () => {
-            AjaxGet('/Basvuru/FirmaSorgula', { vergiKimlikNo: $('#vergiKimlikNo').val(), id: 0 }, FirmaBilgiYaz);
+        AdliSicilInitialOku();
+        document.getElementById('adliSicilKisiEkleBtn')?.addEventListener('click', () => AdliSicilModalAc(-1));
+        AdliSicilKisilerRender();
+        SadeceRakamAlaniIlklendir(document.getElementById('vergiKimlikNo'), 10);
+        document.getElementById('firmaSecBtn')?.addEventListener('click', () => {
+            document.getElementById('firmaSecArama').value = '';
+            firmaSecModal?.show();
+            FirmaSecAra();
+        });
+        document.getElementById('vergiKimlikNo')?.addEventListener('input', event => {
+            if (VknGecerliMi(event.target.value))
+                AjaxGet('/Basvuru/FirmaSorgula', { vergiKimlikNo: event.target.value, id: 0 }, sonuc => {
+                    if (sonuc?.basarili && sonuc.nesne) setFirma(sonuc.nesne);
+                    else PopupMesajGoster(sonuc?.hataStr || @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.NoResults"))), false);
+                });
         });
         document.getElementById('firmaYeniBtn')?.addEventListener('click', () => {
             firmaModalDoldur({ id: 0, vergiKimlikNo: $('#vergiKimlikNo').val() || '' });
@@ -815,6 +881,33 @@
             }
             AjaxGet('/Basvuru/FirmaSorgula', { vergiKimlikNo: $('#vergiKimlikNo').val(), id: 0 }, FirmaBilgiDoldur);
         });
+    }
+
+    function FirmaSecAra() {
+        const aramaMetni = (document.getElementById('firmaSecArama')?.value || '').trim();
+        const liste = document.getElementById('firmaSecListe');
+        if (liste) liste.innerHTML = `<div class="text-center text-muted p-3">${htmlEncode(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.Searching"))))}</div>`;
+        AjaxGet('/Firma/Ara', { aramaMetni }, sonuc => {
+            if (!sonuc?.basarili) {
+                if (liste) liste.innerHTML = `<div class="alert alert-warning">${htmlEncode(sonuc?.hataStr || '')}</div>`;
+                return;
+            }
+            const firmalar = sonuc.nesne || [];
+            if (!firmalar.length) {
+                if (liste) liste.innerHTML = `<div class="text-center text-muted p-3">${htmlEncode(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.NoResults"))))}</div>`;
+                return;
+            }
+            window.basvuruFirmaSecimListesi = firmalar;
+            liste.innerHTML = `<table class="table table-hover mb-0"><thead><tr><th>${htmlEncode(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Field.TicaretUnvani"))))}</th><th>${htmlEncode(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Field.VergiKimlikNo"))))}</th><th></th></tr></thead><tbody>${firmalar.map((firma, index) => `<tr><td>${htmlEncode(firma.ticaretUnvani)}</td><td>${htmlEncode(firma.vergiKimlikNo)}</td><td class="text-right"><button type="button" class="btn btn-sm btn-primary" onclick="FirmaSec(${index})">${htmlEncode(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.Select"))))}</button></td></tr>`).join('')}</tbody></table>`;
+        });
+    }
+
+    function FirmaSec(index) {
+        const firma = (window.basvuruFirmaSecimListesi || [])[index];
+        if (!firma) return;
+        setFirma(firma);
+        dirty = true;
+        firmaSecModal?.hide();
     }
 
     function YatirimBolumuIlklendir() {
@@ -831,18 +924,20 @@
     }
 
     function BelgelerBolumuIlklendir() {
-        AdliSicilInitialOku();
-        document.getElementById('adliSicilKisiEkleBtn')?.addEventListener('click', () => AdliSicilModalAc(-1));
         document.querySelectorAll('.basvuru-dosya-input').forEach(input => {
             input.addEventListener('change', function () {
                 BasvuruDosyasiYukle(this.dataset.formAd || zorunluBelgeFormAd, Number(this.dataset.dosyaNo || 0), this, this.dataset.nameTarget, this.dataset.downloadTarget);
+            });
+        });
+        document.querySelectorAll('.ortaklik-dosya-input').forEach(input => {
+            input.addEventListener('change', function () {
+                OrtaklikDosyasiYukle(this.dataset.formAd || bagliBelgeFormAd, Number(this.dataset.dosyaNo || 0), this, this.dataset.nameTarget, this.dataset.downloadTarget);
             });
         });
         document.getElementById('taahhutDosya')?.addEventListener('change', function () {
             dosyaSecimYaz(this, 'taahhutDosyaSecim', 'Basvuru.TaahhutDosyaAdi');
             TaahhutDosyasiYukle();
         });
-        AdliSicilKisilerRender();
     }
 
     function AdliSicilInitialOku() {
@@ -897,6 +992,11 @@
         if (!kisi.tckn || !kisi.ad || !kisi.soyad || !kisi.gorev) {
             const hata = document.getElementById('adliSicilModalHata');
             if (hata) hata.textContent = adliSicilMetinleri.requiredFields;
+            return;
+        }
+        if (!TcknGecerliMi(kisi.tckn)) {
+            const hata = document.getElementById('adliSicilModalHata');
+            if (hata) hata.textContent = adliSicilMetinleri.invalidTckn;
             return;
         }
         if (AyniAdliSicilTcknVarMi(kisi.tckn, indexText)) {
@@ -1317,15 +1417,16 @@
 
     function OrtaklikBolumuIlklendir() {
         OrtaklikInitialOku();
-        document.getElementById('hasRelatedEnterprise')?.addEventListener('change', toggleRelatedEnterprise);
         document.getElementById('ortakEkleBtn')?.addEventListener('click', () => OrtakModalAc(-1));
         document.getElementById('ortakKisiTuru')?.addEventListener('change', OrtakModalTuzelAlanGuncelle);
+        document.getElementById('ortakPayOrani')?.addEventListener('input', OrtakHesabaDahilOranGuncelle);
+        SadeceRakamAlaniIlklendir(document.getElementById('ortakTcknVkn'), 11);
+        SadeceRakamAlaniIlklendir(document.getElementById('adliSicilTckn'), 11);
         document.querySelectorAll('.ortaklik-dosya-input').forEach(input => {
             input.addEventListener('change', function () {
                 OrtaklikDosyasiYukle(this.dataset.formAd || bagliBelgeFormAd, Number(this.dataset.dosyaNo || 0), this, this.dataset.nameTarget, this.dataset.downloadTarget);
             });
         });
-        toggleRelatedEnterprise();
         OrtaklarRender();
     }
 
@@ -1339,15 +1440,14 @@
         try {
             const model = JSON.parse(jsonElement.textContent || '{}');
             basvuruOrtaklari = Array.isArray(model.ortaklar) ? model.ortaklar : [];
+            basvuruOrtaklari.forEach(ortak => {
+                if (ortak.kisiTuru === 'Tüzel Kişi')
+                    ortak.hesabaDahilOran = HesabaDahilOranHesapla(ortak.payOrani);
+            });
         }
         catch {
             basvuruOrtaklari = [];
         }
-    }
-
-    function toggleRelatedEnterprise() {
-        const secim = document.getElementById('hasRelatedEnterprise')?.value || '';
-        document.getElementById('relatedEnterpriseBox')?.classList.toggle('d-none', secim !== 'true');
     }
 
     function OrtakModalAc(index) {
@@ -1358,8 +1458,7 @@
         modalSet('ortakKisiTuru', ortak.kisiTuru || 'Gerçek Kişi');
         modalSet('ortakPayOrani', ortak.payOrani);
         modalSet('ortakOzelKamuNiteligi', ortak.ozelKamuNiteligi || 'Özel');
-        modalSet('ortakNihaiFaydalaniciBilgisi', ortak.nihaiFaydalaniciBilgisi);
-        modalSet('ortakHesabaDahilOran', ortak.hesabaDahilOran ?? ortak.payOrani);
+        modalSet('ortakHesabaDahilOran', HesabaDahilOranHesapla(ortak.payOrani));
         modalSet('ortakOncekiYilNetSatis', ortak.oncekiYilNetSatis);
         modalSet('ortakSonYilNetSatis', ortak.sonYilNetSatis);
         modalSet('ortakOncekiYilAktifToplami', ortak.oncekiYilAktifToplami);
@@ -1374,6 +1473,23 @@
     function OrtakModalTuzelAlanGuncelle() {
         const tuzelMi = modalValue('ortakKisiTuru') === 'Tüzel Kişi';
         document.getElementById('ortakTuzelMaliAlanlari')?.classList.toggle('d-none', !tuzelMi);
+        const kimlikAlani = document.getElementById('ortakTcknVkn');
+        if (kimlikAlani) {
+            kimlikAlani.maxLength = tuzelMi ? 10 : 11;
+            kimlikAlani.value = kimlikAlani.value.slice(0, kimlikAlani.maxLength);
+        }
+        OrtakHesabaDahilOranGuncelle();
+    }
+
+    function HesabaDahilOranHesapla(payOrani) {
+        const oran = Number(payOrani);
+        if (!Number.isFinite(oran) || oran < 25) return 0;
+        if (oran > 50) return 100;
+        return oran;
+    }
+
+    function OrtakHesabaDahilOranGuncelle() {
+        modalSet('ortakHesabaDahilOran', HesabaDahilOranHesapla(sayiOkuId('ortakPayOrani')));
     }
 
     function OrtakModalKaydet() {
@@ -1385,9 +1501,9 @@
             tcknVkn: modalValue('ortakTcknVkn').trim(),
             kisiTuru: modalValue('ortakKisiTuru'),
             payOrani: sayiOkuId('ortakPayOrani'),
-            hesabaDahilOran: sayiOkuId('ortakHesabaDahilOran'),
+            hesabaDahilOran: HesabaDahilOranHesapla(sayiOkuId('ortakPayOrani')),
             ozelKamuNiteligi: modalValue('ortakOzelKamuNiteligi'),
-            nihaiFaydalaniciBilgisi: modalValue('ortakNihaiFaydalaniciBilgisi').trim(),
+            nihaiFaydalaniciBilgisi: mevcutOrtak()?.nihaiFaydalaniciBilgisi || '',
             uboKycBelgeAdi: mevcutOrtakBelgeAdi(),
             uboKycDosyaId: mevcutOrtakDosyaId(),
             oncekiYilNetSatis: sayiOkuId('ortakOncekiYilNetSatis'),
@@ -1407,17 +1523,26 @@
             if (hata) hata.textContent = ortakMetinleri.requiredNameIdentity;
             return;
         }
+        if (ortak.payOrani == null || ortak.payOrani < 25 || ortak.payOrani > 100) {
+            const hata = document.getElementById('ortakModalHata');
+            if (hata) hata.textContent = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.ShareRateRange")));
+            return;
+        }
+        const kimlikGecerli = ortak.kisiTuru === 'Tüzel Kişi'
+            ? VknGecerliMi(ortak.tcknVkn)
+            : TcknGecerliMi(ortak.tcknVkn);
+        if (!kimlikGecerli) {
+            const hata = document.getElementById('ortakModalHata');
+            if (hata) hata.textContent = ortak.kisiTuru === 'Tüzel Kişi'
+                ? @Html.Raw(JsonSerializer.Serialize(T("Validation.Vkn.Invalid")))
+                : @Html.Raw(JsonSerializer.Serialize(T("Validation.Tckn.Invalid")));
+            return;
+        }
         if (AyniTcknVknVarMi(ortak.tcknVkn, modalValue('ortakModalIndex'))) {
             const hata = document.getElementById('ortakModalHata');
             if (hata) hata.textContent = ortakMetinleri.duplicateIdentity;
             return;
         }
-        if (ortak.kisiTuru === 'Tüzel Kişi' && (!ortak.hesabaDahilOran || ortak.hesabaDahilOran <= 0)) {
-            const hata = document.getElementById('ortakModalHata');
-            if (hata) hata.textContent = ortakMetinleri.legalIncludedRateRequired;
-            return;
-        }
-
         if (indexText === '') basvuruOrtaklari.push(ortak);
         else basvuruOrtaklari[Number(indexText)] = ortak;
         basvuruOrtaklari.forEach((item, index) => item.siraNo = index + 1);
@@ -1453,11 +1578,11 @@
 
         let html = `<div class="table-responsive"><table class="table table-bordered ortak-table"><thead><tr>
             <th>${htmlEncode(ortakMetinleri.rowNo)}</th><th>${htmlEncode(ortakMetinleri.partnerNameTitle)}</th><th>${htmlEncode(ortakMetinleri.identity)}</th><th>${htmlEncode(ortakMetinleri.personType)}</th>
-            <th>${htmlEncode(ortakMetinleri.shareRate)}</th><th>${htmlEncode(ortakMetinleri.privatePublicType)}</th><th>${htmlEncode(ortakMetinleri.beneficialOwner)}</th><th>${htmlEncode(ortakMetinleri.uboKycDocument)}</th><th></th>
+            <th>${htmlEncode(ortakMetinleri.shareRate)}</th><th>${htmlEncode(ortakMetinleri.privatePublicType)}</th><th>${htmlEncode(ortakMetinleri.uboKycDocument)}</th><th></th>
         </tr></thead><tbody>`;
 
         if (basvuruOrtaklari.length === 0) {
-            html += `<tr><td colspan="9" class="text-muted text-center">${htmlEncode(ortakMetinleri.emptyPartners)}</td></tr>`;
+            html += `<tr><td colspan="8" class="text-muted text-center">${htmlEncode(ortakMetinleri.emptyPartners)}</td></tr>`;
         }
         else {
             basvuruOrtaklari.forEach((ortak, index) => {
@@ -1468,7 +1593,6 @@
                     <td>${htmlEncode(OrtakSecimMetni(ortak.kisiTuru))}</td>
                     <td>${sayiYaz(ortak.payOrani)}</td>
                     <td>${htmlEncode(OrtakSecimMetni(ortak.ozelKamuNiteligi))}</td>
-                    <td>${htmlEncode(ortak.nihaiFaydalaniciBilgisi)}</td>
                     <td>${OrtakUboKycHucreHtml(ortak, index)}</td>
                     <td class="text-nowrap">
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="OrtakModalAc(${index})" ${ortaklikReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.edit)}</button>
@@ -1482,6 +1606,11 @@
         container.innerHTML = html;
         OrtaklikOzetGuncelle();
         TuzelOrtakMaliRender();
+        const tuzelOrtakYok = !basvuruOrtaklari.some(ortak => ortak.kisiTuru === 'Tüzel Kişi');
+        document.getElementById('tuzelKisiOrtakBilgileri')?.classList.toggle('d-none', tuzelOrtakYok);
+        document.getElementById('bagliOrtakZorunluBelgeler')?.classList.toggle(
+            'd-none',
+            tuzelOrtakYok);
     }
 
     function OrtakUboKycHucreHtml(ortak, index) {
@@ -1497,10 +1626,14 @@
         </div>`;
     }
 
-    function mevcutOrtakId() {
+    function mevcutOrtak() {
         const indexText = modalValue('ortakModalIndex');
-        if (indexText === '') return 0;
-        return basvuruOrtaklari[Number(indexText)]?.id || 0;
+        if (indexText === '') return null;
+        return basvuruOrtaklari[Number(indexText)] || null;
+    }
+
+    function mevcutOrtakId() {
+        return mevcutOrtak()?.id || 0;
     }
 
     function mevcutOrtakDosyaId() {
@@ -1577,6 +1710,36 @@
         return String(tcknVkn || '').trim().replace(/[^0-9A-Za-z]/g, '').toLocaleUpperCase('tr-TR');
     }
 
+    function SadeceRakamAlaniIlklendir(alan, uzunluk) {
+        if (!alan || alan.dataset.numericInitialized === 'true') return;
+        alan.dataset.numericInitialized = 'true';
+        alan.inputMode = 'numeric';
+        alan.maxLength = uzunluk;
+        alan.addEventListener('input', () => {
+            alan.value = alan.value.replace(/\D/g, '').slice(0, alan.maxLength);
+        });
+    }
+
+    function TcknGecerliMi(value) {
+        const tckn = String(value || '').trim();
+        if (!/^\d{11}$/.test(tckn) || tckn[0] === '0' || /^(\d)\1{10}$/.test(tckn)) return false;
+        const d = [...tckn].map(Number);
+        const onuncu = ((7 * (d[0] + d[2] + d[4] + d[6] + d[8]) - (d[1] + d[3] + d[5] + d[7])) % 10 + 10) % 10;
+        return d[9] === onuncu && d[10] === d.slice(0, 10).reduce((toplam, x) => toplam + x, 0) % 10;
+    }
+
+    function VknGecerliMi(value) {
+        const vkn = String(value || '').trim();
+        if (!/^\d{10}$/.test(vkn) || /^(\d)\1{9}$/.test(vkn)) return false;
+        const d = [...vkn].map(Number);
+        let toplam = 0;
+        for (let i = 0; i < 9; i++) {
+            const basamak = (d[i] + 9 - i) % 10;
+            toplam += basamak === 9 ? 9 : (basamak * (2 ** (9 - i))) % 9;
+        }
+        return d[9] === (10 - (toplam % 10)) % 10;
+    }
+
     function OrtakSecimMetni(value) {
         if (value === 'Gerçek Kişi') return ortakMetinleri.naturalPerson;
         if (value === 'Tüzel Kişi') return ortakMetinleri.legalEntity;
@@ -1598,9 +1761,6 @@
         if (toplamPay > 100) {
             alert.innerHTML = `<div class="alert alert-danger">${htmlEncode(ortakMetinleri.totalShareExceeded)}</div>`;
         }
-        else if (basvuruOrtaklari.length > 0 && toplamPay !== 100) {
-            alert.innerHTML = `<div class="alert alert-warning">${htmlEncode(ortakMetinleri.totalShareExpected.replace('{0}', sayiYaz(toplamPay)))}</div>`;
-        }
         else {
             alert.innerHTML = '';
         }
@@ -1615,51 +1775,37 @@
             return;
         }
 
+        const toplamlar = tuzelOrtaklar.reduce((toplam, ortak) => {
+            const carpan = HesabaDahilOranHesapla(ortak.payOrani) / 100;
+            toplam.oncekiNet += Number(ortak.oncekiYilNetSatis || 0) * carpan;
+            toplam.sonNet += Number(ortak.sonYilNetSatis || 0) * carpan;
+            toplam.oncekiAktif += Number(ortak.oncekiYilAktifToplami || 0) * carpan;
+            toplam.sonAktif += Number(ortak.sonYilAktifToplami || 0) * carpan;
+            return toplam;
+        }, { oncekiNet: 0, sonNet: 0, oncekiAktif: 0, sonAktif: 0 });
+
         let html = `<h3 class="subhead">${htmlEncode(ortakMetinleri.legalFinancialTitle)}</h3>
             <div class="table-responsive"><table class="table table-bordered legal-financial-table"><thead><tr>
-                <th>${htmlEncode(ortakMetinleri.partnerColumn)}</th><th>${htmlEncode(ortakMetinleri.includedRate)}</th><th>${htmlEncode(oncekiMaliYil)} ${htmlEncode(ortakMetinleri.netSalesShort)}</th><th>${htmlEncode(sonMaliYil)} ${htmlEncode(ortakMetinleri.netSalesShort)}</th><th>${htmlEncode(oncekiMaliYil)} ${htmlEncode(ortakMetinleri.assetsShort)}</th><th>${htmlEncode(sonMaliYil)} ${htmlEncode(ortakMetinleri.assetsShort)}</th>
+                <th>${htmlEncode(oncekiMaliYil)} ${htmlEncode(ortakMetinleri.netSalesShort)}</th><th>${htmlEncode(sonMaliYil)} ${htmlEncode(ortakMetinleri.netSalesShort)}</th><th>${htmlEncode(oncekiMaliYil)} ${htmlEncode(ortakMetinleri.assetsShort)}</th><th>${htmlEncode(sonMaliYil)} ${htmlEncode(ortakMetinleri.assetsShort)}</th>
             </tr></thead><tbody>`;
-        tuzelOrtaklar.forEach(ortak => {
-            html += `<tr>
-                <td>${htmlEncode(ortak.adUnvan)}</td>
-                <td>%${sayiYaz(ortak.hesabaDahilOran ?? ortak.payOrani)}</td>
-                <td>${sayiYaz(ortak.oncekiYilNetSatis)}</td>
-                <td>${sayiYaz(ortak.sonYilNetSatis)}</td>
-                <td>${sayiYaz(ortak.oncekiYilAktifToplami)}</td>
-                <td>${sayiYaz(ortak.sonYilAktifToplami)}</td>
-            </tr>`;
-        });
+        html += `<tr class="font-weight-bold"><td>${sayiYaz(toplamlar.oncekiNet)}</td><td>${sayiYaz(toplamlar.sonNet)}</td><td>${sayiYaz(toplamlar.oncekiAktif)}</td><td>${sayiYaz(toplamlar.sonAktif)}</td></tr>`;
         html += '</tbody></table></div>';
         container.innerHTML = html;
     }
 
     function OrtaklikKaydet(afterSuccess, bosBagliSecimiHayirSay) {
-        const secim = document.getElementById('hasRelatedEnterprise')?.value || '';
-        const bagliOrtakVarMi = secim === '' ? (bosBagliSecimiHayirSay ? false : null) : secim === 'true';
-        if (bagliOrtakVarMi === true) {
-            const eksikler = [];
-            if (!modalValue('relatedTitle').trim()) eksikler.push(ortakMetinleri.relatedEnterpriseTitleField);
-            if (!modalValue('relatedId').trim()) eksikler.push(ortakMetinleri.relatedEnterpriseIdentityField);
-            if (sayiAlanBosMu('relPrevNetSales')) eksikler.push(`${oncekiMaliYil} ${ortakMetinleri.netSalesRevenue}`);
-            if (sayiAlanBosMu('relLastNetSales')) eksikler.push(`${sonMaliYil} ${ortakMetinleri.netSalesRevenue}`);
-            if (sayiAlanBosMu('relPrevAssets')) eksikler.push(`${oncekiMaliYil} ${ortakMetinleri.totalAssets}`);
-            if (sayiAlanBosMu('relLastAssets')) eksikler.push(`${sonMaliYil} ${ortakMetinleri.totalAssets}`);
-            if (eksikler.length > 0) {
-                PopupMesajGoster(ortakMetinleri.requiredEnter.replace('{0}', eksikler.join(', ')), false);
-                return;
-            }
-        }
+        const bagliOrtakVarMi = basvuruOrtaklari.some(ortak => ortak.kisiTuru === 'Tüzel Kişi');
         const model = {
             ...BasvuruKimlikleri(),
             bagliOrtakIsletmeVarMi: bagliOrtakVarMi,
             ozelSektorPayi: sayiOkuId('privateShareCalculated'),
             ortaklar: basvuruOrtaklari,
-            bagliOrtakUnvani: modalValue('relatedTitle'),
-            bagliOrtakKimlikNo: modalValue('relatedId'),
-            bagliOrtakOncekiYilNetSatis: sayiOkuId('relPrevNetSales'),
-            bagliOrtakSonYilNetSatis: sayiOkuId('relLastNetSales'),
-            bagliOrtakOncekiYilAktifToplami: sayiOkuId('relPrevAssets'),
-            bagliOrtakSonYilAktifToplami: sayiOkuId('relLastAssets')
+            bagliOrtakUnvani: '',
+            bagliOrtakKimlikNo: '',
+            bagliOrtakOncekiYilNetSatis: null,
+            bagliOrtakSonYilNetSatis: null,
+            bagliOrtakOncekiYilAktifToplami: null,
+            bagliOrtakSonYilAktifToplami: null
         };
         AjaxPost('/Basvuru/KaydetOrtaklik', model, function (sonuc) {
             if (sonuc?.basarili) {
@@ -1787,6 +1933,10 @@
             faaliyetKonusu: modalValue('modalFaaliyetKonusu'),
             adres: modalValue('modalAdres')
         };
+        if (!VknGecerliMi(firma.vergiKimlikNo)) {
+            PopupMesajGoster(@Html.Raw(JsonSerializer.Serialize(T("Validation.Vkn.Invalid"))), false);
+            return;
+        }
         AjaxPost('/Basvuru/FirmaKaydet', firma, function (sonuc) {
             if (sonuc.basarili) {
                 firmaModal?.hide();
@@ -1844,7 +1994,7 @@
             const ilAlani = $('[name="Basvuru.IlId"]');
             if (ilAlani.length) basvuruIlId = Number(ilAlani.val() || 0);
             locked = false;
-            $('#basvuruStepSelect option').prop('disabled', false);
+            $('.basvuru-step').prop('disabled', false);
             dirty = false;
         }
     }
@@ -1858,9 +2008,12 @@
         const yatirim = {
             ...BasvuruKimlikleri(),
             yatirimAdi: degerStr('Basvuru.YatirimAdi'),
-            yatirimTuru: degerInt('Basvuru.yatirim.yatirimTuru'),
+            yatirimTurleri: $('input[name="Basvuru.yatirim.yatirimTurleri"]:checked').map(function () { return parseInt(this.value); }).get(),
             harcamaTurleri: $('input[name="Basvuru.yatirim.harcamaTurleri"]:checked').map(function () { return parseInt(this.value); }).get(),
-            yatiriminAmaci: degerStr('Basvuru.yatirim.YatiriminAmaci')
+            yatiriminAmaci: degerStr('Basvuru.yatirim.YatiriminAmaci'),
+            yatirimFaaliyetleri: degerStr('Basvuru.yatirim.YatirimFaaliyetleri'),
+            yatirimGirdileri: degerStr('Basvuru.yatirim.YatirimGirdileri'),
+            yatirimCiktilari: degerStr('Basvuru.yatirim.YatirimCiktilari')
         };
         AjaxPost('/Basvuru/KaydetYatirimBilgileri', yatirim, sonuc => SonucGosterVeDirtyTemizle(sonuc, afterSuccess));
     }
@@ -1878,17 +2031,48 @@
     }
 
     function FinansKaydet(afterSuccess) {
+        FinansTutarlariniHesapla();
+        const toplamAlani = document.querySelector('[name="Basvuru.finans.ToplamYatirimTutari"]');
+        const oranAlani = document.querySelector('[name="Basvuru.finans.TalepEdilenFinansmanOrani"]');
+        const oran = Number(oranAlani?.value || 0);
+        const azamiOran = Number(oranAlani?.max || 0);
+        if (azamiOran > 0 && oran > azamiOran) {
+            const mesaj = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Finance.RateLimitError")));
+            PopupMesajGoster(mesaj.replace("{0}", String(azamiOran)), false);
+            return;
+        }
         const model = {
             ...BasvuruKimlikleri(),
-            toplamYatirimTutari: degerDec('Basvuru.finans.ToplamYatirimTutari'),
-            talepEdilenFinansmanOrani: degerDec('Basvuru.finans.TalepEdilenFinansmanOrani'),
+            toplamYatirimTutari: Number((toplamAlani?.value || '').replace(/[^0-9]/g, '') || 0),
+            talepEdilenFinansmanOrani: oran,
+            talepEdilenDestekTutari: degerDec('Basvuru.finans.TalepEdilenDestekTutari'),
             basvuruSahibiKatkisi: degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
             onBasvuruSahibiKatkisi: degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
-            talepEdilenVadeSuresiYil: degerInt('Basvuru.finans.TalepEdilenVadeSuresiYil'),
-            digerFinansmanKaynaklariAciklama: degerStr('Basvuru.finans.DigerFinansmanKaynaklariAciklama')
+            talepEdilenVadeSuresiAy: degerInt('Basvuru.finans.TalepEdilenVadeSuresiAy'),
+            yatirimSuresiAy: degerInt('Basvuru.finans.YatirimSuresiAy')
         };
         AjaxPost('/Basvuru/KaydetFinans', model, sonuc => SonucGosterVeDirtyTemizle(sonuc, afterSuccess));
     }
+
+    function FinansTutarlariniHesapla() {
+        const toplamAlani = document.querySelector('[name="Basvuru.finans.ToplamYatirimTutari"]');
+        const oranAlani = document.querySelector('[name="Basvuru.finans.TalepEdilenFinansmanOrani"]');
+        // Toplam yatırım alanı kuruşsuz para alanıdır; nokta/virgül gibi
+        // görüntüleme ayraçlarından bağımsız olarak yalnızca rakamları oku.
+        const toplamMetni = (toplamAlani?.value || '').replace(/[^0-9]/g, '');
+        const toplam = Number(toplamMetni || 0);
+        const oran = Number(oranAlani?.value || 0);
+        const finansman = Math.round(toplam * oran) / 100;
+        const ozKaynak = Math.max(0, toplam - finansman);
+        const finansmanAlani = document.querySelector('[name="Basvuru.finans.TalepEdilenDestekTutari"]');
+        const ozKaynakAlani = document.querySelector('[name="Basvuru.finans.BasvuruSahibiKatkisi"]');
+        if (finansmanAlani) finansmanAlani.value = Math.round(finansman).toLocaleString('tr-TR');
+        if (ozKaynakAlani) ozKaynakAlani.value = Math.round(ozKaynak).toLocaleString('tr-TR');
+    }
+
+    // Form partial olarak DOMContentLoaded sonrasında yüklense de hesaplama çalışsın.
+    window.FinansTutarlariniHesapla = FinansTutarlariniHesapla;
+    FinansTutarlariniHesapla();
 
     function MaliKaydet(afterSuccess) {
         const model = {
@@ -2841,7 +3025,9 @@
             yatirimYeriStatusu: Number(modalValue('adresModalYatirimYeriStatusu') || 0) || 0,
             kiraVeyaTahsisSuresi: kiraVeyaTahsisSuresi === '' ? null : Number(kiraVeyaTahsisSuresi),
             kiraTahsisBitisTarihi: kiraTahsisBitisTarihi || null,
-            yapiRuhsatiDurumu: Number(modalValue('adresModalYapiRuhsatiDurumu') || 0) || 0
+            yapiRuhsatiDurumu: YapimIsiSecili()
+                ? Number(modalValue('adresModalYapiRuhsatiDurumu') || 0) || 0
+                : 5
         };
         adresKaydet(adres);
     }
@@ -2890,7 +3076,20 @@
         modalSet('adresModalKiraVeyaTahsisSuresi', adres.kiraVeyaTahsisSuresi);
         modalSet('adresModalKiraTahsisBitisTarihi', adres.kiraTahsisBitisTarihi);
         modalSet('adresModalYapiRuhsatiDurumu', adres.yapiRuhsatiDurumu);
+        YapiRuhsatiAlanlariniGuncelle();
         uygulamaAdresModal?.show();
+    }
+
+    function YapimIsiSecili() {
+        return !!document.querySelector('input[name="Basvuru.yatirim.harcamaTurleri"][value="1"]:checked');
+    }
+
+    function YapiRuhsatiAlanlariniGuncelle() {
+        const gizle = !YapimIsiSecili();
+        document.getElementById('adresModalYapiRuhsatiAlani')?.classList.toggle('d-none', gizle);
+        document.querySelectorAll('.yapi-ruhsati-kolonu').forEach(element => element.classList.toggle('d-none', gizle));
+        if (gizle) modalSet('adresModalYapiRuhsatiDurumu', 5);
+        if (sonUygulamaAdresleri.length) RenderUygulamaAdresleri(sonUygulamaAdresleri);
     }
 
     function RenderUygulamaAdresleri(uygulamaAdresleri) {
@@ -2901,7 +3100,7 @@
         if (sonUygulamaAdresleri.length === 0) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
-            td.colSpan = '8';
+            td.colSpan = YapimIsiSecili() ? '8' : '7';
             td.className = 'text-muted text-center';
             td.textContent = adresBosMesaj;
             tr.appendChild(td);
@@ -2910,7 +3109,9 @@
         }
         sonUygulamaAdresleri.forEach((adres, index) => {
             const tr = document.createElement('tr');
-            [adres.siraNo, adres.ilAdi, adres.ilceAdi, adres.tamAdres, adres.yatirimYeriStatusuAd, adres.kiraTahsisBitis, adres.yapiRuhsatiDurumuAd].forEach((value, alanIndex) => {
+            const alanlar = [adres.siraNo, adres.ilAdi, adres.ilceAdi, adres.tamAdres, adres.yatirimYeriStatusuAd, adres.kiraTahsisBitis];
+            if (YapimIsiSecili()) alanlar.push(adres.yapiRuhsatiDurumuAd);
+            alanlar.forEach((value, alanIndex) => {
                 const td = document.createElement('td');
                 td.textContent = value || '';
                 if (alanIndex === 3) td.className = 'adres-tam-adres';

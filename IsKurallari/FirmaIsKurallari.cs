@@ -25,7 +25,8 @@ namespace TarimDonusum.IsKurallari
             Sonuc<List<Firma>> sonuc = new();
             if (!KullaniciKontrolEt(kullanici, sonuc)) return sonuc;
             string metin = arama.AramaMetni?.Trim() ?? "";
-            if (string.IsNullOrWhiteSpace(metin))
+            bool basvuran = kullanici!.Yetkiler.Any(x => x.Rol == KullaniciRol.BasvuruKullanicisi);
+            if (string.IsNullOrWhiteSpace(metin) && !basvuran)
             {
                 sonuc.HataEkle("Arama metni girilmelidir.");
                 return sonuc;
@@ -34,7 +35,6 @@ namespace TarimDonusum.IsKurallari
             {
                 await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
-                bool basvuran = kullanici!.Yetkiler.Any(x => x.Rol == KullaniciRol.BasvuruKullanicisi);
                 sonuc.nesne = await new TABFirma(connection).AraAsync(metin, basvuran ? kullanici.Id : null);
             }
             catch (Exception ex) { Hata(sonuc, ex, "Firmalar aranamadı."); }

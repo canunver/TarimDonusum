@@ -43,9 +43,12 @@
                 <div class="donem-form-grid">
                     <label>Yıl<input id="donemYil" type="number" min="2000" max="2200" class="form-control" /></label>
                     <label>Dönem adı<input id="donemAd" maxlength="150" class="form-control" /></label>
+                    <label>Ön Başvuru başlangıç tarihi<input id="onBasvuruBaslangic" type="date" class="form-control" /></label>
+                    <label>Ön başvuru bitiş tarihi<input id="onBasvuruBitis" type="date" class="form-control" /></label>
                     <label>Başvuru başlangıç tarihi<input id="basvuruBaslangic" type="date" class="form-control" /></label>
                     <label>Başvuru bitiş tarihi<input id="basvuruBitis" type="date" class="form-control" /></label>
-                    <label>Ön başvuru bitiş tarihi<input id="onBasvuruBitis" type="date" class="form-control" /></label>
+                    <label>Ön Başvuru Çevrim kuru<input id="onBasvuruCevrimKuru" type="number" min="0" step="0.000001" class="form-control" /></label>
+                    <label>Başvuru Çevrim kuru<input id="basvuruCevrimKuru" type="number" min="0" step="0.000001" class="form-control" /></label>
                     <label>Başvuru durumu
                         <select id="basvuruyaAcik" class="form-control"><option value="true">Açık</option><option value="false">Kapalı</option></select>
                     </label>
@@ -104,7 +107,9 @@
         $('#donemModalBaslik').text(d.id ? 'Dönem düzenle' : 'Yeni dönem');
         $('#donemId').val(d.id || 0); $('#donemYil').val(d.yil || ''); $('#donemAd').val(d.ad || '');
         $('#basvuruBaslangic').val(tarihDegeri(d.basvuruBaslangicTarihi));
+        $('#onBasvuruBaslangic').val(tarihDegeri(d.onBasvuruBaslangicTarihi));
         $('#onBasvuruBitis').val(tarihDegeri(d.onBasvuruBitisTarihi)); $('#basvuruBitis').val(tarihDegeri(d.basvuruBitisTarihi));
+        $('#onBasvuruCevrimKuru').val(d.onBasvuruCevrimKuru ?? ''); $('#basvuruCevrimKuru').val(d.basvuruCevrimKuru ?? '');
         $('#minimumYatirim').val(d.minimumYatirimTutari ?? ''); $('#maksimumYatirim').val(d.maksimumYatirimTutari ?? '');
         $('#maksimumDestek').val(d.maksimumDestekTutari ?? ''); $('#destekOrani').val(d.destekOrani ?? '');
         $('#basvuruyaAcik').val(String(d.basvuruyaAcikMi === true)); $('#aciklama').val(d.aciklama || '');
@@ -116,9 +121,12 @@
         AjaxPost('/Donem/Kaydet', {
             id: Number($('#donemId').val() || 0), yil: Number($('#donemYil').val() || 0), ad: $('#donemAd').val(),
             basvuruyaAcikMi: $('#basvuruyaAcik').val() === 'true',
-            basvuruBaslangicTarihi: $('#basvuruBaslangic').val() || null, onBasvuruBitisTarihi: $('#onBasvuruBitis').val() || null,
+            basvuruBaslangicTarihi: $('#basvuruBaslangic').val() || null,
+            onBasvuruBaslangicTarihi: $('#onBasvuruBaslangic').val() || null, onBasvuruBitisTarihi: $('#onBasvuruBitis').val() || null,
             basvuruBitisTarihi: $('#basvuruBitis').val() || null, minimumYatirimTutari: paraDegeri('#minimumYatirim'),
             maksimumYatirimTutari: paraDegeri('#maksimumYatirim'), maksimumDestekTutari: paraDegeri('#maksimumDestek'),
+            onBasvuruCevrimKuru: $('#onBasvuruCevrimKuru').val() === '' ? null : Number($('#onBasvuruCevrimKuru').val()),
+            basvuruCevrimKuru: $('#basvuruCevrimKuru').val() === '' ? null : Number($('#basvuruCevrimKuru').val()),
             destekOrani: $('#destekOrani').val() === '' ? null : Number($('#destekOrani').val()), aciklama: $('#aciklama').val()
         }, function (sonuc) {
             if (!sonuc || !sonuc.basarili) { PopupMesajGoster((sonuc && sonuc.hataStr) || 'Dönem kaydedilemedi.', false); return; }

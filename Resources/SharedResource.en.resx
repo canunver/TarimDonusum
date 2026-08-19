@@ -566,7 +566,7 @@
     <value>4. Investment Information</value>
   </data>
   <data name="Basvuru.Section5.Title" xml:space="preserve">
-    <value>7. Financing</value>
+    <value>6. Financing</value>
   </data>
   <data name="Basvuru.Section6.Title" xml:space="preserve">
     <value>2. Applicant's Own Financial Data and Scale Check</value>
@@ -697,15 +697,29 @@
   <data name="Basvuru.Field.BasvuruSahibiKatkisiYeni" xml:space="preserve">
     <value>Applicant contribution (USD)</value>
   </data>
-  <data name="Basvuru.Field.TalepEdilenVadeSuresiYil" xml:space="preserve">
-    <value>Requested maturity period (Years)</value>
+  <data name="Basvuru.Field.TalepEdilenVadeSuresiAy" xml:space="preserve">
+    <value>Requested maturity period (Months)</value>
   </data>
   <data name="Basvuru.Field.DigerFinansmanKaynaklariAciklama" xml:space="preserve">
     <value>Other financing sources explanation</value>
   </data>
+  <data name="Basvuru.Finance.RateLimitError" xml:space="preserve"><value>The requested financing rate cannot exceed the period limit of {0}%.</value></data>
+  <data name="Basvuru.Finance.RateLimitExceeded" xml:space="preserve"><value>The requested financing rate cannot exceed the period limit.</value></data>
+  <data name="Basvuru.Field.TalepEdilenFinansmanTutari" xml:space="preserve"><value>Requested financing amount (USD)</value></data>
+  <data name="Basvuru.Field.OzKaynakTutari" xml:space="preserve"><value>Equity amount (USD)</value></data>
+  <data name="Basvuru.Field.YatirimSuresiAy" xml:space="preserve"><value>Investment duration (months)</value></data>
+  <data name="Basvuru.Field.OdemeSuresiAy" xml:space="preserve"><value>Payment period (months) / installment count</value></data>
+  <data name="Basvuru.Finance.InvestmentDurationHelp" xml:space="preserve"><value>Investment duration is the number of months between contract signature and the date when the beneficiary completes all investment activities and receives the final payment.</value></data>
+  <data name="Basvuru.Finance.GracePeriod24Help" xml:space="preserve"><value>The grace period cannot exceed 24 months from contract signature.</value></data>
+  <data name="Basvuru.Finance.GracePeriod12Help" xml:space="preserve"><value>The grace period cannot exceed 12 months after investment completion.</value></data>
+  <data name="Basvuru.Finance.InvestmentDurationRequired" xml:space="preserve"><value>Investment duration must be entered in months.</value></data>
+  <data name="Basvuru.Finance.PaymentDurationRequired" xml:space="preserve"><value>The payment period must be greater than zero.</value></data>
   <data name="Basvuru.Field.YatiriminAmaci" xml:space="preserve">
-    <value>Investment purpose, activities and outputs</value>
+    <value>Investment purpose</value>
   </data>
+  <data name="Basvuru.Field.YatirimFaaliyetleri" xml:space="preserve"><value>Investment activities</value></data>
+  <data name="Basvuru.Field.YatirimGirdileri" xml:space="preserve"><value>Investment inputs</value></data>
+  <data name="Basvuru.Field.YatirimCiktilari" xml:space="preserve"><value>Investment outputs</value></data>
   <data name="Basvuru.Field.OncekiYilNetSatis" xml:space="preserve">
     <value>Previous year net sales revenue (TRY)</value>
   </data>
@@ -800,7 +814,7 @@
     <value>Required Documents - Document upload</value>
   </data>
   <data name="Basvuru.Section7.Title" xml:space="preserve">
-    <value>10. Required Documents</value>
+    <value>9. Required Documents</value>
   </data>
   <data name="Basvuru.Step.UygunHarcama" xml:space="preserve">
     <value>Eligible Expense Preliminary List</value>
@@ -860,19 +874,19 @@
     <value>Investment Summary Table</value>
   </data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
-    <value>8. Investment Summary Table</value>
+    <value>7. Investment Summary Table</value>
   </data>
   <data name="Basvuru.Step.CevreselSosyal" xml:space="preserve">
     <value>Environmental-Social - Annex V</value>
   </data>
   <data name="Basvuru.Section.CevreselSosyal.Title" xml:space="preserve">
-    <value>11. Environmental-Social</value>
+    <value>10. Environmental-Social</value>
   </data>
   <data name="Basvuru.Step.TaahhutBeyan" xml:space="preserve">
     <value>Commitment/Declaration - Declaration document</value>
   </data>
   <data name="Basvuru.Section.TaahhutBeyan.Title" xml:space="preserve">
-    <value>12. Commitment/Declaration</value>
+    <value>11. Commitment/Declaration</value>
   </data>
   <data name="Basvuru.Section.TaahhutBeyan.Description" xml:space="preserve">
     <value>The declaration and commitment document from the application guide annex is uploaded in this section.</value>
@@ -881,7 +895,7 @@
     <value>Summary - Pre-check</value>
   </data>
   <data name="Basvuru.Section.Ozet.Title" xml:space="preserve">
-    <value>13. Summary</value>
+    <value>12. Summary</value>
   </data>
   <data name="Basvuru.Section.Placeholder" xml:space="preserve">
     <value>This section has been separated according to the new form flow; field details will be added.</value>
@@ -1013,7 +1027,7 @@
     <value>Ownership|Lease|Allocation|Easement right|Organized industrial / specialized zone allocation|Other</value>
   </data>
   <data name="Basvuru.Options.BuildingPermitStatuses" xml:space="preserve">
-    <value>Building permit available|Building permit application submitted|Letter stating no permit is required is available|Not yet obtained|No construction work</value>
+    <value>Building permit available|Building permit application submitted|Letter stating no permit is required is available|Application not yet submitted|No construction work</value>
   </data>
   <data name="Home.ApplicationForm" xml:space="preserve">
     <value>Application Form</value>
@@ -1142,7 +1156,7 @@
     <value>Building permit application submitted</value>
   </data>
   <data name="enumUygulamaAdresiYapiRuhsatiDurumu_4" xml:space="preserve">
-    <value>Not yet obtained</value>
+    <value>Application not yet submitted</value>
   </data>
   <data name="enumUygulamaAdresiYapiRuhsatiDurumu_3" xml:space="preserve">
     <value>Letter stating no permit is required is available</value>
@@ -1334,7 +1348,7 @@
     <value>Required documents will be uploaded as separate files. Criminal record documents are added per person, and each file is uploaded after the person is saved.</value>
   </data>
   <data name="Basvuru.Documents.CriminalRecordTitle" xml:space="preserve">
-    <value>Criminal Record</value>
+    <value>Criminal Record (Persons authorized to represent and bind, board members, or additional persons subject to criminal record checks)</value>
   </data>
   <data name="Basvuru.Documents.AddPerson" xml:space="preserve">
     <value>+ Add person</value>
@@ -1352,7 +1366,7 @@
     <value>Upload</value>
   </data>
   <data name="Basvuru.CevreselSosyal.Title" xml:space="preserve">
-    <value>11. Environmental and Social Data Form</value>
+    <value>10. Environmental and Social Data Form</value>
   </data>
   <data name="Basvuru.CevreselSosyal.Description" xml:space="preserve">
     <value>Prepared according to the new Annex V question set. The form opens only the relevant fields based on the nature of the investment; grey/out-of-scope cells in the document are not shown to the user.</value>
@@ -1541,8 +1555,11 @@
     <value>At least one requested expense type must be selected.</value>
   </data>
   <data name="Basvuru.Summary.Error.InvestmentPurposeRequired" xml:space="preserve">
-    <value>The purpose, activities and outputs of the investment must be entered.</value>
+    <value>The investment purpose must be entered.</value>
   </data>
+  <data name="Basvuru.Summary.Error.InvestmentActivitiesRequired" xml:space="preserve"><value>Investment activities must be entered.</value></data>
+  <data name="Basvuru.Summary.Error.InvestmentInputsRequired" xml:space="preserve"><value>Investment inputs must be entered.</value></data>
+  <data name="Basvuru.Summary.Error.InvestmentOutputsRequired" xml:space="preserve"><value>Investment outputs must be entered.</value></data>
   <data name="Basvuru.Summary.Error.ValueChainRequired" xml:space="preserve">
     <value>Value chain must be selected.</value>
   </data>
@@ -1727,7 +1744,7 @@
   <data name="Basvuru.Ortaklik.RelatedEnterpriseNote" xml:space="preserve"><value>If a related/partner enterprise relationship is declared, basic financial information and documents for this enterprise are also collected. Financial information of legal entity partners is included in the calculation separately through the ownership table above.</value></data>
   <data name="Basvuru.Ortaklik.RelatedEnterpriseTitleField" xml:space="preserve"><value>Related/partner enterprise title</value></data>
   <data name="Basvuru.Ortaklik.RelatedEnterpriseIdentityField" xml:space="preserve"><value>Related/partner enterprise TIN/MERSIS</value></data>
-  <data name="Basvuru.Ortaklik.RelatedDocumentsTitle" xml:space="preserve"><value>Required documents - related/partner enterprise</value></data>
+  <data name="Basvuru.Ortaklik.RelatedDocumentsTitle" xml:space="preserve"><value>Legal entity partner required documents</value></data>
   <data name="Basvuru.Mali.PreviousYear" xml:space="preserve"><value>Previous Year</value></data>
   <data name="Basvuru.Mali.LatestYear" xml:space="preserve"><value>Latest Year</value></data>
   <data name="Basvuru.Ortaklik.Modal.Title" xml:space="preserve"><value>Partner / shareholder information</value></data>
@@ -1878,7 +1895,7 @@
   <data name="ForgotPassword.Sent" xml:space="preserve"><value>A password reset link has been sent to your email address.</value></data>
   <data name="ForgotPassword.SendFailed" xml:space="preserve"><value>The password reset email could not be sent. Please try again later.</value></data>
   <data name="Basvuru.Step.DbCtp" xml:space="preserve"><value>DB C-TP Technical Project</value></data>
-  <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve"><value>9. DB C-TP Technical Project</value></data>
+  <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve"><value>8. DB C-TP Technical Project</value></data>
   <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve"><value>Enter the investment's technical overview, production and capacity data, input requirements, renewable energy, machinery-equipment, and building/structure lists.</value></data>
   <data name="Basvuru.Summary.Error.DbCtpRequired" xml:space="preserve"><value>The DB C-TP Technical Project section must be completed.</value></data>
   <data name="Basvuru.Summary.Error.DeclarationsRequired" xml:space="preserve"><value>All declarations in the commitment and declaration section must be accepted.</value></data>
@@ -1919,4 +1936,13 @@
   <data name="Basvuru.Message.AddressSaved" xml:space="preserve"><value>The implementation address was saved.</value></data>
   <data name="Basvuru.Message.AddressSaveFailed" xml:space="preserve"><value>The implementation address could not be saved.</value></data>
   <data name="Basvuru.Message.AddressDeleted" xml:space="preserve"><value>The implementation address was deleted.</value></data>
+  <data name="Validation.Tckn.Invalid" xml:space="preserve"><value>The Turkish ID number must be 11 digits and valid.</value></data>
+  <data name="Validation.Vkn.Invalid" xml:space="preserve"><value>The tax identification number must be 10 digits and valid.</value></data>
+  <data name="Basvuru.Firma.Select" xml:space="preserve"><value>Select</value></data>
+  <data name="Basvuru.Firma.SelectTitle" xml:space="preserve"><value>Select Company</value></data>
+  <data name="Basvuru.Firma.SearchPlaceholder" xml:space="preserve"><value>Company name, tax ID or MERSIS number</value></data>
+  <data name="Basvuru.Firma.Searching" xml:space="preserve"><value>Searching companies...</value></data>
+  <data name="Basvuru.Firma.NoResults" xml:space="preserve"><value>No company found.</value></data>
+  <data name="Basvuru.Common.Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Basvuru.Ortaklik.ShareRateRange" xml:space="preserve"><value>The share rate must be between 25% and 100%.</value></data>
 </root>

@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Localization;
 using System.Text.Json;
+using TarimDonusum.Araclar;
 using TarimDonusum.Models;
 using TarimDonusum.Tablolar;
 
@@ -516,17 +517,21 @@ namespace TarimDonusum.IsKurallari
                 && !string.IsNullOrWhiteSpace(b.irtibat.kisi) && !string.IsNullOrWhiteSpace(b.irtibat.telefon);
             bool sahipTuru = b.basvuruFirma.basvuruSahibiTuru.HasValue && b.basvuruFirma.basvuruSahibiTuru != enumBasvuruSahibiTuru.Tanimsiz;
             bool temsilYetki = !string.IsNullOrWhiteSpace(b.irtibat.yetkiliKisiler) || b.AdliSicilKisileri.Count > 0;
-            bool yatirim = !string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi) && !string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci);
+            bool yatirim = !string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi)
+                && !string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci)
+                && !string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri)
+                && !string.IsNullOrWhiteSpace(b.yatirim.yatirimGirdileri)
+                && !string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari);
             bool yatirimOzeti = !string.IsNullOrWhiteSpace(b.yatirimOzeti.yatirimOzetiJson);
             bool yatirimYeri = b.YatirimAdresleri.Count > 0 && b.YatirimAdresleri.All(x => x.ilId.HasValue && x.ilceId.HasValue && !string.IsNullOrWhiteSpace(x.tamAdres));
             bool degerZinciri = b.basvuruFirma.ilId > 0 && b.yatirim.degerZinciriId.GetValueOrDefault() > 0 && b.yatirim.degerZinciriAsamalari.Count > 0;
             bool finans = b.finans.toplamYatirimTutari.GetValueOrDefault() > 0 && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > 0
-                && b.finans.talepEdilenVadeSuresiYil.GetValueOrDefault() > 0;
+                && b.finans.talepEdilenVadeSuresiAy.GetValueOrDefault() > 0
+                && b.finans.yatirimSuresiAy.GetValueOrDefault() > 0;
             bool mali = b.mali.oncekiYilNetSatis.GetValueOrDefault() > 0 && b.mali.sonYilNetSatis.GetValueOrDefault() > 0
                 && b.mali.oncekiYilAktifToplami.GetValueOrDefault() > 0 && b.mali.sonYilAktifToplami.GetValueOrDefault() > 0;
-            bool ortaklik = b.ortaklik.bagliOrtakIsletmeVarMi.HasValue &&
-                (b.ortaklik.ortaklar.Count == 0 || b.ortaklik.ortaklar.All(x => !string.IsNullOrWhiteSpace(x.adUnvan)
-                    && !string.IsNullOrWhiteSpace(x.tcknVkn) && x.payOrani.HasValue && !string.IsNullOrWhiteSpace(x.nihaiFaydalaniciBilgisi)));
+            bool ortaklik = b.ortaklik.ortaklar.Count == 0 || b.ortaklik.ortaklar.All(x => !string.IsNullOrWhiteSpace(x.adUnvan)
+                && !string.IsNullOrWhiteSpace(x.tcknVkn) && x.payOrani.HasValue);
             bool faaliyet = !string.IsNullOrWhiteSpace(f.faaliyetKonusu) && !string.IsNullOrWhiteSpace(f.naceKodu);
             bool beyanlar = b.TaahhutDosyaId.HasValue && !string.IsNullOrWhiteSpace(b.TaahhutBeyanlarJson);
             bool cevresel = !string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson);
@@ -553,7 +558,7 @@ namespace TarimDonusum.IsKurallari
                 Madde(8, "İl-değer zinciri seçimi", "Başvuru sahibi yatırımın hangi değer zinciri kapsamında olduğunu ve yatırım yerini seçmiş mi?", "İl-değer zinciri seçimi", degerZinciri),
                 Madde(9, "Talep edilen finansman bilgisi", "Tahmini yatırım tutarı, talep edilen RFF/kredi tutarı, para birimi ve önerilen vade bilgisi girilmiş mi?", "Ön finansman bilgisi / bütçe özeti", finans),
                 Madde(10, "Mali bilgiler", "Son iki mali yıla ilişkin net satış hasılatı veya mali bilanço/varlık toplamı bilgileri sisteme girilmiş/yüklenmiş mi?", "Mali tablolar / bilanço / gelir tablosu", mali),
-                Madde(11, "Ortaklık ve sermaye yapısı", "Sermaye yapısı, tüzel kişi ortaklar ve nihai faydalanıcı bilgileri beyan edilmiş mi?", "Ortaklık beyanı, ticaret sicil, ortaklık belgeleri", ortaklik),
+                Madde(11, "Ortaklık ve sermaye yapısı", "Sermaye yapısı ve tüzel kişi ortaklar beyan edilmiş mi?", "Ortaklık beyanı, ticaret sicil, ortaklık belgeleri", ortaklik),
                 Madde(12, "Faaliyet/NACE bilgisi", "Başvuru sahibinin faaliyet konusu ve NACE/faaliyet alanı bilgisi sunulmuş mu?", "NACE/faaliyet alanı kaydı", faaliyet),
                 Madde(13, "Beyan ve taahhütler", "Başvuru beyanı, doğruluk taahhüdü, çifte finansman beyanı, izleme/veri paylaşımı taahhüdü alınmış mı?", "Beyan ve taahhüt formları", beyanlar),
                 Madde(14, "Banka veri paylaşım rızası", "Ziraat Bankası ile finansal/kambiyo uygunluk kontrolü için veri paylaşımına yönelik açık rıza/taahhüt alınmış mı?", "Veri aktarımı/açık rıza/taahhüt beyanı", beyanlar),
@@ -615,7 +620,6 @@ namespace TarimDonusum.IsKurallari
                 || MaliDegerUygun(b.mali.oncekiYilAktifToplami)
                 || MaliDegerUygun(b.mali.sonYilAktifToplami);
 
-            decimal ortaklikPayToplami = b.ortaklik.ortaklar.Sum(x => x.payOrani.GetValueOrDefault());
             bool cevreselKapsamDisi = false;
             if (!string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson))
             {
@@ -644,21 +648,26 @@ namespace TarimDonusum.IsKurallari
             Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru == enumBasvuruSahibiTuru.Tanimsiz, "Basvuru.Summary.Error.ApplicantTypeRequired");
             Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru == enumHukukiTurSirketTuru.Tanimsiz, "Basvuru.Summary.Error.LegalTypeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), "Basvuru.Summary.Error.InvestmentNameRequired");
-            Eksikse(b.yatirim.yatirimTuru == enumYatirimTuru.Tanimsiz, "Basvuru.Summary.Error.InvestmentTypeRequired");
+            Eksikse(b.yatirim.yatirimTurleri.Count == 0, "Basvuru.Summary.Error.InvestmentTypeRequired");
             Eksikse(b.YatirimAdresleri.Count == 0, "Basvuru.Summary.Error.InvestmentAddressRequired");
             Eksikse(b.yatirim.harcamaTurleri.Count == 0, "Basvuru.Summary.Error.ExpenseTypeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), "Basvuru.Summary.Error.InvestmentPurposeRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri), "Basvuru.Summary.Error.InvestmentActivitiesRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimGirdileri), "Basvuru.Summary.Error.InvestmentInputsRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari), "Basvuru.Summary.Error.InvestmentOutputsRequired");
             Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, "Basvuru.Summary.Error.ValueChainRequired");
             Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, "Basvuru.Summary.Error.ValueChainStageRequired");
             Eksikse(!maliOlcekUygun, "Basvuru.Summary.Error.FinancialScaleRequired");
+            Eksikse(b.basvuruFirma.donem.destekOrani.GetValueOrDefault() > 0
+                && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > b.basvuruFirma.donem.destekOrani.GetValueOrDefault(), "Basvuru.Finance.RateLimitExceeded");
+            Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, "Basvuru.Finance.InvestmentDurationRequired");
             Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, "Basvuru.Summary.Error.AuditChoiceRequired");
             Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, "Basvuru.Summary.Error.AuditFileRequired");
-            Eksikse(!b.ortaklik.bagliOrtakIsletmeVarMi.HasValue, "Basvuru.Summary.Error.RelatedEnterpriseRequired");
-            Eksikse(b.ortaklik.ortaklar.Count > 0 && Math.Abs(ortaklikPayToplami - 100) > 0.01m, "Basvuru.Summary.Error.ShareTotalRequired");
-            Eksikse(string.IsNullOrWhiteSpace(b.uygunHarcama.pikkListesiJson) && b.yatirim.harcamaTurleri.Any(x => x == 1 || x == 2), "Basvuru.Summary.Error.PikkRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirimOzeti.yatirimOzetiJson), "Basvuru.Summary.Error.InvestmentSummaryRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.dbCtpTeknikProje.dbCtpTeknikProjeJson), "Basvuru.Summary.Error.DbCtpRequired");
             Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.RequiredDocumentsRequired");
+            Eksikse(b.ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase))
+                && b.ortaklik.bagliOrtakDosyalari.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.RequiredDocumentsRequired");
             Eksikse(b.AdliSicilKisileri.Count == 0, "Basvuru.Summary.Error.CriminalPeopleRequired");
             Eksikse(b.AdliSicilKisileri.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.CriminalFilesRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson), "Basvuru.Summary.Error.EsfRequired");
@@ -738,7 +747,6 @@ namespace TarimDonusum.IsKurallari
                 || MaliDegerUygun(b.mali.sonYilNetSatis)
                 || MaliDegerUygun(b.mali.oncekiYilAktifToplami)
                 || MaliDegerUygun(b.mali.sonYilAktifToplami);
-            decimal ortaklikPayToplami = b.ortaklik.ortaklar.Sum(x => x.payOrani.GetValueOrDefault());
 
             bool cevreselKapsamDisi = false;
             if (!string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson))
@@ -768,21 +776,26 @@ namespace TarimDonusum.IsKurallari
             Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru == enumBasvuruSahibiTuru.Tanimsiz, "Basvuru.Summary.Error.ApplicantTypeRequired");
             Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru == enumHukukiTurSirketTuru.Tanimsiz, "Basvuru.Summary.Error.LegalTypeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), "Basvuru.Summary.Error.InvestmentNameRequired");
-            Eksikse(b.yatirim.yatirimTuru == enumYatirimTuru.Tanimsiz, "Basvuru.Summary.Error.InvestmentTypeRequired");
+            Eksikse(b.yatirim.yatirimTurleri.Count == 0, "Basvuru.Summary.Error.InvestmentTypeRequired");
             Eksikse(b.YatirimAdresleri.Count == 0, "Basvuru.Summary.Error.InvestmentAddressRequired");
             Eksikse(b.yatirim.harcamaTurleri.Count == 0, "Basvuru.Summary.Error.ExpenseTypeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), "Basvuru.Summary.Error.InvestmentPurposeRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri), "Basvuru.Summary.Error.InvestmentActivitiesRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimGirdileri), "Basvuru.Summary.Error.InvestmentInputsRequired");
+            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari), "Basvuru.Summary.Error.InvestmentOutputsRequired");
             Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, "Basvuru.Summary.Error.ValueChainRequired");
             Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, "Basvuru.Summary.Error.ValueChainStageRequired");
             Eksikse(!maliOlcekUygun, "Basvuru.Summary.Error.FinancialScaleRequired");
+            Eksikse(b.basvuruFirma.donem.destekOrani.GetValueOrDefault() > 0
+                && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > b.basvuruFirma.donem.destekOrani.GetValueOrDefault(), "Basvuru.Finance.RateLimitExceeded");
+            Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, "Basvuru.Finance.InvestmentDurationRequired");
             Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, "Basvuru.Summary.Error.AuditChoiceRequired");
             Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, "Basvuru.Summary.Error.AuditFileRequired");
-            Eksikse(!b.ortaklik.bagliOrtakIsletmeVarMi.HasValue, "Basvuru.Summary.Error.RelatedEnterpriseRequired");
-            Eksikse(b.ortaklik.ortaklar.Count > 0 && Math.Abs(ortaklikPayToplami - 100) > 0.01m, "Basvuru.Summary.Error.ShareTotalRequired");
-            Eksikse(string.IsNullOrWhiteSpace(b.uygunHarcama.pikkListesiJson) && b.yatirim.harcamaTurleri.Any(x => x == 1 || x == 2), "Basvuru.Summary.Error.PikkRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirimOzeti.yatirimOzetiJson), "Basvuru.Summary.Error.InvestmentSummaryRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.dbCtpTeknikProje.dbCtpTeknikProjeJson), "Basvuru.Summary.Error.DbCtpRequired");
             Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.RequiredDocumentsRequired");
+            Eksikse(b.ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase))
+                && b.ortaklik.bagliOrtakDosyalari.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.RequiredDocumentsRequired");
             Eksikse(b.AdliSicilKisileri.Count == 0, "Basvuru.Summary.Error.CriminalPeopleRequired");
             Eksikse(b.AdliSicilKisileri.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.CriminalFilesRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson), "Basvuru.Summary.Error.EsfRequired");
@@ -806,6 +819,10 @@ namespace TarimDonusum.IsKurallari
             if (string.IsNullOrWhiteSpace(vergiKimlikNo) && firmaId <= 0)
             {
                 HataEkle(sonuc, "Business.Query.InfoRequired");
+            }
+            else if (firmaId <= 0 && !OrtakFonksiyonlar.VKNGecerliMi(vergiKimlikNo))
+            {
+                sonuc.HataEkle("VKN 10 haneli ve geçerli olmalıdır.");
             }
             if (!sonuc.basarili)
                 return sonuc;
@@ -1312,6 +1329,12 @@ namespace TarimDonusum.IsKurallari
             }
             try
             {
+                if (finans.toplamYatirimTutari.HasValue && finans.talepEdilenFinansmanOrani.HasValue)
+                {
+                    finans.talepEdilenDestekTutari = Math.Round(finans.toplamYatirimTutari.Value * finans.talepEdilenFinansmanOrani.Value / 100m, 2);
+                    finans.basvuruSahibiKatkisi = finans.toplamYatirimTutari.Value - finans.talepEdilenDestekTutari.Value;
+                    finans.onBasvuruSahibiKatkisi = finans.basvuruSahibiKatkisi;
+                }
                 finans.Dogrula(sonuc);
 
                 if (!sonuc.basarili)
@@ -1327,6 +1350,14 @@ namespace TarimDonusum.IsKurallari
                     if (!sonuc.basarili || mevcut == null)
                         return sonuc;
                 }
+
+                decimal azamiFinansmanOrani = mevcut?.basvuruFirma.donem.destekOrani.GetValueOrDefault() ?? 0;
+                if (azamiFinansmanOrani > 0 && finans.talepEdilenFinansmanOrani.GetValueOrDefault() > azamiFinansmanOrani)
+                {
+                    sonuc.HataEkle($"Talep edilen finansman oranı dönem için tanımlanan %{azamiFinansmanOrani:0.##} oranını aşamaz.");
+                    return sonuc;
+                }
+                finans.digerFinansmanKaynaklariAciklama = mevcut?.finans.digerFinansmanKaynaklariAciklama;
 
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
 
@@ -1777,10 +1808,19 @@ namespace TarimDonusum.IsKurallari
                 if (!sonuc.basarili || mevcut == null)
                     return sonuc;
 
+                mevcut.ortaklik.ortaklar = ortaklik.ortaklar;
+                mevcut.ortaklik.ozelSektorPayi = ortaklik.ortaklar
+                    .Where(x => string.Equals(x.ozelKamuNiteligi, "\u00D6zel", StringComparison.OrdinalIgnoreCase))
+                    .Sum(x => x.payOrani.GetValueOrDefault());
+                mevcut.ortaklik.Dogrula(sonuc);
+                if (!sonuc.basarili)
+                    return sonuc;
+
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
                 {
                     TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
+                    await tabBasvuru.OrtaklikKaydetAsync(mevcut);
                     await tabBasvuru.BasvuruOrtaklariKaydetAsync(ortaklik.basvuruId, ortaklik.ortaklar);
 
                     TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
