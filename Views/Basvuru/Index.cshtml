@@ -1,8 +1,9 @@
-@model List<TarimDonusum.Models.Basvuru>
+﻿@model List<TarimDonusum.Models.Basvuru>
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
     ViewData["Title"] = L["Basvuru.Index.Title"];
+    var listeTuru = ViewBag.ListeTuru is enumBasvuruKayitTuru tur ? tur : enumBasvuruKayitTuru.OnBasvuru;
 }
 
 <div class="basvuru-page">
@@ -17,6 +18,12 @@
         }
     </div>
 
+    <div class="nav nav-pills mb-3" role="navigation" aria-label="Başvuru listeleri">
+        <a class="nav-link @(listeTuru == enumBasvuruKayitTuru.OnBasvuru ? "active" : "")"
+           asp-action="Index" asp-route-tur="on-basvuru">Ön Başvurular</a>
+        <a class="nav-link @(listeTuru == enumBasvuruKayitTuru.Basvuru ? "active" : "")"
+           asp-action="Index" asp-route-tur="basvuru">Başvurular</a>
+    </div>
     <div id="ajaxMesaj"
          class="alert alert-info alert-dismissible floating-message"
          style="display:@(TempData["Mesaj"] != null ? "block" : "none")">
@@ -72,7 +79,7 @@
                         <td>@item.basvuruFirma.firma.ticaretUnvani</td>
                         <td>@item.basvuruFirma.firma.vergiKimlikNo</td>
                         <td>@(string.IsNullOrWhiteSpace(item.yatirim.yatirimAdi) ? "-" : item.yatirim.yatirimAdi)</td>
-                        <td><span class="badge bg-secondary">@IsimBul.EnumAdi(item.durum, L)</span></td>
+                        <td><span class="badge bg-secondary">@DurumMetni(item)</span></td>
                         <td class="text-end">
                             <a id="@duzenleLinkId" class="btn btn-sm btn-outline-primary" asp-controller="Basvuru" asp-action="Duzenle" asp-route-id="@item.Id">@L["Basvuru.Common.Edit"]</a>
                         </td>
@@ -98,4 +105,32 @@
         });
     });
 </script>
+}
+
+@functions {
+    private static string DurumMetni(Basvuru item)
+    {
+        if (item.kayitTuru == enumBasvuruKayitTuru.OnBasvuru)
+        {
+            return item.durum switch
+            {
+                enumBasvuruDurum.OnBasvuruDurumu => "Ön Başvuru",
+                enumBasvuruDurum.OnBasvuruDuzeltmeDurumu => "Ön Başvuru Düzeltme",
+                enumBasvuruDurum.OnBasvuruIncelemeDurumu => "Ön Başvuru İnceleme",
+                enumBasvuruDurum.BasvuruDurumu => "Ön Başvuru Kabul Edildi",
+                enumBasvuruDurum.IptalDurumu => "Ön Başvuru Red / İptal",
+                _ => "Ön Başvuru"
+            };
+        }
+
+        return item.durum switch
+        {
+            enumBasvuruDurum.BasvuruDurumu => "Başvuru",
+            enumBasvuruDurum.BasvuruIncelemeDurumu => "Başvuru İnceleme",
+            enumBasvuruDurum.KabulEdildiDurumu => "Başvuru Kabul",
+            enumBasvuruDurum.ReddedildiDurumu => "Başvuru Red",
+            enumBasvuruDurum.BasvuruSecilmediDurumu => "Başvuru Seçilmedi",
+            _ => "Başvuru"
+        };
+    }
 }

@@ -14,7 +14,7 @@
     string kurulusTarihi = b.basvuruFirma.firma.kurulusTarihi?.ToString("yyyy-MM-dd") ?? "";
 }
 
-<section class="basvuru-panel active" data-bolum="Firma">
+<section class="basvuru-panel active" data-bolum="BasvuruSahibi">
     <div class="basvuru-form-section">
         <h2 class="preapp-subtitle">@L["Basvuru.Applicant.PeriodProvinceTitle"]</h2>
         <div class="form-grid">
@@ -47,7 +47,7 @@
     </div>
 
     <div class="basvuru-form-section">
-        <div class="section-toolbar"><h2>@L["Basvuru.Step.1"]</h2><a class="btn btn-outline-primary" href="@Url.Action("OnBasvuruSahibiYazdir", "Basvuru", new { id = b.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div>
+        <div class="section-toolbar"><h2>@L["Basvuru.Step.1"]</h2><a class="btn btn-outline-primary" href="@Url.Action("BasvuruSahibiYazdir", "Basvuru", new { id = b.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div>
         <p class="section-description">@L["Basvuru.Applicant.Description"]</p>
 
         <h4 class="preapp-subtitle">@L["Basvuru.Firma.InfoTitle"]</h4>
@@ -135,6 +135,19 @@
         </div>
         <label class="wide-label">@L["Basvuru.Field.IletisimAdresi"]<textarea id="iletisimAdresi" name="Basvuru.irtibat.adres" disabled="@ro">@b.irtibat.adres</textarea></label>
 
+        <h4 class="preapp-subtitle mt-4">&#xD6;n ba&#x15F;vuru verisi de&#x11F;i&#x15F;iklik kontrol&#xFC;</h4>
+        <div class="form-grid">
+            <label>&#xD6;n ba&#x15F;vurudan sonra de&#x11F;i&#x15F;iklik var m&#x131;?
+                <select id="basvuruDegisiklikVarMiGorunum" disabled>
+                    <option value="false" selected="@(b.basvuruFirma.onBasvuruSonrasiDegisiklikVarMi != true)">Hayır</option>
+                    <option value="true" selected="@(b.basvuruFirma.onBasvuruSonrasiDegisiklikVarMi == true)">Evet</option>
+                </select>
+                <input type="hidden" id="basvuruDegisiklikVarMi" name="Basvuru.OnBasvuruSonrasiDegisiklikVarMi" value="@((b.basvuruFirma.onBasvuruSonrasiDegisiklikVarMi == true).ToString().ToLowerInvariant())" />
+            </label>
+        </div>
+        <label class="wide-label">De&#x11F;i&#x15F;iklik sebebi
+            <textarea id="basvuruDegisiklikSebebi" maxlength="2000" name="Basvuru.OnBasvuruSonrasiDegisiklikSebebi" disabled="@ro">@b.basvuruFirma.onBasvuruSonrasiDegisiklikSebebi</textarea>
+        </label>
         <script type="application/json" id="adliSicilInitialJson">
             @Html.Raw(JsonSerializer.Serialize(b.AdliSicilKisileri))
         </script>

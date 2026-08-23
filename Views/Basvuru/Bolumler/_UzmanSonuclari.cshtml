@@ -1,7 +1,7 @@
-@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+﻿@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @using TarimDonusum.Models
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
-@{ var b = Model.Basvuru; bool duzenlenebilir = b.durum == enumBasvuruDurum.BasvuruDurumu; }
+@{ var b = Model.Basvuru; bool duzenlenebilir = b.durum == enumBasvuruDurum.OnBasvuruIncelemeDurumu; }
 <section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.UzmanSonuclari)" data-list-type="uzman" data-editable="@duzenlenebilir.ToString().ToLowerInvariant()">
     <h2>@L["Basvuru.Step.ExpertResults"]</h2>
     <div class="alert alert-info">@L["Basvuru.Review.ExpertResultsNote"]</div>

@@ -21,7 +21,13 @@ function PopupMesajGoster(mesaj, basarili) {
             type: "button",
             class: "close popup-mesaj-kapat",
             "aria-label": "Close"
-        }).append($('<span/>', { "aria-hidden": "true" }).html("&times;"))
+        })
+            .on("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                PopupMesajKapat(this);
+            })
+            .append($('<span/>', { "aria-hidden": "true" }).html("&times;"))
     );
 
     $container.append($mesaj);

@@ -610,6 +610,60 @@ namespace TarimDonusum.IsKurallari
                     ALTER TABLE dbo.Basvuru ADD OdemeSuresiAy INT NULL;
                   IF COL_LENGTH(N'dbo.Basvuru', N'OdemesizDonemAy') IS NOT NULL
                     EXEC(N'UPDATE dbo.Basvuru SET OdemeSuresiAy = OdemesizDonemAy WHERE OdemeSuresiAy IS NULL;');"),
+            new(40,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'KayitTuru') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD KayitTuru INT NOT NULL CONSTRAINT DF_Basvuru_KayitTuru DEFAULT 1;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OnBasvuruSonrasiDegisiklikVarMi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD OnBasvuruSonrasiDegisiklikVarMi INT NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OnBasvuruSonrasiDegisiklikSebebi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD OnBasvuruSonrasiDegisiklikSebebi NVARCHAR(2000) NULL;"),
+            new(41,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'OncekiYilIhracatSatis') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD OncekiYilIhracatSatis DECIMAL(18,2) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'SonYilIhracatSatis') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD SonYilIhracatSatis DECIMAL(18,2) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OncekiYilCalisanSayisi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD OncekiYilCalisanSayisi INT NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'SonYilCalisanSayisi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD SonYilCalisanSayisi INT NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'MaliAciklama') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD MaliAciklama NVARCHAR(2000) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruOrtaklar', N'IliskiTuru') IS NULL
+                    ALTER TABLE dbo.BasvuruOrtaklar ADD IliskiTuru NVARCHAR(50) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruOrtaklar', N'BelgeReferansi') IS NULL
+                    ALTER TABLE dbo.BasvuruOrtaklar ADD BelgeReferansi NVARCHAR(500) NULL;"),
+            new(42,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'MaliBelgeReferanslariJson') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD MaliBelgeReferanslariJson NVARCHAR(MAX) NULL;"),
+            new(43,
+                @"IF COL_LENGTH(N'dbo.BasvuruAdliSicilKisiler', N'YetkiKapsami') IS NULL
+                    ALTER TABLE dbo.BasvuruAdliSicilKisiler ADD YetkiKapsami NVARCHAR(500) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruAdliSicilKisiler', N'Aciklama') IS NULL
+                    ALTER TABLE dbo.BasvuruAdliSicilKisiler ADD Aciklama NVARCHAR(1000) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruAdliSicilKisiler', N'ImzaYetkiDosyaAdi') IS NULL
+                    ALTER TABLE dbo.BasvuruAdliSicilKisiler ADD ImzaYetkiDosyaAdi NVARCHAR(260) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruAdliSicilKisiler', N'ImzaYetkiDosyaId') IS NULL
+                    ALTER TABLE dbo.BasvuruAdliSicilKisiler ADD ImzaYetkiDosyaId INT NULL;"),            new(44,
+                @"IF COL_LENGTH(N'dbo.BasvuruOrtaklar', N'DogumTarihi') IS NULL
+                    ALTER TABLE dbo.BasvuruOrtaklar ADD DogumTarihi DATE NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruOrtaklar', N'Cinsiyet') IS NULL
+                    ALTER TABLE dbo.BasvuruOrtaklar ADD Cinsiyet NVARCHAR(20) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruOrtaklar', N'SahiplikNiteligi') IS NULL
+                    ALTER TABLE dbo.BasvuruOrtaklar ADD SahiplikNiteligi NVARCHAR(30) NULL;"),
+            new(45,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'BasvuruKonusuTesis') IS NULL ALTER TABLE dbo.Basvuru ADD BasvuruKonusuTesis NVARCHAR(250) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OrganizeAlanTuru') IS NULL ALTER TABLE dbo.Basvuru ADD OrganizeAlanTuru NVARCHAR(150) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'PlanlananBaslangicTarihi') IS NULL ALTER TABLE dbo.Basvuru ADD PlanlananBaslangicTarihi DATE NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'PlanlananTamamlanmaTarihi') IS NULL ALTER TABLE dbo.Basvuru ADD PlanlananTamamlanmaTarihi DATE NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'Koordinat') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD Koordinat NVARCHAR(100) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'AdaParsel') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD AdaParsel NVARCHAR(100) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'SegeKademesi') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD SegeKademesi NVARCHAR(50) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'KullanimHakkiBaslangicTarihi') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD KullanimHakkiBaslangicTarihi DATE NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'DonemleriKapsiyorMu') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD DonemleriKapsiyorMu BIT NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'IzinTakvimAciklama') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD IzinTakvimAciklama NVARCHAR(1000) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'AdresBelgeDosyaId') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD AdresBelgeDosyaId INT NULL, AdresBelgeDosyaAdi NVARCHAR(260) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'KullanimHakkiDosyaId') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD KullanimHakkiDosyaId INT NULL, KullanimHakkiDosyaAdi NVARCHAR(260) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'KanitDosyaId') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD KanitDosyaId INT NULL, KanitDosyaAdi NVARCHAR(260) NULL;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

@@ -1819,3 +1819,11 @@ body {
     flex-wrap: wrap;
   }
 }
+
+@media print {
+    body * { visibility: hidden !important; }
+    .basvuru-sahibi-yazdir, .basvuru-sahibi-yazdir * { visibility: visible !important; }
+    .basvuru-sahibi-yazdir { position: absolute; inset: 0; width: 100%; background: #fff; }
+    .basvuru-sahibi-yazdir .no-print { display: none !important; }
+    .basvuru-sahibi-yazdir input, .basvuru-sahibi-yazdir select, .basvuru-sahibi-yazdir textarea { border: 1px solid #999 !important; color: #000 !important; background: #fff !important; }
+}

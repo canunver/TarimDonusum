@@ -1,0 +1,99 @@
+@using System.Text.Json
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+    int donemYil = b.basvuruFirma.donem?.yil ?? 0;
+    if (donemYil <= 0 && b.basvuruFirma.donemId > 0)
+        donemYil = Model.Donemler?.FirstOrDefault(x => x.id == b.basvuruFirma.donemId)?.yil ?? 0;
+    string oncekiYil = donemYil > 0 ? (donemYil - 2).ToString() : "Önceki yıl";
+    string sonYil = donemYil > 0 ? (donemYil - 1).ToString() : "Son yıl";
+    var isletmeler = (b.ortaklik?.ortaklar ?? new List<BasvuruOrtak>())
+        .Where(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase))
+        .ToList();
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruMaliVeriler)">
+    <h2>Mali Veriler ve Ölçek Kontrolü</h2>
+    <p class="lead">Tutarları TL olarak ve tam mali yıl esasına göre giriniz. Ön başvurudan aktarılan bilgiler başvuru aşamasında güncellenebilir.</p>
+
+    <h3 class="subhead">Başvuru Sahibinin Kendi Mali Verileri</h3>
+    <div class="table-responsive">
+        <table class="table table-bordered mali-table basvuru-mali-ana-tablo" style="min-width:1200px">
+            <colgroup><col style="width:12%" /><col style="width:15%" /><col style="width:15%" /><col style="width:15%" /><col style="width:15%" /><col style="width:12%" /><col style="width:16%" /></colgroup>
+            <thead><tr><th>Mali veri</th><th>@oncekiYil</th><th>@sonYil</th><th>@oncekiYil belge ref.</th><th>@sonYil belge ref.</th><th>Kaynak</th><th>Açıklama</th></tr></thead>
+            <tbody>
+                <tr><td>Yıllık net satış hasılatı (TL)</td><td><input class="money-integer" name="Basvuru.mali.OncekiYilNetSatis" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilNetSatis)" disabled="@ro" /></td><td><input class="money-integer" name="Basvuru.mali.SonYilNetSatis" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilNetSatis)" disabled="@ro" /></td><td>@MaliDosyaAlani("netSatis.onceki", 1, "maliRefNetOnceki", ro)</td><td>@MaliDosyaAlani("netSatis.son", 2, "maliRefNetSon", ro)</td><td>Gelir tablosu</td><td>Ölçek ve ihracat oranı için</td></tr>
+                <tr><td>Aktif toplamı (TL)</td><td><input class="money-integer" name="Basvuru.mali.OncekiYilAktifToplami" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilAktifToplami)" disabled="@ro" /></td><td><input class="money-integer" name="Basvuru.mali.SonYilAktifToplami" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilAktifToplami)" disabled="@ro" /></td><td>@MaliDosyaAlani("aktif.onceki", 3, "maliRefAktifOnceki", ro)</td><td>@MaliDosyaAlani("aktif.son", 4, "maliRefAktifSon", ro)</td><td>Bilanço</td><td>Ölçek için</td></tr>
+                <tr><td>İhracat satış tutarı (TL)</td><td><input class="money-integer" name="Basvuru.mali.OncekiYilIhracatSatis" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilIhracatSatis)" disabled="@ro" /></td><td><input class="money-integer" name="Basvuru.mali.SonYilIhracatSatis" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilIhracatSatis)" disabled="@ro" /></td><td>@MaliDosyaAlani("ihracat.onceki", 5, "maliRefIhracatOnceki", ro)</td><td>@MaliDosyaAlani("ihracat.son", 6, "maliRefIhracatSon", ro)</td><td>İhracat kayıtları</td><td>Son iki yıl toplamı</td></tr>
+                <tr><td>Çalışan sayısı (ortalama)</td><td><input type="number" min="0" step="1" name="Basvuru.mali.OncekiYilCalisanSayisi" value="@b.mali.oncekiYilCalisanSayisi" disabled="@ro" /></td><td><input type="number" min="0" step="1" name="Basvuru.mali.SonYilCalisanSayisi" value="@b.mali.sonYilCalisanSayisi" disabled="@ro" /></td><td>@MaliDosyaAlani("calisan.onceki", 7, "maliRefCalisanOnceki", ro)</td><td>@MaliDosyaAlani("calisan.son", 8, "maliRefCalisanSon", ro)</td><td>SGK kayıtları</td><td>Kadın istihdam kriteri için</td></tr>
+                <tr><td>Son iki yıl ihracat / satış oranı</td><td colspan="2"><strong id="basvuruMaliIhracatOrani">-</strong></td><td colspan="4">Sıralama puanı 7.2 girdisi</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <input type="hidden" id="maliBelgeReferanslariJson" value="@b.mali.belgeReferanslariJson" />
+
+    <div class="section-toolbar mt-4">
+        <h3 class="subhead mb-0">Bağlı / Ortak İşletme Mali Verileri</h3>
+        @if (!ro) { <button type="button" id="basvuruMaliIsletmeEkleBtn" class="btn btn-outline-primary">Ekle</button> }
+    </div>
+    <script type="application/json" id="basvuruMaliIsletmelerJson">@Html.Raw(JsonSerializer.Serialize(isletmeler))</script>
+    <div id="basvuruMaliIsletmeler" class="table-responsive"></div>
+
+    <h3 class="subhead mt-4">Konsolide Ölçek ve Denetim Ön Kontrolü</h3>
+    <div class="form-grid mali-konsolide-grid">
+        <label>Konsolide önceki yıl net satış<input id="maliKonsolideOncekiNet" readonly /></label>
+        <label>Konsolide son yıl net satış<input id="maliKonsolideSonNet" readonly /></label>
+        <label>Konsolide önceki yıl aktif<input id="maliKonsolideOncekiAktif" readonly /></label>
+        <label>Konsolide son yıl aktif<input id="maliKonsolideSonAktif" readonly /></label>
+        <label>Ölçek kontrolü<input id="maliKonsolideOlcek" readonly /></label>
+        <label>Bağımsız denetime tabi mi?
+            <select id="bagimsizDenetimeTabiMi" name="Basvuru.mali.BagimsizDenetimeTabiMi" disabled="@ro">
+                <option value="" selected="@(!b.mali.bagimsizDenetimeTabiMi.HasValue)">Seçiniz</option>
+                <option value="true" selected="@(b.mali.bagimsizDenetimeTabiMi == true)">Evet</option>
+                <option value="false" selected="@(b.mali.bagimsizDenetimeTabiMi == false)">Hayır</option>
+            </select>
+        </label>
+        <div id="denetimDosyaBolumu" class="document-upload-box @(b.mali.bagimsizDenetimeTabiMi == true ? "" : "d-none")">
+            <label>Bağımsız denetim raporu ref.</label>
+            <div class="document-file-row">
+                @if (!ro) { <label class="btn btn-primary mb-0" for="denetimDosya">Yükle</label> }
+                <input id="denetimDosya" type="file" class="document-file-input" disabled="@ro" />
+                <span id="denetimDosyaSecim" class="document-file-name">@(string.IsNullOrWhiteSpace(b.mali.denetimDosyaAdi) ? "Dosya seçilmedi" : b.mali.denetimDosyaAdi)</span>
+                <a id="denetimIndirBtn" class="btn btn-outline-primary @(b.mali.denetimDosyaId.HasValue ? "" : "d-none")" href="@(b.mali.denetimDosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = b.mali.denetimDosyaId.Value }) : "#")" target="_blank" rel="noopener">İndir</a>
+            </div>
+        </div>
+        <label class="wide-label" style="grid-column:1 / -1">Mali veri açıklaması<textarea name="Basvuru.mali.Aciklama" maxlength="2000" rows="5" disabled="@ro">@b.mali.aciklama</textarea></label>
+    </div>
+    <input type="hidden" name="Basvuru.mali.DenetimDosyaAdi" value="@b.mali.denetimDosyaAdi" />
+    <input type="hidden" name="Basvuru.mali.DenetimDosyaId" value="@b.mali.denetimDosyaId" />
+
+    <div class="modal fade firma-modal" id="basvuruMaliIsletmeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg"><div class="modal-content firma-modal-content">
+            <div class="modal-header firma-modal-header"><h5 class="modal-title">Bağlı / Ortak İşletme Mali Verileri</h5><button type="button" class="close basvuru-mali-modal-kapat" aria-label="Kapat"><span aria-hidden="true">&times;</span></button></div>
+            <div class="modal-body firma-modal-body">
+                <input id="basvuruMaliIsletmeIndex" type="hidden" />
+                <div class="form-grid">
+                    <label>İşletme unvanı<input id="basvuruMaliOrtakAdUnvan" maxlength="250" /></label>
+                    <label>VKN<input id="basvuruMaliOrtakVkn" inputmode="numeric" maxlength="10" /></label>
+                    <label>İlişki türü<select id="basvuruMaliOrtakIliski"><option value="">Seçiniz</option><option value="Bağlı İşletme">Bağlı İşletme</option><option value="Ortak İşletme">Ortak İşletme</option></select></label>
+                    <label>Dahil oranı (%)<input id="basvuruMaliOrtakOran" type="number" min="0" max="100" step="0.01" /></label>
+                    <label>@oncekiYil net satış<input id="basvuruMaliOrtakOncekiNet" class="money-integer" /></label>
+                    <label>@sonYil net satış<input id="basvuruMaliOrtakSonNet" class="money-integer" /></label>
+                    <label>@oncekiYil aktif<input id="basvuruMaliOrtakOncekiAktif" class="money-integer" /></label>
+                    <label>@sonYil aktif<input id="basvuruMaliOrtakSonAktif" class="money-integer" /></label>
+                </div>
+                <div class="document-upload-box mt-3"><label>Belge ref.</label><div class="document-file-row"><label id="basvuruMaliOrtakBelgeSecBtn" class="btn btn-primary mb-0" for="basvuruMaliOrtakBelge">Yükle</label><input id="basvuruMaliOrtakBelge" type="file" class="document-file-input" /><span id="basvuruMaliOrtakBelgeAdi" class="document-file-name">Dosya seçilmedi</span><a id="basvuruMaliOrtakBelgeIndir" class="btn btn-outline-primary d-none" href="#" target="_blank" rel="noopener">İndir</a></div><div id="basvuruMaliOrtakBelgeNot" class="document-note">Yeni işletmede belge yüklemek için önce kaydediniz.</div></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary basvuru-mali-modal-kapat">İptal</button><button type="button" class="btn btn-primary" id="basvuruMaliIsletmeKaydetBtn">Kaydet</button></div>
+        </div></div>
+    </div>
+</section>
+
+@functions {
+    private Microsoft.AspNetCore.Html.IHtmlContent MaliDosyaAlani(string anahtar, int dosyaNo, string id, bool saltOkunur)
+    {
+        string yukle = saltOkunur ? "" : $"<label class=\"btn btn-sm btn-outline-primary mb-0\" for=\"{id}\">Yükle</label><input id=\"{id}\" type=\"file\" class=\"document-file-input mali-belge-input\" data-ref-key=\"{anahtar}\" data-dosya-no=\"{dosyaNo}\" data-name-target=\"{id}Adi\" data-download-target=\"{id}Indir\" />";
+        return new Microsoft.AspNetCore.Html.HtmlString($"<div class=\"mali-ref-file\"><span id=\"{id}Adi\" class=\"document-file-name\">Dosya seçilmedi</span>{yukle}<a id=\"{id}Indir\" class=\"btn btn-sm btn-outline-secondary d-none\" href=\"#\" target=\"_blank\" rel=\"noopener\">İndir</a></div>");
+    }
+}

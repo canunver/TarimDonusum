@@ -171,7 +171,7 @@
     Eksikse(string.IsNullOrWhiteSpace(rawYatirimOzeti), R("Basvuru.Summary.Error.InvestmentSummaryRequired"));
     Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.RequiredDocumentsRequired"));
     Eksikse(b.ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "T\u00FCzel Ki\u015Fi", StringComparison.OrdinalIgnoreCase))
-        && b.ortaklik.bagliOrtakDosyalari.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.RequiredDocumentsRequired"));
+        && b.ortaklik.bagliOrtakDosyalari.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.LegalPartnerDocumentsRequired"));
     Eksikse(b.AdliSicilKisileri.Count == 0, R("Basvuru.Summary.Error.CriminalPeopleRequired"));
     Eksikse(b.AdliSicilKisileri.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.CriminalFilesRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson), R("Basvuru.Summary.Error.EsfRequired"));

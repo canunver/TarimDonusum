@@ -1,11 +1,11 @@
-@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+﻿@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @using TarimDonusum.Models
 @using System.Text.Json
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
     var b = Model.Basvuru;
-    bool tamamlanabilir = b.durum == enumBasvuruDurum.BasvuruDurumu;
+    bool tamamlanabilir = b.durum == enumBasvuruDurum.OnBasvuruIncelemeDurumu;
     bool denetimKayitli =
         !string.IsNullOrWhiteSpace(b.DenetimGerekcesi) &&
         b.DenetimSonucu.HasValue &&

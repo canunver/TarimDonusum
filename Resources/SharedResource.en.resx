@@ -219,28 +219,72 @@
   <data name="Layout.InstitutionName" xml:space="preserve">
     <value>TKDK - Agriculture and Rural Development Support Institution</value>
   </data>
-  <data name="Layout.ThemeSelection" xml:space="preserve"><value>Theme Selection</value></data>
-  <data name="Layout.Theme.Navy" xml:space="preserve"><value>Navy</value></data>
-  <data name="Layout.Theme.Green" xml:space="preserve"><value>Green</value></data>
-  <data name="Layout.Theme.Blue" xml:space="preserve"><value>Blue</value></data>
-  <data name="Layout.Theme.Light" xml:space="preserve"><value>Light</value></data>
-  <data name="Layout.Logout" xml:space="preserve"><value>Logout</value></data>
-  <data name="Basvuru.Summary.SubmitButton" xml:space="preserve"><value>Submit Pre-Application for Review</value></data>
-  <data name="Basvuru.Summary.SubmitConfirm" xml:space="preserve"><value>Are you sure you want to submit the pre-application for review? The information cannot be changed after submission.</value></data>
-  <data name="Basvuru.Summary.SubmittedReadonly" xml:space="preserve"><value>The pre-application has been submitted for review and is now read-only.</value></data>
-  <data name="Business.Application.Submit.AlreadySubmitted" xml:space="preserve"><value>The pre-application has already been submitted or is no longer editable.</value></data>
-  <data name="Business.Application.Submit.Success" xml:space="preserve"><value>The pre-application was successfully submitted for review.</value></data>
-  <data name="Business.Application.Submit.Failed" xml:space="preserve"><value>The pre-application could not be submitted for review. Please try again.</value></data>
-  <data name="Layout.ChangePassword" xml:space="preserve"><value>Change my password</value></data>
-  <data name="Layout.NewPassword" xml:space="preserve"><value>New password</value></data>
-  <data name="Layout.NewPasswordAgain" xml:space="preserve"><value>Confirm new password</value></data>
-  <data name="Layout.PasswordRule" xml:space="preserve"><value>The password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character.</value></data>
-  <data name="Layout.Close" xml:space="preserve"><value>Close</value></data>
-  <data name="Layout.Cancel" xml:space="preserve"><value>Cancel</value></data>
-  <data name="Layout.Save" xml:space="preserve"><value>Save</value></data>
-  <data name="Kullanici.ChangePassword.SessionInvalid" xml:space="preserve"><value>Your session is invalid. Please sign in again.</value></data>
-  <data name="Kullanici.ChangePassword.Success" xml:space="preserve"><value>Your password has been changed successfully.</value></data>
-  <data name="Kullanici.ChangePassword.Failed" xml:space="preserve"><value>The password could not be changed. Please try again.</value></data>
+  <data name="Layout.ThemeSelection" xml:space="preserve">
+    <value>Theme Selection</value>
+  </data>
+  <data name="Layout.Theme.Navy" xml:space="preserve">
+    <value>Navy</value>
+  </data>
+  <data name="Layout.Theme.Green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="Layout.Theme.Blue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="Layout.Theme.Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Layout.Logout" xml:space="preserve">
+    <value>Logout</value>
+  </data>
+  <data name="Basvuru.Summary.SubmitButton" xml:space="preserve">
+    <value>Submit Pre-Application for Review</value>
+  </data>
+  <data name="Basvuru.Summary.SubmitConfirm" xml:space="preserve">
+    <value>Are you sure you want to submit the pre-application for review? The information cannot be changed after submission.</value>
+  </data>
+  <data name="Basvuru.Summary.SubmittedReadonly" xml:space="preserve">
+    <value>The pre-application has been submitted for review and is now read-only.</value>
+  </data>
+  <data name="Business.Application.Submit.AlreadySubmitted" xml:space="preserve">
+    <value>The pre-application has already been submitted or is no longer editable.</value>
+  </data>
+  <data name="Business.Application.Submit.Success" xml:space="preserve">
+    <value>The pre-application was successfully submitted for review.</value>
+  </data>
+  <data name="Business.Application.Submit.Failed" xml:space="preserve">
+    <value>The pre-application could not be submitted for review. Please try again.</value>
+  </data>
+  <data name="Layout.ChangePassword" xml:space="preserve">
+    <value>Change my password</value>
+  </data>
+  <data name="Layout.NewPassword" xml:space="preserve">
+    <value>New password</value>
+  </data>
+  <data name="Layout.NewPasswordAgain" xml:space="preserve">
+    <value>Confirm new password</value>
+  </data>
+  <data name="Layout.PasswordRule" xml:space="preserve">
+    <value>The password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character.</value>
+  </data>
+  <data name="Layout.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Layout.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Layout.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Kullanici.ChangePassword.SessionInvalid" xml:space="preserve">
+    <value>Your session is invalid. Please sign in again.</value>
+  </data>
+  <data name="Kullanici.ChangePassword.Success" xml:space="preserve">
+    <value>Your password has been changed successfully.</value>
+  </data>
+  <data name="Kullanici.ChangePassword.Failed" xml:space="preserve">
+    <value>The password could not be changed. Please try again.</value>
+  </data>
   <data name="YeniKullanici.Title" xml:space="preserve">
     <value>New User</value>
   </data>
@@ -703,23 +747,51 @@
   <data name="Basvuru.Field.DigerFinansmanKaynaklariAciklama" xml:space="preserve">
     <value>Other financing sources explanation</value>
   </data>
-  <data name="Basvuru.Finance.RateLimitError" xml:space="preserve"><value>The requested financing rate cannot exceed the period limit of {0}%.</value></data>
-  <data name="Basvuru.Finance.RateLimitExceeded" xml:space="preserve"><value>The requested financing rate cannot exceed the period limit.</value></data>
-  <data name="Basvuru.Field.TalepEdilenFinansmanTutari" xml:space="preserve"><value>Requested financing amount (USD)</value></data>
-  <data name="Basvuru.Field.OzKaynakTutari" xml:space="preserve"><value>Equity amount (USD)</value></data>
-  <data name="Basvuru.Field.YatirimSuresiAy" xml:space="preserve"><value>Investment duration (months)</value></data>
-  <data name="Basvuru.Field.OdemeSuresiAy" xml:space="preserve"><value>Payment period (months) / installment count</value></data>
-  <data name="Basvuru.Finance.InvestmentDurationHelp" xml:space="preserve"><value>Investment duration is the number of months between contract signature and the date when the beneficiary completes all investment activities and receives the final payment.</value></data>
-  <data name="Basvuru.Finance.GracePeriod24Help" xml:space="preserve"><value>The grace period cannot exceed 24 months from contract signature.</value></data>
-  <data name="Basvuru.Finance.GracePeriod12Help" xml:space="preserve"><value>The grace period cannot exceed 12 months after investment completion.</value></data>
-  <data name="Basvuru.Finance.InvestmentDurationRequired" xml:space="preserve"><value>Investment duration must be entered in months.</value></data>
-  <data name="Basvuru.Finance.PaymentDurationRequired" xml:space="preserve"><value>The payment period must be greater than zero.</value></data>
+  <data name="Basvuru.Finance.RateLimitError" xml:space="preserve">
+    <value>The requested financing rate cannot exceed the period limit of {0}%.</value>
+  </data>
+  <data name="Basvuru.Finance.RateLimitExceeded" xml:space="preserve">
+    <value>The requested financing rate cannot exceed the period limit.</value>
+  </data>
+  <data name="Basvuru.Field.TalepEdilenFinansmanTutari" xml:space="preserve">
+    <value>Requested financing amount (USD)</value>
+  </data>
+  <data name="Basvuru.Field.OzKaynakTutari" xml:space="preserve">
+    <value>Equity amount (USD)</value>
+  </data>
+  <data name="Basvuru.Field.YatirimSuresiAy" xml:space="preserve">
+    <value>Investment duration (months)</value>
+  </data>
+  <data name="Basvuru.Field.OdemeSuresiAy" xml:space="preserve">
+    <value>Payment period (months) / installment count</value>
+  </data>
+  <data name="Basvuru.Finance.InvestmentDurationHelp" xml:space="preserve">
+    <value>Investment duration is the number of months between contract signature and the date when the beneficiary completes all investment activities and receives the final payment.</value>
+  </data>
+  <data name="Basvuru.Finance.GracePeriod24Help" xml:space="preserve">
+    <value>The grace period cannot exceed 24 months from contract signature.</value>
+  </data>
+  <data name="Basvuru.Finance.GracePeriod12Help" xml:space="preserve">
+    <value>The grace period cannot exceed 12 months after investment completion.</value>
+  </data>
+  <data name="Basvuru.Finance.InvestmentDurationRequired" xml:space="preserve">
+    <value>Investment duration must be entered in months.</value>
+  </data>
+  <data name="Basvuru.Finance.PaymentDurationRequired" xml:space="preserve">
+    <value>The payment period must be greater than zero.</value>
+  </data>
   <data name="Basvuru.Field.YatiriminAmaci" xml:space="preserve">
     <value>Investment purpose</value>
   </data>
-  <data name="Basvuru.Field.YatirimFaaliyetleri" xml:space="preserve"><value>Investment activities</value></data>
-  <data name="Basvuru.Field.YatirimGirdileri" xml:space="preserve"><value>Investment inputs</value></data>
-  <data name="Basvuru.Field.YatirimCiktilari" xml:space="preserve"><value>Investment outputs</value></data>
+  <data name="Basvuru.Field.YatirimFaaliyetleri" xml:space="preserve">
+    <value>Investment activities</value>
+  </data>
+  <data name="Basvuru.Field.YatirimGirdileri" xml:space="preserve">
+    <value>Investment inputs</value>
+  </data>
+  <data name="Basvuru.Field.YatirimCiktilari" xml:space="preserve">
+    <value>Investment outputs</value>
+  </data>
   <data name="Basvuru.Field.OncekiYilNetSatis" xml:space="preserve">
     <value>Previous year net sales revenue (TRY)</value>
   </data>
@@ -1557,9 +1629,15 @@
   <data name="Basvuru.Summary.Error.InvestmentPurposeRequired" xml:space="preserve">
     <value>The investment purpose must be entered.</value>
   </data>
-  <data name="Basvuru.Summary.Error.InvestmentActivitiesRequired" xml:space="preserve"><value>Investment activities must be entered.</value></data>
-  <data name="Basvuru.Summary.Error.InvestmentInputsRequired" xml:space="preserve"><value>Investment inputs must be entered.</value></data>
-  <data name="Basvuru.Summary.Error.InvestmentOutputsRequired" xml:space="preserve"><value>Investment outputs must be entered.</value></data>
+  <data name="Basvuru.Summary.Error.InvestmentActivitiesRequired" xml:space="preserve">
+    <value>Investment activities must be entered.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.InvestmentInputsRequired" xml:space="preserve">
+    <value>Investment inputs must be entered.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.InvestmentOutputsRequired" xml:space="preserve">
+    <value>Investment outputs must be entered.</value>
+  </data>
   <data name="Basvuru.Summary.Error.ValueChainRequired" xml:space="preserve">
     <value>Value chain must be selected.</value>
   </data>
@@ -1605,344 +1683,1047 @@
   <data name="Basvuru.Summary.Error.CommitmentRequired" xml:space="preserve">
     <value>Commitment / Declarations document must be uploaded.</value>
   </data>
-  <data name="Basvuru.Common.Back" xml:space="preserve"><value>Back</value></data>
-  <data name="Basvuru.Common.Download" xml:space="preserve"><value>Download</value></data>
-  <data name="Basvuru.Common.RowNo" xml:space="preserve"><value>No</value></data>
-  <data name="Basvuru.Applicant.PeriodProvinceTitle" xml:space="preserve"><value>Application Period and Province</value></data>
-  <data name="Basvuru.Applicant.Description" xml:space="preserve"><value>Identity, contact, activity and legal type information.</value></data>
-  <data name="Basvuru.Field.HukukiTurSirketTuru" xml:space="preserve"><value>Legal type / company type</value></data>
-  <data name="Basvuru.Field.TemsilIlzamKisilerReadonly" xml:space="preserve"><value>Person(s) authorized to represent and bind</value></data>
-  <data name="Basvuru.Field.YonetimKuruluAdliSicilKisilerReadonly" xml:space="preserve"><value>Board members / additional persons subject to criminal record check</value></data>
-  <data name="Basvuru.Placeholder.TemsilIlzamFromCriminalRecord" xml:space="preserve"><value>Generated from persons authorized to represent and bind entered in the criminal record section.</value></data>
-  <data name="Basvuru.Placeholder.BoardMembersFromCriminalRecord" xml:space="preserve"><value>Generated from board members and additional persons subject to criminal record check entered in the criminal record section.</value></data>
-  <data name="Basvuru.Criminal.ModalTitle" xml:space="preserve"><value>Criminal record check person</value></data>
-  <data name="Basvuru.Criminal.Role" xml:space="preserve"><value>Role</value></data>
-  <data name="Basvuru.Criminal.RoleOptions" xml:space="preserve"><value>Company Partner|Authorized to represent and bind|Board member|Additional Person Subject to Criminal Record Check</value></data>
-  <data name="Basvuru.Criminal.Upload" xml:space="preserve"><value>Upload criminal record</value></data>
-  <data name="Basvuru.Criminal.FileMissing" xml:space="preserve"><value>Criminal record is not uploaded, please upload</value></data>
-  <data name="Basvuru.Criminal.SavePersonFirst" xml:space="preserve"><value>Save the person before uploading the criminal record.</value></data>
-  <data name="Basvuru.Criminal.RequiredFields" xml:space="preserve"><value>TCKN, name, surname and role are required.</value></data>
-  <data name="Basvuru.Criminal.DuplicateTckn" xml:space="preserve"><value>Two criminal record persons cannot be saved with the same TCKN.</value></data>
-  <data name="Basvuru.Criminal.Empty" xml:space="preserve"><value>No criminal record check person has been added.</value></data>
-  <data name="Basvuru.Criminal.FileColumn" xml:space="preserve"><value>Criminal record</value></data>
-  <data name="Basvuru.Field.Tckn" xml:space="preserve"><value>TCKN</value></data>
-  <data name="Basvuru.Field.TcknVkn" xml:space="preserve"><value>TCKN / VKN</value></data>
-  <data name="Basvuru.Field.Ad" xml:space="preserve"><value>Name</value></data>
-  <data name="Basvuru.Field.Soyad" xml:space="preserve"><value>Surname</value></data>
-  <data name="Basvuru.Esf.SelectInvestmentScopeFirst" xml:space="preserve"><value>Please select whether the investment is modernization of an existing facility, a new facility, or both.</value></data>
-  <data name="Basvuru.Esf.OpenedBySelection" xml:space="preserve"><value>The form has been opened according to your selection. Fields left grey in the document and not related to your selection are not shown.</value></data>
-  <data name="Basvuru.Esf.ShowHideList" xml:space="preserve"><value>Show / hide list</value></data>
-  <data name="Basvuru.Esf.InfoLabel" xml:space="preserve"><value>Information:</value></data>
-  <data name="Basvuru.Esf.InformativeNote" xml:space="preserve"><value>Informative Note:</value></data>
-  <data name="Basvuru.Esf.PlannedOnlyNote" xml:space="preserve"><value>This question relates only to the planned investment; the existing enterprise field is not opened because it is grey in the document.</value></data>
-  <data name="Basvuru.Esf.GlobalContext" xml:space="preserve"><value>General Declaration / Project Information</value></data>
-  <data name="Basvuru.Esf.ExistingContext" xml:space="preserve"><value>Existing Enterprise/Facility</value></data>
-  <data name="Basvuru.Esf.PlannedContext" xml:space="preserve"><value>Planned Investment</value></data>
-  <data name="Basvuru.Esf.Placeholder.Explain" xml:space="preserve"><value>Enter explanation</value></data>
-  <data name="Basvuru.Esf.Placeholder.Text" xml:space="preserve"><value>Enter information</value></data>
-  <data name="Basvuru.Esf.Placeholder.Document" xml:space="preserve"><value>Document name / uploaded supporting document</value></data>
-  <data name="Basvuru.Esf.ExclusionWarning" xml:space="preserve"><value>Excluded activity warning: This answer may cause the investment to be evaluated negatively for eligibility.</value></data>
-  <data name="Business.Session.Expired" xml:space="preserve"><value>Your session has expired.</value></data>
-  <data name="Business.User.InfoMissing" xml:space="preserve"><value>User information was not received.</value></data>
-  <data name="Business.User.NotFoundOrPassive" xml:space="preserve"><value>User was not found or is inactive.</value></data>
-  <data name="Business.User.CreateFailed" xml:space="preserve"><value>User record could not be created.</value></data>
-  <data name="Business.User.NotFound" xml:space="preserve"><value>User was not found.</value></data>
-  <data name="Business.User.InvalidCredentials" xml:space="preserve"><value>User code or password is incorrect.</value></data>
-  <data name="Business.User.ReadFailed" xml:space="preserve"><value>User information could not be read.</value></data>
-  <data name="Business.User.TestActiveUserNotFound" xml:space="preserve"><value>No active user was found for test login.</value></data>
-  <data name="Business.User.TestUserReadFailed" xml:space="preserve"><value>User could not be read for test login.</value></data>
-  <data name="Business.User.SimilarRecordExists" xml:space="preserve"><value>A similar user record exists, so the record cannot be created.</value></data>
-  <data name="Business.Database.ConnectionSettingMissing" xml:space="preserve"><value>Database connection setting was not found.</value></data>
-  <data name="Business.Query.InfoRequired" xml:space="preserve"><value>Query information must be provided.</value></data>
-  <data name="Business.Company.NotFound" xml:space="preserve"><value>Company was not found.</value></data>
-  <data name="Business.Company.UserNotRelated" xml:space="preserve"><value>This company is not related to the user.</value></data>
-  <data name="Business.Company.ExistsButUserNotRelated" xml:space="preserve"><value>The company exists in the system but is not related to the user.</value></data>
-  <data name="Business.Company.SaveFailed" xml:space="preserve"><value>Company could not be saved.</value></data>
-  <data name="Business.Application.NotFound" xml:space="preserve"><value>Application was not found.</value></data>
-  <data name="Business.Application.ViewUnauthorized" xml:space="preserve"><value>You are not authorized to view this application.</value></data>
-  <data name="Business.Application.RecordRequired" xml:space="preserve"><value>Application record must be selected.</value></data>
-  <data name="Business.Application.NotFoundOrUnauthorized" xml:space="preserve"><value>Application record was not found or you are not authorized for this action.</value></data>
-  <data name="Business.Application.CompanyUserNotRelated" xml:space="preserve"><value>The application company is not related to the user.</value></data>
-  <data name="Business.Application.ApplicantInfoRequired" xml:space="preserve"><value>Applicant information must be sent.</value></data>
-  <data name="Business.Application.FileFormUndefined" xml:space="preserve"><value>File form is not defined.</value></data>
-  <data name="Business.Application.FileTypeRequired" xml:space="preserve"><value>File type must be selected.</value></data>
-  <data name="Business.Application.FileTypeUndefined" xml:space="preserve"><value>File type is not defined.</value></data>
-  <data name="Business.Application.UboKycDocument" xml:space="preserve"><value>UBO-KYC document</value></data>
-  <data name="Business.Application.UboKycPartnerRequired" xml:space="preserve"><value>The partner must be saved before uploading the UBO-KYC document.</value></data>
-  <data name="Business.Application.CriminalPersonRequiredBeforeUpload" xml:space="preserve"><value>The person must be saved before uploading the criminal record.</value></data>
-  <data name="Business.Application.DocumentDescriptionRequired" xml:space="preserve"><value>Document description must be entered.</value></data>
-  <data name="Business.Application.DocumentPackageUploaded" xml:space="preserve"><value>Document package uploaded.</value></data>
-  <data name="Business.Application.CommitmentFileUploaded" xml:space="preserve"><value>Commitment file uploaded.</value></data>
-  <data name="Business.Application.AuditFileUploaded" xml:space="preserve"><value>Independent audit file uploaded.</value></data>
-  <data name="Business.File.ModuleCodeRequired" xml:space="preserve"><value>Module code is required.</value></data>
-  <data name="Business.File.ViewFilesUnauthorized" xml:space="preserve"><value>You are not authorized to view files.</value></data>
-  <data name="Business.File.ViewFileUnauthorized" xml:space="preserve"><value>You are not authorized to view the file.</value></data>
-  <data name="Business.File.ListReadFailed" xml:space="preserve"><value>File list could not be read.</value></data>
-  <data name="Business.File.ReadFailed" xml:space="preserve"><value>File could not be read.</value></data>
-  <data name="Business.File.FileRequired" xml:space="preserve"><value>File must be selected.</value></data>
-  <data name="Business.File.NotFound" xml:space="preserve"><value>File was not found.</value></data>
-  <data name="Business.File.AddUnauthorized" xml:space="preserve"><value>You are not authorized to add files.</value></data>
-  <data name="Business.File.UpdateUnauthorized" xml:space="preserve"><value>You are not authorized to update files.</value></data>
-  <data name="Business.File.DeleteUnauthorized" xml:space="preserve"><value>You are not authorized to delete files.</value></data>
-  <data name="Business.File.Added" xml:space="preserve"><value>File added.</value></data>
-  <data name="Business.File.Updated" xml:space="preserve"><value>File updated.</value></data>
-  <data name="Business.File.Uploaded" xml:space="preserve"><value>File uploaded.</value></data>
-  <data name="Business.File.Deleted" xml:space="preserve"><value>File deleted.</value></data>
-  <data name="Business.File.SaveFailed" xml:space="preserve"><value>File could not be saved.</value></data>
-  <data name="Business.File.DeleteFailed" xml:space="preserve"><value>File could not be deleted.</value></data>
-  <data name="Business.File.ConnectionStringMissing" xml:space="preserve"><value>File management connection string is not defined.</value></data>
-  <data name="Business.File.FormNameRequired" xml:space="preserve"><value>Form name is required.</value></data>
-  <data name="Business.File.FormKeyRequired" xml:space="preserve"><value>Form key is required.</value></data>
-  <data name="Business.File.FileNoRequired" xml:space="preserve"><value>File no is required.</value></data>
-  <data name="Business.File.FileNoCannotBeNegative" xml:space="preserve"><value>File no cannot be negative.</value></data>
-  <data name="Business.File.FileNameRequired" xml:space="preserve"><value>File name is required.</value></data>
-  <data name="Business.File.ContentRequired" xml:space="preserve"><value>File content is required.</value></data>
-  <data name="Business.Pikk.EquipmentRowRequired" xml:space="preserve"><value>Because machine-equipment expense is selected, name and purpose of use must be entered in at least one machine/equipment row.</value></data>
-  <data name="Business.Pikk.ConstructionRowRequired" xml:space="preserve"><value>Because construction expense is selected, name and purpose of use must be entered in at least one building/construction row.</value></data>
-  <data name="Business.Esf.AnswersReadFailed" xml:space="preserve"><value>Environmental-social survey answers could not be read.</value></data>
-  <data name="Business.Esf.UnknownQuestion" xml:space="preserve"><value>Undefined environmental-social survey question: {0}</value></data>
-  <data name="Business.Criminal.DuplicateTcknWithValue" xml:space="preserve"><value>More than one criminal record person cannot be saved with TCKN {0}.</value></data>
-  <data name="Business.Criminal.PeopleSaved" xml:space="preserve"><value>Criminal record persons saved.</value></data>
-  <data name="Business.Address.DistrictNotInApplicationProvince" xml:space="preserve"><value>The selected district does not belong to the application province or is inactive.</value></data>
-  <data name="Business.Address.NotFound" xml:space="preserve"><value>Address record was not found.</value></data>
-  <data name="Business.Address.SaveFailed" xml:space="preserve"><value>Application address could not be saved.</value></data>
-  <data name="Business.Address.RecordRequired" xml:space="preserve"><value>Address record must be selected.</value></data>
-  <data name="Business.Address.DeleteFailed" xml:space="preserve"><value>Application address could not be deleted.</value></data>
-  <data name="Business.Partnership.ApplicationRequiredBeforeSave" xml:space="preserve"><value>Partnership information cannot be saved before the application record is created.</value></data>
-  <data name="Business.Partnership.SaveFailed" xml:space="preserve"><value>Partnership information could not be saved.</value></data>
-  <data name="Business.Documents.PackageDeclarationRequired" xml:space="preserve"><value>It must be declared that all required documents are included in a single document.</value></data>
-  <data name="Business.Documents.RequiredGroupsUndefined" xml:space="preserve"><value>Required document groups are not defined.</value></data>
-  <data name="Business.Documents.RequiredGroupsMustBeSent" xml:space="preserve"><value>Required document groups must be sent to the server.</value></data>
-  <data name="Business.Documents.RequiredGroupsMustBeChecked" xml:space="preserve"><value>All required document groups must be checked.</value></data>
-  <data name="Başvuru kayıtları listelenemedi." xml:space="preserve"><value>Application records could not be listed.</value></data>
-  <data name="Kullanıcı bilgisi okunamadı." xml:space="preserve"><value>User information could not be read.</value></data>
-  <data name="Başvuru dönemleri listelenemedi." xml:space="preserve"><value>Application periods could not be listed.</value></data>
-  <data name="İl listesi okunamadı." xml:space="preserve"><value>Province list could not be read.</value></data>
-  <data name="İlçe listesi okunamadı." xml:space="preserve"><value>District list could not be read.</value></data>
-  <data name="Değer zincirleri listelenemedi." xml:space="preserve"><value>Value chains could not be listed.</value></data>
-  <data name="Değer zinciri aşamaları listelenemedi." xml:space="preserve"><value>Value chain stages could not be listed.</value></data>
-  <data name="Başvuru kaydı okunamadı." xml:space="preserve"><value>Application record could not be read.</value></data>
-  <data name="Firma sorgulanamadı." xml:space="preserve"><value>Company could not be queried.</value></data>
-  <data name="Firma kaydedilemedi." xml:space="preserve"><value>Company could not be saved.</value></data>
-  <data name="Başvuru kaydedilemedi." xml:space="preserve"><value>Application could not be saved.</value></data>
-  <data name="Ortaklık bilgileri kaydedilemedi." xml:space="preserve"><value>Partnership information could not be saved.</value></data>
-  <data name="Ortak/pay sahibi bilgileri kaydedilemedi." xml:space="preserve"><value>Partner/shareholder information could not be saved.</value></data>
-  <data name="Başvuru dosyası kaydedilemedi." xml:space="preserve"><value>Application file could not be saved.</value></data>
-  <data name="Adli sicil kişileri kaydedilemedi." xml:space="preserve"><value>Criminal record persons could not be saved.</value></data>
-  <data name="Doküman paketi kaydedilemedi." xml:space="preserve"><value>Document package could not be saved.</value></data>
-  <data name="Taahhüt dosyası kaydedilemedi." xml:space="preserve"><value>Commitment file could not be saved.</value></data>
-  <data name="Bağımsız denetim dosyası kaydedilemedi." xml:space="preserve"><value>Independent audit file could not be saved.</value></data>
-  <data name="Dosya indirilemedi." xml:space="preserve"><value>File could not be downloaded.</value></data>
-  <data name="Uygulama adresi kaydedilemedi." xml:space="preserve"><value>Application address could not be saved.</value></data>
-  <data name="Uygulama adresi silinemedi." xml:space="preserve"><value>Application address could not be deleted.</value></data>
-  <data name="Basvuru.Ortaklik.Title" xml:space="preserve"><value>3. Ownership and Authority Information</value></data>
-  <data name="Basvuru.Ortaklik.Lead" xml:space="preserve"><value>Total shareholding percentage and private sector share are calculated by the system based on partner/shareholder rows. Financial data is not requested for natural person partners; financial data for legal entity partners is collected separately and included in the financial scale check according to the shareholding percentage.</value></data>
-  <data name="Basvuru.Ortaklik.PrivateShareCalculated" xml:space="preserve"><value>Private sector share (%) - calculated by system</value></data>
-  <data name="Basvuru.Ortaklik.PartnersTableTitle" xml:space="preserve"><value>Ownership structure detail table</value></data>
-  <data name="Basvuru.Ortaklik.AddPartner" xml:space="preserve"><value>+ Add partner / shareholder</value></data>
-  <data name="Basvuru.Ortaklik.RelatedEnterpriseTitle" xml:space="preserve"><value>Related / Partner Enterprise Information</value></data>
-  <data name="Basvuru.Ortaklik.RelatedEnterpriseNote" xml:space="preserve"><value>If a related/partner enterprise relationship is declared, basic financial information and documents for this enterprise are also collected. Financial information of legal entity partners is included in the calculation separately through the ownership table above.</value></data>
-  <data name="Basvuru.Ortaklik.RelatedEnterpriseTitleField" xml:space="preserve"><value>Related/partner enterprise title</value></data>
-  <data name="Basvuru.Ortaklik.RelatedEnterpriseIdentityField" xml:space="preserve"><value>Related/partner enterprise TIN/MERSIS</value></data>
-  <data name="Basvuru.Ortaklik.RelatedDocumentsTitle" xml:space="preserve"><value>Legal entity partner required documents</value></data>
-  <data name="Basvuru.Mali.PreviousYear" xml:space="preserve"><value>Previous Year</value></data>
-  <data name="Basvuru.Mali.LatestYear" xml:space="preserve"><value>Latest Year</value></data>
-  <data name="Basvuru.Ortaklik.Modal.Title" xml:space="preserve"><value>Partner / shareholder information</value></data>
-  <data name="Basvuru.Ortaklik.PartnerNameTitle" xml:space="preserve"><value>Partner / shareholder name-title</value></data>
-  <data name="Basvuru.Ortaklik.Identity" xml:space="preserve"><value>TCKN / TIN</value></data>
-  <data name="Basvuru.Ortaklik.PersonType" xml:space="preserve"><value>Natural / legal person</value></data>
-  <data name="Basvuru.Ortaklik.NaturalPerson" xml:space="preserve"><value>Natural Person</value></data>
-  <data name="Basvuru.Ortaklik.LegalEntity" xml:space="preserve"><value>Legal Entity</value></data>
-  <data name="Basvuru.Ortaklik.ShareRate" xml:space="preserve"><value>Share rate (%)</value></data>
-  <data name="Basvuru.Ortaklik.PrivatePublicType" xml:space="preserve"><value>Private / public status</value></data>
-  <data name="Basvuru.Ortaklik.PrivateSector" xml:space="preserve"><value>Private</value></data>
-  <data name="Basvuru.Ortaklik.PublicSector" xml:space="preserve"><value>Public</value></data>
-  <data name="Basvuru.Ortaklik.BeneficialOwner" xml:space="preserve"><value>Ultimate/beneficial owner information</value></data>
-  <data name="Basvuru.Ortaklik.UboKycDocument" xml:space="preserve"><value>UBO-KYC document</value></data>
-  <data name="Basvuru.Ortaklik.UboKycUpload" xml:space="preserve"><value>Upload UBO-KYC document</value></data>
-  <data name="Basvuru.Ortaklik.UboKycMissing" xml:space="preserve"><value>UBO-KYC document is not uploaded, please upload it</value></data>
-  <data name="Basvuru.Ortaklik.UboKycSavePartnerFirst" xml:space="preserve"><value>Save the partner before uploading the UBO-KYC document.</value></data>
-  <data name="Basvuru.Ortaklik.LegalFinancialTitle" xml:space="preserve"><value>Legal entity partner financial data</value></data>
-  <data name="Basvuru.Ortaklik.IncludedRatePercent" xml:space="preserve"><value>Included rate (%)</value></data>
-  <data name="Basvuru.Ortaklik.NetSalesShort" xml:space="preserve"><value>net sales</value></data>
-  <data name="Basvuru.Ortaklik.AssetsShort" xml:space="preserve"><value>assets</value></data>
-  <data name="Basvuru.Ortaklik.EmptyPartners" xml:space="preserve"><value>No partner/shareholder has been added.</value></data>
-  <data name="Basvuru.Ortaklik.TotalShareExceeded" xml:space="preserve"><value>Total partner/shareholder share rate cannot exceed 100%.</value></data>
-  <data name="Basvuru.Ortaklik.TotalShareExpected" xml:space="preserve"><value>Total share rate: {0}%. The total is expected to be 100.</value></data>
-  <data name="Basvuru.Ortaklik.PartnerColumn" xml:space="preserve"><value>Partner / shareholder</value></data>
-  <data name="Basvuru.Ortaklik.IncludedRate" xml:space="preserve"><value>Included rate</value></data>
-  <data name="Basvuru.Ortaklik.RequiredNameIdentity" xml:space="preserve"><value>Partner name/title and TCKN/TIN must be entered.</value></data>
-  <data name="Basvuru.Ortaklik.DuplicateIdentity" xml:space="preserve"><value>Two partners cannot be saved with the same TCKN/TIN.</value></data>
-  <data name="Basvuru.Ortaklik.LegalIncludedRateRequired" xml:space="preserve"><value>Included rate must be entered for a legal entity partner.</value></data>
-  <data name="Basvuru.Ortaklik.NetSalesRevenue" xml:space="preserve"><value>net sales revenue</value></data>
-  <data name="Basvuru.Ortaklik.TotalAssets" xml:space="preserve"><value>total assets</value></data>
-  <data name="Basvuru.Ortaklik.RequiredEnter" xml:space="preserve"><value>{0} must be entered.</value></data>
-  <data name="Birim.Title" xml:space="preserve"><value>Units</value></data>
-  <data name="Birim.Heading" xml:space="preserve"><value>Units</value></data>
-  <data name="Birim.Description" xml:space="preserve"><value>User units, center/provincial status, province code, and display order are managed here.</value></data>
-  <data name="Birim.Add" xml:space="preserve"><value>Add Unit</value></data>
-  <data name="Birim.Edit" xml:space="preserve"><value>Edit</value></data>
-  <data name="Birim.Deactivate" xml:space="preserve"><value>Deactivate</value></data>
-  <data name="Birim.ConfirmDeactivate" xml:space="preserve"><value>Deactivate this unit?</value></data>
-  <data name="Birim.Modal.Title" xml:space="preserve"><value>Unit Information</value></data>
-  <data name="Birim.Field.Order" xml:space="preserve"><value>Order No</value></data>
-  <data name="Birim.Field.Name" xml:space="preserve"><value>Unit Name</value></data>
-  <data name="Birim.Field.Type" xml:space="preserve"><value>Unit Type</value></data>
-  <data name="Birim.Field.ProvinceCode" xml:space="preserve"><value>Province Code</value></data>
-  <data name="Birim.Field.Province" xml:space="preserve"><value>Province</value></data>
-  <data name="Birim.Field.Status" xml:space="preserve"><value>Status</value></data>
-  <data name="Birim.Field.Action" xml:space="preserve"><value>Action</value></data>
-  <data name="Birim.Type.Center" xml:space="preserve"><value>Center</value></data>
-  <data name="Birim.Type.Provincial" xml:space="preserve"><value>Provincial</value></data>
-  <data name="Birim.Status.Active" xml:space="preserve"><value>Active</value></data>
-  <data name="Birim.Status.Passive" xml:space="preserve"><value>Passive</value></data>
-  <data name="Business.Authorization.SystemAdminRequired" xml:space="preserve"><value>System administrator permission is required for this action.</value></data>
-  <data name="Business.Unit.ListFailed" xml:space="preserve"><value>The unit list could not be read.</value></data>
-  <data name="Business.Unit.NotFound" xml:space="preserve"><value>The unit could not be found.</value></data>
-  <data name="Business.Unit.Saved" xml:space="preserve"><value>The unit has been saved.</value></data>
-  <data name="Business.Unit.SaveFailed" xml:space="preserve"><value>The unit could not be saved.</value></data>
-  <data name="Business.Unit.Deactivated" xml:space="preserve"><value>The unit has been deactivated.</value></data>
-  <data name="Business.Unit.DeactivateFailed" xml:space="preserve"><value>The unit could not be deactivated.</value></data>
-  <data name="Business.Unit.NameRequired" xml:space="preserve"><value>Unit name must be entered.</value></data>
-  <data name="Business.Unit.TypeRequired" xml:space="preserve"><value>Unit type must be selected.</value></data>
-  <data name="Business.Unit.OrderRequired" xml:space="preserve"><value>Order number must be entered.</value></data>
-  <data name="Business.Unit.ProvinceRequired" xml:space="preserve"><value>Province code must be selected for a provincial unit.</value></data>
-  <data name="Business.Unit.ProvinceNotFound" xml:space="preserve"><value>The selected province code could not be found.</value></data>
-  <data name="Kullanici.Title" xml:space="preserve"><value>User Management</value></data>
-  <data name="Kullanici.Heading" xml:space="preserve"><value>User Management</value></data>
-  <data name="Kullanici.Description" xml:space="preserve"><value>Search, add and manage user permissions</value></data>
-  <data name="Kullanici.Add" xml:space="preserve"><value>New user</value></data>
-  <data name="Kullanici.All" xml:space="preserve"><value>All</value></data>
-  <data name="Kullanici.Search" xml:space="preserve"><value>Search</value></data>
-  <data name="Kullanici.SearchPrompt" xml:space="preserve"><value>Enter search criteria and press Search.</value></data>
-  <data name="Kullanici.ModalTitle" xml:space="preserve"><value>User</value></data>
-  <data name="Kullanici.Close" xml:space="preserve"><value>Close</value></data>
-  <data name="Kullanici.Save" xml:space="preserve"><value>Save</value></data>
-  <data name="Kullanici.Select" xml:space="preserve"><value>Select</value></data>
-  <data name="Kullanici.Edit" xml:space="preserve"><value>Edit</value></data>
-  <data name="Kullanici.Delete" xml:space="preserve"><value>Delete</value></data>
-  <data name="Kullanici.AddType" xml:space="preserve"><value>Add type</value></data>
-  <data name="Kullanici.TypesAndRoles" xml:space="preserve"><value>User types and roles</value></data>
-  <data name="Kullanici.UsersFailed" xml:space="preserve"><value>Users could not be loaded.</value></data>
-  <data name="Kullanici.UnitsFailed" xml:space="preserve"><value>Units could not be loaded.</value></data>
-  <data name="Kullanici.NoResults" xml:space="preserve"><value>No users matched the search criteria.</value></data>
-  <data name="Kullanici.Field.FullName" xml:space="preserve"><value>Full name</value></data>
-  <data name="Kullanici.Field.Unit" xml:space="preserve"><value>Unit</value></data>
-  <data name="Kullanici.Field.UserType" xml:space="preserve"><value>User type</value></data>
-  <data name="Kullanici.Field.Role" xml:space="preserve"><value>Role</value></data>
-  <data name="Kullanici.Field.TypeRoleUnit" xml:space="preserve"><value>User type / role / unit</value></data>
-  <data name="Kullanici.Field.Email" xml:space="preserve"><value>Email</value></data>
-  <data name="Kullanici.Field.Phone" xml:space="preserve"><value>Phone</value></data>
-  <data name="Kullanici.Field.Status" xml:space="preserve"><value>Status</value></data>
-  <data name="Kullanici.Field.TCKN" xml:space="preserve"><value>Turkish ID number</value></data>
-  <data name="Kullanici.Field.Name" xml:space="preserve"><value>Name</value></data>
-  <data name="Kullanici.Field.Surname" xml:space="preserve"><value>Surname</value></data>
-  <data name="Kullanici.Field.BirthDate" xml:space="preserve"><value>Birth date</value></data>
-  <data name="Kullanici.Field.Gender" xml:space="preserve"><value>Gender</value></data>
-  <data name="Kullanici.Field.Password" xml:space="preserve"><value>Password</value></data>
-  <data name="Kullanici.Gender.Female" xml:space="preserve"><value>Female</value></data>
-  <data name="Kullanici.Gender.Male" xml:space="preserve"><value>Male</value></data>
-  <data name="Kullanici.Status.Active" xml:space="preserve"><value>Active</value></data>
-  <data name="Kullanici.Status.Passive" xml:space="preserve"><value>Passive</value></data>
-  <data name="Kullanici.Type.SistemYoneticisi" xml:space="preserve"><value>System user</value></data>
-  <data name="Kullanici.Type.BasvuruKullanicisi" xml:space="preserve"><value>Applicant user</value></data>
-  <data name="Kullanici.Type.BirimKullanicisi" xml:space="preserve"><value>Unit user</value></data>
-  <data name="Kullanici.Role.Gorme" xml:space="preserve"><value>View</value></data>
-  <data name="Kullanici.Role.Yazma" xml:space="preserve"><value>Edit</value></data>
-  <data name="Kullanici.Role.Onaylama" xml:space="preserve"><value>Approve</value></data>
-  <data name="Kullanici.PasswordLink.Send" xml:space="preserve"><value>Send password link</value></data>
-  <data name="Kullanici.PasswordLink.Sent" xml:space="preserve"><value>The password setup link was sent to the user.</value></data>
-  <data name="Kullanici.PasswordLink.MailSubject" xml:space="preserve"><value>Password setup link</value></data>
-  <data name="Kullanici.PasswordLink.MailBody" xml:space="preserve"><value>Hello {0},&lt;br/&gt;&lt;br/&gt;&lt;a href=&quot;{1}&quot;&gt;Click here&lt;/a&gt; to set your password. The link is valid for five minutes and can only be used once.</value></data>
-  <data name="Kullanici.PasswordLink.Title" xml:space="preserve"><value>Set password</value></data>
-  <data name="Kullanici.PasswordLink.Description" xml:space="preserve"><value>Set a new password for your account.</value></data>
-  <data name="Kullanici.PasswordLink.PasswordAgain" xml:space="preserve"><value>Confirm password</value></data>
-  <data name="Kullanici.PasswordLink.SetPassword" xml:space="preserve"><value>Save password</value></data>
-  <data name="Kullanici.PasswordLink.Invalid" xml:space="preserve"><value>The password link is invalid, used or expired.</value></data>
-  <data name="Kullanici.PasswordLink.Mismatch" xml:space="preserve"><value>Passwords do not match.</value></data>
-  <data name="Kullanici.PasswordLink.Weak" xml:space="preserve"><value>The password must be at least 8 characters and sufficiently strong.</value></data>
-  <data name="Kullanici.PasswordLink.Success" xml:space="preserve"><value>Your password has been set. You can now sign in.</value></data>
-  <data name="enumBasvuruDurum_0" xml:space="preserve"><value>Undefined</value></data>
-  <data name="enumBasvuruDurum_1" xml:space="preserve"><value>Pre-application</value></data>
-  <data name="enumBasvuruDurum_3" xml:space="preserve"><value>Under Review</value></data>
-  <data name="enumBasvuruDurum_5" xml:space="preserve"><value>Accepted</value></data>
-  <data name="enumBasvuruDurum_7" xml:space="preserve"><value>Rejected</value></data>
-  <data name="enumBasvuruDurum_9" xml:space="preserve"><value>Cancelled</value></data>
-  <data name="Basvuru.Review.Title" xml:space="preserve"><value>Pre-application Review Checklist</value></data>
-  <data name="Basvuru.Review.ChecklistNote" xml:space="preserve"><value>Questions, answers, and explanation fields will be displayed here once the checklist is defined.</value></data>
-  <data name="Basvuru.Review.Result" xml:space="preserve"><value>Pre-application Review Result</value></data>
-  <data name="Basvuru.Review.Reason" xml:space="preserve"><value>Reason for the Pre-application Review Result</value></data>
-  <data name="Basvuru.Review.Rejected" xml:space="preserve"><value>Rejected</value></data>
-  <data name="Basvuru.Review.Accepted" xml:space="preserve"><value>Accepted</value></data>
-  <data name="Basvuru.Review.Returned" xml:space="preserve"><value>Returned for correction</value></data>
-  <data name="Basvuru.Review.Finalize" xml:space="preserve"><value>Finalize</value></data>
-  <data name="Basvuru.Review.Readonly" xml:space="preserve"><value>This review has been finalized and is read-only.</value></data>
-  <data name="Basvuru.Review.ResultRequired" xml:space="preserve"><value>A review result must be selected.</value></data>
-  <data name="Basvuru.Review.FinalizeConfirm" xml:space="preserve"><value>The review result will be saved and the application status will change. Do you want to continue?</value></data>
-  <data name="Basvuru.Review.FieldsRequired" xml:space="preserve"><value>The result and the reason for the result must be entered together.</value></data>
-  <data name="ForgotPassword.Title" xml:space="preserve"><value>Forgot Password</value></data>
-  <data name="ForgotPassword.Description" xml:space="preserve"><value>Enter all the details registered to your account.</value></data>
-  <data name="ForgotPassword.TCKN" xml:space="preserve"><value>Turkish ID Number</value></data>
-  <data name="ForgotPassword.Name" xml:space="preserve"><value>First name</value></data>
-  <data name="ForgotPassword.Surname" xml:space="preserve"><value>Last name</value></data>
-  <data name="ForgotPassword.BirthDate" xml:space="preserve"><value>Date of birth</value></data>
-  <data name="ForgotPassword.Email" xml:space="preserve"><value>Email</value></data>
-  <data name="ForgotPassword.Phone" xml:space="preserve"><value>Phone</value></data>
-  <data name="ForgotPassword.Send" xml:space="preserve"><value>Send password reset email</value></data>
-  <data name="ForgotPassword.Back" xml:space="preserve"><value>Back to sign in</value></data>
-  <data name="ForgotPassword.Link" xml:space="preserve"><value>Forgot password</value></data>
-  <data name="ForgotPassword.InvalidData" xml:space="preserve"><value>Please check that your details are correct and try again.</value></data>
-  <data name="ForgotPassword.Sent" xml:space="preserve"><value>A password reset link has been sent to your email address.</value></data>
-  <data name="ForgotPassword.SendFailed" xml:space="preserve"><value>The password reset email could not be sent. Please try again later.</value></data>
-  <data name="Basvuru.Step.DbCtp" xml:space="preserve"><value>DB C-TP Technical Project</value></data>
-  <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve"><value>8. DB C-TP Technical Project</value></data>
-  <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve"><value>Enter the investment's technical overview, production and capacity data, input requirements, renewable energy, machinery-equipment, and building/structure lists.</value></data>
-  <data name="Basvuru.Summary.Error.DbCtpRequired" xml:space="preserve"><value>The DB C-TP Technical Project section must be completed.</value></data>
-  <data name="Basvuru.Summary.Error.DeclarationsRequired" xml:space="preserve"><value>All declarations in the commitment and declaration section must be accepted.</value></data>
-  <data name="Basvuru.Step.SystemResults" xml:space="preserve"><value>System Results</value></data>
-  <data name="Basvuru.Step.ExpertResults" xml:space="preserve"><value>Expert Results</value></data>
-  <data name="Basvuru.Step.Decision" xml:space="preserve"><value>Decision</value></data>
-  <data name="Basvuru.Review.SystemResultsNote" xml:space="preserve"><value>If no saved system result exists, this list is generated from the application data on first load. Saved results are shown thereafter.</value></data>
-  <data name="Basvuru.Review.ExpertResultsNote" xml:space="preserve"><value>Enter and save the expert assessment. The saved assessment is shown on subsequent visits.</value></data>
-  <data name="Basvuru.Message.ListFailed" xml:space="preserve"><value>Application records could not be listed.</value></data>
-  <data name="Basvuru.Message.NewApplicantOnly" xml:space="preserve"><value>Only applicant users can create a new pre-application.</value></data>
-  <data name="Basvuru.Message.NewScreenFailed" xml:space="preserve"><value>The new application screen could not be opened.</value></data>
-  <data name="Basvuru.Message.ReadFailed" xml:space="preserve"><value>The application record could not be read.</value></data>
-  <data name="Basvuru.Message.SaveFailed" xml:space="preserve"><value>The application could not be saved.</value></data>
-  <data name="Basvuru.Message.OwnerReadFailed" xml:space="preserve"><value>The applicant details could not be read.</value></data>
-  <data name="Basvuru.Message.AddressListFailed" xml:space="preserve"><value>Implementation addresses could not be listed.</value></data>
-  <data name="Basvuru.Message.AddressDeleteFailed" xml:space="preserve"><value>The implementation address could not be deleted.</value></data>
-  <data name="Basvuru.Message.PartnershipSaveFailed" xml:space="preserve"><value>Partnership details could not be saved.</value></data>
-  <data name="Basvuru.Message.StakeholderSaveFailed" xml:space="preserve"><value>Partner/shareholder details could not be saved.</value></data>
-  <data name="Basvuru.Message.SessionExpired" xml:space="preserve"><value>Your session has expired.</value></data>
-  <data name="Basvuru.Message.DocumentPackageUploadFailed" xml:space="preserve"><value>The document package could not be uploaded.</value></data>
-  <data name="Basvuru.Message.CommitmentUploadFailed" xml:space="preserve"><value>The commitment file could not be uploaded.</value></data>
-  <data name="Basvuru.Message.AuditUploadFailed" xml:space="preserve"><value>The independent audit file could not be uploaded.</value></data>
-  <data name="Basvuru.Message.PartnershipFileUploadFailed" xml:space="preserve"><value>The partnership file could not be uploaded.</value></data>
-  <data name="Basvuru.Message.CriminalRecordSaveFailed" xml:space="preserve"><value>Criminal record persons could not be saved.</value></data>
-  <data name="Basvuru.Message.FileDownloadFailed" xml:space="preserve"><value>The file could not be downloaded.</value></data>
-  <data name="Basvuru.Message.CompanyNotFound" xml:space="preserve"><value>Company not found.</value></data>
-  <data name="Basvuru.Message.CompanyQueryFailed" xml:space="preserve"><value>The company query could not be completed.</value></data>
-  <data name="Basvuru.Message.CompanySaveFailed" xml:space="preserve"><value>The company could not be saved.</value></data>
-  <data name="Basvuru.Report.SaveFirst.ProjeButcesi" xml:space="preserve"><value>The application must be saved before printing the project budget.</value></data>
-  <data name="Basvuru.Report.SaveFirst.YatirimOzeti" xml:space="preserve"><value>The application must be saved before printing the investment summary.</value></data>
-  <data name="Basvuru.Report.SaveFirst.IsletmeGideri" xml:space="preserve"><value>The application must be saved before printing operating expenses.</value></data>
-  <data name="Basvuru.Report.SaveFirst.OnBasvuruTamlik" xml:space="preserve"><value>The application must be saved before printing the completeness check.</value></data>
-  <data name="Basvuru.Report.SaveFirst.OnBasvuruUygunluk" xml:space="preserve"><value>The application must be saved before printing the eligibility check.</value></data>
-  <data name="Basvuru.Report.SaveFirst.OnBilgiler" xml:space="preserve"><value>The application must be saved before printing the preliminary information.</value></data>
-  <data name="Basvuru.Report.SaveFirst.MakineEkipman" xml:space="preserve"><value>The application must be saved before printing the machinery-equipment report.</value></data>
-  <data name="Basvuru.Report.SaveFirst.BinaListesi" xml:space="preserve"><value>The application must be saved before printing the building/structure list.</value></data>
-  <data name="Basvuru.Report.TemplateNotFound" xml:space="preserve"><value>Report template not found: {0}</value></data>
-  <data name="Basvuru.Message.AddressSaved" xml:space="preserve"><value>The implementation address was saved.</value></data>
-  <data name="Basvuru.Message.AddressSaveFailed" xml:space="preserve"><value>The implementation address could not be saved.</value></data>
-  <data name="Basvuru.Message.AddressDeleted" xml:space="preserve"><value>The implementation address was deleted.</value></data>
-  <data name="Validation.Tckn.Invalid" xml:space="preserve"><value>The Turkish ID number must be 11 digits and valid.</value></data>
-  <data name="Validation.Vkn.Invalid" xml:space="preserve"><value>The tax identification number must be 10 digits and valid.</value></data>
-  <data name="Basvuru.Firma.Select" xml:space="preserve"><value>Select</value></data>
-  <data name="Basvuru.Firma.SelectTitle" xml:space="preserve"><value>Select Company</value></data>
-  <data name="Basvuru.Firma.SearchPlaceholder" xml:space="preserve"><value>Company name, tax ID or MERSIS number</value></data>
-  <data name="Basvuru.Firma.Searching" xml:space="preserve"><value>Searching companies...</value></data>
-  <data name="Basvuru.Firma.NoResults" xml:space="preserve"><value>No company found.</value></data>
-  <data name="Basvuru.Common.Search" xml:space="preserve"><value>Search</value></data>
-  <data name="Basvuru.Ortaklik.ShareRateRange" xml:space="preserve"><value>The share rate must be between 25% and 100%.</value></data>
+  <data name="Basvuru.Common.Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Basvuru.Common.Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="Basvuru.Common.RowNo" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Basvuru.Applicant.PeriodProvinceTitle" xml:space="preserve">
+    <value>Application Period and Province</value>
+  </data>
+  <data name="Basvuru.Applicant.Description" xml:space="preserve">
+    <value>Identity, contact, activity and legal type information.</value>
+  </data>
+  <data name="Basvuru.Field.HukukiTurSirketTuru" xml:space="preserve">
+    <value>Legal type / company type</value>
+  </data>
+  <data name="Basvuru.Field.TemsilIlzamKisilerReadonly" xml:space="preserve">
+    <value>Person(s) authorized to represent and bind</value>
+  </data>
+  <data name="Basvuru.Field.YonetimKuruluAdliSicilKisilerReadonly" xml:space="preserve">
+    <value>Board members / additional persons subject to criminal record check</value>
+  </data>
+  <data name="Basvuru.Placeholder.TemsilIlzamFromCriminalRecord" xml:space="preserve">
+    <value>Generated from persons authorized to represent and bind entered in the criminal record section.</value>
+  </data>
+  <data name="Basvuru.Placeholder.BoardMembersFromCriminalRecord" xml:space="preserve">
+    <value>Generated from board members and additional persons subject to criminal record check entered in the criminal record section.</value>
+  </data>
+  <data name="Basvuru.Criminal.ModalTitle" xml:space="preserve">
+    <value>Criminal record check person</value>
+  </data>
+  <data name="Basvuru.Criminal.Role" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="Basvuru.Criminal.RoleOptions" xml:space="preserve">
+    <value>Company Partner|Authorized to represent and bind|Board member|Additional Person Subject to Criminal Record Check</value>
+  </data>
+  <data name="Basvuru.Criminal.Upload" xml:space="preserve">
+    <value>Upload criminal record</value>
+  </data>
+  <data name="Basvuru.Criminal.FileMissing" xml:space="preserve">
+    <value>Criminal record is not uploaded, please upload</value>
+  </data>
+  <data name="Basvuru.Criminal.SavePersonFirst" xml:space="preserve">
+    <value>Save the person before uploading the criminal record.</value>
+  </data>
+  <data name="Basvuru.Criminal.RequiredFields" xml:space="preserve">
+    <value>TCKN, name, surname and role are required.</value>
+  </data>
+  <data name="Basvuru.Criminal.DuplicateTckn" xml:space="preserve">
+    <value>Two criminal record persons cannot be saved with the same TCKN.</value>
+  </data>
+  <data name="Basvuru.Criminal.InvalidTckn" xml:space="preserve">
+    <value>Please enter a valid identity number.</value>
+  </data>
+  <data name="Basvuru.Criminal.Empty" xml:space="preserve">
+    <value>No criminal record check person has been added.</value>
+  </data>
+  <data name="Basvuru.Criminal.FileColumn" xml:space="preserve">
+    <value>Criminal record</value>
+  </data>
+  <data name="Basvuru.Field.Tckn" xml:space="preserve">
+    <value>TCKN</value>
+  </data>
+  <data name="Basvuru.Field.TcknVkn" xml:space="preserve">
+    <value>TCKN / VKN</value>
+  </data>
+  <data name="Basvuru.Field.Ad" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Basvuru.Field.Soyad" xml:space="preserve">
+    <value>Surname</value>
+  </data>
+  <data name="Basvuru.Esf.SelectInvestmentScopeFirst" xml:space="preserve">
+    <value>Please select whether the investment is modernization of an existing facility, a new facility, or both.</value>
+  </data>
+  <data name="Basvuru.Esf.OpenedBySelection" xml:space="preserve">
+    <value>The form has been opened according to your selection. Fields left grey in the document and not related to your selection are not shown.</value>
+  </data>
+  <data name="Basvuru.Esf.ShowHideList" xml:space="preserve">
+    <value>Show / hide list</value>
+  </data>
+  <data name="Basvuru.Esf.InfoLabel" xml:space="preserve">
+    <value>Information:</value>
+  </data>
+  <data name="Basvuru.Esf.InformativeNote" xml:space="preserve">
+    <value>Informative Note:</value>
+  </data>
+  <data name="Basvuru.Esf.PlannedOnlyNote" xml:space="preserve">
+    <value>This question relates only to the planned investment; the existing enterprise field is not opened because it is grey in the document.</value>
+  </data>
+  <data name="Basvuru.Esf.GlobalContext" xml:space="preserve">
+    <value>General Declaration / Project Information</value>
+  </data>
+  <data name="Basvuru.Esf.ExistingContext" xml:space="preserve">
+    <value>Existing Enterprise/Facility</value>
+  </data>
+  <data name="Basvuru.Esf.PlannedContext" xml:space="preserve">
+    <value>Planned Investment</value>
+  </data>
+  <data name="Basvuru.Esf.Placeholder.Explain" xml:space="preserve">
+    <value>Enter explanation</value>
+  </data>
+  <data name="Basvuru.Esf.Placeholder.Text" xml:space="preserve">
+    <value>Enter information</value>
+  </data>
+  <data name="Basvuru.Esf.Placeholder.Document" xml:space="preserve">
+    <value>Document name / uploaded supporting document</value>
+  </data>
+  <data name="Basvuru.Esf.ExclusionWarning" xml:space="preserve">
+    <value>Excluded activity warning: This answer may cause the investment to be evaluated negatively for eligibility.</value>
+  </data>
+  <data name="Business.Session.Expired" xml:space="preserve">
+    <value>Your session has expired.</value>
+  </data>
+  <data name="Business.User.InfoMissing" xml:space="preserve">
+    <value>User information was not received.</value>
+  </data>
+  <data name="Business.User.NotFoundOrPassive" xml:space="preserve">
+    <value>User was not found or is inactive.</value>
+  </data>
+  <data name="Business.User.CreateFailed" xml:space="preserve">
+    <value>User record could not be created.</value>
+  </data>
+  <data name="Business.User.NotFound" xml:space="preserve">
+    <value>User was not found.</value>
+  </data>
+  <data name="Business.User.InvalidCredentials" xml:space="preserve">
+    <value>User code or password is incorrect.</value>
+  </data>
+  <data name="Business.User.ReadFailed" xml:space="preserve">
+    <value>User information could not be read.</value>
+  </data>
+  <data name="Business.User.TestActiveUserNotFound" xml:space="preserve">
+    <value>No active user was found for test login.</value>
+  </data>
+  <data name="Business.User.TestUserReadFailed" xml:space="preserve">
+    <value>User could not be read for test login.</value>
+  </data>
+  <data name="Business.User.SimilarRecordExists" xml:space="preserve">
+    <value>A similar user record exists, so the record cannot be created.</value>
+  </data>
+  <data name="Business.Database.ConnectionSettingMissing" xml:space="preserve">
+    <value>Database connection setting was not found.</value>
+  </data>
+  <data name="Business.Query.InfoRequired" xml:space="preserve">
+    <value>Query information must be provided.</value>
+  </data>
+  <data name="Business.Company.NotFound" xml:space="preserve">
+    <value>Company was not found.</value>
+  </data>
+  <data name="Business.Company.UserNotRelated" xml:space="preserve">
+    <value>This company is not related to the user.</value>
+  </data>
+  <data name="Business.Company.ExistsButUserNotRelated" xml:space="preserve">
+    <value>The company exists in the system but is not related to the user.</value>
+  </data>
+  <data name="Business.Company.SaveFailed" xml:space="preserve">
+    <value>Company could not be saved.</value>
+  </data>
+  <data name="Business.Application.NotFound" xml:space="preserve">
+    <value>Application was not found.</value>
+  </data>
+  <data name="Business.Application.ViewUnauthorized" xml:space="preserve">
+    <value>You are not authorized to view this application.</value>
+  </data>
+  <data name="Business.Application.RecordRequired" xml:space="preserve">
+    <value>Application record must be selected.</value>
+  </data>
+  <data name="Business.Application.NotFoundOrUnauthorized" xml:space="preserve">
+    <value>Application record was not found or you are not authorized for this action.</value>
+  </data>
+  <data name="Business.Application.CompanyUserNotRelated" xml:space="preserve">
+    <value>The application company is not related to the user.</value>
+  </data>
+  <data name="Business.Application.ApplicantInfoRequired" xml:space="preserve">
+    <value>Applicant information must be sent.</value>
+  </data>
+  <data name="Business.Application.FileFormUndefined" xml:space="preserve">
+    <value>File form is not defined.</value>
+  </data>
+  <data name="Business.Application.FileTypeRequired" xml:space="preserve">
+    <value>File type must be selected.</value>
+  </data>
+  <data name="Business.Application.FileTypeUndefined" xml:space="preserve">
+    <value>File type is not defined.</value>
+  </data>
+  <data name="Business.Application.UboKycDocument" xml:space="preserve">
+    <value>UBO-KYC document</value>
+  </data>
+  <data name="Business.Application.UboKycPartnerRequired" xml:space="preserve">
+    <value>The partner must be saved before uploading the UBO-KYC document.</value>
+  </data>
+  <data name="Business.Application.CriminalPersonRequiredBeforeUpload" xml:space="preserve">
+    <value>The person must be saved before uploading the criminal record.</value>
+  </data>
+  <data name="Business.Application.DocumentDescriptionRequired" xml:space="preserve">
+    <value>Document description must be entered.</value>
+  </data>
+  <data name="Business.Application.DocumentPackageUploaded" xml:space="preserve">
+    <value>Document package uploaded.</value>
+  </data>
+  <data name="Business.Application.CommitmentFileUploaded" xml:space="preserve">
+    <value>Commitment file uploaded.</value>
+  </data>
+  <data name="Business.Application.AuditFileUploaded" xml:space="preserve">
+    <value>Independent audit file uploaded.</value>
+  </data>
+  <data name="Business.File.ModuleCodeRequired" xml:space="preserve">
+    <value>Module code is required.</value>
+  </data>
+  <data name="Business.File.ViewFilesUnauthorized" xml:space="preserve">
+    <value>You are not authorized to view files.</value>
+  </data>
+  <data name="Business.File.ViewFileUnauthorized" xml:space="preserve">
+    <value>You are not authorized to view the file.</value>
+  </data>
+  <data name="Business.File.ListReadFailed" xml:space="preserve">
+    <value>File list could not be read.</value>
+  </data>
+  <data name="Business.File.ReadFailed" xml:space="preserve">
+    <value>File could not be read.</value>
+  </data>
+  <data name="Business.File.FileRequired" xml:space="preserve">
+    <value>File must be selected.</value>
+  </data>
+  <data name="Business.File.NotFound" xml:space="preserve">
+    <value>File was not found.</value>
+  </data>
+  <data name="Business.File.AddUnauthorized" xml:space="preserve">
+    <value>You are not authorized to add files.</value>
+  </data>
+  <data name="Business.File.UpdateUnauthorized" xml:space="preserve">
+    <value>You are not authorized to update files.</value>
+  </data>
+  <data name="Business.File.DeleteUnauthorized" xml:space="preserve">
+    <value>You are not authorized to delete files.</value>
+  </data>
+  <data name="Business.File.Added" xml:space="preserve">
+    <value>File added.</value>
+  </data>
+  <data name="Business.File.Updated" xml:space="preserve">
+    <value>File updated.</value>
+  </data>
+  <data name="Business.File.Uploaded" xml:space="preserve">
+    <value>File uploaded.</value>
+  </data>
+  <data name="Business.File.Deleted" xml:space="preserve">
+    <value>File deleted.</value>
+  </data>
+  <data name="Business.File.SaveFailed" xml:space="preserve">
+    <value>File could not be saved.</value>
+  </data>
+  <data name="Business.File.DeleteFailed" xml:space="preserve">
+    <value>File could not be deleted.</value>
+  </data>
+  <data name="Business.File.ConnectionStringMissing" xml:space="preserve">
+    <value>File management connection string is not defined.</value>
+  </data>
+  <data name="Business.File.FormNameRequired" xml:space="preserve">
+    <value>Form name is required.</value>
+  </data>
+  <data name="Business.File.FormKeyRequired" xml:space="preserve">
+    <value>Form key is required.</value>
+  </data>
+  <data name="Business.File.FileNoRequired" xml:space="preserve">
+    <value>File no is required.</value>
+  </data>
+  <data name="Business.File.FileNoCannotBeNegative" xml:space="preserve">
+    <value>File no cannot be negative.</value>
+  </data>
+  <data name="Business.File.FileNameRequired" xml:space="preserve">
+    <value>File name is required.</value>
+  </data>
+  <data name="Business.File.ContentRequired" xml:space="preserve">
+    <value>File content is required.</value>
+  </data>
+  <data name="Business.Pikk.EquipmentRowRequired" xml:space="preserve">
+    <value>Because machine-equipment expense is selected, name and purpose of use must be entered in at least one machine/equipment row.</value>
+  </data>
+  <data name="Business.Pikk.ConstructionRowRequired" xml:space="preserve">
+    <value>Because construction expense is selected, name and purpose of use must be entered in at least one building/construction row.</value>
+  </data>
+  <data name="Business.Esf.AnswersReadFailed" xml:space="preserve">
+    <value>Environmental-social survey answers could not be read.</value>
+  </data>
+  <data name="Business.Esf.UnknownQuestion" xml:space="preserve">
+    <value>Undefined environmental-social survey question: {0}</value>
+  </data>
+  <data name="Business.Criminal.DuplicateTcknWithValue" xml:space="preserve">
+    <value>More than one criminal record person cannot be saved with TCKN {0}.</value>
+  </data>
+  <data name="Business.Criminal.PeopleSaved" xml:space="preserve">
+    <value>Criminal record persons saved.</value>
+  </data>
+  <data name="Business.Address.DistrictNotInApplicationProvince" xml:space="preserve">
+    <value>The selected district does not belong to the application province or is inactive.</value>
+  </data>
+  <data name="Business.Address.NotFound" xml:space="preserve">
+    <value>Address record was not found.</value>
+  </data>
+  <data name="Business.Address.SaveFailed" xml:space="preserve">
+    <value>Application address could not be saved.</value>
+  </data>
+  <data name="Business.Address.RecordRequired" xml:space="preserve">
+    <value>Address record must be selected.</value>
+  </data>
+  <data name="Business.Address.DeleteFailed" xml:space="preserve">
+    <value>Application address could not be deleted.</value>
+  </data>
+  <data name="Business.Partnership.ApplicationRequiredBeforeSave" xml:space="preserve">
+    <value>Partnership information cannot be saved before the application record is created.</value>
+  </data>
+  <data name="Business.Partnership.SaveFailed" xml:space="preserve">
+    <value>Partnership information could not be saved.</value>
+  </data>
+  <data name="Business.Documents.PackageDeclarationRequired" xml:space="preserve">
+    <value>It must be declared that all required documents are included in a single document.</value>
+  </data>
+  <data name="Business.Documents.RequiredGroupsUndefined" xml:space="preserve">
+    <value>Required document groups are not defined.</value>
+  </data>
+  <data name="Business.Documents.RequiredGroupsMustBeSent" xml:space="preserve">
+    <value>Required document groups must be sent to the server.</value>
+  </data>
+  <data name="Business.Documents.RequiredGroupsMustBeChecked" xml:space="preserve">
+    <value>All required document groups must be checked.</value>
+  </data>
+  <data name="Başvuru kayıtları listelenemedi." xml:space="preserve">
+    <value>Application records could not be listed.</value>
+  </data>
+  <data name="Kullanıcı bilgisi okunamadı." xml:space="preserve">
+    <value>User information could not be read.</value>
+  </data>
+  <data name="Başvuru dönemleri listelenemedi." xml:space="preserve">
+    <value>Application periods could not be listed.</value>
+  </data>
+  <data name="İl listesi okunamadı." xml:space="preserve">
+    <value>Province list could not be read.</value>
+  </data>
+  <data name="İlçe listesi okunamadı." xml:space="preserve">
+    <value>District list could not be read.</value>
+  </data>
+  <data name="Değer zincirleri listelenemedi." xml:space="preserve">
+    <value>Value chains could not be listed.</value>
+  </data>
+  <data name="Değer zinciri aşamaları listelenemedi." xml:space="preserve">
+    <value>Value chain stages could not be listed.</value>
+  </data>
+  <data name="Başvuru kaydı okunamadı." xml:space="preserve">
+    <value>Application record could not be read.</value>
+  </data>
+  <data name="Firma sorgulanamadı." xml:space="preserve">
+    <value>Company could not be queried.</value>
+  </data>
+  <data name="Firma kaydedilemedi." xml:space="preserve">
+    <value>Company could not be saved.</value>
+  </data>
+  <data name="Başvuru kaydedilemedi." xml:space="preserve">
+    <value>Application could not be saved.</value>
+  </data>
+  <data name="Ortaklık bilgileri kaydedilemedi." xml:space="preserve">
+    <value>Partnership information could not be saved.</value>
+  </data>
+  <data name="Ortak/pay sahibi bilgileri kaydedilemedi." xml:space="preserve">
+    <value>Partner/shareholder information could not be saved.</value>
+  </data>
+  <data name="Başvuru dosyası kaydedilemedi." xml:space="preserve">
+    <value>Application file could not be saved.</value>
+  </data>
+  <data name="Adli sicil kişileri kaydedilemedi." xml:space="preserve">
+    <value>Criminal record persons could not be saved.</value>
+  </data>
+  <data name="Doküman paketi kaydedilemedi." xml:space="preserve">
+    <value>Document package could not be saved.</value>
+  </data>
+  <data name="Taahhüt dosyası kaydedilemedi." xml:space="preserve">
+    <value>Commitment file could not be saved.</value>
+  </data>
+  <data name="Bağımsız denetim dosyası kaydedilemedi." xml:space="preserve">
+    <value>Independent audit file could not be saved.</value>
+  </data>
+  <data name="Dosya indirilemedi." xml:space="preserve">
+    <value>File could not be downloaded.</value>
+  </data>
+  <data name="Uygulama adresi kaydedilemedi." xml:space="preserve">
+    <value>Application address could not be saved.</value>
+  </data>
+  <data name="Uygulama adresi silinemedi." xml:space="preserve">
+    <value>Application address could not be deleted.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.Title" xml:space="preserve">
+    <value>3. Ownership and Authority Information</value>
+  </data>
+  <data name="Basvuru.Ortaklik.Lead" xml:space="preserve">
+    <value>Total shareholding percentage and private sector share are calculated by the system based on partner/shareholder rows. Financial data is not requested for natural person partners; financial data for legal entity partners is collected separately and included in the financial scale check according to the shareholding percentage.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PrivateShareCalculated" xml:space="preserve">
+    <value>Private sector share (%) - calculated by system</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PartnersTableTitle" xml:space="preserve">
+    <value>Ownership structure detail table</value>
+  </data>
+  <data name="Basvuru.Ortaklik.AddPartner" xml:space="preserve">
+    <value>+ Add partner / shareholder</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RelatedEnterpriseTitle" xml:space="preserve">
+    <value>Related / Partner Enterprise Information</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RelatedEnterpriseNote" xml:space="preserve">
+    <value>If a related/partner enterprise relationship is declared, basic financial information and documents for this enterprise are also collected. Financial information of legal entity partners is included in the calculation separately through the ownership table above.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RelatedEnterpriseTitleField" xml:space="preserve">
+    <value>Related/partner enterprise title</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RelatedEnterpriseIdentityField" xml:space="preserve">
+    <value>Related/partner enterprise TIN/MERSIS</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RelatedDocumentsTitle" xml:space="preserve">
+    <value>Legal entity partner required documents</value>
+  </data>
+  <data name="Basvuru.Mali.PreviousYear" xml:space="preserve">
+    <value>Previous Year</value>
+  </data>
+  <data name="Basvuru.Mali.LatestYear" xml:space="preserve">
+    <value>Latest Year</value>
+  </data>
+  <data name="Basvuru.Ortaklik.Modal.Title" xml:space="preserve">
+    <value>Partner / shareholder information</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PartnerNameTitle" xml:space="preserve">
+    <value>Partner / shareholder name-title</value>
+  </data>
+  <data name="Basvuru.Ortaklik.Identity" xml:space="preserve">
+    <value>TCKN / TIN</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PersonType" xml:space="preserve">
+    <value>Natural / legal person</value>
+  </data>
+  <data name="Basvuru.Ortaklik.NaturalPerson" xml:space="preserve">
+    <value>Natural Person</value>
+  </data>
+  <data name="Basvuru.Ortaklik.LegalEntity" xml:space="preserve">
+    <value>Legal Entity</value>
+  </data>
+  <data name="Basvuru.Ortaklik.ShareRate" xml:space="preserve">
+    <value>Share rate (%)</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PrivatePublicType" xml:space="preserve">
+    <value>Private / public status</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PrivateSector" xml:space="preserve">
+    <value>Private</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PublicSector" xml:space="preserve">
+    <value>Public</value>
+  </data>
+  <data name="Basvuru.Ortaklik.BeneficialOwner" xml:space="preserve">
+    <value>Ultimate/beneficial owner information</value>
+  </data>
+  <data name="Basvuru.Ortaklik.UboKycDocument" xml:space="preserve">
+    <value>UBO-KYC document</value>
+  </data>
+  <data name="Basvuru.Ortaklik.UboKycUpload" xml:space="preserve">
+    <value>Upload UBO-KYC document</value>
+  </data>
+  <data name="Basvuru.Ortaklik.UboKycMissing" xml:space="preserve">
+    <value>UBO-KYC document is not uploaded, please upload it</value>
+  </data>
+  <data name="Basvuru.Ortaklik.UboKycSavePartnerFirst" xml:space="preserve">
+    <value>Save the partner before uploading the UBO-KYC document.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.LegalFinancialTitle" xml:space="preserve">
+    <value>Legal entity partner financial data</value>
+  </data>
+  <data name="Basvuru.Ortaklik.IncludedRatePercent" xml:space="preserve">
+    <value>Included rate (%)</value>
+  </data>
+  <data name="Basvuru.Ortaklik.NetSalesShort" xml:space="preserve">
+    <value>net sales</value>
+  </data>
+  <data name="Basvuru.Ortaklik.AssetsShort" xml:space="preserve">
+    <value>assets</value>
+  </data>
+  <data name="Basvuru.Ortaklik.EmptyPartners" xml:space="preserve">
+    <value>No partner/shareholder has been added.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.TotalShareExceeded" xml:space="preserve">
+    <value>Total partner/shareholder share rate cannot exceed 100%.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.TotalShareExpected" xml:space="preserve">
+    <value>Total share rate: {0}%. The total is expected to be 100.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PartnerColumn" xml:space="preserve">
+    <value>Partner / shareholder</value>
+  </data>
+  <data name="Basvuru.Ortaklik.IncludedRate" xml:space="preserve">
+    <value>Included rate</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RequiredNameIdentity" xml:space="preserve">
+    <value>Partner name/title and TCKN/TIN must be entered.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.DuplicateIdentity" xml:space="preserve">
+    <value>Two partners cannot be saved with the same TCKN/TIN.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.LegalIncludedRateRequired" xml:space="preserve">
+    <value>Included rate must be entered for a legal entity partner.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.NetSalesRevenue" xml:space="preserve">
+    <value>net sales revenue</value>
+  </data>
+  <data name="Basvuru.Ortaklik.TotalAssets" xml:space="preserve">
+    <value>total assets</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RequiredEnter" xml:space="preserve">
+    <value>{0} must be entered.</value>
+  </data>
+  <data name="Birim.Title" xml:space="preserve">
+    <value>Units</value>
+  </data>
+  <data name="Birim.Heading" xml:space="preserve">
+    <value>Units</value>
+  </data>
+  <data name="Birim.Description" xml:space="preserve">
+    <value>User units, center/provincial status, province code, and display order are managed here.</value>
+  </data>
+  <data name="Birim.Add" xml:space="preserve">
+    <value>Add Unit</value>
+  </data>
+  <data name="Birim.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Birim.Deactivate" xml:space="preserve">
+    <value>Deactivate</value>
+  </data>
+  <data name="Birim.ConfirmDeactivate" xml:space="preserve">
+    <value>Deactivate this unit?</value>
+  </data>
+  <data name="Birim.Modal.Title" xml:space="preserve">
+    <value>Unit Information</value>
+  </data>
+  <data name="Birim.Field.Order" xml:space="preserve">
+    <value>Order No</value>
+  </data>
+  <data name="Birim.Field.Name" xml:space="preserve">
+    <value>Unit Name</value>
+  </data>
+  <data name="Birim.Field.Type" xml:space="preserve">
+    <value>Unit Type</value>
+  </data>
+  <data name="Birim.Field.ProvinceCode" xml:space="preserve">
+    <value>Province Code</value>
+  </data>
+  <data name="Birim.Field.Province" xml:space="preserve">
+    <value>Province</value>
+  </data>
+  <data name="Birim.Field.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Birim.Field.Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Birim.Type.Center" xml:space="preserve">
+    <value>Center</value>
+  </data>
+  <data name="Birim.Type.Provincial" xml:space="preserve">
+    <value>Provincial</value>
+  </data>
+  <data name="Birim.Status.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Birim.Status.Passive" xml:space="preserve">
+    <value>Passive</value>
+  </data>
+  <data name="Business.Authorization.SystemAdminRequired" xml:space="preserve">
+    <value>System administrator permission is required for this action.</value>
+  </data>
+  <data name="Business.Unit.ListFailed" xml:space="preserve">
+    <value>The unit list could not be read.</value>
+  </data>
+  <data name="Business.Unit.NotFound" xml:space="preserve">
+    <value>The unit could not be found.</value>
+  </data>
+  <data name="Business.Unit.Saved" xml:space="preserve">
+    <value>The unit has been saved.</value>
+  </data>
+  <data name="Business.Unit.SaveFailed" xml:space="preserve">
+    <value>The unit could not be saved.</value>
+  </data>
+  <data name="Business.Unit.Deactivated" xml:space="preserve">
+    <value>The unit has been deactivated.</value>
+  </data>
+  <data name="Business.Unit.DeactivateFailed" xml:space="preserve">
+    <value>The unit could not be deactivated.</value>
+  </data>
+  <data name="Business.Unit.NameRequired" xml:space="preserve">
+    <value>Unit name must be entered.</value>
+  </data>
+  <data name="Business.Unit.TypeRequired" xml:space="preserve">
+    <value>Unit type must be selected.</value>
+  </data>
+  <data name="Business.Unit.OrderRequired" xml:space="preserve">
+    <value>Order number must be entered.</value>
+  </data>
+  <data name="Business.Unit.ProvinceRequired" xml:space="preserve">
+    <value>Province code must be selected for a provincial unit.</value>
+  </data>
+  <data name="Business.Unit.ProvinceNotFound" xml:space="preserve">
+    <value>The selected province code could not be found.</value>
+  </data>
+  <data name="Kullanici.Title" xml:space="preserve">
+    <value>User Management</value>
+  </data>
+  <data name="Kullanici.Heading" xml:space="preserve">
+    <value>User Management</value>
+  </data>
+  <data name="Kullanici.Description" xml:space="preserve">
+    <value>Search, add and manage user permissions</value>
+  </data>
+  <data name="Kullanici.Add" xml:space="preserve">
+    <value>New user</value>
+  </data>
+  <data name="Kullanici.All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Kullanici.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Kullanici.SearchPrompt" xml:space="preserve">
+    <value>Enter search criteria and press Search.</value>
+  </data>
+  <data name="Kullanici.ModalTitle" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="Kullanici.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Kullanici.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Kullanici.Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="Kullanici.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Kullanici.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Kullanici.AddType" xml:space="preserve">
+    <value>Add type</value>
+  </data>
+  <data name="Kullanici.TypesAndRoles" xml:space="preserve">
+    <value>User types and roles</value>
+  </data>
+  <data name="Kullanici.UsersFailed" xml:space="preserve">
+    <value>Users could not be loaded.</value>
+  </data>
+  <data name="Kullanici.UnitsFailed" xml:space="preserve">
+    <value>Units could not be loaded.</value>
+  </data>
+  <data name="Kullanici.NoResults" xml:space="preserve">
+    <value>No users matched the search criteria.</value>
+  </data>
+  <data name="Kullanici.Field.FullName" xml:space="preserve">
+    <value>Full name</value>
+  </data>
+  <data name="Kullanici.Field.Unit" xml:space="preserve">
+    <value>Unit</value>
+  </data>
+  <data name="Kullanici.Field.UserType" xml:space="preserve">
+    <value>User type</value>
+  </data>
+  <data name="Kullanici.Field.Role" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="Kullanici.Field.TypeRoleUnit" xml:space="preserve">
+    <value>User type / role / unit</value>
+  </data>
+  <data name="Kullanici.Field.Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Kullanici.Field.Phone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="Kullanici.Field.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Kullanici.Field.TCKN" xml:space="preserve">
+    <value>Turkish ID number</value>
+  </data>
+  <data name="Kullanici.Field.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Kullanici.Field.Surname" xml:space="preserve">
+    <value>Surname</value>
+  </data>
+  <data name="Kullanici.Field.BirthDate" xml:space="preserve">
+    <value>Birth date</value>
+  </data>
+  <data name="Kullanici.Field.Gender" xml:space="preserve">
+    <value>Gender</value>
+  </data>
+  <data name="Kullanici.Field.Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Kullanici.Gender.Female" xml:space="preserve">
+    <value>Female</value>
+  </data>
+  <data name="Kullanici.Gender.Male" xml:space="preserve">
+    <value>Male</value>
+  </data>
+  <data name="Kullanici.Status.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Kullanici.Status.Passive" xml:space="preserve">
+    <value>Passive</value>
+  </data>
+  <data name="Kullanici.Type.SistemYoneticisi" xml:space="preserve">
+    <value>System user</value>
+  </data>
+  <data name="Kullanici.Type.BasvuruKullanicisi" xml:space="preserve">
+    <value>Applicant user</value>
+  </data>
+  <data name="Kullanici.Type.BirimKullanicisi" xml:space="preserve">
+    <value>Unit user</value>
+  </data>
+  <data name="Kullanici.Role.Gorme" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Kullanici.Role.Yazma" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Kullanici.Role.Onaylama" xml:space="preserve">
+    <value>Approve</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Send" xml:space="preserve">
+    <value>Send password link</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Sent" xml:space="preserve">
+    <value>The password setup link was sent to the user.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.MailSubject" xml:space="preserve">
+    <value>Password setup link</value>
+  </data>
+  <data name="Kullanici.PasswordLink.MailBody" xml:space="preserve">
+    <value>Hello {0},&lt;br/&gt;&lt;br/&gt;&lt;a href="{1}"&gt;Click here&lt;/a&gt; to set your password. The link is valid for five minutes and can only be used once.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Title" xml:space="preserve">
+    <value>Set password</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Description" xml:space="preserve">
+    <value>Set a new password for your account.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.PasswordAgain" xml:space="preserve">
+    <value>Confirm password</value>
+  </data>
+  <data name="Kullanici.PasswordLink.SetPassword" xml:space="preserve">
+    <value>Save password</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Invalid" xml:space="preserve">
+    <value>The password link is invalid, used or expired.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Mismatch" xml:space="preserve">
+    <value>Passwords do not match.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Weak" xml:space="preserve">
+    <value>The password must be at least 8 characters and sufficiently strong.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Success" xml:space="preserve">
+    <value>Your password has been set. You can now sign in.</value>
+  </data>
+  <data name="enumBasvuruDurum_0" xml:space="preserve">
+    <value>Undefined</value>
+  </data>
+  <data name="enumBasvuruDurum_1" xml:space="preserve">
+    <value>Pre-application</value>
+  </data>
+  <data name="enumBasvuruDurum_3" xml:space="preserve">
+    <value>Under Review</value>
+  </data>
+  <data name="enumBasvuruDurum_5" xml:space="preserve">
+    <value>Accepted</value>
+  </data>
+  <data name="enumBasvuruDurum_7" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="enumBasvuruDurum_9" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Basvuru.Review.Title" xml:space="preserve">
+    <value>Pre-application Review Checklist</value>
+  </data>
+  <data name="Basvuru.Review.ChecklistNote" xml:space="preserve">
+    <value>Questions, answers, and explanation fields will be displayed here once the checklist is defined.</value>
+  </data>
+  <data name="Basvuru.Review.Result" xml:space="preserve">
+    <value>Pre-application Review Result</value>
+  </data>
+  <data name="Basvuru.Review.Reason" xml:space="preserve">
+    <value>Reason for the Pre-application Review Result</value>
+  </data>
+  <data name="Basvuru.Review.Rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="Basvuru.Review.Accepted" xml:space="preserve">
+    <value>Accepted</value>
+  </data>
+  <data name="Basvuru.Review.Returned" xml:space="preserve">
+    <value>Returned for correction</value>
+  </data>
+  <data name="Basvuru.Review.Finalize" xml:space="preserve">
+    <value>Finalize</value>
+  </data>
+  <data name="Basvuru.Review.Readonly" xml:space="preserve">
+    <value>This review has been finalized and is read-only.</value>
+  </data>
+  <data name="Basvuru.Review.ResultRequired" xml:space="preserve">
+    <value>A review result must be selected.</value>
+  </data>
+  <data name="Basvuru.Review.FinalizeConfirm" xml:space="preserve">
+    <value>The review result will be saved and the application status will change. Do you want to continue?</value>
+  </data>
+  <data name="Basvuru.Review.FieldsRequired" xml:space="preserve">
+    <value>The result and the reason for the result must be entered together.</value>
+  </data>
+  <data name="ForgotPassword.Title" xml:space="preserve">
+    <value>Forgot Password</value>
+  </data>
+  <data name="ForgotPassword.Description" xml:space="preserve">
+    <value>Enter all the details registered to your account.</value>
+  </data>
+  <data name="ForgotPassword.TCKN" xml:space="preserve">
+    <value>Turkish ID Number</value>
+  </data>
+  <data name="ForgotPassword.Name" xml:space="preserve">
+    <value>First name</value>
+  </data>
+  <data name="ForgotPassword.Surname" xml:space="preserve">
+    <value>Last name</value>
+  </data>
+  <data name="ForgotPassword.BirthDate" xml:space="preserve">
+    <value>Date of birth</value>
+  </data>
+  <data name="ForgotPassword.Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="ForgotPassword.Phone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="ForgotPassword.Send" xml:space="preserve">
+    <value>Send password reset email</value>
+  </data>
+  <data name="ForgotPassword.Back" xml:space="preserve">
+    <value>Back to sign in</value>
+  </data>
+  <data name="ForgotPassword.Link" xml:space="preserve">
+    <value>Forgot password</value>
+  </data>
+  <data name="ForgotPassword.InvalidData" xml:space="preserve">
+    <value>Please check that your details are correct and try again.</value>
+  </data>
+  <data name="ForgotPassword.Sent" xml:space="preserve">
+    <value>A password reset link has been sent to your email address.</value>
+  </data>
+  <data name="ForgotPassword.SendFailed" xml:space="preserve">
+    <value>The password reset email could not be sent. Please try again later.</value>
+  </data>
+  <data name="Basvuru.Step.DbCtp" xml:space="preserve">
+    <value>DB C-TP Technical Project</value>
+  </data>
+  <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve">
+    <value>8. DB C-TP Technical Project</value>
+  </data>
+  <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve">
+    <value>Enter the investment's technical overview, production and capacity data, input requirements, renewable energy, machinery-equipment, and building/structure lists.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.DbCtpRequired" xml:space="preserve">
+    <value>The DB C-TP Technical Project section must be completed.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.DeclarationsRequired" xml:space="preserve">
+    <value>All declarations in the commitment and declaration section must be accepted.</value>
+  </data>
+  <data name="Basvuru.Step.SystemResults" xml:space="preserve">
+    <value>System Results</value>
+  </data>
+  <data name="Basvuru.Step.ExpertResults" xml:space="preserve">
+    <value>Expert Results</value>
+  </data>
+  <data name="Basvuru.Step.Decision" xml:space="preserve">
+    <value>Decision</value>
+  </data>
+  <data name="Basvuru.Review.SystemResultsNote" xml:space="preserve">
+    <value>If no saved system result exists, this list is generated from the application data on first load. Saved results are shown thereafter.</value>
+  </data>
+  <data name="Basvuru.Review.ExpertResultsNote" xml:space="preserve">
+    <value>Enter and save the expert assessment. The saved assessment is shown on subsequent visits.</value>
+  </data>
+  <data name="Basvuru.Message.ListFailed" xml:space="preserve">
+    <value>Application records could not be listed.</value>
+  </data>
+  <data name="Basvuru.Message.NewApplicantOnly" xml:space="preserve">
+    <value>Only applicant users can create a new pre-application.</value>
+  </data>
+  <data name="Basvuru.Message.NewScreenFailed" xml:space="preserve">
+    <value>The new application screen could not be opened.</value>
+  </data>
+  <data name="Basvuru.Message.ReadFailed" xml:space="preserve">
+    <value>The application record could not be read.</value>
+  </data>
+  <data name="Basvuru.Message.SaveFailed" xml:space="preserve">
+    <value>The application could not be saved.</value>
+  </data>
+  <data name="Basvuru.Message.OwnerReadFailed" xml:space="preserve">
+    <value>The applicant details could not be read.</value>
+  </data>
+  <data name="Basvuru.Message.AddressListFailed" xml:space="preserve">
+    <value>Implementation addresses could not be listed.</value>
+  </data>
+  <data name="Basvuru.Message.AddressDeleteFailed" xml:space="preserve">
+    <value>The implementation address could not be deleted.</value>
+  </data>
+  <data name="Basvuru.Message.PartnershipSaveFailed" xml:space="preserve">
+    <value>Partnership details could not be saved.</value>
+  </data>
+  <data name="Basvuru.Message.StakeholderSaveFailed" xml:space="preserve">
+    <value>Partner/shareholder details could not be saved.</value>
+  </data>
+  <data name="Basvuru.Message.SessionExpired" xml:space="preserve">
+    <value>Your session has expired.</value>
+  </data>
+  <data name="Basvuru.Message.DocumentPackageUploadFailed" xml:space="preserve">
+    <value>The document package could not be uploaded.</value>
+  </data>
+  <data name="Basvuru.Message.CommitmentUploadFailed" xml:space="preserve">
+    <value>The commitment file could not be uploaded.</value>
+  </data>
+  <data name="Basvuru.Message.AuditUploadFailed" xml:space="preserve">
+    <value>The independent audit file could not be uploaded.</value>
+  </data>
+  <data name="Basvuru.Message.PartnershipFileUploadFailed" xml:space="preserve">
+    <value>The partnership file could not be uploaded.</value>
+  </data>
+  <data name="Basvuru.Message.CriminalRecordSaveFailed" xml:space="preserve">
+    <value>Criminal record persons could not be saved.</value>
+  </data>
+  <data name="Basvuru.Message.FileDownloadFailed" xml:space="preserve">
+    <value>The file could not be downloaded.</value>
+  </data>
+  <data name="Basvuru.Message.CompanyNotFound" xml:space="preserve">
+    <value>Company not found.</value>
+  </data>
+  <data name="Basvuru.Message.CompanyQueryFailed" xml:space="preserve">
+    <value>The company query could not be completed.</value>
+  </data>
+  <data name="Basvuru.Message.CompanySaveFailed" xml:space="preserve">
+    <value>The company could not be saved.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.ProjeButcesi" xml:space="preserve">
+    <value>The application must be saved before printing the project budget.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.YatirimOzeti" xml:space="preserve">
+    <value>The application must be saved before printing the investment summary.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.IsletmeGideri" xml:space="preserve">
+    <value>The application must be saved before printing operating expenses.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.OnBasvuruTamlik" xml:space="preserve">
+    <value>The application must be saved before printing the completeness check.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.OnBasvuruUygunluk" xml:space="preserve">
+    <value>The application must be saved before printing the eligibility check.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.OnBilgiler" xml:space="preserve">
+    <value>The application must be saved before printing the preliminary information.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.MakineEkipman" xml:space="preserve">
+    <value>The application must be saved before printing the machinery-equipment report.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.BinaListesi" xml:space="preserve">
+    <value>The application must be saved before printing the building/structure list.</value>
+  </data>
+  <data name="Basvuru.Report.TemplateNotFound" xml:space="preserve">
+    <value>Report template not found: {0}</value>
+  </data>
+  <data name="Basvuru.Message.AddressSaved" xml:space="preserve">
+    <value>The implementation address was saved.</value>
+  </data>
+  <data name="Basvuru.Message.AddressSaveFailed" xml:space="preserve">
+    <value>The implementation address could not be saved.</value>
+  </data>
+  <data name="Basvuru.Message.AddressDeleted" xml:space="preserve">
+    <value>The implementation address was deleted.</value>
+  </data>
+  <data name="Validation.Tckn.Invalid" xml:space="preserve">
+    <value>The Turkish ID number must be 11 digits and valid.</value>
+  </data>
+  <data name="Validation.Vkn.Invalid" xml:space="preserve">
+    <value>The tax identification number must be 10 digits and valid.</value>
+  </data>
+  <data name="Basvuru.Firma.Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="Basvuru.Firma.SelectTitle" xml:space="preserve">
+    <value>Select Company</value>
+  </data>
+  <data name="Basvuru.Firma.SearchPlaceholder" xml:space="preserve">
+    <value>Company name, tax ID or MERSIS number</value>
+  </data>
+  <data name="Basvuru.Firma.Searching" xml:space="preserve">
+    <value>Searching companies...</value>
+  </data>
+  <data name="Basvuru.Firma.NoResults" xml:space="preserve">
+    <value>No company found.</value>
+  </data>
+  <data name="Basvuru.Common.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Basvuru.Ortaklik.ShareRateRange" xml:space="preserve">
+    <value>The share rate is required and must be greater than 0 and at most 100.</value>
+  </data>
+  <data name="MenuBasvuru.onBasvurular" xml:space="preserve">
+    <value>Pre-applications</value>
+  </data>
+  <data name="MenuBasvuru.basvurular" xml:space="preserve">
+    <value>Applications</value>
+  </data>
+  <data name="Basvuru.Summary.Error.LegalPartnerDocumentsRequired" xml:space="preserve">
+    <value>Required legal-entity partner documents must be uploaded.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.TcknLengthRequired" xml:space="preserve">
+    <value>An 11-digit identity number is required for a natural person.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.VknLengthRequired" xml:space="preserve">
+    <value>A 10-digit tax number is required for a legal entity.</value>
+  </data>
+  <data name="Basvuru.ApplicationFinancial.Title" xml:space="preserve">
+    <value>Financial Data and Scale Check</value>
+  </data>
+  <data name="Basvuru.ApplicationPartnershipAuthority.Title" xml:space="preserve"><value>Partnership and Authority</value></data>
+  <data name="Basvuru.ApplicationInvestment.Title" xml:space="preserve"><value>Investment Information</value></data>
 </root>

@@ -1,4 +1,4 @@
-﻿@using System.Text.Json
+@using System.Text.Json
 @using TarimDonusum.Models
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
@@ -7,7 +7,7 @@
     var b = Model.Basvuru;
     bool ro = Model.SaltOkunur;
     bool kilitli = b.Id <= 0 && !Model.DenetciGorunumu;
-    IReadOnlyList<BasvuruBolumTanim> bolumler = BasvuruBolumleri.Tum(Model.DenetciGorunumu);
+    IReadOnlyList<BasvuruBolumTanim> bolumler = BasvuruBolumleri.Tum(Model.DenetciGorunumu, b.kayitTuru);
     BasvuruBolumTanim ilkBolum = bolumler.First();
 
     string T(string key) => L[key].Value;
@@ -94,6 +94,8 @@
                     <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBilgilerYazdir" asp-route-id="@b.Id">Ön Bilgiler</a>
                     <a class="dropdown-item" asp-controller="Basvuru" asp-action="MakineEkipmanYazdir" asp-route-id="@b.Id">Makine-Ekipman</a>
                     <a class="dropdown-item" asp-controller="Basvuru" asp-action="BinaListesiYazdir" asp-route-id="@b.Id">Bina/Yapı Listesi</a>
+                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="OrtaklikYetkiYazdir" asp-route-id="@b.Id">Ortaklık ve Yetki</a>
+                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="YatirimBilgileriYazdir" asp-route-id="@b.Id">Yatırım Bilgileri</a>
                     @if (Model.DenetciGorunumu)
                     {
                         <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBasvuruTamlikYazdir" asp-route-id="@b.Id">Tamlık Kontrolü</a>
@@ -227,8 +229,19 @@
                                     }
                                 </select>
                             </label>
+                            <label>SEGE kademesi<input id="adresModalSegeKademesi" /></label>
+                            <label>Koordinat<input id="adresModalKoordinat" placeholder="Enlem, boylam" /></label>
+                            <label>Ada / parsel<input id="adresModalAdaParsel" /></label>
+                            <label>Kullanım hakkı başlangıç tarihi<input id="adresModalKullanimHakkiBaslangicTarihi" type="date" /></label>
+                            <label>Uygulama ve geri ödeme dönemini kapsıyor mu?<select id="adresModalDonemleriKapsiyorMu"><option value="">Seçiniz</option><option value="true">Evet</option><option value="false">Hayır</option></select></label>
                         </div>
                         <label class="wide-label">@L["Basvuru.Field.TamAdres"]<textarea id="adresModalTamAdres"></textarea></label>
+                        <label class="wide-label">İzin/ruhsat takvimi ve açıklama<textarea id="adresModalIzinTakvimAciklama"></textarea></label>
+                        <div class="form-grid yatirim-yeri-dosyalari">
+                            <label>Adres belge referansı<input id="adresModalAdresBelgeDosya" type="file" /><span id="adresModalAdresBelgeDosyaAdi" class="document-file-name"></span><a id="adresModalAdresBelgeIndir" class="btn btn-sm btn-outline-secondary d-none" target="_blank">İndir</a></label>
+                            <label>Tapu/kira/tahsis referansı<input id="adresModalKullanimHakkiDosya" type="file" /><span id="adresModalKullanimHakkiDosyaAdi" class="document-file-name"></span><a id="adresModalKullanimHakkiIndir" class="btn btn-sm btn-outline-secondary d-none" target="_blank">İndir</a></label>
+                            <label>İzin/ruhsat kanıt referansı<input id="adresModalKanitDosya" type="file" /><span id="adresModalKanitDosyaAdi" class="document-file-name"></span><a id="adresModalKanitIndir" class="btn btn-sm btn-outline-secondary d-none" target="_blank">İndir</a></label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -261,7 +274,7 @@
                                     <option value="Tüzel Kişi">@L["Basvuru.Ortaklik.LegalEntity"]</option>
                                 </select>
                             </label>
-                            <label>@L["Basvuru.Ortaklik.ShareRate"]<input id="ortakPayOrani" type="number" min="25" max="100" step="0.01" /></label>
+                            <label>@L["Basvuru.Ortaklik.ShareRate"]<input id="ortakPayOrani" type="number" min="0.01" max="100" step="0.01" /></label>
                             <label>
                                 @L["Basvuru.Ortaklik.PrivatePublicType"]
                                 <select id="ortakOzelKamuNiteligi">
@@ -270,7 +283,12 @@
                                 </select>
                             </label>
                         </div>
-                        <div class="document-upload-box mt-3" id="ortakUboKycBox">
+                        <div class="form-grid mt-3">
+                            <label id="ortakDogumTarihiLabel">Doğum tarihi<input id="ortakDogumTarihi" type="date" /></label>
+                            <label id="ortakCinsiyetLabel">Cinsiyet<select id="ortakCinsiyet"><option value="">Seçiniz</option><option value="Kadın">Kadın</option><option value="Erkek">Erkek</option></select></label>
+                            <label>Sıralamada sahiplik niteliği<input id="ortakSahiplikNiteligi" readonly /></label>
+                            <label>Nihai faydalanıcı<input id="ortakNihaiFaydalanici" maxlength="250" /></label>
+                        </div>                        <div class="document-upload-box mt-3" id="ortakUboKycBox">
                             <div class="document-file-row">
                                 <label class="btn btn-primary mb-0 disabled" for="ortakUboKycDosya" id="ortakUboKycSecBtn">@L["Basvuru.Ortaklik.UboKycUpload"]</label>
                                 <input id="ortakUboKycDosya" type="file" class="document-file-input" disabled />
@@ -329,7 +347,15 @@
                                 </select>
                             </label>
                         </div>
-                        <div class="document-upload-box mt-3" id="adliSicilDosyaBox">
+                        <div class="form-grid mt-3">
+                            <label>Yetki kapsamı<textarea id="adliSicilYetkiKapsami" maxlength="500"></textarea></label>
+                            <label>Açıklama<textarea id="adliSicilAciklama" maxlength="1000"></textarea></label>
+                        </div>
+                        <div class="document-upload-box mt-3" id="imzaYetkiDosyaBox">
+                            <label>İmza/Yetki belgesi ref.</label>
+                            <div class="document-file-row"><label class="btn btn-primary mb-0 disabled" for="imzaYetkiDosya" id="imzaYetkiDosyaSecBtn">Yükle</label><input id="imzaYetkiDosya" type="file" class="document-file-input" disabled /><span id="imzaYetkiDosyaAdi" class="document-file-name">Dosya seçilmedi</span><a id="imzaYetkiIndirBtn" class="btn btn-outline-primary d-none" href="#" target="_blank" rel="noopener">İndir</a></div>
+                            <div class="document-note" id="imzaYetkiDosyaNot">Belge yüklemek için önce kişiyi kaydediniz.</div>
+                        </div>                        <div class="document-upload-box mt-3" id="adliSicilDosyaBox">
                             <div class="document-file-row">
                                 <label class="btn btn-primary mb-0 disabled" for="adliSicilDosya" id="adliSicilDosyaSecBtn">@L["Basvuru.Criminal.Upload"]</label>
                                 <input id="adliSicilDosya" type="file" class="document-file-input" disabled />
@@ -354,6 +380,10 @@
     var active = @((int)ilkBolum.Bolum);
     let basvuruIlId = @b.basvuruFirma.ilId;
     const bolumFirma = @((int)enumBasvuruBolum.Firma);
+    const bolumBasvuruSahibi = @((int)enumBasvuruBolum.BasvuruSahibi);
+    const bolumBasvuruMaliVeriler = @((int)enumBasvuruBolum.BasvuruMaliVeriler);
+    const bolumBasvuruOrtaklikYetki = @((int)enumBasvuruBolum.BasvuruOrtaklikYetki);
+    const bolumBasvuruYatirimBilgileri = @((int)enumBasvuruBolum.BasvuruYatirimBilgileri);
     const bolumIrtibat = @((int)enumBasvuruBolum.Irtibat);
     const bolumYatirim = @((int)enumBasvuruBolum.Yatirim);
     const bolumUygulamaAdresi = @((int)enumBasvuruBolum.UygulamaAdresi);
@@ -444,7 +474,7 @@
         savePersonFirst: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Criminal.SavePersonFirst"))),
         requiredFields: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Criminal.RequiredFields"))),
         duplicateTckn: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Criminal.DuplicateTckn"))),
-        invalidTckn: @Html.Raw(JsonSerializer.Serialize(T("Validation.Tckn.Invalid"))),
+        invalidTckn: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Criminal.InvalidTckn"))),
         empty: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Criminal.Empty")))
     };
     const cevreselSosyalMetinleri = {
@@ -505,6 +535,7 @@
     var dbCtpData = {};
 
     document.addEventListener('DOMContentLoaded', () => {
+        if (typeof PopupMesajIlklendir === 'function') PopupMesajIlklendir();
         uygulamaAdresModal = modalOlustur(document.getElementById('uygulamaAdresModal'));
         firmaModal = modalOlustur(document.getElementById('firmaModal'));
         firmaSecModal = modalOlustur(document.getElementById('firmaSecModal'));
@@ -543,6 +574,7 @@
         document.getElementById('ortakUboKycDosya')?.addEventListener('change', OrtakModalUboKycDosyasiYukle);
         document.getElementById('adliSicilKaydetBtn')?.addEventListener('click', AdliSicilModalKaydet);
         document.getElementById('adliSicilDosya')?.addEventListener('change', AdliSicilDosyasiYukle);
+        document.getElementById('imzaYetkiDosya')?.addEventListener('change', ImzaYetkiDosyasiYukle);
 
         BasvuruBolumIlklendir(active);
         YapiRuhsatiAlanlariniGuncelle();
@@ -660,6 +692,9 @@
     function BolumKayitGerektirir(bolum) {
         return [
             bolumFirma,
+            bolumBasvuruSahibi,
+            bolumBasvuruMaliVeriler,
+            bolumBasvuruYatirimBilgileri,
             bolumIrtibat,
             bolumYatirim,
             bolumUygulamaAdresi,
@@ -702,11 +737,13 @@
             });
         }
 
-        if (bolum === bolumFirma) FirmaBolumuIlklendir();
+        if (bolum === bolumFirma || bolum === bolumBasvuruSahibi) FirmaBolumuIlklendir();
         if (bolum === bolumYatirim) YatirimBolumuIlklendir();
-        if (bolum === bolumUygulamaAdresi) UygulamaAdresiBolumuIlklendir();
-        if (bolum === bolumFinans || bolum === bolumMali || bolum === bolumOrtaklik) ParaTamsayiAyarla();
+        if (bolum === bolumUygulamaAdresi || bolum === bolumBasvuruYatirimBilgileri) UygulamaAdresiBolumuIlklendir();
+        if (bolum === bolumFinans || bolum === bolumMali || bolum === bolumBasvuruMaliVeriler || bolum === bolumOrtaklik) ParaTamsayiAyarla();
         if (bolum === bolumMali) MaliBolumuIlklendir();
+        if (bolum === bolumBasvuruMaliVeriler) BasvuruMaliBolumuIlklendir();
+        if (bolum === bolumBasvuruOrtaklikYetki) BasvuruOrtaklikYetkiBolumuIlklendir();
         if (bolum === bolumOrtaklik) OrtaklikBolumuIlklendir();
         if (bolum === bolumUygunHarcama) UygunHarcamaBolumuIlklendir();
         if (bolum === bolumYatirimOzeti) YatirimOzetiBolumuIlklendir();
@@ -739,6 +776,20 @@
         }
         if (panel.dataset.editable !== 'true') tbody.querySelectorAll('select,textarea').forEach(x => x.disabled = true);
         tbody.querySelectorAll('select,textarea').forEach(x => x.addEventListener('input', () => dirty = true));
+        document.getElementById('sistemSonuclariYenidenUretBtn')?.addEventListener('click', function () {
+            if (!window.confirm('Kayıtlı sistem sonuçları güncel başvuru verilerine göre yeniden oluşturulacaktır. Devam edilsin mi?')) return;
+            const button = this;
+            button.disabled = true;
+            AjaxPost('/Denetleme/SistemSonuclariniYenidenUret', { basvuruId: BasvuruId() }, sonuc => {
+                SonucGoster(sonuc);
+                if (sonuc?.basarili && sonuc.nesne) {
+                    panel.querySelector('.denetim-listesi-json').value = sonuc.nesne;
+                    dirty = false;
+                    DenetimListesiIlklendir();
+                }
+                button.disabled = false;
+            });
+        });
         panel._denetimListesiKaydet = function (button, afterSuccess) {
             const guncel = satirlar.map((x, i) => {
                 const tr = tbody.querySelector(`tr[data-index="${i}"]`);
@@ -852,10 +903,39 @@
         });
     }
 
+    function BasvuruDegisiklikVarIsaretle() {
+        if (active !== bolumBasvuruSahibi || basvuruReadonly) return;
+        const alan = document.getElementById('basvuruDegisiklikVarMi');
+        const gorunum = document.getElementById('basvuruDegisiklikVarMiGorunum');
+        const gerekce = document.getElementById('basvuruDegisiklikSebebi');
+        if (alan) alan.value = 'true';
+        if (gorunum) gorunum.value = 'true';
+        if (gerekce) gerekce.required = true;
+    }
+
+    function BasvuruDegisiklikTakibiniIlklendir() {
+        if (active !== bolumBasvuruSahibi || basvuruReadonly) return;
+        const panel = document.querySelector('[data-bolum="BasvuruSahibi"]');
+        const gerekce = document.getElementById('basvuruDegisiklikSebebi');
+        if (document.getElementById('basvuruDegisiklikVarMi')?.value === 'true' && gerekce)
+            gerekce.required = true;
+        panel?.querySelectorAll('input:not([type="hidden"]):not([type="file"]), select, textarea').forEach(alan => {
+            if (alan.id === 'basvuruDegisiklikVarMiGorunum' || alan.id === 'basvuruDegisiklikSebebi') return;
+            alan.addEventListener('change', BasvuruDegisiklikVarIsaretle);
+            alan.addEventListener('input', BasvuruDegisiklikVarIsaretle);
+        });
+    }
+    function BasvuruOrtaklikYetkiBolumuIlklendir() {
+        OrtaklikBolumuIlklendir();
+        AdliSicilInitialOku();
+        document.getElementById('adliSicilKisiEkleBtn')?.addEventListener('click', () => AdliSicilModalAc(-1));
+        AdliSicilKisilerRender();
+    }
     function FirmaBolumuIlklendir() {
         AdliSicilInitialOku();
         document.getElementById('adliSicilKisiEkleBtn')?.addEventListener('click', () => AdliSicilModalAc(-1));
         AdliSicilKisilerRender();
+        BasvuruDegisiklikTakibiniIlklendir();
         SadeceRakamAlaniIlklendir(document.getElementById('vergiKimlikNo'), 10);
         document.getElementById('firmaSecBtn')?.addEventListener('click', () => {
             document.getElementById('firmaSecArama').value = '';
@@ -907,6 +987,7 @@
         if (!firma) return;
         setFirma(firma);
         dirty = true;
+        BasvuruDegisiklikVarIsaretle();
         firmaSecModal?.hide();
     }
 
@@ -963,9 +1044,12 @@
         modalSet('adliSicilAd', kisi.ad);
         modalSet('adliSicilSoyad', kisi.soyad);
         modalSet('adliSicilGorev', kisi.gorev);
+        modalSet('adliSicilYetkiKapsami', kisi.yetkiKapsami);
+        modalSet('adliSicilAciklama', kisi.aciklama);
         const hata = document.getElementById('adliSicilModalHata');
         if (hata) hata.textContent = '';
         AdliSicilDosyaDurumGuncelle();
+        ImzaYetkiDosyaDurumGuncelle();
         adliSicilModal?.show();
     }
 
@@ -978,6 +1062,10 @@
             ad: modalValue('adliSicilAd').trim(),
             soyad: modalValue('adliSicilSoyad').trim(),
             gorev: modalValue('adliSicilGorev'),
+            yetkiKapsami: modalValue('adliSicilYetkiKapsami').trim(),
+            aciklama: modalValue('adliSicilAciklama').trim(),
+            imzaYetkiDosyaAdi: mevcutAdliSicilKisi()?.imzaYetkiDosyaAdi || '',
+            imzaYetkiDosyaId: mevcutAdliSicilKisi()?.imzaYetkiDosyaId || null,
             dosyaAdi: mevcutAdliSicilDosyaAdi(),
             dosyaId: mevcutAdliSicilDosyaId()
         };
@@ -995,8 +1083,7 @@
             return;
         }
         if (!TcknGecerliMi(kisi.tckn)) {
-            const hata = document.getElementById('adliSicilModalHata');
-            if (hata) hata.textContent = adliSicilMetinleri.invalidTckn;
+            PopupMesajGoster(adliSicilMetinleri.invalidTckn, false);
             return;
         }
         if (AyniAdliSicilTcknVarMi(kisi.tckn, indexText)) {
@@ -1017,6 +1104,7 @@
             modalSet('adliSicilModalIndex', yeniIndex >= 0 ? String(yeniIndex) : '');
             AdliSicilKisilerRender();
             AdliSicilDosyaDurumGuncelle();
+            ImzaYetkiDosyaDurumGuncelle();
         });
     }
 
@@ -1042,11 +1130,11 @@
         if (!container) return;
 
         let html = `<div class="table-responsive"><table class="table table-bordered ortak-table"><thead><tr>
-            <th>${htmlEncode(ortakMetinleri.rowNo)}</th><th>${htmlEncode(adliSicilMetinleri.tckn)}</th><th>${htmlEncode(adliSicilMetinleri.name)}</th><th>${htmlEncode(adliSicilMetinleri.surname)}</th><th>${htmlEncode(adliSicilMetinleri.role)}</th><th>${htmlEncode(adliSicilMetinleri.fileColumn)}</th><th>${htmlEncode(ortakMetinleri.actions)}</th>
+            <th>No</th><th>TCKN</th><th>Ad soyad</th><th>Görev/unvan</th><th>Yetki kapsamı</th><th>İmza/Yetki belgesi</th><th>Adli sicil belgesi</th><th>Açıklama</th><th>İşlemler</th>
         </tr></thead><tbody>`;
 
         if (basvuruAdliSicilKisileri.length === 0) {
-            html += `<tr><td colspan="7" class="text-muted text-center">${htmlEncode(adliSicilMetinleri.empty)}</td></tr>`;
+            html += `<tr><td colspan="9" class="text-muted text-center">${htmlEncode(adliSicilMetinleri.empty)}</td></tr>`;
         }
         else {
             basvuruAdliSicilKisileri.forEach((kisi, index) => {
@@ -1055,10 +1143,12 @@
                 html += `<tr>
                     <td>${index + 1}</td>
                     <td>${htmlEncode(kisi.tckn)}</td>
-                    <td>${htmlEncode(kisi.ad)}</td>
-                    <td>${htmlEncode(kisi.soyad)}</td>
+                    <td>${htmlEncode((kisi.ad || '') + ' ' + (kisi.soyad || ''))}</td>
                     <td>${htmlEncode(kisi.gorev)}</td>
+                    <td>${htmlEncode(kisi.yetkiKapsami || '')}</td>
+                    <td>${htmlEncode(kisi.imzaYetkiDosyaAdi || 'Dosya seçilmedi')}</td>
                     <td><span class="adli-sicil-file-name">${htmlEncode(dosyaYuklu ? kisi.dosyaAdi : adliSicilMetinleri.fileMissing)}</span></td>
+                    <td>${htmlEncode(kisi.aciklama || '')}</td>
                     <td class="text-nowrap">
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="AdliSicilModalAc(${index})" ${basvuruReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.edit)}</button>
                         <button type="button" class="btn btn-sm btn-outline-danger" onclick="AdliSicilSil(${index})" ${basvuruReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.delete)}</button>
@@ -1123,6 +1213,28 @@
         }
     }
 
+    function ImzaYetkiDosyaDurumGuncelle() {
+        const kisi = mevcutAdliSicilKisi();
+        const kayitliMi = !!kisi?.id;
+        const input = document.getElementById('imzaYetkiDosya');
+        if (input) { input.disabled = !kayitliMi || basvuruReadonly; input.value = ''; }
+        document.getElementById('imzaYetkiDosyaSecBtn')?.classList.toggle('disabled', !kayitliMi || basvuruReadonly);
+        const yuklu = !!kisi?.imzaYetkiDosyaId;
+        const name = document.getElementById('imzaYetkiDosyaAdi'); if (name) name.textContent = yuklu ? (kisi.imzaYetkiDosyaAdi || '') : 'Dosya seçilmedi';
+        const note = document.getElementById('imzaYetkiDosyaNot'); if (note) { note.classList.toggle('d-none', kayitliMi); }
+        const download = document.getElementById('imzaYetkiIndirBtn'); if (download) { download.classList.toggle('d-none', !yuklu); download.href = yuklu ? `/Basvuru/DosyaIndir/${kisi.imzaYetkiDosyaId}` : '#'; }
+    }
+
+    function ImzaYetkiDosyasiYukle() {
+        const kisi = mevcutAdliSicilKisi();
+        if (!kisi?.id) { PopupMesajGoster('Belge yüklemek için önce kişiyi kaydediniz.', false); return; }
+        BasvuruDosyasiYukle('Basvuru_ImzaYetki', kisi.id, document.getElementById('imzaYetkiDosya'), 'imzaYetkiDosyaAdi', 'imzaYetkiIndirBtn', function (sonuc) {
+            const nesne = sonuc?.nesne || sonuc?.Nesne || {};
+            kisi.imzaYetkiDosyaId = nesne.dosyaId || nesne.DosyaId || null;
+            kisi.imzaYetkiDosyaAdi = nesne.dosyaAdi || nesne.DosyaAdi || '';
+            ImzaYetkiDosyaDurumGuncelle(); AdliSicilKisilerRender();
+        });
+    }
     function AdliSicilDosyasiYukle() {
         const input = document.getElementById('adliSicilDosya');
         const kisi = mevcutAdliSicilKisi();
@@ -1420,6 +1532,8 @@
         document.getElementById('ortakEkleBtn')?.addEventListener('click', () => OrtakModalAc(-1));
         document.getElementById('ortakKisiTuru')?.addEventListener('change', OrtakModalTuzelAlanGuncelle);
         document.getElementById('ortakPayOrani')?.addEventListener('input', OrtakHesabaDahilOranGuncelle);
+        document.getElementById('ortakDogumTarihi')?.addEventListener('change', OrtakSahiplikNiteligiGuncelle);
+        document.getElementById('ortakCinsiyet')?.addEventListener('change', OrtakSahiplikNiteligiGuncelle);
         SadeceRakamAlaniIlklendir(document.getElementById('ortakTcknVkn'), 11);
         SadeceRakamAlaniIlklendir(document.getElementById('adliSicilTckn'), 11);
         document.querySelectorAll('.ortaklik-dosya-input').forEach(input => {
@@ -1458,6 +1572,9 @@
         modalSet('ortakKisiTuru', ortak.kisiTuru || 'Gerçek Kişi');
         modalSet('ortakPayOrani', ortak.payOrani);
         modalSet('ortakOzelKamuNiteligi', ortak.ozelKamuNiteligi || 'Özel');
+        modalSet('ortakDogumTarihi', ortak.dogumTarihi ? String(ortak.dogumTarihi).substring(0, 10) : '');
+        modalSet('ortakCinsiyet', ortak.cinsiyet || '');
+        modalSet('ortakNihaiFaydalanici', ortak.nihaiFaydalaniciBilgisi || '');
         modalSet('ortakHesabaDahilOran', HesabaDahilOranHesapla(ortak.payOrani));
         modalSet('ortakOncekiYilNetSatis', ortak.oncekiYilNetSatis);
         modalSet('ortakSonYilNetSatis', ortak.sonYilNetSatis);
@@ -1478,7 +1595,11 @@
             kimlikAlani.maxLength = tuzelMi ? 10 : 11;
             kimlikAlani.value = kimlikAlani.value.slice(0, kimlikAlani.maxLength);
         }
+        document.getElementById('ortakDogumTarihiLabel')?.classList.toggle('d-none', tuzelMi);
+        document.getElementById('ortakCinsiyetLabel')?.classList.toggle('d-none', tuzelMi);
+        if (tuzelMi) { modalSet('ortakDogumTarihi', ''); modalSet('ortakCinsiyet', ''); }
         OrtakHesabaDahilOranGuncelle();
+        OrtakSahiplikNiteligiGuncelle();
     }
 
     function HesabaDahilOranHesapla(payOrani) {
@@ -1488,13 +1609,21 @@
         return oran;
     }
 
+    function OrtakSahiplikNiteligiGuncelle() {
+        if (modalValue('ortakKisiTuru') !== 'Gerçek Kişi') { modalSet('ortakSahiplikNiteligi', 'Uygulanamaz'); return; }
+        const kadin = modalValue('ortakCinsiyet') === 'Kadın';
+        const raw = modalValue('ortakDogumTarihi');
+        let genc = false;
+        if (raw) { const dogum = new Date(raw + 'T00:00:00'); const sinir = new Date(); sinir.setHours(0,0,0,0); sinir.setFullYear(sinir.getFullYear()-40); genc = dogum > sinir; }
+        modalSet('ortakSahiplikNiteligi', kadin && genc ? 'Her ikisi' : kadin ? 'Kadın' : genc ? '40 yaş altı' : 'Uygulanamaz');
+    }
     function OrtakHesabaDahilOranGuncelle() {
         modalSet('ortakHesabaDahilOran', HesabaDahilOranHesapla(sayiOkuId('ortakPayOrani')));
     }
 
     function OrtakModalKaydet() {
         const ortak = {
-            id: mevcutOrtakId(),
+            id: modalValue('ortakModalIndex') === '' ? 0 : mevcutOrtakId(),
             basvuruId: BasvuruId(),
             siraNo: 0,
             adUnvan: modalValue('ortakAdUnvan').trim(),
@@ -1503,7 +1632,10 @@
             payOrani: sayiOkuId('ortakPayOrani'),
             hesabaDahilOran: HesabaDahilOranHesapla(sayiOkuId('ortakPayOrani')),
             ozelKamuNiteligi: modalValue('ortakOzelKamuNiteligi'),
-            nihaiFaydalaniciBilgisi: mevcutOrtak()?.nihaiFaydalaniciBilgisi || '',
+            dogumTarihi: modalValue('ortakDogumTarihi') || null,
+            cinsiyet: modalValue('ortakCinsiyet'),
+            sahiplikNiteligi: modalValue('ortakSahiplikNiteligi'),
+            nihaiFaydalaniciBilgisi: modalValue('ortakNihaiFaydalanici').trim(),
             uboKycBelgeAdi: mevcutOrtakBelgeAdi(),
             uboKycDosyaId: mevcutOrtakDosyaId(),
             oncekiYilNetSatis: sayiOkuId('ortakOncekiYilNetSatis'),
@@ -1519,28 +1651,24 @@
         }
 
         if (!ortak.adUnvan || !ortak.tcknVkn) {
-            const hata = document.getElementById('ortakModalHata');
-            if (hata) hata.textContent = ortakMetinleri.requiredNameIdentity;
+                        PopupMesajGoster(ortakMetinleri.requiredNameIdentity, false);
             return;
         }
-        if (ortak.payOrani == null || ortak.payOrani < 25 || ortak.payOrani > 100) {
-            const hata = document.getElementById('ortakModalHata');
-            if (hata) hata.textContent = @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.ShareRateRange")));
+        if (ortak.payOrani == null || ortak.payOrani <= 0 || ortak.payOrani > 100) {
+                        PopupMesajGoster(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.ShareRateRange"))), false);
             return;
         }
         const kimlikGecerli = ortak.kisiTuru === 'Tüzel Kişi'
-            ? VknGecerliMi(ortak.tcknVkn)
-            : TcknGecerliMi(ortak.tcknVkn);
+            ? /^\d{10}$/.test(ortak.tcknVkn)
+            : /^\d{11}$/.test(ortak.tcknVkn);
         if (!kimlikGecerli) {
-            const hata = document.getElementById('ortakModalHata');
-            if (hata) hata.textContent = ortak.kisiTuru === 'Tüzel Kişi'
-                ? @Html.Raw(JsonSerializer.Serialize(T("Validation.Vkn.Invalid")))
-                : @Html.Raw(JsonSerializer.Serialize(T("Validation.Tckn.Invalid")));
+            PopupMesajGoster(ortak.kisiTuru === 'Tüzel Kişi'
+                ? @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.VknLengthRequired")))
+                : @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.TcknLengthRequired"))), false);
             return;
         }
         if (AyniTcknVknVarMi(ortak.tcknVkn, modalValue('ortakModalIndex'))) {
-            const hata = document.getElementById('ortakModalHata');
-            if (hata) hata.textContent = ortakMetinleri.duplicateIdentity;
+                        PopupMesajGoster(ortakMetinleri.duplicateIdentity, false);
             return;
         }
         if (indexText === '') basvuruOrtaklari.push(ortak);
@@ -1551,7 +1679,7 @@
         OrtaklarKaydet(function () {
             modalSet('ortakModalIndex', String(basvuruOrtaklari.findIndex(x => TcknVknNormalize(x.tcknVkn) === TcknVknNormalize(ortak.tcknVkn))));
             OrtakModalUboKycDurumGuncelle();
-        });
+        }, ortak.siraNo);
     }
 
     function AyniTcknVknVarMi(tcknVkn, mevcutIndexText) {
@@ -1564,13 +1692,17 @@
 
     function OrtakSil(index) {
         if (ortaklikReadonly) return;
-        basvuruOrtaklari.splice(index, 1);
-        basvuruOrtaklari.forEach((item, itemIndex) => item.siraNo = itemIndex + 1);
-        dirty = true;
-        OrtaklarRender();
-        OrtaklarKaydet();
+        const ortak = basvuruOrtaklari[index];
+        if (!ortak?.id) return;
+        AjaxPost('/Basvuru/OrtakSil', { ...BasvuruKimlikleri(), ortakId: ortak.id }, function (sonuc) {
+            if (sonuc?.basarili) {
+                basvuruOrtaklari.splice(index, 1);
+                OrtaklarRender();
+                dirty = false;
+            }
+            SonucGoster(sonuc);
+        });
     }
-
     function OrtaklarRender() {
         const container = document.getElementById('partnersTable');
         if (!container) return;
@@ -1578,11 +1710,11 @@
 
         let html = `<div class="table-responsive"><table class="table table-bordered ortak-table"><thead><tr>
             <th>${htmlEncode(ortakMetinleri.rowNo)}</th><th>${htmlEncode(ortakMetinleri.partnerNameTitle)}</th><th>${htmlEncode(ortakMetinleri.identity)}</th><th>${htmlEncode(ortakMetinleri.personType)}</th>
-            <th>${htmlEncode(ortakMetinleri.shareRate)}</th><th>${htmlEncode(ortakMetinleri.privatePublicType)}</th><th>${htmlEncode(ortakMetinleri.uboKycDocument)}</th><th></th>
+            <th>${htmlEncode(ortakMetinleri.shareRate)}</th><th>${htmlEncode(ortakMetinleri.privatePublicType)}</th><th>Doğum tarihi</th><th>Cinsiyet</th><th>Nihai faydalanıcı</th><th>Sıralamada sahiplik niteliği</th><th>${htmlEncode(ortakMetinleri.uboKycDocument)}</th><th></th>
         </tr></thead><tbody>`;
 
         if (basvuruOrtaklari.length === 0) {
-            html += `<tr><td colspan="8" class="text-muted text-center">${htmlEncode(ortakMetinleri.emptyPartners)}</td></tr>`;
+            html += `<tr><td colspan="12" class="text-muted text-center">${htmlEncode(ortakMetinleri.emptyPartners)}</td></tr>`;
         }
         else {
             basvuruOrtaklari.forEach((ortak, index) => {
@@ -1593,6 +1725,10 @@
                     <td>${htmlEncode(OrtakSecimMetni(ortak.kisiTuru))}</td>
                     <td>${sayiYaz(ortak.payOrani)}</td>
                     <td>${htmlEncode(OrtakSecimMetni(ortak.ozelKamuNiteligi))}</td>
+                    <td>${htmlEncode(ortak.dogumTarihi ? String(ortak.dogumTarihi).substring(0,10) : '')}</td>
+                    <td>${htmlEncode(ortak.cinsiyet || '')}</td>
+                    <td>${htmlEncode(ortak.nihaiFaydalaniciBilgisi || '')}</td>
+                    <td>${htmlEncode(ortak.sahiplikNiteligi || 'Uygulanamaz')}</td>
                     <td>${OrtakUboKycHucreHtml(ortak, index)}</td>
                     <td class="text-nowrap">
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="OrtakModalAc(${index})" ${ortaklikReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.edit)}</button>
@@ -1755,6 +1891,11 @@
             .reduce((sum, ortak) => sum + Number(ortak.payOrani || 0), 0);
         const ozelInput = document.getElementById('privateShareCalculated');
         if (ozelInput) ozelInput.value = sayiYaz(ozelPay);
+        const kadinPay = basvuruOrtaklari.filter(x => x.sahiplikNiteligi === 'Kadın' || x.sahiplikNiteligi === 'Her ikisi').reduce((s,x)=>s+Number(x.payOrani||0),0);
+        const gencPay = basvuruOrtaklari.filter(x => x.sahiplikNiteligi === '40 yaş altı' || x.sahiplikNiteligi === 'Her ikisi').reduce((s,x)=>s+Number(x.payOrani||0),0);
+        const toplamInput=document.getElementById('partnershipTotal'); if(toplamInput) toplamInput.value=sayiYaz(toplamPay);
+        const kadinInput=document.getElementById('femaleOwnershipCalculated'); if(kadinInput) kadinInput.value=sayiYaz(kadinPay);
+        const gencInput=document.getElementById('youngOwnershipCalculated'); if(gencInput) gencInput.value=sayiYaz(gencPay);
 
         const alert = document.getElementById('partnerAlerts');
         if (!alert) return;
@@ -1799,7 +1940,7 @@
             ...BasvuruKimlikleri(),
             bagliOrtakIsletmeVarMi: bagliOrtakVarMi,
             ozelSektorPayi: sayiOkuId('privateShareCalculated'),
-            ortaklar: basvuruOrtaklari,
+            ortaklar: [basvuruOrtaklari.find(x => x.siraNo === degisenOrtakSiraNo)],
             bagliOrtakUnvani: '',
             bagliOrtakKimlikNo: '',
             bagliOrtakOncekiYilNetSatis: null,
@@ -1816,13 +1957,16 @@
         });
     }
 
-    function OrtaklarKaydet(afterSuccess) {
+    function OrtaklarKaydet(afterSuccess, degisenOrtakSiraNo) {
         const model = {
             ...BasvuruKimlikleri(),
-            ortaklar: basvuruOrtaklari
+            ortaklar: [basvuruOrtaklari.find(x => x.siraNo === degisenOrtakSiraNo)],
+            degisenOrtakSiraNo: degisenOrtakSiraNo || null
         };
         AjaxPost('/Basvuru/KaydetOrtaklar', model, function (sonuc) {
             if (sonuc?.basarili) {
+                const kaydedilen = basvuruOrtaklari.find(x => x.siraNo === degisenOrtakSiraNo);
+                if (kaydedilen && sonuc.nesne) kaydedilen.id = sonuc.nesne;
                 dirty = false;
                 if (afterSuccess) afterSuccess(sonuc);
             }
@@ -1934,13 +2078,14 @@
             adres: modalValue('modalAdres')
         };
         if (!VknGecerliMi(firma.vergiKimlikNo)) {
-            PopupMesajGoster(@Html.Raw(JsonSerializer.Serialize(T("Validation.Vkn.Invalid"))), false);
+            PopupMesajGoster(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.VknLengthRequired"))), false);
             return;
         }
         AjaxPost('/Basvuru/FirmaKaydet', firma, function (sonuc) {
             if (sonuc.basarili) {
                 firmaModal?.hide();
                 setFirma({ ...firma, id: sonuc.nesne || firma.id });
+                BasvuruDegisiklikVarIsaretle();
             }
             SonucGoster(sonuc);
         });
@@ -1957,7 +2102,8 @@
             unvan: degerStr('Basvuru.irtibat.unvan'),
             telefon: degerStr('Basvuru.irtibat.telefon'),
             ePosta: degerStr('Basvuru.irtibat.ePosta'),
-            adres: degerStr('Basvuru.irtibat.adres')
+            adres: degerStr('Basvuru.irtibat.adres'),
+            yetkiliKisiler: degerStr('Basvuru.irtibat.yetkiliKisiler')
         };
     }
 
@@ -1971,6 +2117,9 @@
             sonIkiYildirFaalMi: degerStr('Basvuru.SonIkiYildirFaalMi') === '' ? null : degerBool('Basvuru.SonIkiYildirFaalMi'),
             basvuruSahibiTuru: degerInt('Basvuru.BasvuruSahibiTuru'),
             hukukiTurSirketTuru: degerInt('Basvuru.HukukiTurSirketTuru'),
+            yonetimKuruluUyeleriAdliSicilKisiler: degerStr('Basvuru.YonetimKuruluUyeleriAdliSicilKisiler'),
+            onBasvuruSonrasiDegisiklikVarMi: degerStr('Basvuru.OnBasvuruSonrasiDegisiklikVarMi') === '' ? null : degerBool('Basvuru.OnBasvuruSonrasiDegisiklikVarMi'),
+            onBasvuruSonrasiDegisiklikSebebi: degerStr('Basvuru.OnBasvuruSonrasiDegisiklikSebebi'),
             ozelSektorPayi: $('[name="Basvuru.OzelSektorPayi"]').length ? degerDec('Basvuru.OzelSektorPayi') : 0,
             bagliOrtakIsletmeVarMi: $('[name="Basvuru.BagliOrtakIsletmeVarMi"]').length ? degerBool('Basvuru.BagliOrtakIsletmeVarMi') : null,
             bagliOrtakAciklama: $('[name="Basvuru.BagliOrtakAciklama"]').length ? degerStr('Basvuru.BagliOrtakAciklama') : null
@@ -1982,20 +2131,37 @@
     }
 
     function BasvuruSahibiKaydet(afterSuccess) {
+        if (document.getElementById('basvuruDegisiklikVarMi')?.value === 'true' &&
+            !(document.getElementById('basvuruDegisiklikSebebi')?.value || '').trim()) {
+            PopupMesajGoster('Başvuru sahibi bilgileri değiştirildiği için değişiklik gerekçesi girilmelidir.', false);
+            return;
+        }
         AjaxPost('/Basvuru/KaydetBasvuruSahibi', {
             basvuruFirma: BasvuruFirmaModeliOlustur(),
             irtibat: IrtibatModeliOlustur()
         }, sonuc => BasvuruKayitSonucGoster(sonuc, afterSuccess));
     }
 
+    function AnaBasvuruBilgileriniKilitle() {
+        ['basvuruDonemi', 'basvuruIl', 'vergiKimlikNo'].forEach(id => {
+            const alan = document.getElementById(id);
+            if (alan) alan.disabled = true;
+        });
+        ['firmaSecBtn', 'firmaYeniBtn', 'firmaDuzenleBtn'].forEach(id => {
+            const button = document.getElementById(id);
+            if (button) button.classList.add('d-none');
+        });
+    }
     function BasvuruKayitKimlikGuncelle(sonuc) {
         if (sonuc?.basarili && sonuc.nesne) {
+            const yeniKayit = BasvuruId() <= 0;
             $('[name="Basvuru.Id"]').val(sonuc.nesne);
             const ilAlani = $('[name="Basvuru.IlId"]');
             if (ilAlani.length) basvuruIlId = Number(ilAlani.val() || 0);
             locked = false;
             $('.basvuru-step').prop('disabled', false);
             dirty = false;
+            if (yeniKayit) AnaBasvuruBilgileriniKilitle();
         }
     }
 
@@ -2013,7 +2179,11 @@
             yatiriminAmaci: degerStr('Basvuru.yatirim.YatiriminAmaci'),
             yatirimFaaliyetleri: degerStr('Basvuru.yatirim.YatirimFaaliyetleri'),
             yatirimGirdileri: degerStr('Basvuru.yatirim.YatirimGirdileri'),
-            yatirimCiktilari: degerStr('Basvuru.yatirim.YatirimCiktilari')
+            yatirimCiktilari: degerStr('Basvuru.yatirim.YatirimCiktilari'),
+            basvuruKonusuTesis: degerStr('Basvuru.yatirim.BasvuruKonusuTesis'),
+            organizeAlanTuru: degerStr('Basvuru.yatirim.OrganizeAlanTuru'),
+            planlananBaslangicTarihi: degerStr('Basvuru.yatirim.PlanlananBaslangicTarihi') || null,
+            planlananTamamlanmaTarihi: degerStr('Basvuru.yatirim.PlanlananTamamlanmaTarihi') || null
         };
         AjaxPost('/Basvuru/KaydetYatirimBilgileri', yatirim, sonuc => SonucGosterVeDirtyTemizle(sonuc, afterSuccess));
     }
@@ -2081,6 +2251,12 @@
             sonYilNetSatis: degerDec('Basvuru.mali.SonYilNetSatis'),
             oncekiYilAktifToplami: degerDec('Basvuru.mali.OncekiYilAktifToplami'),
             sonYilAktifToplami: degerDec('Basvuru.mali.SonYilAktifToplami'),
+            oncekiYilIhracatSatis: degerDec('Basvuru.mali.OncekiYilIhracatSatis'),
+            sonYilIhracatSatis: degerDec('Basvuru.mali.SonYilIhracatSatis'),
+            oncekiYilCalisanSayisi: degerInt('Basvuru.mali.OncekiYilCalisanSayisi'),
+            sonYilCalisanSayisi: degerInt('Basvuru.mali.SonYilCalisanSayisi'),
+            aciklama: degerStr('Basvuru.mali.Aciklama'),
+            belgeReferanslariJson: MaliBelgeReferanslariJsonOlustur(),
             bagimsizDenetimeTabiMi: degerStr('Basvuru.mali.BagimsizDenetimeTabiMi') === '' ? null : degerBool('Basvuru.mali.BagimsizDenetimeTabiMi'),
             denetimDosyaAdi: degerStr('Basvuru.mali.DenetimDosyaAdi'),
             denetimDosyaId: degerInt('Basvuru.mali.DenetimDosyaId')
@@ -2924,17 +3100,150 @@
         catch { PopupMesajGoster('Taahhüt ve beyan verisi okunamadı.', false); }
     }
 
+    let basvuruMaliIsletmeleri = [];
+    let basvuruMaliBelgeReferanslari = {};
+    let basvuruMaliIsletmeModal = null;
+
+    function BasvuruMaliBolumuIlklendir() {
+        const json = document.getElementById('basvuruMaliIsletmelerJson')?.textContent || '[]';
+        try { basvuruMaliIsletmeleri = JSON.parse(json); } catch { basvuruMaliIsletmeleri = []; }
+        try { basvuruMaliBelgeReferanslari = JSON.parse(document.getElementById('maliBelgeReferanslariJson')?.value || '{}'); } catch { basvuruMaliBelgeReferanslari = {}; }
+        basvuruMaliIsletmeModal = modalOlustur(document.getElementById('basvuruMaliIsletmeModal'));
+        document.querySelectorAll('.basvuru-mali-modal-kapat').forEach(x => x.addEventListener('click', () => basvuruMaliIsletmeModal?.hide()));
+        document.getElementById('basvuruMaliIsletmeKaydetBtn')?.addEventListener('click', BasvuruMaliIsletmeKaydet);
+        document.getElementById('basvuruMaliOrtakBelge')?.addEventListener('change', BasvuruMaliOrtakBelgesiYukle);
+        document.getElementById('basvuruMaliIsletmeEkleBtn')?.addEventListener('click', () => BasvuruMaliIsletmeModalAc(-1));
+        document.getElementById('denetimDosya')?.addEventListener('change', function () {
+            dosyaSecimYaz(this, 'denetimDosyaSecim', 'Basvuru.mali.DenetimDosyaAdi');
+            DenetimDosyasiYukle();
+        });
+        document.getElementById('bagimsizDenetimeTabiMi')?.addEventListener('change', DenetimDosyaBolumuGuncelle);
+
+        document.querySelectorAll('.mali-belge-input').forEach(input => {
+            const ref = basvuruMaliBelgeReferanslari[input.dataset.refKey] || {};
+            MaliDosyaGorunumGuncelle(ref, input.dataset.nameTarget, input.dataset.downloadTarget);
+            input.addEventListener('change', function () {
+                BasvuruDosyasiYukle('Basvuru_MaliBelge', Number(this.dataset.dosyaNo), this, this.dataset.nameTarget, this.dataset.downloadTarget, sonuc => {
+                    const nesne = sonuc?.nesne || sonuc?.Nesne || {};
+                    basvuruMaliBelgeReferanslari[this.dataset.refKey] = { dosyaId: nesne.dosyaId || nesne.DosyaId, dosyaAdi: nesne.dosyaAdi || nesne.DosyaAdi || '' };
+                    document.getElementById('maliBelgeReferanslariJson').value = JSON.stringify(basvuruMaliBelgeReferanslari);
+                });
+            });
+        });
+        document.querySelectorAll('[name^="Basvuru.mali."]').forEach(input => {
+            input.addEventListener('input', BasvuruMaliKonsolideGuncelle);
+            input.addEventListener('change', BasvuruMaliKonsolideGuncelle);
+        });
+        DenetimDosyaBolumuGuncelle();
+        BasvuruMaliIsletmeleriRender();
+        BasvuruMaliKonsolideGuncelle();
+    }
+
+    function BasvuruMaliIsletmeleriRender() {
+        const container = document.getElementById('basvuruMaliIsletmeler');
+        if (!container) return;
+        if (!basvuruMaliIsletmeleri.length) {
+            container.innerHTML = '<div class="alert alert-info">Bağlı veya ortak işletme kaydı bulunmuyor.</div>';
+            return;
+        }
+        let html = `<table class="table table-bordered" style="min-width:1100px"><thead><tr><th>İşletme unvanı</th><th>VKN</th><th>İlişki türü</th><th>Dahil oranı (%)</th><th>${htmlEncode(oncekiMaliYil)} net satış</th><th>${htmlEncode(sonMaliYil)} net satış</th><th>${htmlEncode(oncekiMaliYil)} aktif</th><th>${htmlEncode(sonMaliYil)} aktif</th><th>Belge ref.</th><th></th></tr></thead><tbody>`;
+        basvuruMaliIsletmeleri.forEach((x, index) => {
+            const belge = MaliDosyaRefOku(x.belgeReferansi);
+            html += `<tr><td>${htmlEncode(x.adUnvan || '')}</td><td>${htmlEncode(x.tcknVkn || '')}</td><td>${htmlEncode(x.iliskiTuru || '')}</td><td>${htmlEncode(x.hesabaDahilOran ?? 0)}</td><td>${htmlEncode(sayiYaz(x.oncekiYilNetSatis))}</td><td>${htmlEncode(sayiYaz(x.sonYilNetSatis))}</td><td>${htmlEncode(sayiYaz(x.oncekiYilAktifToplami))}</td><td>${htmlEncode(sayiYaz(x.sonYilAktifToplami))}</td><td>${htmlEncode(belge.dosyaAdi || 'Dosya seçilmedi')}</td><td><button type="button" class="btn btn-sm btn-outline-primary" onclick="BasvuruMaliIsletmeModalAc(${index})">${basvuruReadonly ? 'Görüntüle' : 'Düzenle'}</button></td></tr>`;
+        });
+        container.innerHTML = html + '</tbody></table>';
+    }
+
+    function BasvuruMaliIsletmeModalAc(index) {
+        const yeni = index < 0;
+        const x = yeni ? { id:0, basvuruId:BasvuruId(), kisiTuru:'Tüzel Kişi', hesabaDahilOran:0, belgeReferansi:'' } : basvuruMaliIsletmeleri[index];
+        if (!x) return;
+        modalSet('basvuruMaliIsletmeIndex', yeni ? '' : String(index));
+        modalSet('basvuruMaliOrtakAdUnvan', x.adUnvan);
+        modalSet('basvuruMaliOrtakVkn', x.tcknVkn);
+        modalSet('basvuruMaliOrtakIliski', x.iliskiTuru);
+        modalSet('basvuruMaliOrtakOran', x.hesabaDahilOran ?? 0);
+        modalSet('basvuruMaliOrtakOncekiNet', sayiYaz(x.oncekiYilNetSatis));
+        modalSet('basvuruMaliOrtakSonNet', sayiYaz(x.sonYilNetSatis));
+        modalSet('basvuruMaliOrtakOncekiAktif', sayiYaz(x.oncekiYilAktifToplami));
+        modalSet('basvuruMaliOrtakSonAktif', sayiYaz(x.sonYilAktifToplami));
+        const kimlikKilitli = !yeni || basvuruReadonly;
+        document.getElementById('basvuruMaliOrtakAdUnvan').disabled = kimlikKilitli;
+        document.getElementById('basvuruMaliOrtakVkn').disabled = kimlikKilitli;
+        ['basvuruMaliOrtakIliski','basvuruMaliOrtakOran','basvuruMaliOrtakOncekiNet','basvuruMaliOrtakSonNet','basvuruMaliOrtakOncekiAktif','basvuruMaliOrtakSonAktif'].forEach(id => document.getElementById(id).disabled = basvuruReadonly);
+        document.getElementById('basvuruMaliIsletmeKaydetBtn')?.classList.toggle('d-none', basvuruReadonly);
+        const belge = MaliDosyaRefOku(x.belgeReferansi);
+        MaliDosyaGorunumGuncelle(belge, 'basvuruMaliOrtakBelgeAdi', 'basvuruMaliOrtakBelgeIndir');
+        const belgeAktif = !basvuruReadonly && Number(x.id || 0) > 0;
+        document.getElementById('basvuruMaliOrtakBelge').disabled = !belgeAktif;
+        document.getElementById('basvuruMaliOrtakBelgeSecBtn')?.classList.toggle('disabled', !belgeAktif);
+        document.getElementById('basvuruMaliOrtakBelgeNot').textContent = belgeAktif ? 'Dosya seçildiğinde otomatik kaydedilir.' : (basvuruReadonly ? '' : 'Yeni işletmede belge yüklemek için önce kaydediniz.');
+        ParaTamsayiAyarla();
+        basvuruMaliIsletmeModal?.show();
+    }
+
+    function BasvuruMaliIsletmeKaydet() {
+        const indexText = modalValue('basvuruMaliIsletmeIndex');
+        const index = indexText === '' ? -1 : Number(indexText);
+        const mevcut = index >= 0 ? basvuruMaliIsletmeleri[index] : {};
+        const dec = id => { const raw=modalValue(id); if(!raw) return null; const normalized=raw.includes(',')?raw.replace(/\./g,'').replace(',','.'):raw.replace(/\s/g,''); const parsed=Number(normalized); return Number.isFinite(parsed)?parsed:null; };
+        const model = { ...mevcut, id:Number(mevcut.id||0), basvuruId:BasvuruId(), adUnvan:modalValue('basvuruMaliOrtakAdUnvan'), tcknVkn:modalValue('basvuruMaliOrtakVkn'), kisiTuru:'Tüzel Kişi', iliskiTuru:modalValue('basvuruMaliOrtakIliski'), hesabaDahilOran:dec('basvuruMaliOrtakOran'), oncekiYilNetSatis:dec('basvuruMaliOrtakOncekiNet'), sonYilNetSatis:dec('basvuruMaliOrtakSonNet'), oncekiYilAktifToplami:dec('basvuruMaliOrtakOncekiAktif'), sonYilAktifToplami:dec('basvuruMaliOrtakSonAktif'), belgeReferansi:mevcut.belgeReferansi||'' };
+        AjaxPost('/Basvuru/KaydetBasvuruBagliOrtak', model, sonuc => {
+            if (sonuc?.basarili) {
+                model.id = sonuc.nesne;
+                if (index >= 0) basvuruMaliIsletmeleri[index] = model; else basvuruMaliIsletmeleri.push(model);
+                dirty = false;
+                BasvuruMaliIsletmeleriRender();
+                BasvuruMaliKonsolideGuncelle();
+                basvuruMaliIsletmeModal?.hide();
+            }
+            SonucGoster(sonuc);
+        });
+    }
+
+    function MaliBelgeReferanslariJsonOlustur() { return JSON.stringify(basvuruMaliBelgeReferanslari || {}); }
+    function MaliDosyaRefOku(raw) { if (!raw) return {}; if (typeof raw === 'object') return raw; try { return JSON.parse(raw); } catch { return {}; } }
+    function MaliDosyaGorunumGuncelle(ref, nameTargetId, downloadTargetId) {
+        const name = document.getElementById(nameTargetId), download = document.getElementById(downloadTargetId);
+        if (name) name.textContent = ref?.dosyaAdi || 'Dosya seçilmedi';
+        if (download) { download.classList.toggle('d-none', !ref?.dosyaId); download.href = ref?.dosyaId ? '/Basvuru/DosyaIndir?id=' + ref.dosyaId : '#'; }
+    }
+    function BasvuruMaliOrtakBelgesiYukle() {
+        const indexText = modalValue('basvuruMaliIsletmeIndex');
+        const index = indexText === '' ? -1 : Number(indexText);
+        const ortak = index >= 0 ? basvuruMaliIsletmeleri[index] : null;
+        const input = document.getElementById('basvuruMaliOrtakBelge');
+        if (!ortak?.id) { PopupMesajGoster('Önce işletme kaydını kaydediniz.', false); return; }
+        BasvuruDosyasiYukle('BOMALI_' + ortak.id, 1, input, 'basvuruMaliOrtakBelgeAdi', 'basvuruMaliOrtakBelgeIndir', sonuc => {
+            const nesne = sonuc?.nesne || sonuc?.Nesne || {};
+            ortak.belgeReferansi = JSON.stringify({ dosyaId:nesne.dosyaId||nesne.DosyaId, dosyaAdi:nesne.dosyaAdi||nesne.DosyaAdi||'' });
+            BasvuruMaliIsletmeleriRender();
+        });
+    }
+
+    function BasvuruMaliKonsolideGuncelle() {
+        const own = { oncekiNet:degerDec('Basvuru.mali.OncekiYilNetSatis')||0, sonNet:degerDec('Basvuru.mali.SonYilNetSatis')||0, oncekiAktif:degerDec('Basvuru.mali.OncekiYilAktifToplami')||0, sonAktif:degerDec('Basvuru.mali.SonYilAktifToplami')||0 };
+        basvuruMaliIsletmeleri.forEach(x => { const oran=Number(x.hesabaDahilOran||0)/100; own.oncekiNet+=Number(x.oncekiYilNetSatis||0)*oran; own.sonNet+=Number(x.sonYilNetSatis||0)*oran; own.oncekiAktif+=Number(x.oncekiYilAktifToplami||0)*oran; own.sonAktif+=Number(x.sonYilAktifToplami||0)*oran; });
+        const set=(id,value)=>{const el=document.getElementById(id);if(el)el.value=sayiYaz(value);};
+        set('maliKonsolideOncekiNet',own.oncekiNet); set('maliKonsolideSonNet',own.sonNet); set('maliKonsolideOncekiAktif',own.oncekiAktif); set('maliKonsolideSonAktif',own.sonAktif);
+        const degerler=[own.oncekiNet,own.sonNet,own.oncekiAktif,own.sonAktif];
+        const olcekUygun=degerler.some(x=>x>=100000000&&x<=4000000000);
+        const olcek=document.getElementById('maliKonsolideOlcek'); if(olcek)olcek.value=olcekUygun?'Uygun':'Uygun Değil';
+        const satis=(degerDec('Basvuru.mali.OncekiYilNetSatis')||0)+(degerDec('Basvuru.mali.SonYilNetSatis')||0);
+        const ihracat=(degerDec('Basvuru.mali.OncekiYilIhracatSatis')||0)+(degerDec('Basvuru.mali.SonYilIhracatSatis')||0);
+        const oran=document.getElementById('basvuruMaliIhracatOrani'); if(oran)oran.textContent=satis>0?(ihracat/satis*100).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' %':'-';
+    }
     function PaneliKaydet(afterSuccess) {
-        if (active === bolumFirma) BasvuruSahibiKaydet(afterSuccess);
+        if (active === bolumFirma || active === bolumBasvuruSahibi) BasvuruSahibiKaydet(afterSuccess);
         else if (active === bolumIrtibat) FirmaIrtibatKaydet(afterSuccess);
         else if (active === bolumYatirim) DegerZinciriKaydet(afterSuccess);
-        else if (active === bolumUygulamaAdresi) YatirimBilgileriKaydet(afterSuccess);
+        else if (active === bolumUygulamaAdresi || active === bolumBasvuruYatirimBilgileri) YatirimBilgileriKaydet(afterSuccess);
         else if (active === bolumUygunHarcama) UygunHarcamaKaydet(afterSuccess);
         else if (active === bolumFinans) FinansKaydet(afterSuccess);
         else if (active === bolumYatirimOzeti) YatirimOzetiKaydet(afterSuccess);
         else if (active === bolumDbCtpTeknikProje) DbCtpKaydet(afterSuccess);
         else if (active === bolumTaahhutBeyan) TaahhutBeyanlariKaydet(afterSuccess);
-        else if (active === bolumMali) MaliKaydet(afterSuccess);
+        else if (active === bolumMali || active === bolumBasvuruMaliVeriler) MaliKaydet(afterSuccess);
         else if (active === bolumOrtaklik) OrtaklikKaydet(afterSuccess);
         else if (active === bolumCevreselSosyal) CevreselSosyalKaydet(afterSuccess);
         else if (active === bolumSistemSonuclari || active === bolumUzmanSonuclari) {
@@ -3027,13 +3336,31 @@
             kiraTahsisBitisTarihi: kiraTahsisBitisTarihi || null,
             yapiRuhsatiDurumu: YapimIsiSecili()
                 ? Number(modalValue('adresModalYapiRuhsatiDurumu') || 0) || 0
-                : 5
+                : 5,
+            koordinat: modalValue('adresModalKoordinat'),
+            adaParsel: modalValue('adresModalAdaParsel'),
+            segeKademesi: modalValue('adresModalSegeKademesi'),
+            kullanimHakkiBaslangicTarihi: modalValue('adresModalKullanimHakkiBaslangicTarihi') || null,
+            donemleriKapsiyorMu: modalValue('adresModalDonemleriKapsiyorMu') === '' ? null : modalValue('adresModalDonemleriKapsiyorMu') === 'true',
+            izinTakvimAciklama: modalValue('adresModalIzinTakvimAciklama')
         };
         adresKaydet(adres);
     }
 
     function adresKaydet(adres) {
-        AjaxPost('/Basvuru/UygulamaAdresiKaydet', adres, SonucGosterGizle);
+        AjaxPost('/Basvuru/UygulamaAdresiKaydet', adres, function (sonuc) {
+            if (!sonuc?.basarili || !sonuc?.nesne) { SonucGoster(sonuc); return; }
+            const adresId = sonuc.nesne.id || sonuc.nesne.Id;
+            const dosyalar = [
+                { input: 'adresModalAdresBelgeDosya', no: 1 },
+                { input: 'adresModalKullanimHakkiDosya', no: 2 },
+                { input: 'adresModalKanitDosya', no: 3 }
+            ].filter(x => document.getElementById(x.input)?.files?.length);
+            const tamamla = () => { UygulamaAdresleriListele(); uygulamaAdresModal?.hide(); SonucGoster(sonuc); };
+            if (!dosyalar.length) { tamamla(); return; }
+            let kalan = dosyalar.length;
+            dosyalar.forEach(x => BasvuruDosyasiYukle(`BYAT_${adresId}`, x.no, document.getElementById(x.input), '', '', () => { if (--kalan === 0) tamamla(); }));
+        });
     }
 
     function adresSil(adresId) {
@@ -3076,10 +3403,25 @@
         modalSet('adresModalKiraVeyaTahsisSuresi', adres.kiraVeyaTahsisSuresi);
         modalSet('adresModalKiraTahsisBitisTarihi', adres.kiraTahsisBitisTarihi);
         modalSet('adresModalYapiRuhsatiDurumu', adres.yapiRuhsatiDurumu);
+        modalSet('adresModalKoordinat', adres.koordinat);
+        modalSet('adresModalAdaParsel', adres.adaParsel);
+        modalSet('adresModalSegeKademesi', adres.segeKademesi);
+        modalSet('adresModalKullanimHakkiBaslangicTarihi', adres.kullanimHakkiBaslangicTarihi);
+        modalSet('adresModalDonemleriKapsiyorMu', adres.donemleriKapsiyorMu == null ? '' : String(adres.donemleriKapsiyorMu));
+        modalSet('adresModalIzinTakvimAciklama', adres.izinTakvimAciklama);
+        AdresDosyaGoster('adresModalAdresBelgeDosyaAdi', 'adresModalAdresBelgeIndir', adres.adresBelgeDosyaAdi, adres.adresBelgeDosyaId);
+        AdresDosyaGoster('adresModalKullanimHakkiDosyaAdi', 'adresModalKullanimHakkiIndir', adres.kullanimHakkiDosyaAdi, adres.kullanimHakkiDosyaId);
+        AdresDosyaGoster('adresModalKanitDosyaAdi', 'adresModalKanitIndir', adres.kanitDosyaAdi, adres.kanitDosyaId);
+        ['adresModalAdresBelgeDosya','adresModalKullanimHakkiDosya','adresModalKanitDosya'].forEach(id => { const e=document.getElementById(id); if(e)e.value=''; });
         YapiRuhsatiAlanlariniGuncelle();
         uygulamaAdresModal?.show();
     }
 
+    function AdresDosyaGoster(adId, linkId, dosyaAdi, dosyaId) {
+        const ad = document.getElementById(adId), link = document.getElementById(linkId);
+        if (ad) ad.textContent = dosyaAdi || 'Dosya seçilmedi';
+        if (link) { link.classList.toggle('d-none', !dosyaId); link.href = dosyaId ? `/Basvuru/DosyaIndir/${dosyaId}` : '#'; }
+    }
     function YapimIsiSecili() {
         return !!document.querySelector('input[name="Basvuru.yatirim.harcamaTurleri"][value="1"]:checked');
     }
@@ -3095,48 +3437,62 @@
     function RenderUygulamaAdresleri(uygulamaAdresleri) {
         const tbody = document.getElementById('uygulamaAdresListesi');
         if (!tbody) return;
+        const hakTbody = document.getElementById('yatirimYeriKullanimHaklariListesi');
+        const basvuruYatirimSayfasi = active === bolumBasvuruYatirimBilgileri;
         sonUygulamaAdresleri = uygulamaAdresleri || [];
         tbody.innerHTML = '';
+        if (hakTbody) hakTbody.innerHTML = '';
         if (sonUygulamaAdresleri.length === 0) {
-            const tr = document.createElement('tr');
-            const td = document.createElement('td');
-            td.colSpan = YapimIsiSecili() ? '8' : '7';
-            td.className = 'text-muted text-center';
-            td.textContent = adresBosMesaj;
-            tr.appendChild(td);
-            tbody.appendChild(tr);
+            const bosSatir = (hedef, sutun) => { if (!hedef) return; const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=String(sutun);td.className='text-muted text-center';td.textContent=adresBosMesaj;tr.appendChild(td);hedef.appendChild(tr); };
+            bosSatir(tbody, basvuruYatirimSayfasi ? (basvuruReadonly ? 8 : 9) : (YapimIsiSecili() ? 8 : 7));
+            bosSatir(hakTbody, 9);
             return;
         }
         sonUygulamaAdresleri.forEach((adres, index) => {
             const tr = document.createElement('tr');
-            const alanlar = [adres.siraNo, adres.ilAdi, adres.ilceAdi, adres.tamAdres, adres.yatirimYeriStatusuAd, adres.kiraTahsisBitis];
-            if (YapimIsiSecili()) alanlar.push(adres.yapiRuhsatiDurumuAd);
-            alanlar.forEach((value, alanIndex) => {
-                const td = document.createElement('td');
-                td.textContent = value || '';
-                if (alanIndex === 3) td.className = 'adres-tam-adres';
-                tr.appendChild(td);
-            });
-            const actionTd = document.createElement('td');
-            const editBtn = document.createElement('button');
-            editBtn.type = 'button';
-            editBtn.className = 'btn btn-sm btn-outline-secondary mr-1';
-            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-            editBtn.addEventListener('click', () => adresModalAc(index));
-            const deleteBtn = document.createElement('button');
-            deleteBtn.type = 'button';
-            deleteBtn.className = 'btn btn-sm btn-outline-danger';
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.addEventListener('click', () => {
-                if (confirm(adresSilOnay)) adresSil(adres.id);
-            });
-            actionTd.appendChild(editBtn);
-            actionTd.appendChild(deleteBtn);
-            tr.appendChild(actionTd);
+            const alanlar = basvuruYatirimSayfasi
+                ? [adres.siraNo, adres.ilAdi, adres.ilceAdi, adres.segeKademesi, adres.tamAdres, adres.koordinat, adres.adaParsel, adres.adresBelgeDosyaAdi]
+                : [adres.siraNo, adres.ilAdi, adres.ilceAdi, adres.tamAdres, adres.yatirimYeriStatusuAd, adres.kiraTahsisBitis];
+            if (!basvuruYatirimSayfasi && YapimIsiSecili()) alanlar.push(adres.yapiRuhsatiDurumuAd);
+            alanlar.forEach((value, alanIndex) => { const td=document.createElement('td');
+                if (basvuruYatirimSayfasi && alanIndex === 7) BelgeBaglantisiEkle(td, adres.adresBelgeDosyaId, adres.adresBelgeDosyaAdi);
+                else td.textContent=value || '';
+                if((basvuruYatirimSayfasi && alanIndex===4)||(!basvuruYatirimSayfasi && alanIndex===3))td.className='adres-tam-adres';tr.appendChild(td); });
+            if (!basvuruReadonly) {
+                const actionTd=document.createElement('td');
+                const editBtn=document.createElement('button');editBtn.type='button';editBtn.className='btn btn-sm btn-outline-secondary mr-1';editBtn.innerHTML='<i class="fas fa-edit"></i>';editBtn.addEventListener('click',()=>adresModalAc(index));
+                const deleteBtn=document.createElement('button');deleteBtn.type='button';deleteBtn.className='btn btn-sm btn-outline-danger';deleteBtn.innerHTML='<i class="fas fa-trash"></i>';deleteBtn.addEventListener('click',()=>{if(confirm(adresSilOnay))adresSil(adres.id);});
+                actionTd.appendChild(editBtn);actionTd.appendChild(deleteBtn);tr.appendChild(actionTd);
+            }
             tbody.appendChild(tr);
+            if (hakTbody) {
+                const hakTr=document.createElement('tr');
+                const hakAlanlar=[adres.siraNo,adres.yatirimYeriStatusuAd,tarihGorunum(adres.kullanimHakkiBaslangicTarihi),tarihGorunum(adres.kiraTahsisBitisTarihi),adres.donemleriKapsiyorMu==null?'':(adres.donemleriKapsiyorMu?'Evet':'Hayır'),adres.kullanimHakkiDosyaAdi,adres.yapiRuhsatiDurumuAd,adres.izinTakvimAciklama,adres.kanitDosyaAdi];
+                hakAlanlar.forEach((value, alanIndex)=>{const td=document.createElement('td');
+                    if(alanIndex===5) BelgeBaglantisiEkle(td, adres.kullanimHakkiDosyaId, adres.kullanimHakkiDosyaAdi);
+                    else if(alanIndex===8) BelgeBaglantisiEkle(td, adres.kanitDosyaId, adres.kanitDosyaAdi);
+                    else td.textContent=value || '';
+                    hakTr.appendChild(td);});
+                hakTbody.appendChild(hakTr);
+            }
         });
     }
 
+    function BelgeBaglantisiEkle(hucre, dosyaId, dosyaAdi) {
+        if (!dosyaId) { hucre.textContent = 'Yüklenmedi'; hucre.classList.add('text-muted'); return; }
+        const link = document.createElement('a');
+        link.href = `/Basvuru/DosyaIndir/${dosyaId}`;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = dosyaAdi || 'İndir';
+        link.className = 'document-download-link';
+        hucre.appendChild(link);
+    }
+    function tarihGorunum(value) {
+        if (!value) return '';
+        const parca=String(value).substring(0,10).split('-');
+        return parca.length===3 ? `${parca[2]}.${parca[1]}.${parca[0]}` : value;
+    }
     function antiForgeryToken() {
         return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
     }

@@ -20,7 +20,11 @@ namespace TarimDonusum.Models
         DbCtpTeknikProje = 15,
         SistemSonuclari = 16,
         UzmanSonuclari = 17,
-        Karar = 18
+        Karar = 18,
+        BasvuruSahibi = 19,
+        BasvuruMaliVeriler = 20,
+        BasvuruOrtaklikYetki = 21,
+        BasvuruYatirimBilgileri = 22
     }
 
     public sealed record BasvuruBolumTanim(
@@ -35,6 +39,10 @@ namespace TarimDonusum.Models
         private static readonly IReadOnlyList<BasvuruBolumTanim> Tanimlar =
         [
             new(enumBasvuruBolum.Firma, 10, "Basvuru.Step.1", "Bolumler/_Firma"),
+            new(enumBasvuruBolum.BasvuruSahibi, 15, "Basvuru.Step.1", "Basvuru/_BasvuruSahibi"),
+            new(enumBasvuruBolum.BasvuruMaliVeriler, 16, "Basvuru.ApplicationFinancial.Title", "Basvuru/_MaliVeriler"),
+            new(enumBasvuruBolum.BasvuruOrtaklikYetki, 17, "Basvuru.ApplicationPartnershipAuthority.Title", "Basvuru/_OrtaklikYetki"),
+            new(enumBasvuruBolum.BasvuruYatirimBilgileri, 18, "Basvuru.ApplicationInvestment.Title", "Basvuru/_YatirimBilgileri"),
             new(enumBasvuruBolum.Mali, 20, "Basvuru.Step.6", "Bolumler/_Mali"),
             new(enumBasvuruBolum.Ortaklik, 30, "Basvuru.Step.Ortaklik", "Bolumler/_Ortaklik"),
             new(enumBasvuruBolum.UygulamaAdresi, 40, "Basvuru.Step.4", "Bolumler/_UygulamaAdresi"),
@@ -51,17 +59,25 @@ namespace TarimDonusum.Models
             new(enumBasvuruBolum.Karar, 150, "Basvuru.Step.Decision", "Bolumler/_Denetim", true)
         ];
 
-        public static IReadOnlyList<BasvuruBolumTanim> Tum(bool denetciGorunumu)
+        public static IReadOnlyList<BasvuruBolumTanim> Tum(bool denetciGorunumu, enumBasvuruKayitTuru kayitTuru = enumBasvuruKayitTuru.OnBasvuru)
         {
+            if (kayitTuru == enumBasvuruKayitTuru.Basvuru)
+            {
+                return Tanimlar
+                    .Where(x => x.Bolum == enumBasvuruBolum.BasvuruSahibi || x.Bolum == enumBasvuruBolum.BasvuruMaliVeriler || x.Bolum == enumBasvuruBolum.BasvuruOrtaklikYetki || x.Bolum == enumBasvuruBolum.BasvuruYatirimBilgileri)
+                    .ToList();
+            }
+
             return Tanimlar
+                .Where(x => x.Bolum != enumBasvuruBolum.BasvuruSahibi && x.Bolum != enumBasvuruBolum.BasvuruMaliVeriler && x.Bolum != enumBasvuruBolum.BasvuruOrtaklikYetki)
                 .Where(x => denetciGorunumu || !x.DenetciBolumu)
                 .OrderBy(x => x.Sira)
                 .ToList();
         }
 
-        public static BasvuruBolumTanim? Bul(enumBasvuruBolum bolum, bool denetciGorunumu)
+        public static BasvuruBolumTanim? Bul(enumBasvuruBolum bolum, bool denetciGorunumu, enumBasvuruKayitTuru kayitTuru = enumBasvuruKayitTuru.OnBasvuru)
         {
-            return Tum(denetciGorunumu).FirstOrDefault(x => x.Bolum == bolum);
+            return Tum(denetciGorunumu, kayitTuru).FirstOrDefault(x => x.Bolum == bolum);
         }
     }
 }

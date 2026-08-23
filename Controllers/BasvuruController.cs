@@ -30,7 +30,7 @@ namespace TarimDonusum.Controllers
         }
 
         [OturumKontrol]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string tur = "on-basvuru")
         {
             Sonuc<List<Basvuru>> sonuc;
             ; try
@@ -41,6 +41,17 @@ namespace TarimDonusum.Controllers
 
                 ViewBag.YeniBasvuruYetkisi = BasvuruKullanicisiMi(kullanici);
                 sonuc = await _basvuruIsKurallari.KullaniciBasvuruVersiyonlariniListeleAsync(kullanici);
+                enumBasvuruKayitTuru kayitTuru = string.Equals(tur, "basvuru", StringComparison.OrdinalIgnoreCase)
+                    ? enumBasvuruKayitTuru.Basvuru
+                    : enumBasvuruKayitTuru.OnBasvuru;
+                ViewBag.ListeTuru = kayitTuru;
+
+                if (sonuc.nesne != null)
+                {
+                    sonuc.nesne = sonuc.nesne
+                        .Where(x => x.kayitTuru == kayitTuru)
+                        .ToList();
+                }
             }
             catch (Exception ex)
             {
@@ -103,6 +114,23 @@ namespace TarimDonusum.Controllers
             }
         }
 
+        [OturumKontrol]
+        [HttpGet]
+        public Task<IActionResult> BasvuruSahibiYazdir(int id) =>
+            RaporYazdirAsync(id, new RPROB_BasvuruSahibi(_environment.ContentRootPath), "Başvuru sahibi bilgileri yazdırılmadan önce kaydedilmelidir.");
+
+        [OturumKontrol]
+        [HttpGet]
+        public Task<IActionResult> OrtaklikYetkiYazdir(int id) =>
+            RaporYazdirAsync(id, new RPROB_OrtaklikYetki(_environment.ContentRootPath), "Ortaklık ve yetki bilgileri yazdırılmadan önce kaydedilmelidir.");
+        [OturumKontrol]
+        [HttpGet]
+        public Task<IActionResult> YatirimBilgileriYazdir(int id) =>
+            RaporYazdirAsync(id, new RPROB_YatirimBilgileri(_environment.ContentRootPath), "Yatırım bilgileri yazdırılmadan önce kaydedilmelidir.");
+        [OturumKontrol]
+        [HttpGet]
+        public Task<IActionResult> OnBasvuruSahibiYazdir(int id) =>
+            RaporYazdirAsync(id, new RPROB_BasvuruSahibi(_environment.ContentRootPath, true), "Ön başvuru sahibi bilgileri yazdırılmadan önce kaydedilmelidir.");
         [OturumKontrol]
         [HttpGet]
         public Task<IActionResult> ProjeButcesiYazdir(int id) =>
@@ -204,7 +232,7 @@ namespace TarimDonusum.Controllers
                 BasvuruFormViewModel model = await FormViewModelHazirlaAsync(basvuru, kullanici);
                 if (model.DenetciGorunumu)
                     _basvuruIsKurallari.DenetimListeleriniIlkDegerle(model.Basvuru);
-                BasvuruBolumTanim? bolumTanim = BasvuruBolumleri.Bul(bolum, model.DenetciGorunumu);
+                BasvuruBolumTanim? bolumTanim = BasvuruBolumleri.Bul(bolum, model.DenetciGorunumu, model.Basvuru.kayitTuru);
                 if (bolumTanim == null)
                     return BadRequest();
 
@@ -639,6 +667,26 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetBasvuruBagliOrtak([FromBody] BasvuruOrtak model)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return RedirectToAction("Index", "Home");
+            Sonuc<int> sonuc = await _basvuruIsKurallari.KaydetBasvuruBagliOrtakAsync(model, kullanici);
+            if (sonuc.basarili) sonuc.mesaj = L["kayitBasarili"];
+            return Json(sonuc);
+        }
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OrtakSil([FromBody] BasvuruOrtakSilModel model)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return RedirectToAction("Index", "Home");
+            return Json(await _basvuruIsKurallari.OrtakSilAsync(model.basvuruId, model.ortakId, kullanici));
+        }
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> BelgePaketiYukle(
             int basvuruId,
             string aciklama,
@@ -938,7 +986,9 @@ namespace TarimDonusum.Controllers
         {
             bool basvuruKullanicisi = BasvuruKullanicisiMi(kullanici);
             bool duzenlenebilirDurum =
-                basvuru.durum == enumBasvuruDurum.OnBasvuruDurumu &&
+                ((basvuru.durum == enumBasvuruDurum.OnBasvuruDurumu ||
+                  basvuru.durum == enumBasvuruDurum.OnBasvuruDuzeltmeDurumu) ||
+                 (basvuru.durum == enumBasvuruDurum.BasvuruDurumu && basvuru.kayitTuru == enumBasvuruKayitTuru.Basvuru)) &&
                 basvuru.basvuruFirma.siraNo == 0;
 
             BasvuruFormViewModel model = new BasvuruFormViewModel

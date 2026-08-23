@@ -1,0 +1,40 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+    bool CheckedInt(IEnumerable<int> values, int value) => values.Contains(value);
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruYatirimBilgileri)">
+    <div class="section-toolbar">
+        <h2 class="mb-0">Yatırım Bilgileri ve Yatırım Uygulama Yeri</h2>
+        <a class="btn btn-outline-primary" href="@Url.Action("YatirimBilgileriYazdir", "Basvuru", new { id = b.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+    </div>
+    <div class="form-grid">
+        <label>Yatırımın adı<input name="Basvuru.YatirimAdi" value="@b.yatirim.yatirimAdi" disabled="@ro" /></label>
+        <label>Başvuru konusu tesis<input name="Basvuru.yatirim.BasvuruKonusuTesis" value="@b.yatirim.basvuruKonusuTesis" disabled="@ro" /></label>
+        <label>Kümelenme / organize alan türü<input name="Basvuru.yatirim.OrganizeAlanTuru" value="@b.yatirim.organizeAlanTuru" disabled="@ro" /></label>
+        <label>Planlanan başlangıç tarihi<input type="date" name="Basvuru.yatirim.PlanlananBaslangicTarihi" value="@b.yatirim.planlananBaslangicTarihi?.ToString("yyyy-MM-dd")" disabled="@ro" /></label>
+        <label>Planlanan tamamlanma tarihi<input type="date" name="Basvuru.yatirim.PlanlananTamamlanmaTarihi" value="@b.yatirim.planlananTamamlanmaTarihi?.ToString("yyyy-MM-dd")" disabled="@ro" /></label>
+    </div>
+    <h3>Yatırım türü</h3>
+    <div class="check-grid">
+        @foreach (enumYatirimTuru item in Enum.GetValues<enumYatirimTuru>().Where(x => x != enumYatirimTuru.Tanimsiz))
+        { <label><input type="checkbox" name="Basvuru.yatirim.yatirimTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.yatirimTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label> }
+    </div>
+    <h3>Talep edilen harcama türleri</h3>
+    <div class="check-grid">
+        @foreach (enumHarcamaTuru item in Enum.GetValues<enumHarcamaTuru>().Where(x => x != enumHarcamaTuru.Tanimsiz))
+        { <label><input type="checkbox" name="Basvuru.yatirim.harcamaTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.harcamaTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label> }
+    </div>
+    <label class="wide-label">Yatırımın amacı<textarea name="Basvuru.yatirim.YatiriminAmaci" disabled="@ro">@b.yatirim.yatiriminAmaci</textarea></label>
+    <label class="wide-label">Yatırım faaliyetleri<textarea name="Basvuru.yatirim.YatirimFaaliyetleri" disabled="@ro">@b.yatirim.yatirimFaaliyetleri</textarea></label>
+    <label class="wide-label">Yatırım girdileri<textarea name="Basvuru.yatirim.YatirimGirdileri" disabled="@ro">@b.yatirim.yatirimGirdileri</textarea></label>
+    <label class="wide-label">Yatırım çıktıları<textarea name="Basvuru.yatirim.YatirimCiktilari" disabled="@ro">@b.yatirim.yatirimCiktilari</textarea></label>
+
+    <div class="section-toolbar mt-4"><h3 class="mb-0">Yatırım Uygulama Yerleri</h3>@if (!ro) { <button type="button" class="btn btn-outline-primary" id="adresYeniBtn"><i class="fas fa-plus mr-1"></i>Yatırım Yeri Ekle</button> }</div>
+    <div class="table-responsive"><table class="table uygulama-adres-table"><thead><tr><th>No</th><th>İl</th><th>İlçe</th><th>SEGE</th><th>Açık adres</th><th>Koordinat</th><th>Ada/parsel</th><th>Belge ref.</th>@if(!ro){<th>İşlem</th>}</tr></thead><tbody id="uygulamaAdresListesi"></tbody></table></div>
+
+    <h3 class="mt-4">Yatırım Yeri Kullanım Hakkı ve İzinler</h3>
+    <div class="table-responsive"><table class="table uygulama-adres-table"><thead><tr><th>Adres no</th><th>Kullanım hakkı türü</th><th>Başlangıç tarihi</th><th>Bitiş tarihi</th><th>Dönemleri kapsıyor mu?</th><th>Tapu/kira/tahsis ref.</th><th>İzin/ruhsat durumu</th><th>Takvim / açıklama</th><th>Kanıt ref.</th></tr></thead><tbody id="yatirimYeriKullanimHaklariListesi"></tbody></table></div></section>

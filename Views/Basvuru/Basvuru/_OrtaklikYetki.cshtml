@@ -1,0 +1,19 @@
+@using System.Text.Json
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+    var ortaklik = b.ortaklik ?? new BasvuruOrtaklik { basvuruId = b.Id };
+    ortaklik.basvuruId = b.Id;
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruOrtaklikYetki)">
+    <div class="section-toolbar"><h2 class="mb-0">Ortaklık ve Yetki Bilgileri</h2><a class="btn btn-outline-primary" href="@Url.Action("OrtaklikYetkiYazdir", "Basvuru", new { id = b.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div>
+    <script type="application/json" id="ortaklikInitialJson">@Html.Raw(JsonSerializer.Serialize(ortaklik))</script>
+    <div class="section-toolbar"><h3 class="subhead mb-0">Ortaklık Yapısı</h3>@if (!ro) { <button type="button" class="btn btn-outline-primary" id="ortakEkleBtn">Ortak Ekle</button> }</div>
+    <div id="partnersTable" class="partners-table-wrap"></div><div id="partnerAlerts" class="mt-3"></div>
+    <div class="form-grid mt-3"><label>Toplam ortaklık payı<input id="partnershipTotal" readonly /></label><label>Özel sektör payı<input id="privateShareCalculated" readonly /></label><label>Kadın sahiplik payı<input id="femaleOwnershipCalculated" readonly /></label><label>40 yaş altı sahiplik payı<input id="youngOwnershipCalculated" readonly /></label></div>
+    <div id="tuzelKisiOrtakBilgileri" class="d-none"><div id="legalPartnerFinancials"></div></div>
+    <script type="application/json" id="adliSicilInitialJson">@Html.Raw(JsonSerializer.Serialize(b.AdliSicilKisileri ?? new List<BasvuruAdliSicilKisi>()))</script>
+    <div class="section-toolbar mt-5"><h3 class="subhead mb-0">Temsil, İlzam ve Adli Sicil Kontrolüne Tabi Kişiler</h3>@if (!ro) { <button type="button" class="btn btn-outline-primary" id="adliSicilKisiEkleBtn">Kişi Ekle</button> }</div>
+    <div id="adliSicilKisilerTable"></div>
+</section>

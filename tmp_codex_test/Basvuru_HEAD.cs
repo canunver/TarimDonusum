@@ -58,21 +58,11 @@ namespace TarimDonusum.Models
     public enum enumBasvuruDurum : int
     {
         Tanimsiz = 0, //"Tanımsız";
-        OnBasvuruDurumu = 1, // Ön Başvuru
-        OnBasvuruDuzeltmeDurumu = 2,
-        OnBasvuruIncelemeDurumu = 3,
-        BasvuruDurumu = 4, // Başvuru
-        BasvuruIncelemeDurumu = 5,
-        KabulEdildiDurumu = 6, // Başvuru Kabul
-        BasvuruSecilmediDurumu = 7,
-        ReddedildiDurumu = 8, // Başvuru Red
-        IptalDurumu = 9, // Ön Başvuru Red / İptal
-    }
-
-    public enum enumBasvuruKayitTuru : int
-    {
-        OnBasvuru = 1,
-        Basvuru = 2
+        OnBasvuruDurumu = 1, //"Ön Başvuru";
+        IptalDurumu = 9, //"İptal";
+        BasvuruDurumu = 3, //"Başvuru";
+        KabulEdildiDurumu = 5, //"Kabul Edildi";
+        ReddedildiDurumu = 7, //"Reddedildi";
     }
 
     public enum enumBasvuruSahibiTuru
@@ -161,7 +151,6 @@ namespace TarimDonusum.Models
         }
 
         public enumBasvuruDurum durum { get; set; } = enumBasvuruDurum.OnBasvuruDurumu;
-        public enumBasvuruKayitTuru kayitTuru { get; set; } = enumBasvuruKayitTuru.OnBasvuru;
 
         public BasvuruFirma basvuruFirma { get; set; } = new();
 
@@ -227,9 +216,6 @@ namespace TarimDonusum.Models
         public enumBasvuruSahibiTuru? basvuruSahibiTuru { get; set; }
         public enumHukukiTurSirketTuru? hukukiTurSirketTuru { get; set; }
         public string? yonetimKuruluUyeleriAdliSicilKisiler { get; set; } = "";
-        public bool? onBasvuruSonrasiDegisiklikVarMi { get; set; }
-        [StringLength(2000)]
-        public string? onBasvuruSonrasiDegisiklikSebebi { get; set; } = "";
         public decimal? ozelSektorPayi { get; set; }
         public bool? bagliOrtakIsletmeVarMi { get; set; }
         public string? bagliOrtakAciklama { get; set; } = "";
@@ -271,10 +257,6 @@ namespace TarimDonusum.Models
         public int? degerZinciriId { get; set; }
         public List<DegerZinciriAsama> degerZinciriAsamalari { get; set; } = new();
         public List<int> harcamaTurleri { get; set; } = new();
-        public string? basvuruKonusuTesis { get; set; }
-        public string? organizeAlanTuru { get; set; }
-        public DateTime? planlananBaslangicTarihi { get; set; }
-        public DateTime? planlananTamamlanmaTarihi { get; set; }
 
         public void Dogrula(Sonuc sonuc)
         {
@@ -360,7 +342,6 @@ namespace TarimDonusum.Models
         public bool? bagliOrtakIsletmeVarMi { get; set; }
         public decimal? ozelSektorPayi { get; set; }
         public List<BasvuruOrtak> ortaklar { get; set; } = new();
-        public int? degisenOrtakSiraNo { get; set; }
         public string? bagliOrtakUnvani { get; set; } = "";
         public string? bagliOrtakKimlikNo { get; set; } = "";
         public decimal? bagliOrtakOncekiYilNetSatis { get; set; }
@@ -369,12 +350,12 @@ namespace TarimDonusum.Models
         public decimal? bagliOrtakSonYilAktifToplami { get; set; }
         public List<BasvuruOrtaklikDosya> bagliOrtakDosyalari { get; set; } = new();
 
-        internal void Dogrula(Sonuc sonuc, int? dogrulanacakSiraNo = null)
+        internal void Dogrula(Sonuc sonuc)
         {
             if (basvuruId <= 0)
                 sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
 
-            OrtaklariDogrula(sonuc, dogrulanacakSiraNo);
+            OrtaklariDogrula(sonuc);
             bagliOrtakIsletmeVarMi = ortaklar.Any(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase));
 
             decimal AgirlikliToplam(Func<BasvuruOrtak, decimal?> alan) => ortaklar
@@ -387,14 +368,14 @@ namespace TarimDonusum.Models
             bagliOrtakSonYilAktifToplami = AgirlikliToplam(x => x.sonYilAktifToplami);
         }
 
-        internal void OrtaklariDogrula(Sonuc sonuc, int? dogrulanacakSiraNo = null)
+        internal void OrtaklariDogrula(Sonuc sonuc)
         {
             decimal toplamPay = ortaklar.Sum(x => x.payOrani.GetValueOrDefault());
             if (ortaklar.Count > 0 && toplamPay > 100)
                 sonuc.HataEkle("Ortak/pay sahibi toplam pay oranı 100'ü geçemez.");
 
-            foreach (BasvuruOrtak ortak in ortaklar.Where(x => (!dogrulanacakSiraNo.HasValue || x.siraNo == dogrulanacakSiraNo.Value) && (!x.payOrani.HasValue || x.payOrani <= 0 || x.payOrani > 100)))
-                sonuc.HataEkle($"{ortak.adUnvan} için pay oranı 0'dan büyük ve 100'e eşit veya küçük olmalıdır.");
+            foreach (BasvuruOrtak ortak in ortaklar.Where(x => !x.payOrani.HasValue || x.payOrani < 25 || x.payOrani > 100))
+                sonuc.HataEkle($"{ortak.adUnvan} için pay oranı %25 ile %100 arasında olmalıdır.");
 
             List<string> tekrarliKimlikler = ortaklar
                 .Select(x => TcknVknNormalizeEt(x.tcknVkn))
@@ -408,19 +389,17 @@ namespace TarimDonusum.Models
                 sonuc.HataEkle($"{kimlik} TCKN/VKN ile birden fazla ortak kaydedilemez.");
             }
 
-            foreach (BasvuruOrtak ortak in ortaklar.Where(x => (!dogrulanacakSiraNo.HasValue || x.siraNo == dogrulanacakSiraNo.Value) && string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase)))
+            foreach (BasvuruOrtak ortak in ortaklar.Where(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase)))
             {
                 ortak.hesabaDahilOran = BasvuruOrtak.HesabaDahilOranHesapla(ortak.payOrani);
-                string vkn = ortak.tcknVkn?.Trim() ?? "";
-                if (vkn.Length != 10 || !vkn.All(char.IsDigit))
-                    sonuc.HataEkle($"{ortak.adUnvan} için 10 haneli VKN girilmelidir.");
+                if (!Araclar.OrtakFonksiyonlar.VKNGecerliMi(ortak.tcknVkn))
+                    sonuc.HataEkle($"{ortak.adUnvan} için 10 haneli ve geçerli bir VKN girilmelidir.");
             }
 
-            foreach (BasvuruOrtak ortak in ortaklar.Where(x => (!dogrulanacakSiraNo.HasValue || x.siraNo == dogrulanacakSiraNo.Value) && string.Equals(x.kisiTuru, "Gerçek Kişi", StringComparison.OrdinalIgnoreCase)))
+            foreach (BasvuruOrtak ortak in ortaklar.Where(x => string.Equals(x.kisiTuru, "Gerçek Kişi", StringComparison.OrdinalIgnoreCase)))
             {
-                string tckn = ortak.tcknVkn?.Trim() ?? "";
-                if (tckn.Length != 11 || !tckn.All(char.IsDigit))
-                    sonuc.HataEkle($"{ortak.adUnvan} için 11 haneli TCKN girilmelidir.");
+                if (!Araclar.OrtakFonksiyonlar.TCKNGecerliMi(ortak.tcknVkn))
+                    sonuc.HataEkle($"{ortak.adUnvan} için 11 haneli ve geçerli bir TCKN girilmelidir.");
             }
         }
 
@@ -434,12 +413,6 @@ namespace TarimDonusum.Models
         }
     }
 
-    public class BasvuruOrtakSilModel
-    {
-        public int basvuruId { get; set; }
-        public int ortakId { get; set; }
-    }
-
     public class BasvuruOrtak
     {
         public int id { get; set; }
@@ -451,9 +424,6 @@ namespace TarimDonusum.Models
         public decimal? payOrani { get; set; }
         public decimal? hesabaDahilOran { get; set; }
         public string? ozelKamuNiteligi { get; set; } = "";
-        public DateTime? dogumTarihi { get; set; }
-        public string? cinsiyet { get; set; } = "";
-        public string? sahiplikNiteligi { get; set; } = "Uygulanamaz";
         public string? nihaiFaydalaniciBilgisi { get; set; } = "";
         public string? uboKycBelgeAdi { get; set; } = "";
         public int? uboKycDosyaId { get; set; }
@@ -461,24 +431,7 @@ namespace TarimDonusum.Models
         public decimal? sonYilNetSatis { get; set; }
         public decimal? oncekiYilAktifToplami { get; set; }
         public decimal? sonYilAktifToplami { get; set; }
-        public string? iliskiTuru { get; set; } = "";
-        public string? belgeReferansi { get; set; } = "";
 
-        public string SahiplikNiteligiHesapla(DateTime bugun)
-        {
-            if (!string.Equals(kisiTuru, "Gerçek Kişi", StringComparison.OrdinalIgnoreCase))
-            {
-                dogumTarihi = null;
-                cinsiyet = "";
-                return "Uygulanamaz";
-            }
-            bool kadin = string.Equals(cinsiyet, "Kadın", StringComparison.OrdinalIgnoreCase);
-            bool genc = dogumTarihi.HasValue && dogumTarihi.Value.Date > bugun.Date.AddYears(-40);
-            if (kadin && genc) return "Her ikisi";
-            if (kadin) return "Kadın";
-            if (genc) return "40 yaş altı";
-            return "Uygulanamaz";
-        }
         public static decimal HesabaDahilOranHesapla(decimal? payOrani)
         {
             decimal oran = payOrani.GetValueOrDefault();
@@ -505,10 +458,6 @@ namespace TarimDonusum.Models
         public string? ad { get; set; } = "";
         public string? soyad { get; set; } = "";
         public string? gorev { get; set; } = "";
-        public string? yetkiKapsami { get; set; } = "";
-        public string? aciklama { get; set; } = "";
-        public string? imzaYetkiDosyaAdi { get; set; } = "";
-        public int? imzaYetkiDosyaId { get; set; }
         public string? dosyaAdi { get; set; } = "";
         public int? dosyaId { get; set; }
 
@@ -519,7 +468,7 @@ namespace TarimDonusum.Models
             if (string.IsNullOrWhiteSpace(tckn))
                 sonuc.HataEkle("TCKN girilmelidir.");
             else if (!Araclar.OrtakFonksiyonlar.TCKNGecerliMi(tckn))
-                sonuc.HataEkle("Geçerli bir TCKN giriniz.");
+                sonuc.HataEkle("TCKN 11 haneli ve geçerli olmalıdır.");
             if (string.IsNullOrWhiteSpace(ad))
                 sonuc.HataEkle("Ad girilmelidir.");
             if (string.IsNullOrWhiteSpace(soyad))
@@ -629,12 +578,6 @@ namespace TarimDonusum.Models
         public decimal? sonYilNetSatis { get; set; }
         public decimal? oncekiYilAktifToplami { get; set; }
         public decimal? sonYilAktifToplami { get; set; }
-        public decimal? oncekiYilIhracatSatis { get; set; }
-        public decimal? sonYilIhracatSatis { get; set; }
-        public int? oncekiYilCalisanSayisi { get; set; }
-        public int? sonYilCalisanSayisi { get; set; }
-        public string? aciklama { get; set; } = "";
-        public string? belgeReferanslariJson { get; set; } = "";
         public bool? bagimsizDenetimeTabiMi { get; set; }
         public string denetimDosyaAdi { get; set; } = "";
         public int? denetimDosyaId { get; set; }
@@ -689,11 +632,6 @@ namespace TarimDonusum.Models
         }
     }
 
-    public class BasvuruMaliBelgeReferansi
-    {
-        public int dosyaId { get; set; }
-        public string dosyaAdi { get; set; } = "";
-    }
     public class BasvuruDosyaYuklemeSonucu
     {
         public int BasvuruId { get; set; }
@@ -730,18 +668,6 @@ namespace TarimDonusum.Models
         public enumUygulamaAdresiYatirimYeriStatusu yatirimYeriStatusu { get; set; } = enumUygulamaAdresiYatirimYeriStatusu.Tanimsiz;
         public int? kiraVeyaTahsisSuresi { get; set; }
         public DateTime? kiraTahsisBitisTarihi { get; set; }
-        public string? koordinat { get; set; }
-        public string? adaParsel { get; set; }
-        public string? segeKademesi { get; set; }
-        public DateTime? kullanimHakkiBaslangicTarihi { get; set; }
-        public bool? donemleriKapsiyorMu { get; set; }
-        public string? izinTakvimAciklama { get; set; }
-        public int? adresBelgeDosyaId { get; set; }
-        public string? adresBelgeDosyaAdi { get; set; }
-        public int? kullanimHakkiDosyaId { get; set; }
-        public string? kullanimHakkiDosyaAdi { get; set; }
-        public int? kanitDosyaId { get; set; }
-        public string? kanitDosyaAdi { get; set; }
 
         public string kiraTahsisBitis
         {

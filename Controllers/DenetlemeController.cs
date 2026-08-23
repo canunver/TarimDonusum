@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using TarimDonusum.FrameWork;
 using TarimDonusum.FrameWork.Logging;
@@ -119,6 +119,16 @@ namespace TarimDonusum.Controllers
             return Json(await _basvuruIsKurallari.DenetimListesiKaydetAsync(model, kullanici));
         }
 
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SistemSonuclariniYenidenUret([FromBody] DenetimListesiKayit model)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return Json(new { basarili = false, mesaj = "Oturum süresi doldu." });
+            if (BasvuruKullanicisiMi(kullanici)) return Forbid();
+            return Json(await _basvuruIsKurallari.SistemDenetimListesiniYenidenUretAsync(model.basvuruId, kullanici));
+        }
         private static bool BasvuruKullanicisiMi(Kullanici? kullanici)
         {
             return kullanici?.Yetkiler.Any(x => x.Rol == KullaniciRol.BasvuruKullanicisi) == true;

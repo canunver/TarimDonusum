@@ -184,28 +184,28 @@
     <value>Denetleme Kayıtları</value>
   </data>
   <data name="MenuBasvuru.tanimlar" xml:space="preserve">
-    <value>Tan&#305;mlar</value>
+    <value>Tanımlar</value>
   </data>
   <data name="MenuBasvuru.dashboard" xml:space="preserve">
-    <value>G&#246;sterge Paneli</value>
+    <value>Gösterge Paneli</value>
   </data>
   <data name="MenuBasvuru.kullanicilar" xml:space="preserve">
-    <value>Kullan&#305;c&#305;lar</value>
+    <value>Kullanıcılar</value>
   </data>
   <data name="MenuBasvuru.birimler" xml:space="preserve">
     <value>Birimler</value>
   </data>
   <data name="MenuBasvuru.iller" xml:space="preserve">
-    <value>&#304;ller</value>
+    <value>İller</value>
   </data>
   <data name="MenuBasvuru.ilceler" xml:space="preserve">
-    <value>&#304;l&#231;eler</value>
+    <value>İlçeler</value>
   </data>
   <data name="MenuBasvuru.degerZincirleri" xml:space="preserve">
-    <value>De&#287;er Zincirleri</value>
+    <value>Değer Zincirleri</value>
   </data>
   <data name="MenuBasvuru.donemler" xml:space="preserve">
-    <value>D&#246;nemler</value>
+    <value>Dönemler</value>
   </data>
   <data name="Layout.DefaultTitle" xml:space="preserve">
     <value>TKDK Başvuru Portalı</value>
@@ -219,28 +219,72 @@
   <data name="Layout.InstitutionName" xml:space="preserve">
     <value>TKDK - Tarım ve Kırsal Kalkınmayı Destekleme Kurumu</value>
   </data>
-  <data name="Layout.ThemeSelection" xml:space="preserve"><value>Tema Seçimi</value></data>
-  <data name="Layout.Theme.Navy" xml:space="preserve"><value>Lacivert</value></data>
-  <data name="Layout.Theme.Green" xml:space="preserve"><value>Yeşil</value></data>
-  <data name="Layout.Theme.Blue" xml:space="preserve"><value>Mavi</value></data>
-  <data name="Layout.Theme.Light" xml:space="preserve"><value>Açık</value></data>
-  <data name="Layout.Logout" xml:space="preserve"><value>Çıkış</value></data>
-  <data name="Basvuru.Summary.SubmitButton" xml:space="preserve"><value>Ön Başvuruyu İncelemeye Gönder</value></data>
-  <data name="Basvuru.Summary.SubmitConfirm" xml:space="preserve"><value>Ön başvuruyu incelemeye göndermek istediğinize emin misiniz? Gönderimden sonra bilgiler değiştirilemez.</value></data>
-  <data name="Basvuru.Summary.SubmittedReadonly" xml:space="preserve"><value>Ön başvuru incelemeye gönderildi. Başvuru artık salt okunur durumdadır.</value></data>
-  <data name="Business.Application.Submit.AlreadySubmitted" xml:space="preserve"><value>Ön başvuru daha önce gönderilmiş veya artık düzenlenebilir durumda değil.</value></data>
-  <data name="Business.Application.Submit.Success" xml:space="preserve"><value>Ön başvuru incelemeye başarıyla gönderildi.</value></data>
-  <data name="Business.Application.Submit.Failed" xml:space="preserve"><value>Ön başvuru incelemeye gönderilemedi. Lütfen tekrar deneyin.</value></data>
-  <data name="Layout.ChangePassword" xml:space="preserve"><value>Şifremi değiştir</value></data>
-  <data name="Layout.NewPassword" xml:space="preserve"><value>Yeni şifre</value></data>
-  <data name="Layout.NewPasswordAgain" xml:space="preserve"><value>Yeni şifre tekrar</value></data>
-  <data name="Layout.PasswordRule" xml:space="preserve"><value>Şifre en az 8 karakter olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir.</value></data>
-  <data name="Layout.Close" xml:space="preserve"><value>Kapat</value></data>
-  <data name="Layout.Cancel" xml:space="preserve"><value>İptal</value></data>
-  <data name="Layout.Save" xml:space="preserve"><value>Kaydet</value></data>
-  <data name="Kullanici.ChangePassword.SessionInvalid" xml:space="preserve"><value>Oturum bilgisi geçersiz. Lütfen yeniden giriş yapın.</value></data>
-  <data name="Kullanici.ChangePassword.Success" xml:space="preserve"><value>Şifreniz başarıyla değiştirildi.</value></data>
-  <data name="Kullanici.ChangePassword.Failed" xml:space="preserve"><value>Şifre değiştirilemedi. Lütfen tekrar deneyin.</value></data>
+  <data name="Layout.ThemeSelection" xml:space="preserve">
+    <value>Tema Seçimi</value>
+  </data>
+  <data name="Layout.Theme.Navy" xml:space="preserve">
+    <value>Lacivert</value>
+  </data>
+  <data name="Layout.Theme.Green" xml:space="preserve">
+    <value>Yeşil</value>
+  </data>
+  <data name="Layout.Theme.Blue" xml:space="preserve">
+    <value>Mavi</value>
+  </data>
+  <data name="Layout.Theme.Light" xml:space="preserve">
+    <value>Açık</value>
+  </data>
+  <data name="Layout.Logout" xml:space="preserve">
+    <value>Çıkış</value>
+  </data>
+  <data name="Basvuru.Summary.SubmitButton" xml:space="preserve">
+    <value>Ön Başvuruyu İncelemeye Gönder</value>
+  </data>
+  <data name="Basvuru.Summary.SubmitConfirm" xml:space="preserve">
+    <value>Ön başvuruyu incelemeye göndermek istediğinize emin misiniz? Gönderimden sonra bilgiler değiştirilemez.</value>
+  </data>
+  <data name="Basvuru.Summary.SubmittedReadonly" xml:space="preserve">
+    <value>Ön başvuru incelemeye gönderildi. Başvuru artık salt okunur durumdadır.</value>
+  </data>
+  <data name="Business.Application.Submit.AlreadySubmitted" xml:space="preserve">
+    <value>Ön başvuru daha önce gönderilmiş veya artık düzenlenebilir durumda değil.</value>
+  </data>
+  <data name="Business.Application.Submit.Success" xml:space="preserve">
+    <value>Ön başvuru incelemeye başarıyla gönderildi.</value>
+  </data>
+  <data name="Business.Application.Submit.Failed" xml:space="preserve">
+    <value>Ön başvuru incelemeye gönderilemedi. Lütfen tekrar deneyin.</value>
+  </data>
+  <data name="Layout.ChangePassword" xml:space="preserve">
+    <value>Şifremi değiştir</value>
+  </data>
+  <data name="Layout.NewPassword" xml:space="preserve">
+    <value>Yeni şifre</value>
+  </data>
+  <data name="Layout.NewPasswordAgain" xml:space="preserve">
+    <value>Yeni şifre tekrar</value>
+  </data>
+  <data name="Layout.PasswordRule" xml:space="preserve">
+    <value>Şifre en az 8 karakter olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir.</value>
+  </data>
+  <data name="Layout.Close" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="Layout.Cancel" xml:space="preserve">
+    <value>İptal</value>
+  </data>
+  <data name="Layout.Save" xml:space="preserve">
+    <value>Kaydet</value>
+  </data>
+  <data name="Kullanici.ChangePassword.SessionInvalid" xml:space="preserve">
+    <value>Oturum bilgisi geçersiz. Lütfen yeniden giriş yapın.</value>
+  </data>
+  <data name="Kullanici.ChangePassword.Success" xml:space="preserve">
+    <value>Şifreniz başarıyla değiştirildi.</value>
+  </data>
+  <data name="Kullanici.ChangePassword.Failed" xml:space="preserve">
+    <value>Şifre değiştirilemedi. Lütfen tekrar deneyin.</value>
+  </data>
   <data name="YeniKullanici.Title" xml:space="preserve">
     <value>Yeni Kullanıcı</value>
   </data>
@@ -703,23 +747,51 @@
   <data name="Basvuru.Field.DigerFinansmanKaynaklariAciklama" xml:space="preserve">
     <value>Diğer finansman kaynakları açıklaması</value>
   </data>
-  <data name="Basvuru.Finance.RateLimitError" xml:space="preserve"><value>Talep edilen finansman oranı dönem için tanımlanan %{0} oranını aşamaz.</value></data>
-  <data name="Basvuru.Finance.RateLimitExceeded" xml:space="preserve"><value>Talep edilen finansman oranı dönem için tanımlanan oranı aşamaz.</value></data>
-  <data name="Basvuru.Field.TalepEdilenFinansmanTutari" xml:space="preserve"><value>Talep edilen finansman tutarı (USD)</value></data>
-  <data name="Basvuru.Field.OzKaynakTutari" xml:space="preserve"><value>Öz kaynak tutarı (USD)</value></data>
-  <data name="Basvuru.Field.YatirimSuresiAy" xml:space="preserve"><value>Yatırım süresi (ay)</value></data>
-  <data name="Basvuru.Field.OdemeSuresiAy" xml:space="preserve"><value>Ödeme süresi (ay) / taksit sayısı</value></data>
-  <data name="Basvuru.Finance.InvestmentDurationHelp" xml:space="preserve"><value>Yatırım süresi: sözleşme imza tarihinden faydalanıcının yatırımıyla ilgili tüm faaliyetleri tamamladığı ve son ödemesini aldığı tarih arasındaki sürenin ay olarak karşılığıdır.</value></data>
-  <data name="Basvuru.Finance.GracePeriod24Help" xml:space="preserve"><value>Geri ödemesiz dönem, sözleşme imzasından itibaren 24 ayı geçemez.</value></data>
-  <data name="Basvuru.Finance.GracePeriod12Help" xml:space="preserve"><value>Geri ödemesiz dönem, yatırımın tamamlanmasının ardından 12 ayı geçemez.</value></data>
-  <data name="Basvuru.Finance.InvestmentDurationRequired" xml:space="preserve"><value>Yatırım süresi ay olarak girilmelidir.</value></data>
-  <data name="Basvuru.Finance.PaymentDurationRequired" xml:space="preserve"><value>Ödeme süresi sıfırdan büyük olmalıdır.</value></data>
+  <data name="Basvuru.Finance.RateLimitError" xml:space="preserve">
+    <value>Talep edilen finansman oranı dönem için tanımlanan %{0} oranını aşamaz.</value>
+  </data>
+  <data name="Basvuru.Finance.RateLimitExceeded" xml:space="preserve">
+    <value>Talep edilen finansman oranı dönem için tanımlanan oranı aşamaz.</value>
+  </data>
+  <data name="Basvuru.Field.TalepEdilenFinansmanTutari" xml:space="preserve">
+    <value>Talep edilen finansman tutarı (USD)</value>
+  </data>
+  <data name="Basvuru.Field.OzKaynakTutari" xml:space="preserve">
+    <value>Öz kaynak tutarı (USD)</value>
+  </data>
+  <data name="Basvuru.Field.YatirimSuresiAy" xml:space="preserve">
+    <value>Yatırım süresi (ay)</value>
+  </data>
+  <data name="Basvuru.Field.OdemeSuresiAy" xml:space="preserve">
+    <value>Ödeme süresi (ay) / taksit sayısı</value>
+  </data>
+  <data name="Basvuru.Finance.InvestmentDurationHelp" xml:space="preserve">
+    <value>Yatırım süresi: sözleşme imza tarihinden faydalanıcının yatırımıyla ilgili tüm faaliyetleri tamamladığı ve son ödemesini aldığı tarih arasındaki sürenin ay olarak karşılığıdır.</value>
+  </data>
+  <data name="Basvuru.Finance.GracePeriod24Help" xml:space="preserve">
+    <value>Geri ödemesiz dönem, sözleşme imzasından itibaren 24 ayı geçemez.</value>
+  </data>
+  <data name="Basvuru.Finance.GracePeriod12Help" xml:space="preserve">
+    <value>Geri ödemesiz dönem, yatırımın tamamlanmasının ardından 12 ayı geçemez.</value>
+  </data>
+  <data name="Basvuru.Finance.InvestmentDurationRequired" xml:space="preserve">
+    <value>Yatırım süresi ay olarak girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Finance.PaymentDurationRequired" xml:space="preserve">
+    <value>Ödeme süresi sıfırdan büyük olmalıdır.</value>
+  </data>
   <data name="Basvuru.Field.YatiriminAmaci" xml:space="preserve">
     <value>Yatırımın amacı</value>
   </data>
-  <data name="Basvuru.Field.YatirimFaaliyetleri" xml:space="preserve"><value>Yatırım faaliyetleri</value></data>
-  <data name="Basvuru.Field.YatirimGirdileri" xml:space="preserve"><value>Yatırım girdileri</value></data>
-  <data name="Basvuru.Field.YatirimCiktilari" xml:space="preserve"><value>Yatırım çıktıları</value></data>
+  <data name="Basvuru.Field.YatirimFaaliyetleri" xml:space="preserve">
+    <value>Yatırım faaliyetleri</value>
+  </data>
+  <data name="Basvuru.Field.YatirimGirdileri" xml:space="preserve">
+    <value>Yatırım girdileri</value>
+  </data>
+  <data name="Basvuru.Field.YatirimCiktilari" xml:space="preserve">
+    <value>Yatırım çıktıları</value>
+  </data>
   <data name="Basvuru.Field.OncekiYilNetSatis" xml:space="preserve">
     <value>Önceki yıl net satış hasılatı (TL)</value>
   </data>
@@ -1386,435 +1458,1320 @@
   <data name="Basvuru.Documents.Required.7" xml:space="preserve">
     <value>Noter onaylı imza sirküleri</value>
   </data>
-  <data name="Basvuru.Common.SaveAndContinue" xml:space="preserve"><value>Kaydet ve Devam Et</value></data>
-  <data name="Basvuru.Common.Continue" xml:space="preserve"><value>Devam Et</value></data>
-  <data name="Basvuru.Documents.RequiredSeparateDescription" xml:space="preserve"><value>Zorunlu belgeler ayrı dosyalar olarak yüklenecektir. Adli sicil kaydı kişi bazında eklenir ve kişi kaydedildikten sonra dosyası yüklenir.</value></data>
-  <data name="Basvuru.Documents.CriminalRecordTitle" xml:space="preserve"><value>Adli Sicil Kaydı (Temsil ve ilzama yetkili kişiler, yönetim kurulu üyeleri veya adli sicil kontrolüne tabi ek kişiler)</value></data>
-  <data name="Basvuru.Documents.AddPerson" xml:space="preserve"><value>+ Kişi ekle</value></data>
-  <data name="Basvuru.Documents.RequiredDocumentsTitle" xml:space="preserve"><value>Zorunlu belgeler</value></data>
-  <data name="Basvuru.Documents.FileType" xml:space="preserve"><value>Dosya Türü</value></data>
-  <data name="Basvuru.Documents.FileName" xml:space="preserve"><value>Dosya Adı</value></data>
-  <data name="Basvuru.Documents.Upload" xml:space="preserve"><value>Yükle</value></data>
-  <data name="Basvuru.CevreselSosyal.Title" xml:space="preserve"><value>10. Çevresel ve Sosyal Veri Formu</value></data>
-  <data name="Basvuru.CevreselSosyal.Description" xml:space="preserve"><value>Yeni Ek V soru setine göre düzenlenmiştir. Form, yatırımın niteliğine göre sadece ilgili alanları açar; dokümandaki gri/kapsam dışı hücreler kullanıcıya gösterilmez.</value></data>
-  <data name="Basvuru.CevreselSosyal.ScopeQuestion" xml:space="preserve"><value>Başvuru konusu yatırım aşağıdakilerden hangisini kapsamaktadır?</value></data>
-  <data name="Basvuru.CevreselSosyal.Scope.Existing" xml:space="preserve"><value>Mevcut tesisin modernizasyonu</value></data>
-  <data name="Basvuru.CevreselSosyal.Scope.Planned" xml:space="preserve"><value>Yeni tesis</value></data>
-  <data name="Basvuru.CevreselSosyal.Scope.Both" xml:space="preserve"><value>Her ikisi</value></data>
-  <data name="Basvuru.CevreselSosyal.ScopeNote" xml:space="preserve"><value>Seçime göre Mevcut İşletme ve/veya Planlanan Yatırım alanları açılır. Soru yalnızca planlanan yatırıma ilişkinse mevcut işletme alanı gösterilmez.</value></data>
-  <data name="Basvuru.CevreselSosyal.Declaration" xml:space="preserve"><value>İşbu formda sunulan bilgilerin doğru, eksiksiz ve mevcut saha koşullarıyla ve/veya yeni yatırımlar için onaylı proje tasarım parametreleriyle uyumlu olduğunu; yatırımın uygulama ve işletme dönemlerinde Türkiye Cumhuriyeti mevzuatına ve Dünya Bankası Çevresel ve Sosyal Çerçeve standartlarına uyacağımı kabul, beyan ve taahhüt ederim. Gerçeğe aykırı beyan veya uyumsuzluk tespitinde düzeltici faaliyet, kredi desteğinin askıya alınması veya alt projenin sonlandırılması gündeme gelebilir.</value></data>
-  <data name="Basvuru.YatirimOzeti.Description" xml:space="preserve"><value>Bu bölüm yatırım bütçesi, üretim-satış bilgileri ve tam kapasitede yıllık işletme giderleri adım adım girilecek şekilde tasarlanmıştır.</value></data>
-  <data name="Basvuru.YatirimOzeti.Card.InvestmentBudget" xml:space="preserve"><value>Toplam yatırım bütçesi</value></data>
-  <data name="Basvuru.YatirimOzeti.Card.FinanceTotal" xml:space="preserve"><value>Finansman kaynakları toplamı</value></data>
-  <data name="Basvuru.YatirimOzeti.Card.FinanceGap" xml:space="preserve"><value>Finansman farkı</value></data>
-  <data name="Basvuru.YatirimOzeti.Card.AnnualOperatingExpense" xml:space="preserve"><value>Yıllık işletme gideri</value></data>
-  <data name="Basvuru.YatirimOzeti.Section.Budget" xml:space="preserve"><value>A. Toplam Yatırım Bütçesi ve Finansman Kaynakları</value></data>
-  <data name="Basvuru.YatirimOzeti.Section.BudgetNote" xml:space="preserve"><value>Tutarlar TL olarak girilir. Satır toplamları, yatırım toplamı, finansman kaynakları toplamı ve fark otomatik hesaplanır.</value></data>
-  <data name="Basvuru.YatirimOzeti.Section.Production" xml:space="preserve"><value>B. Üretim ve Satış Bilgileri</value></data>
-  <data name="Basvuru.YatirimOzeti.Section.ProductionNote" xml:space="preserve"><value>Her ürün/ürün grubu için birim, mevcut durum ve 1-10. yıl projeksiyonları girilir.</value></data>
-  <data name="Basvuru.YatirimOzeti.AddProduct" xml:space="preserve"><value>+ Ürün/ürün grubu ekle</value></data>
-  <data name="Basvuru.YatirimOzeti.Section.Expense" xml:space="preserve"><value>C. Tam Kapasitede Yıllık İşletme Giderleri</value></data>
-  <data name="Basvuru.YatirimOzeti.Section.ExpenseNote" xml:space="preserve"><value>Gider unsuru, miktar, birim fiyat, sabit/değişken oranları ve tutarlar sistem içinde hesaplanır.</value></data>
-  <data name="Basvuru.YatirimOzeti.LoadDefaultExpenses" xml:space="preserve"><value>Varsayılan gider başlıklarını yükle</value></data>
-  <data name="Basvuru.YatirimOzeti.AddExpense" xml:space="preserve"><value>+ İşletme gideri satırı ekle</value></data>
-  <data name="Basvuru.Summary.Lead" xml:space="preserve"><value>Başvuru gönderilmeden önce sistem kontrolleri.</value></data>
-  <data name="Basvuru.Summary.Card.TradeTitle" xml:space="preserve"><value>Ticaret unvanı</value></data>
-  <data name="Basvuru.Summary.Card.Investment" xml:space="preserve"><value>Yatırım</value></data>
-  <data name="Basvuru.Summary.Card.ValueChain" xml:space="preserve"><value>Değer Zinciri</value></data>
-  <data name="Basvuru.Summary.Card.FinancialScale" xml:space="preserve"><value>Mali Ölçek</value></data>
-  <data name="Basvuru.Summary.Suitable" xml:space="preserve"><value>Uygun</value></data>
-  <data name="Basvuru.Summary.NotSuitable" xml:space="preserve"><value>Uygun değil</value></data>
-  <data name="Basvuru.Summary.CheckResultTitle" xml:space="preserve"><value>Ön Kontrol Sonucu</value></data>
-  <data name="Basvuru.Summary.SuccessStrong" xml:space="preserve"><value>Ön kontrol başarıyla tamamlandı.</value></data>
-  <data name="Basvuru.Summary.SuccessText" xml:space="preserve"><value>Başvuru gönderime hazır görünüyor.</value></data>
-  <data name="Basvuru.Summary.MissingFieldsTitle" xml:space="preserve"><value>Eksik/Hatalı Alanlar</value></data>
-  <data name="Basvuru.Summary.DetailTitle" xml:space="preserve"><value>Başvuru Özeti</value></data>
-  <data name="Basvuru.Summary.Detail.TaxNo" xml:space="preserve"><value>Vergi kimlik no:</value></data>
-  <data name="Basvuru.Summary.Detail.MersisNo" xml:space="preserve"><value>MERSİS no:</value></data>
-  <data name="Basvuru.Summary.Detail.InvestmentProvince" xml:space="preserve"><value>Yatırım ili:</value></data>
-  <data name="Basvuru.Summary.Detail.InvestmentType" xml:space="preserve"><value>Yatırım türü:</value></data>
-  <data name="Basvuru.Summary.Detail.SelectedStages" xml:space="preserve"><value>Seçilen aşamalar:</value></data>
-  <data name="Basvuru.Summary.Detail.ApplicantLastNetSales" xml:space="preserve"><value>Başvuru sahibi son yıl net satış hasılatı:</value></data>
-  <data name="Basvuru.Summary.Detail.ApplicantLastAssets" xml:space="preserve"><value>Başvuru sahibi son yıl aktif toplamı:</value></data>
-  <data name="Basvuru.Summary.Detail.ControlLastNetSales" xml:space="preserve"><value>Kontrole esas son yıl net satış hasılatı:</value></data>
-  <data name="Basvuru.Summary.Detail.ControlLastAssets" xml:space="preserve"><value>Kontrole esas son yıl aktif toplamı:</value></data>
-  <data name="Basvuru.Summary.Detail.InvestmentBudget" xml:space="preserve"><value>Yatırım özeti toplam yatırım bütçesi:</value></data>
-  <data name="Basvuru.Summary.Detail.FinanceTotal" xml:space="preserve"><value>Finansman kaynakları toplamı:</value></data>
-  <data name="Basvuru.Summary.Detail.AnnualOperatingExpense" xml:space="preserve"><value>Tam kapasitede yıllık işletme gideri:</value></data>
-  <data name="Basvuru.Summary.Detail.AuditSubject" xml:space="preserve"><value>Bağımsız denetime tabi mi?:</value></data>
-  <data name="Basvuru.Summary.Detail.EsfScope" xml:space="preserve"><value>Çevresel-sosyal yatırım kapsamı:</value></data>
-  <data name="Basvuru.Summary.Detail.EsfExclusion" xml:space="preserve"><value>Kapsam dışı faaliyet beyanı:</value></data>
-  <data name="Basvuru.Summary.Detail.ShareTotal" xml:space="preserve"><value>Ortaklık pay toplamı:</value></data>
-  <data name="Basvuru.Summary.Detail.PrivateShare" xml:space="preserve"><value>Özel sektör payı:</value></data>
-  <data name="Basvuru.Summary.Error.PeriodRequired" xml:space="preserve"><value>Başvuru dönemi seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.ProvinceRequired" xml:space="preserve"><value>Başvuru ili seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.CompanyRequired" xml:space="preserve"><value>Firma seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.ContactPersonRequired" xml:space="preserve"><value>İletişim kişisi girilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.ContactPhoneRequired" xml:space="preserve"><value>İrtibat telefonu girilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.ActiveTwoYearsRequired" xml:space="preserve"><value>Son 2 yıldır faal mi seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.ApplicantTypeRequired" xml:space="preserve"><value>Başvuru sahibi türü seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.LegalTypeRequired" xml:space="preserve"><value>Hukuki tür / şirket türü seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.InvestmentNameRequired" xml:space="preserve"><value>Yatırım adı girilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.InvestmentTypeRequired" xml:space="preserve"><value>Yatırım türü seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.InvestmentAddressRequired" xml:space="preserve"><value>En az bir yatırım uygulama yeri girilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.ExpenseTypeRequired" xml:space="preserve"><value>En az bir talep edilen harcama türü seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.InvestmentPurposeRequired" xml:space="preserve"><value>Yatırımın amacı girilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.InvestmentActivitiesRequired" xml:space="preserve"><value>Yatırım faaliyetleri girilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.InvestmentInputsRequired" xml:space="preserve"><value>Yatırım girdileri girilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.InvestmentOutputsRequired" xml:space="preserve"><value>Yatırım çıktıları girilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.ValueChainRequired" xml:space="preserve"><value>Değer zinciri seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.ValueChainStageRequired" xml:space="preserve"><value>En az bir değer zinciri aşaması seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.FinancialScaleRequired" xml:space="preserve"><value>Mali ölçek kontrolü uygun olmalıdır.</value></data>
-  <data name="Basvuru.Summary.Error.AuditChoiceRequired" xml:space="preserve"><value>Bağımsız denetime tabi mi seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.AuditFileRequired" xml:space="preserve"><value>Bağımsız denetim raporu yüklenmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.RelatedEnterpriseRequired" xml:space="preserve"><value>Bağlı/ortak işletme ilişkisi seçilmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.ShareTotalRequired" xml:space="preserve"><value>Ortaklık pay oranları toplamı %100 olmalıdır.</value></data>
-  <data name="Basvuru.Summary.Error.PikkRequired" xml:space="preserve"><value>Uygun harcama ön listesi doldurulmalıdır.</value></data>
-  <data name="Basvuru.Summary.Error.InvestmentSummaryRequired" xml:space="preserve"><value>Yatırım özeti tablosu doldurulmalıdır.</value></data>
-  <data name="Basvuru.Summary.Error.RequiredDocumentsRequired" xml:space="preserve"><value>Zorunlu belgelerin tamamı yüklenmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.CriminalPeopleRequired" xml:space="preserve"><value>Adli sicil kontrolüne tabi kişi listesi oluşturulmalıdır.</value></data>
-  <data name="Basvuru.Summary.Error.CriminalFilesRequired" xml:space="preserve"><value>Adli sicil kontrolüne tabi kişilerin adli sicil dosyaları yüklenmelidir.</value></data>
-  <data name="Basvuru.Summary.Error.EsfRequired" xml:space="preserve"><value>Çevresel ve Sosyal Veri Formu doldurulmalıdır.</value></data>
-  <data name="Basvuru.Summary.Error.EsfExclusion" xml:space="preserve"><value>Çevresel-sosyal kapsam dışı faaliyet beyanı Evet olarak işaretlenmiştir.</value></data>
-  <data name="Basvuru.Summary.Error.CommitmentRequired" xml:space="preserve"><value>Taahhüt / Beyanlar dokümanı yüklenmelidir.</value></data>
-  <data name="Basvuru.Common.Back" xml:space="preserve"><value>Geri</value></data>
-  <data name="Basvuru.Common.Download" xml:space="preserve"><value>İndir</value></data>
-  <data name="Basvuru.Common.RowNo" xml:space="preserve"><value>Sıra</value></data>
-  <data name="Basvuru.Applicant.PeriodProvinceTitle" xml:space="preserve"><value>Başvuru Dönemi ve İli</value></data>
-  <data name="Basvuru.Applicant.Description" xml:space="preserve"><value>Kimlik, iletişim, faaliyet ve hukuki tür bilgileri.</value></data>
-  <data name="Basvuru.Field.HukukiTurSirketTuru" xml:space="preserve"><value>Hukuki tür / şirket türü</value></data>
-  <data name="Basvuru.Field.TemsilIlzamKisilerReadonly" xml:space="preserve"><value>Temsil ve ilzama yetkili kişi(ler)</value></data>
-  <data name="Basvuru.Field.YonetimKuruluAdliSicilKisilerReadonly" xml:space="preserve"><value>Yönetim kurulu üyeleri / adli sicil kontrolüne tabi ek kişiler</value></data>
-  <data name="Basvuru.Placeholder.TemsilIlzamFromCriminalRecord" xml:space="preserve"><value>Adli sicil bölümüne girilen temsil ve ilzama yetkili kişilerden üretilir.</value></data>
-  <data name="Basvuru.Placeholder.BoardMembersFromCriminalRecord" xml:space="preserve"><value>Adli sicil bölümüne girilen yönetim kurulu üyeleri ve adli sicil kontrolüne tabi ek kişilerden üretilir.</value></data>
-  <data name="Basvuru.Criminal.ModalTitle" xml:space="preserve"><value>Adli sicil kontrol kişisi</value></data>
-  <data name="Basvuru.Criminal.Role" xml:space="preserve"><value>Görev</value></data>
-  <data name="Basvuru.Criminal.RoleOptions" xml:space="preserve"><value>Şirket Ortağı|Temsil ve ilzama yetkili|Yönetim kurulu üye|Adli Sicil Kontrolüne Tabi Ek Kişi</value></data>
-  <data name="Basvuru.Criminal.Upload" xml:space="preserve"><value>Adli sicil kaydı yükle</value></data>
-  <data name="Basvuru.Criminal.FileMissing" xml:space="preserve"><value>Adli sicil kaydı yüklü değil, yükleyiniz</value></data>
-  <data name="Basvuru.Criminal.SavePersonFirst" xml:space="preserve"><value>Adli sicil kaydı yüklemek için önce kişiyi kaydedin.</value></data>
-  <data name="Basvuru.Criminal.RequiredFields" xml:space="preserve"><value>TCKN, ad, soyad ve görev girilmelidir.</value></data>
-  <data name="Basvuru.Criminal.DuplicateTckn" xml:space="preserve"><value>Aynı TCKN ile iki adli sicil kişisi kaydedilemez.</value></data>
-  <data name="Basvuru.Criminal.Empty" xml:space="preserve"><value>Adli sicil kontrol kişisi eklenmedi.</value></data>
-  <data name="Basvuru.Criminal.FileColumn" xml:space="preserve"><value>Adli sicil kaydı</value></data>
-  <data name="Basvuru.Field.Tckn" xml:space="preserve"><value>TCKN</value></data>
-  <data name="Basvuru.Field.TcknVkn" xml:space="preserve"><value>TCKN / VKN</value></data>
-  <data name="Basvuru.Field.Ad" xml:space="preserve"><value>Ad</value></data>
-  <data name="Basvuru.Field.Soyad" xml:space="preserve"><value>Soyad</value></data>
-  <data name="Basvuru.Esf.SelectInvestmentScopeFirst" xml:space="preserve"><value>Lütfen yatırımın mevcut tesis modernizasyonu, yeni tesis veya her ikisi olduğunu seçiniz.</value></data>
-  <data name="Basvuru.Esf.OpenedBySelection" xml:space="preserve"><value>Form seçiminize göre açılmıştır. Dokümanda gri bırakılan ve seçiminizle ilgili olmayan alanlar gösterilmez.</value></data>
-  <data name="Basvuru.Esf.ShowHideList" xml:space="preserve"><value>Listeyi göster / gizle</value></data>
-  <data name="Basvuru.Esf.InfoLabel" xml:space="preserve"><value>Bilgilendirme:</value></data>
-  <data name="Basvuru.Esf.InformativeNote" xml:space="preserve"><value>Bilgilendirici Not:</value></data>
-  <data name="Basvuru.Esf.PlannedOnlyNote" xml:space="preserve"><value>Bu soru yalnızca planlanan yatırıma ilişkindir; mevcut işletme alanı dokümanda gri olduğu için açılmamıştır.</value></data>
-  <data name="Basvuru.Esf.GlobalContext" xml:space="preserve"><value>Genel Beyan / Proje Bilgisi</value></data>
-  <data name="Basvuru.Esf.ExistingContext" xml:space="preserve"><value>Mevcut İşletme/Tesis</value></data>
-  <data name="Basvuru.Esf.PlannedContext" xml:space="preserve"><value>Planlanan Yatırım</value></data>
-  <data name="Basvuru.Esf.Placeholder.Explain" xml:space="preserve"><value>Açıklama giriniz</value></data>
-  <data name="Basvuru.Esf.Placeholder.Text" xml:space="preserve"><value>Bilgi giriniz</value></data>
-  <data name="Basvuru.Esf.Placeholder.Document" xml:space="preserve"><value>Belge adı / yüklenen destekleyici belge</value></data>
-  <data name="Basvuru.Esf.ExclusionWarning" xml:space="preserve"><value>Kapsam dışı faaliyet uyarısı: Bu cevap, yatırımın uygunluk açısından olumsuz değerlendirilmesine neden olabilir.</value></data>
-  <data name="Business.Session.Expired" xml:space="preserve"><value>Oturum süresi doldu.</value></data>
-  <data name="Business.User.InfoMissing" xml:space="preserve"><value>Kullanıcı bilgisi gelmedi.</value></data>
-  <data name="Business.User.NotFoundOrPassive" xml:space="preserve"><value>Kullanıcı bulunamadı veya pasif.</value></data>
-  <data name="Business.User.CreateFailed" xml:space="preserve"><value>Kullanıcı kaydı oluşturulamadı.</value></data>
-  <data name="Business.User.NotFound" xml:space="preserve"><value>Kullanıcı bulunamadı.</value></data>
-  <data name="Business.User.InvalidCredentials" xml:space="preserve"><value>Kullanıcı kodu veya şifre hatalı.</value></data>
-  <data name="Business.User.ReadFailed" xml:space="preserve"><value>Kullanıcı bilgileri okunamadı.</value></data>
-  <data name="Business.User.TestActiveUserNotFound" xml:space="preserve"><value>Test girişi için aktif kullanıcı bulunamadı.</value></data>
-  <data name="Business.User.TestUserReadFailed" xml:space="preserve"><value>Test girişi için kullanıcı okunamadı.</value></data>
-  <data name="Business.User.SimilarRecordExists" xml:space="preserve"><value>Benzer bir kullanıcı kaydı bulunduğu için kayıt yapılamaz.</value></data>
-  <data name="Business.Database.ConnectionSettingMissing" xml:space="preserve"><value>Veritabanı bağlantı ayarı bulunamadı.</value></data>
-  <data name="Business.Query.InfoRequired" xml:space="preserve"><value>Sorgulama bilgisi verilmelidir.</value></data>
-  <data name="Business.Company.NotFound" xml:space="preserve"><value>Firma bulunamadı.</value></data>
-  <data name="Business.Company.UserNotRelated" xml:space="preserve"><value>Bu firma kullanıcı ile ilişkili değil.</value></data>
-  <data name="Business.Company.ExistsButUserNotRelated" xml:space="preserve"><value>Firma sistemde var fakat kullanıcı ile ilişkili değil.</value></data>
-  <data name="Business.Company.SaveFailed" xml:space="preserve"><value>Firma kaydedilemedi.</value></data>
-  <data name="Business.Application.NotFound" xml:space="preserve"><value>Başvuru bulunamadı.</value></data>
-  <data name="Business.Application.ViewUnauthorized" xml:space="preserve"><value>Bu başvuruyu görüntüleme yetkiniz yok.</value></data>
-  <data name="Business.Application.RecordRequired" xml:space="preserve"><value>Başvuru kaydı seçilmelidir.</value></data>
-  <data name="Business.Application.NotFoundOrUnauthorized" xml:space="preserve"><value>Başvuru kaydı bulunamadı veya bu işlem için yetkiniz yok.</value></data>
-  <data name="Business.Application.CompanyUserNotRelated" xml:space="preserve"><value>Başvurunun firması ile kullanıcı ilişkili değil.</value></data>
-  <data name="Business.Application.ApplicantInfoRequired" xml:space="preserve"><value>Başvuru sahibi bilgileri gönderilmelidir.</value></data>
-  <data name="Business.Application.FileFormUndefined" xml:space="preserve"><value>Dosya formu tanımlı değildir.</value></data>
-  <data name="Business.Application.FileTypeRequired" xml:space="preserve"><value>Dosya türü seçilmelidir.</value></data>
-  <data name="Business.Application.FileTypeUndefined" xml:space="preserve"><value>Dosya türü tanımlı değildir.</value></data>
-  <data name="Business.Application.UboKycDocument" xml:space="preserve"><value>UBO-KYC belgesi</value></data>
-  <data name="Business.Application.UboKycPartnerRequired" xml:space="preserve"><value>UBO-KYC belgesi yüklemek için ortak önce kaydedilmelidir.</value></data>
-  <data name="Business.Application.CriminalPersonRequiredBeforeUpload" xml:space="preserve"><value>Adli sicil kaydı yüklemek için kişi önce kaydedilmelidir.</value></data>
-  <data name="Business.Application.DocumentDescriptionRequired" xml:space="preserve"><value>Belge açıklaması girilmelidir.</value></data>
-  <data name="Business.Application.DocumentPackageUploaded" xml:space="preserve"><value>Doküman paketi yüklendi.</value></data>
-  <data name="Business.Application.CommitmentFileUploaded" xml:space="preserve"><value>Taahhüt dosyası yüklendi.</value></data>
-  <data name="Business.Application.AuditFileUploaded" xml:space="preserve"><value>Bağımsız denetim dosyası yüklendi.</value></data>
-  <data name="Business.File.ModuleCodeRequired" xml:space="preserve"><value>Modül kodu zorunludur.</value></data>
-  <data name="Business.File.ViewFilesUnauthorized" xml:space="preserve"><value>Dosyaları görüntüleme yetkiniz yok.</value></data>
-  <data name="Business.File.ViewFileUnauthorized" xml:space="preserve"><value>Dosyayı görüntüleme yetkiniz yok.</value></data>
-  <data name="Business.File.ListReadFailed" xml:space="preserve"><value>Dosya listesi okunamadı.</value></data>
-  <data name="Business.File.ReadFailed" xml:space="preserve"><value>Dosya okunamadı.</value></data>
-  <data name="Business.File.FileRequired" xml:space="preserve"><value>Dosya seçilmelidir.</value></data>
-  <data name="Business.File.NotFound" xml:space="preserve"><value>Dosya bulunamadı.</value></data>
-  <data name="Business.File.AddUnauthorized" xml:space="preserve"><value>Dosya ekleme yetkiniz yok.</value></data>
-  <data name="Business.File.UpdateUnauthorized" xml:space="preserve"><value>Dosya güncelleme yetkiniz yok.</value></data>
-  <data name="Business.File.DeleteUnauthorized" xml:space="preserve"><value>Dosya silme yetkiniz yok.</value></data>
-  <data name="Business.File.Added" xml:space="preserve"><value>Dosya eklendi.</value></data>
-  <data name="Business.File.Updated" xml:space="preserve"><value>Dosya güncellendi.</value></data>
-  <data name="Business.File.Uploaded" xml:space="preserve"><value>Dosya yüklendi.</value></data>
-  <data name="Business.File.Deleted" xml:space="preserve"><value>Dosya silindi.</value></data>
-  <data name="Business.File.SaveFailed" xml:space="preserve"><value>Dosya kaydedilemedi.</value></data>
-  <data name="Business.File.DeleteFailed" xml:space="preserve"><value>Dosya silinemedi.</value></data>
-  <data name="Business.File.ConnectionStringMissing" xml:space="preserve"><value>Dosya yönetimi bağlantı cümlesi tanımlı değil.</value></data>
-  <data name="Business.File.FormNameRequired" xml:space="preserve"><value>Form adı zorunludur.</value></data>
-  <data name="Business.File.FormKeyRequired" xml:space="preserve"><value>Form anahtarı zorunludur.</value></data>
-  <data name="Business.File.FileNoRequired" xml:space="preserve"><value>Dosya no zorunludur.</value></data>
-  <data name="Business.File.FileNoCannotBeNegative" xml:space="preserve"><value>Dosya no negatif olamaz.</value></data>
-  <data name="Business.File.FileNameRequired" xml:space="preserve"><value>Dosya adı zorunludur.</value></data>
-  <data name="Business.File.ContentRequired" xml:space="preserve"><value>Dosya içeriği zorunludur.</value></data>
-  <data name="Business.Pikk.EquipmentRowRequired" xml:space="preserve"><value>Makine-ekipman harcaması seçildiği için en az bir makine/ekipman satırında ad ve kullanım amacı girilmelidir.</value></data>
-  <data name="Business.Pikk.ConstructionRowRequired" xml:space="preserve"><value>Yapım işi harcaması seçildiği için en az bir bina/yapım işi satırında ad ve kullanım amacı girilmelidir.</value></data>
-  <data name="Business.Esf.AnswersReadFailed" xml:space="preserve"><value>Çevresel-sosyal anket cevapları okunamadı.</value></data>
-  <data name="Business.Esf.UnknownQuestion" xml:space="preserve"><value>Tanımsız çevresel-sosyal anket sorusu: {0}</value></data>
-  <data name="Business.Criminal.DuplicateTcknWithValue" xml:space="preserve"><value>{0} TCKN ile birden fazla adli sicil kişisi kaydedilemez.</value></data>
-  <data name="Business.Criminal.PeopleSaved" xml:space="preserve"><value>Adli sicil kişileri kaydedildi.</value></data>
-  <data name="Business.Address.DistrictNotInApplicationProvince" xml:space="preserve"><value>Seçilen ilçe başvuru iline ait değil veya pasif.</value></data>
-  <data name="Business.Address.NotFound" xml:space="preserve"><value>Adres kaydı bulunamadı.</value></data>
-  <data name="Business.Address.SaveFailed" xml:space="preserve"><value>Uygulama adresi kaydedilemedi.</value></data>
-  <data name="Business.Address.RecordRequired" xml:space="preserve"><value>Adres kaydı seçilmelidir.</value></data>
-  <data name="Business.Address.DeleteFailed" xml:space="preserve"><value>Uygulama adresi silinemedi.</value></data>
-  <data name="Business.Partnership.ApplicationRequiredBeforeSave" xml:space="preserve"><value>Başvuru kaydı oluşturulmadan ortaklık bilgileri kaydedilemez.</value></data>
-  <data name="Business.Partnership.SaveFailed" xml:space="preserve"><value>Ortaklık bilgileri kaydedilemedi.</value></data>
-  <data name="Business.Documents.PackageDeclarationRequired" xml:space="preserve"><value>Zorunlu belgelerin tamamının tek dokümanda yer aldığı beyan edilmelidir.</value></data>
-  <data name="Business.Documents.RequiredGroupsUndefined" xml:space="preserve"><value>Zorunlu belge grupları tanımlı değildir.</value></data>
-  <data name="Business.Documents.RequiredGroupsMustBeSent" xml:space="preserve"><value>Zorunlu belge grupları sunucuya gönderilmelidir.</value></data>
-  <data name="Business.Documents.RequiredGroupsMustBeChecked" xml:space="preserve"><value>Zorunlu belge gruplarının tamamı işaretlenmelidir.</value></data>
-  <data name="Başvuru kayıtları listelenemedi." xml:space="preserve"><value>Başvuru kayıtları listelenemedi.</value></data>
-  <data name="Kullanıcı bilgisi okunamadı." xml:space="preserve"><value>Kullanıcı bilgisi okunamadı.</value></data>
-  <data name="Başvuru dönemleri listelenemedi." xml:space="preserve"><value>Başvuru dönemleri listelenemedi.</value></data>
-  <data name="İl listesi okunamadı." xml:space="preserve"><value>İl listesi okunamadı.</value></data>
-  <data name="İlçe listesi okunamadı." xml:space="preserve"><value>İlçe listesi okunamadı.</value></data>
-  <data name="Değer zincirleri listelenemedi." xml:space="preserve"><value>Değer zincirleri listelenemedi.</value></data>
-  <data name="Değer zinciri aşamaları listelenemedi." xml:space="preserve"><value>Değer zinciri aşamaları listelenemedi.</value></data>
-  <data name="Başvuru kaydı okunamadı." xml:space="preserve"><value>Başvuru kaydı okunamadı.</value></data>
-  <data name="Firma sorgulanamadı." xml:space="preserve"><value>Firma sorgulanamadı.</value></data>
-  <data name="Firma kaydedilemedi." xml:space="preserve"><value>Firma kaydedilemedi.</value></data>
-  <data name="Başvuru kaydedilemedi." xml:space="preserve"><value>Başvuru kaydedilemedi.</value></data>
-  <data name="Ortaklık bilgileri kaydedilemedi." xml:space="preserve"><value>Ortaklık bilgileri kaydedilemedi.</value></data>
-  <data name="Ortak/pay sahibi bilgileri kaydedilemedi." xml:space="preserve"><value>Ortak/pay sahibi bilgileri kaydedilemedi.</value></data>
-  <data name="Başvuru dosyası kaydedilemedi." xml:space="preserve"><value>Başvuru dosyası kaydedilemedi.</value></data>
-  <data name="Adli sicil kişileri kaydedilemedi." xml:space="preserve"><value>Adli sicil kişileri kaydedilemedi.</value></data>
-  <data name="Doküman paketi kaydedilemedi." xml:space="preserve"><value>Doküman paketi kaydedilemedi.</value></data>
-  <data name="Taahhüt dosyası kaydedilemedi." xml:space="preserve"><value>Taahhüt dosyası kaydedilemedi.</value></data>
-  <data name="Bağımsız denetim dosyası kaydedilemedi." xml:space="preserve"><value>Bağımsız denetim dosyası kaydedilemedi.</value></data>
-  <data name="Dosya indirilemedi." xml:space="preserve"><value>Dosya indirilemedi.</value></data>
-  <data name="Uygulama adresi kaydedilemedi." xml:space="preserve"><value>Uygulama adresi kaydedilemedi.</value></data>
-  <data name="Uygulama adresi silinemedi." xml:space="preserve"><value>Uygulama adresi silinemedi.</value></data>
-  <data name="Basvuru.Ortaklik.Title" xml:space="preserve"><value>3. Ortaklık ve Yetki Bilgileri</value></data>
-  <data name="Basvuru.Ortaklik.Lead" xml:space="preserve"><value>Ortak/pay sahibi satırları üzerinden toplam pay oranı ve özel sektör payı sistem tarafından hesaplanır. Gerçek kişi ortaklar için mali veri istenmez; tüzel kişi ortaklar için mali veriler ayrıca alınır ve ortaklık payına göre mali ölçek kontrolüne dahil edilir.</value></data>
-  <data name="Basvuru.Ortaklik.PrivateShareCalculated" xml:space="preserve"><value>Özel sektör payı (%) - sistem hesaplar</value></data>
-  <data name="Basvuru.Ortaklik.PartnersTableTitle" xml:space="preserve"><value>Ortaklık yapısı detay tablosu</value></data>
-  <data name="Basvuru.Ortaklik.AddPartner" xml:space="preserve"><value>+ Ortak / pay sahibi ekle</value></data>
-  <data name="Basvuru.Ortaklik.RelatedEnterpriseTitle" xml:space="preserve"><value>Bağlı / Ortak İşletme Bilgileri</value></data>
-  <data name="Basvuru.Ortaklik.RelatedEnterpriseNote" xml:space="preserve"><value>Bağlı/ortak işletme ilişkisi ayrıca beyan edilmişse bu işletmeye ilişkin temel mali bilgiler ve belgeler de alınır. Tüzel kişi ortakların mali bilgileri ise yukarıdaki ortaklık tablosu üzerinden ayrıca hesaplamaya dahil edilir.</value></data>
-  <data name="Basvuru.Ortaklik.RelatedEnterpriseTitleField" xml:space="preserve"><value>Bağlı/ortak işletme unvanı</value></data>
-  <data name="Basvuru.Ortaklik.RelatedEnterpriseIdentityField" xml:space="preserve"><value>Bağlı/ortak işletme VKN/MERSİS</value></data>
-  <data name="Basvuru.Ortaklik.RelatedDocumentsTitle" xml:space="preserve"><value>Tüzel kişi ortak zorunlu belgeleri</value></data>
-  <data name="Basvuru.Mali.PreviousYear" xml:space="preserve"><value>Önceki Yıl</value></data>
-  <data name="Basvuru.Mali.LatestYear" xml:space="preserve"><value>Son Yıl</value></data>
-  <data name="Basvuru.Ortaklik.Modal.Title" xml:space="preserve"><value>Ortak / pay sahibi bilgisi</value></data>
-  <data name="Basvuru.Ortaklik.PartnerNameTitle" xml:space="preserve"><value>Ortak / pay sahibi adı-unvanı</value></data>
-  <data name="Basvuru.Ortaklik.Identity" xml:space="preserve"><value>TCKN / VKN</value></data>
-  <data name="Basvuru.Ortaklik.PersonType" xml:space="preserve"><value>Gerçek / tüzel kişi</value></data>
-  <data name="Basvuru.Ortaklik.NaturalPerson" xml:space="preserve"><value>Gerçek Kişi</value></data>
-  <data name="Basvuru.Ortaklik.LegalEntity" xml:space="preserve"><value>Tüzel Kişi</value></data>
-  <data name="Basvuru.Ortaklik.ShareRate" xml:space="preserve"><value>Pay oranı (%)</value></data>
-  <data name="Basvuru.Ortaklik.PrivatePublicType" xml:space="preserve"><value>Özel / kamu niteliği</value></data>
-  <data name="Basvuru.Ortaklik.PrivateSector" xml:space="preserve"><value>Özel</value></data>
-  <data name="Basvuru.Ortaklik.PublicSector" xml:space="preserve"><value>Kamu</value></data>
-  <data name="Basvuru.Ortaklik.BeneficialOwner" xml:space="preserve"><value>Nihai/gerçek faydalanıcı bilgisi</value></data>
-  <data name="Basvuru.Ortaklik.UboKycDocument" xml:space="preserve"><value>UBO-KYC belgesi</value></data>
-  <data name="Basvuru.Ortaklik.UboKycUpload" xml:space="preserve"><value>UBO-KYC belgesi yükle</value></data>
-  <data name="Basvuru.Ortaklik.UboKycMissing" xml:space="preserve"><value>UBO-KYC belgesi yüklü değil, yükleyiniz</value></data>
-  <data name="Basvuru.Ortaklik.UboKycSavePartnerFirst" xml:space="preserve"><value>UBO-KYC belgesi yüklemek için önce ortağı kaydedin.</value></data>
-  <data name="Basvuru.Ortaklik.LegalFinancialTitle" xml:space="preserve"><value>Tüzel kişi ortak mali verileri</value></data>
-  <data name="Basvuru.Ortaklik.IncludedRatePercent" xml:space="preserve"><value>Hesaba dahil oran (%)</value></data>
-  <data name="Basvuru.Ortaklik.NetSalesShort" xml:space="preserve"><value>net satış</value></data>
-  <data name="Basvuru.Ortaklik.AssetsShort" xml:space="preserve"><value>aktif</value></data>
-  <data name="Basvuru.Ortaklik.EmptyPartners" xml:space="preserve"><value>Ortak/pay sahibi eklenmedi.</value></data>
-  <data name="Basvuru.Ortaklik.TotalShareExceeded" xml:space="preserve"><value>Ortak/pay sahibi toplam pay oranı 100'ü geçemez.</value></data>
-  <data name="Basvuru.Ortaklik.TotalShareExpected" xml:space="preserve"><value>Toplam pay oranı: {0}%. Toplamın 100 olması beklenir.</value></data>
-  <data name="Basvuru.Ortaklik.PartnerColumn" xml:space="preserve"><value>Ortak / pay sahibi</value></data>
-  <data name="Basvuru.Ortaklik.IncludedRate" xml:space="preserve"><value>Hesaba dahil oran</value></data>
-  <data name="Basvuru.Ortaklik.RequiredNameIdentity" xml:space="preserve"><value>Ortak adı/unvanı ve TCKN/VKN girilmelidir.</value></data>
-  <data name="Basvuru.Ortaklik.DuplicateIdentity" xml:space="preserve"><value>Aynı TCKN/VKN ile iki ortak kaydedilemez.</value></data>
-  <data name="Basvuru.Ortaklik.LegalIncludedRateRequired" xml:space="preserve"><value>Tüzel kişi ortak için hesaba dahil oran girilmelidir.</value></data>
-  <data name="Basvuru.Ortaklik.NetSalesRevenue" xml:space="preserve"><value>net satış hasılatı</value></data>
-  <data name="Basvuru.Ortaklik.TotalAssets" xml:space="preserve"><value>aktif toplamı</value></data>
-  <data name="Basvuru.Ortaklik.RequiredEnter" xml:space="preserve"><value>{0} girilmelidir.</value></data>
-  <data name="Birim.Title" xml:space="preserve"><value>Birimler</value></data>
-  <data name="Birim.Heading" xml:space="preserve"><value>Birimler</value></data>
-  <data name="Birim.Description" xml:space="preserve"><value>Kullan&#305;c&#305; birimlerinin merkez/ta&#351;ra bilgisi, il kodu ve g&#246;r&#252;n&#252;m s&#305;ras&#305; buradan y&#246;netilir.</value></data>
-  <data name="Birim.Add" xml:space="preserve"><value>Birim Ekle</value></data>
-  <data name="Birim.Edit" xml:space="preserve"><value>D&#252;zenle</value></data>
-  <data name="Birim.Deactivate" xml:space="preserve"><value>Pasif Yap</value></data>
-  <data name="Birim.ConfirmDeactivate" xml:space="preserve"><value>Bu birim pasif yap&#305;ls&#305;n m&#305;?</value></data>
-  <data name="Birim.Modal.Title" xml:space="preserve"><value>Birim Bilgileri</value></data>
-  <data name="Birim.Field.Order" xml:space="preserve"><value>S&#305;ra No</value></data>
-  <data name="Birim.Field.Name" xml:space="preserve"><value>Birim Ad&#305;</value></data>
-  <data name="Birim.Field.Type" xml:space="preserve"><value>Birim T&#252;r&#252;</value></data>
-  <data name="Birim.Field.ProvinceCode" xml:space="preserve"><value>&#304;l Kodu</value></data>
-  <data name="Birim.Field.Province" xml:space="preserve"><value>&#304;l</value></data>
-  <data name="Birim.Field.Status" xml:space="preserve"><value>Durum</value></data>
-  <data name="Birim.Field.Action" xml:space="preserve"><value>&#304;&#351;lem</value></data>
-  <data name="Birim.Type.Center" xml:space="preserve"><value>Merkez</value></data>
-  <data name="Birim.Type.Provincial" xml:space="preserve"><value>Ta&#351;ra</value></data>
-  <data name="Birim.Status.Active" xml:space="preserve"><value>Aktif</value></data>
-  <data name="Birim.Status.Passive" xml:space="preserve"><value>Pasif</value></data>
-  <data name="Business.Authorization.SystemAdminRequired" xml:space="preserve"><value>Bu i&#351;lem i&#231;in sistem y&#246;neticisi yetkisi gerekir.</value></data>
-  <data name="Business.Unit.ListFailed" xml:space="preserve"><value>Birim listesi okunamad&#305;.</value></data>
-  <data name="Business.Unit.NotFound" xml:space="preserve"><value>Birim bulunamad&#305;.</value></data>
-  <data name="Business.Unit.Saved" xml:space="preserve"><value>Birim kaydedildi.</value></data>
-  <data name="Business.Unit.SaveFailed" xml:space="preserve"><value>Birim kaydedilemedi.</value></data>
-  <data name="Business.Unit.Deactivated" xml:space="preserve"><value>Birim pasif yap&#305;ld&#305;.</value></data>
-  <data name="Business.Unit.DeactivateFailed" xml:space="preserve"><value>Birim pasif yap&#305;lamad&#305;.</value></data>
-  <data name="Business.Unit.NameRequired" xml:space="preserve"><value>Birim ad&#305; girilmelidir.</value></data>
-  <data name="Business.Unit.TypeRequired" xml:space="preserve"><value>Birim t&#252;r&#252; se&#231;ilmelidir.</value></data>
-  <data name="Business.Unit.OrderRequired" xml:space="preserve"><value>S&#305;ra numaras&#305; girilmelidir.</value></data>
-  <data name="Business.Unit.ProvinceRequired" xml:space="preserve"><value>Ta&#351;ra birimi i&#231;in il kodu se&#231;ilmelidir.</value></data>
-  <data name="Business.Unit.ProvinceNotFound" xml:space="preserve"><value>Se&#231;ilen il kodu bulunamad&#305;.</value></data>
-  <data name="Kullanici.Title" xml:space="preserve"><value>Kullan&#305;c&#305; Y&#246;netimi</value></data>
-  <data name="Kullanici.Heading" xml:space="preserve"><value>Kullan&#305;c&#305; Y&#246;netimi</value></data>
-  <data name="Kullanici.Description" xml:space="preserve"><value>Kullan&#305;c&#305; arama, ekleme ve yetki d&#252;zenleme</value></data>
-  <data name="Kullanici.Add" xml:space="preserve"><value>Yeni kullan&#305;c&#305;</value></data>
-  <data name="Kullanici.All" xml:space="preserve"><value>T&#252;m&#252;</value></data>
-  <data name="Kullanici.Search" xml:space="preserve"><value>Ara</value></data>
-  <data name="Kullanici.SearchPrompt" xml:space="preserve"><value>Arama kriterlerini girip Ara tu&#351;una bas&#305;n&#305;z.</value></data>
-  <data name="Kullanici.ModalTitle" xml:space="preserve"><value>Kullan&#305;c&#305;</value></data>
-  <data name="Kullanici.Close" xml:space="preserve"><value>Kapat</value></data>
-  <data name="Kullanici.Save" xml:space="preserve"><value>Kaydet</value></data>
-  <data name="Kullanici.Select" xml:space="preserve"><value>Se&#231;iniz</value></data>
-  <data name="Kullanici.Edit" xml:space="preserve"><value>D&#252;zenle</value></data>
-  <data name="Kullanici.Delete" xml:space="preserve"><value>Sil</value></data>
-  <data name="Kullanici.AddType" xml:space="preserve"><value>Tip ekle</value></data>
-  <data name="Kullanici.TypesAndRoles" xml:space="preserve"><value>Kullan&#305;c&#305; tipleri ve roller</value></data>
-  <data name="Kullanici.UsersFailed" xml:space="preserve"><value>Kullan&#305;c&#305;lar getirilemedi.</value></data>
-  <data name="Kullanici.UnitsFailed" xml:space="preserve"><value>Birimler getirilemedi.</value></data>
-  <data name="Kullanici.NoResults" xml:space="preserve"><value>Arama kriterlerine uygun kullan&#305;c&#305; bulunamad&#305;.</value></data>
-  <data name="Kullanici.Field.FullName" xml:space="preserve"><value>Ad soyad</value></data>
-  <data name="Kullanici.Field.Unit" xml:space="preserve"><value>Birim</value></data>
-  <data name="Kullanici.Field.UserType" xml:space="preserve"><value>Kullan&#305;c&#305; tipi</value></data>
-  <data name="Kullanici.Field.Role" xml:space="preserve"><value>Rol</value></data>
-  <data name="Kullanici.Field.TypeRoleUnit" xml:space="preserve"><value>Kullan&#305;c&#305; tipi / rol / birim</value></data>
-  <data name="Kullanici.Field.Email" xml:space="preserve"><value>E-posta</value></data>
-  <data name="Kullanici.Field.Phone" xml:space="preserve"><value>Telefon</value></data>
-  <data name="Kullanici.Field.Status" xml:space="preserve"><value>Durum</value></data>
-  <data name="Kullanici.Field.TCKN" xml:space="preserve"><value>T.C. kimlik no</value></data>
-  <data name="Kullanici.Field.Name" xml:space="preserve"><value>Ad</value></data>
-  <data name="Kullanici.Field.Surname" xml:space="preserve"><value>Soyad</value></data>
-  <data name="Kullanici.Field.BirthDate" xml:space="preserve"><value>Do&#287;um tarihi</value></data>
-  <data name="Kullanici.Field.Gender" xml:space="preserve"><value>Cinsiyet</value></data>
-  <data name="Kullanici.Field.Password" xml:space="preserve"><value>Parola</value></data>
-  <data name="Kullanici.Gender.Female" xml:space="preserve"><value>Kad&#305;n</value></data>
-  <data name="Kullanici.Gender.Male" xml:space="preserve"><value>Erkek</value></data>
-  <data name="Kullanici.Status.Active" xml:space="preserve"><value>Aktif</value></data>
-  <data name="Kullanici.Status.Passive" xml:space="preserve"><value>Pasif</value></data>
-  <data name="Kullanici.Type.SistemYoneticisi" xml:space="preserve"><value>Sistem kullan&#305;c&#305;s&#305;</value></data>
-  <data name="Kullanici.Type.BasvuruKullanicisi" xml:space="preserve"><value>Ba&#351;vuru kullan&#305;c&#305;s&#305;</value></data>
-  <data name="Kullanici.Type.BirimKullanicisi" xml:space="preserve"><value>Birim kullan&#305;c&#305;s&#305;</value></data>
-  <data name="Kullanici.Role.Gorme" xml:space="preserve"><value>G&#246;rme</value></data>
-  <data name="Kullanici.Role.Yazma" xml:space="preserve"><value>Yazma</value></data>
-  <data name="Kullanici.Role.Onaylama" xml:space="preserve"><value>Onaylama</value></data>
-  <data name="Kullanici.PasswordLink.Send" xml:space="preserve"><value>Parola ba&#287;lant&#305;s&#305; g&#246;nder</value></data>
-  <data name="Kullanici.PasswordLink.Sent" xml:space="preserve"><value>Parola belirleme ba&#287;lant&#305;s&#305; kullan&#305;c&#305;ya g&#246;nderildi.</value></data>
-  <data name="Kullanici.PasswordLink.MailSubject" xml:space="preserve"><value>Parola belirleme ba&#287;lant&#305;s&#305;</value></data>
-  <data name="Kullanici.PasswordLink.MailBody" xml:space="preserve"><value>Merhaba {0},&lt;br/&gt;&lt;br/&gt;Parolan&#305;z&#305; belirlemek i&#231;in &lt;a href=&quot;{1}&quot;&gt;bu ba&#287;lant&#305;ya t&#305;klay&#305;n&lt;/a&gt;. Ba&#287;lant&#305; be&#351; dakika ge&#231;erlidir ve yaln&#305;zca bir kez kullan&#305;labilir.</value></data>
-  <data name="Kullanici.PasswordLink.Title" xml:space="preserve"><value>Parola belirle</value></data>
-  <data name="Kullanici.PasswordLink.Description" xml:space="preserve"><value>Hesab&#305;n&#305;z i&#231;in yeni bir parola belirleyin.</value></data>
-  <data name="Kullanici.PasswordLink.PasswordAgain" xml:space="preserve"><value>Parola tekrar</value></data>
-  <data name="Kullanici.PasswordLink.SetPassword" xml:space="preserve"><value>Parolay&#305; kaydet</value></data>
-  <data name="Kullanici.PasswordLink.Invalid" xml:space="preserve"><value>Parola ba&#287;lant&#305;s&#305; ge&#231;ersiz, kullan&#305;lm&#305;&#351; veya s&#252;resi dolmu&#351;.</value></data>
-  <data name="Kullanici.PasswordLink.Mismatch" xml:space="preserve"><value>Parolalar e&#351;le&#351;miyor.</value></data>
-  <data name="Kullanici.PasswordLink.Weak" xml:space="preserve"><value>Parola en az 8 karakter olmal&#305; ve yeterli g&#252;&#231;te olmal&#305;d&#305;r.</value></data>
-  <data name="Kullanici.PasswordLink.Success" xml:space="preserve"><value>Parolan&#305;z ba&#351;ar&#305;yla belirlendi. Giri&#351; yapabilirsiniz.</value></data>
-  <data name="enumBasvuruDurum_0" xml:space="preserve"><value>Tanımsız</value></data>
-  <data name="enumBasvuruDurum_1" xml:space="preserve"><value>Ön Başvuru</value></data>
-  <data name="enumBasvuruDurum_3" xml:space="preserve"><value>İncelemede</value></data>
-  <data name="enumBasvuruDurum_5" xml:space="preserve"><value>Kabul Edildi</value></data>
-  <data name="enumBasvuruDurum_7" xml:space="preserve"><value>Reddedildi</value></data>
-  <data name="enumBasvuruDurum_9" xml:space="preserve"><value>İptal</value></data>
-  <data name="Basvuru.Review.Title" xml:space="preserve"><value>Ön Başvuru İnceleme Sonuç Listesi</value></data>
-  <data name="Basvuru.Review.ChecklistNote" xml:space="preserve"><value>Sonuç listesi belirlendiğinde soru, cevap ve açıklama alanları bu bölümde gösterilecektir.</value></data>
-  <data name="Basvuru.Review.Result" xml:space="preserve"><value>Ön Başvuru değerlendirmesinin Sonucu</value></data>
-  <data name="Basvuru.Review.Reason" xml:space="preserve"><value>Ön Başvuru değerlendirmesinin Sonuç Gerekçesi</value></data>
-  <data name="Basvuru.Review.Rejected" xml:space="preserve"><value>Reddedildi</value></data>
-  <data name="Basvuru.Review.Accepted" xml:space="preserve"><value>Kabul edildi</value></data>
-  <data name="Basvuru.Review.Returned" xml:space="preserve"><value>Düzeltme için iade edildi</value></data>
-  <data name="Basvuru.Review.Finalize" xml:space="preserve"><value>Sonuçlandır</value></data>
-  <data name="Basvuru.Review.Readonly" xml:space="preserve"><value>Bu denetim sonuçlandırılmıştır ve salt okunurdur.</value></data>
-  <data name="Basvuru.Review.ResultRequired" xml:space="preserve"><value>Denetim sonucu seçilmelidir.</value></data>
-  <data name="Basvuru.Review.FinalizeConfirm" xml:space="preserve"><value>Denetim sonucu kaydedilecek ve başvurunun durumu değiştirilecektir. Devam edilsin mi?</value></data>
-  <data name="Basvuru.Review.FieldsRequired" xml:space="preserve"><value>Sonuç ve sonuç gerekçesi birlikte girilmelidir.</value></data>
-  <data name="ForgotPassword.Title" xml:space="preserve"><value>Şifremi Unuttum</value></data>
-  <data name="ForgotPassword.Description" xml:space="preserve"><value>Hesabınıza kayıtlı bilgilerin tamamını girin.</value></data>
-  <data name="ForgotPassword.TCKN" xml:space="preserve"><value>T.C. Kimlik No</value></data>
-  <data name="ForgotPassword.Name" xml:space="preserve"><value>Ad</value></data>
-  <data name="ForgotPassword.Surname" xml:space="preserve"><value>Soyad</value></data>
-  <data name="ForgotPassword.BirthDate" xml:space="preserve"><value>Doğum tarihi</value></data>
-  <data name="ForgotPassword.Email" xml:space="preserve"><value>E-posta</value></data>
-  <data name="ForgotPassword.Phone" xml:space="preserve"><value>Telefon</value></data>
-  <data name="ForgotPassword.Send" xml:space="preserve"><value>Şifre sıfırlama maili gönder</value></data>
-  <data name="ForgotPassword.Back" xml:space="preserve"><value>Girişe dön</value></data>
-  <data name="ForgotPassword.Link" xml:space="preserve"><value>Şifremi unuttum</value></data>
-  <data name="ForgotPassword.InvalidData" xml:space="preserve"><value>Lütfen verilerin doğruluğunu denetleyip tekrar deneyin.</value></data>
-  <data name="ForgotPassword.Sent" xml:space="preserve"><value>Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.</value></data>
-  <data name="ForgotPassword.SendFailed" xml:space="preserve"><value>Şifre sıfırlama e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin.</value></data>
-  <data name="Basvuru.Step.DbCtp" xml:space="preserve"><value>DB C-TP Teknik Proje</value></data>
-  <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve"><value>8. DB C-TP Teknik Proje</value></data>
-  <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve"><value>Yatırımın teknik ön bilgileri, üretim ve kapasite verileri, girdi ihtiyacı, yenilenebilir enerji, makine-ekipman ve bina/yapı listeleri bu bölümde girilir.</value></data>
-  <data name="Basvuru.Summary.Error.DbCtpRequired" xml:space="preserve"><value>DB C-TP Teknik Proje bölümü doldurulmalıdır.</value></data>
-  <data name="Basvuru.Summary.Error.DeclarationsRequired" xml:space="preserve"><value>Taahhüt ve beyan bölümündeki tüm beyanlar onaylanmalıdır.</value></data>
-  <data name="Basvuru.Step.SystemResults" xml:space="preserve"><value>Sistem Sonuçları</value></data>
-  <data name="Basvuru.Step.ExpertResults" xml:space="preserve"><value>Uzman Sonuçları</value></data>
-  <data name="Basvuru.Step.Decision" xml:space="preserve"><value>Karar</value></data>
-  <data name="Basvuru.Review.SystemResultsNote" xml:space="preserve"><value>Bu liste, kayıtlı bir sistem sonucu yoksa başvuru verilerinden ilk açılışta oluşturulur. Kaydettikten sonra kayıtlı sonuçlar gösterilir.</value></data>
-  <data name="Basvuru.Review.ExpertResultsNote" xml:space="preserve"><value>Uzman değerlendirmesini girip kaydediniz. Sonraki açılışlarda kayıtlı değerlendirme gösterilir.</value></data>
-  <data name="Basvuru.Message.ListFailed" xml:space="preserve"><value>Başvuru kayıtları listelenemedi.</value></data>
-  <data name="Basvuru.Message.NewApplicantOnly" xml:space="preserve"><value>Yeni ön başvuru yalnızca başvuru kullanıcıları tarafından oluşturulabilir.</value></data>
-  <data name="Basvuru.Message.NewScreenFailed" xml:space="preserve"><value>Yeni başvuru ekranı açılamadı.</value></data>
-  <data name="Basvuru.Message.ReadFailed" xml:space="preserve"><value>Başvuru kaydı okunamadı.</value></data>
-  <data name="Basvuru.Message.SaveFailed" xml:space="preserve"><value>Başvuru kaydedilemedi.</value></data>
-  <data name="Basvuru.Message.OwnerReadFailed" xml:space="preserve"><value>Başvuru sahibi bilgileri okunamadı.</value></data>
-  <data name="Basvuru.Message.AddressListFailed" xml:space="preserve"><value>Uygulama adresleri listelenemedi.</value></data>
-  <data name="Basvuru.Message.AddressDeleteFailed" xml:space="preserve"><value>Uygulama adresi silinemedi.</value></data>
-  <data name="Basvuru.Message.PartnershipSaveFailed" xml:space="preserve"><value>Ortaklık bilgileri kaydedilemedi.</value></data>
-  <data name="Basvuru.Message.StakeholderSaveFailed" xml:space="preserve"><value>Ortak/pay sahibi bilgileri kaydedilemedi.</value></data>
-  <data name="Basvuru.Message.SessionExpired" xml:space="preserve"><value>Oturum süresi doldu.</value></data>
-  <data name="Basvuru.Message.DocumentPackageUploadFailed" xml:space="preserve"><value>Doküman paketi yüklenemedi.</value></data>
-  <data name="Basvuru.Message.CommitmentUploadFailed" xml:space="preserve"><value>Taahhüt dosyası yüklenemedi.</value></data>
-  <data name="Basvuru.Message.AuditUploadFailed" xml:space="preserve"><value>Bağımsız denetim dosyası yüklenemedi.</value></data>
-  <data name="Basvuru.Message.PartnershipFileUploadFailed" xml:space="preserve"><value>Ortaklık dosyası yüklenemedi.</value></data>
-  <data name="Basvuru.Message.CriminalRecordSaveFailed" xml:space="preserve"><value>Adli sicil kişileri kaydedilemedi.</value></data>
-  <data name="Basvuru.Message.FileDownloadFailed" xml:space="preserve"><value>Dosya indirilemedi.</value></data>
-  <data name="Basvuru.Message.CompanyNotFound" xml:space="preserve"><value>Firma bulunamadı.</value></data>
-  <data name="Basvuru.Message.CompanyQueryFailed" xml:space="preserve"><value>Firma sorgulama işlemi tamamlanamadı.</value></data>
-  <data name="Basvuru.Message.CompanySaveFailed" xml:space="preserve"><value>Firma kaydedilemedi.</value></data>
-  <data name="Basvuru.Report.SaveFirst.ProjeButcesi" xml:space="preserve"><value>Proje bütçesi yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
-  <data name="Basvuru.Report.SaveFirst.YatirimOzeti" xml:space="preserve"><value>Yatırım özeti yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
-  <data name="Basvuru.Report.SaveFirst.IsletmeGideri" xml:space="preserve"><value>İşletme giderleri yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
-  <data name="Basvuru.Report.SaveFirst.OnBasvuruTamlik" xml:space="preserve"><value>Tamlık kontrolü yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
-  <data name="Basvuru.Report.SaveFirst.OnBasvuruUygunluk" xml:space="preserve"><value>Uygunluk kontrolü yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
-  <data name="Basvuru.Report.SaveFirst.OnBilgiler" xml:space="preserve"><value>Ön bilgiler yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
-  <data name="Basvuru.Report.SaveFirst.MakineEkipman" xml:space="preserve"><value>Makine-ekipman raporu yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
-  <data name="Basvuru.Report.SaveFirst.BinaListesi" xml:space="preserve"><value>Bina/yapı listesi yazdırılmadan önce başvuru kaydedilmelidir.</value></data>
-  <data name="Basvuru.Report.TemplateNotFound" xml:space="preserve"><value>Rapor şablonu bulunamadı: {0}</value></data>
-  <data name="Basvuru.Message.AddressSaved" xml:space="preserve"><value>Uygulama adresi kaydedildi.</value></data>
-  <data name="Basvuru.Message.AddressSaveFailed" xml:space="preserve"><value>Uygulama adresi kaydedilemedi.</value></data>
-  <data name="Basvuru.Message.AddressDeleted" xml:space="preserve"><value>Uygulama adresi silindi.</value></data>
-  <data name="Validation.Tckn.Invalid" xml:space="preserve"><value>TCKN 11 haneli ve geçerli olmalıdır.</value></data>
-  <data name="Validation.Vkn.Invalid" xml:space="preserve"><value>VKN 10 haneli ve geçerli olmalıdır.</value></data>
-  <data name="Basvuru.Firma.Select" xml:space="preserve"><value>Seç</value></data>
-  <data name="Basvuru.Firma.SelectTitle" xml:space="preserve"><value>Firma Seç</value></data>
-  <data name="Basvuru.Firma.SearchPlaceholder" xml:space="preserve"><value>Firma unvanı, VKN veya MERSİS no</value></data>
-  <data name="Basvuru.Firma.Searching" xml:space="preserve"><value>Firmalar aranıyor...</value></data>
-  <data name="Basvuru.Firma.NoResults" xml:space="preserve"><value>Firma bulunamadı.</value></data>
-  <data name="Basvuru.Common.Search" xml:space="preserve"><value>Ara</value></data>
-  <data name="Basvuru.Ortaklik.ShareRateRange" xml:space="preserve"><value>Pay oranı %25 ile %100 arasında olmalıdır.</value></data>
+  <data name="Basvuru.Common.SaveAndContinue" xml:space="preserve">
+    <value>Kaydet ve Devam Et</value>
+  </data>
+  <data name="Basvuru.Common.Continue" xml:space="preserve">
+    <value>Devam Et</value>
+  </data>
+  <data name="Basvuru.Documents.RequiredSeparateDescription" xml:space="preserve">
+    <value>Zorunlu belgeler ayrı dosyalar olarak yüklenecektir. Adli sicil kaydı kişi bazında eklenir ve kişi kaydedildikten sonra dosyası yüklenir.</value>
+  </data>
+  <data name="Basvuru.Documents.CriminalRecordTitle" xml:space="preserve">
+    <value>Adli Sicil Kaydı (Temsil ve ilzama yetkili kişiler, yönetim kurulu üyeleri veya adli sicil kontrolüne tabi ek kişiler)</value>
+  </data>
+  <data name="Basvuru.Documents.AddPerson" xml:space="preserve">
+    <value>+ Kişi ekle</value>
+  </data>
+  <data name="Basvuru.Documents.RequiredDocumentsTitle" xml:space="preserve">
+    <value>Zorunlu belgeler</value>
+  </data>
+  <data name="Basvuru.Documents.FileType" xml:space="preserve">
+    <value>Dosya Türü</value>
+  </data>
+  <data name="Basvuru.Documents.FileName" xml:space="preserve">
+    <value>Dosya Adı</value>
+  </data>
+  <data name="Basvuru.Documents.Upload" xml:space="preserve">
+    <value>Yükle</value>
+  </data>
+  <data name="Basvuru.CevreselSosyal.Title" xml:space="preserve">
+    <value>10. Çevresel ve Sosyal Veri Formu</value>
+  </data>
+  <data name="Basvuru.CevreselSosyal.Description" xml:space="preserve">
+    <value>Yeni Ek V soru setine göre düzenlenmiştir. Form, yatırımın niteliğine göre sadece ilgili alanları açar; dokümandaki gri/kapsam dışı hücreler kullanıcıya gösterilmez.</value>
+  </data>
+  <data name="Basvuru.CevreselSosyal.ScopeQuestion" xml:space="preserve">
+    <value>Başvuru konusu yatırım aşağıdakilerden hangisini kapsamaktadır?</value>
+  </data>
+  <data name="Basvuru.CevreselSosyal.Scope.Existing" xml:space="preserve">
+    <value>Mevcut tesisin modernizasyonu</value>
+  </data>
+  <data name="Basvuru.CevreselSosyal.Scope.Planned" xml:space="preserve">
+    <value>Yeni tesis</value>
+  </data>
+  <data name="Basvuru.CevreselSosyal.Scope.Both" xml:space="preserve">
+    <value>Her ikisi</value>
+  </data>
+  <data name="Basvuru.CevreselSosyal.ScopeNote" xml:space="preserve">
+    <value>Seçime göre Mevcut İşletme ve/veya Planlanan Yatırım alanları açılır. Soru yalnızca planlanan yatırıma ilişkinse mevcut işletme alanı gösterilmez.</value>
+  </data>
+  <data name="Basvuru.CevreselSosyal.Declaration" xml:space="preserve">
+    <value>İşbu formda sunulan bilgilerin doğru, eksiksiz ve mevcut saha koşullarıyla ve/veya yeni yatırımlar için onaylı proje tasarım parametreleriyle uyumlu olduğunu; yatırımın uygulama ve işletme dönemlerinde Türkiye Cumhuriyeti mevzuatına ve Dünya Bankası Çevresel ve Sosyal Çerçeve standartlarına uyacağımı kabul, beyan ve taahhüt ederim. Gerçeğe aykırı beyan veya uyumsuzluk tespitinde düzeltici faaliyet, kredi desteğinin askıya alınması veya alt projenin sonlandırılması gündeme gelebilir.</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Description" xml:space="preserve">
+    <value>Bu bölüm yatırım bütçesi, üretim-satış bilgileri ve tam kapasitede yıllık işletme giderleri adım adım girilecek şekilde tasarlanmıştır.</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Card.InvestmentBudget" xml:space="preserve">
+    <value>Toplam yatırım bütçesi</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Card.FinanceTotal" xml:space="preserve">
+    <value>Finansman kaynakları toplamı</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Card.FinanceGap" xml:space="preserve">
+    <value>Finansman farkı</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Card.AnnualOperatingExpense" xml:space="preserve">
+    <value>Yıllık işletme gideri</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Section.Budget" xml:space="preserve">
+    <value>A. Toplam Yatırım Bütçesi ve Finansman Kaynakları</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Section.BudgetNote" xml:space="preserve">
+    <value>Tutarlar TL olarak girilir. Satır toplamları, yatırım toplamı, finansman kaynakları toplamı ve fark otomatik hesaplanır.</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Section.Production" xml:space="preserve">
+    <value>B. Üretim ve Satış Bilgileri</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Section.ProductionNote" xml:space="preserve">
+    <value>Her ürün/ürün grubu için birim, mevcut durum ve 1-10. yıl projeksiyonları girilir.</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.AddProduct" xml:space="preserve">
+    <value>+ Ürün/ürün grubu ekle</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Section.Expense" xml:space="preserve">
+    <value>C. Tam Kapasitede Yıllık İşletme Giderleri</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.Section.ExpenseNote" xml:space="preserve">
+    <value>Gider unsuru, miktar, birim fiyat, sabit/değişken oranları ve tutarlar sistem içinde hesaplanır.</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.LoadDefaultExpenses" xml:space="preserve">
+    <value>Varsayılan gider başlıklarını yükle</value>
+  </data>
+  <data name="Basvuru.YatirimOzeti.AddExpense" xml:space="preserve">
+    <value>+ İşletme gideri satırı ekle</value>
+  </data>
+  <data name="Basvuru.Summary.Lead" xml:space="preserve">
+    <value>Başvuru gönderilmeden önce sistem kontrolleri.</value>
+  </data>
+  <data name="Basvuru.Summary.Card.TradeTitle" xml:space="preserve">
+    <value>Ticaret unvanı</value>
+  </data>
+  <data name="Basvuru.Summary.Card.Investment" xml:space="preserve">
+    <value>Yatırım</value>
+  </data>
+  <data name="Basvuru.Summary.Card.ValueChain" xml:space="preserve">
+    <value>Değer Zinciri</value>
+  </data>
+  <data name="Basvuru.Summary.Card.FinancialScale" xml:space="preserve">
+    <value>Mali Ölçek</value>
+  </data>
+  <data name="Basvuru.Summary.Suitable" xml:space="preserve">
+    <value>Uygun</value>
+  </data>
+  <data name="Basvuru.Summary.NotSuitable" xml:space="preserve">
+    <value>Uygun değil</value>
+  </data>
+  <data name="Basvuru.Summary.CheckResultTitle" xml:space="preserve">
+    <value>Ön Kontrol Sonucu</value>
+  </data>
+  <data name="Basvuru.Summary.SuccessStrong" xml:space="preserve">
+    <value>Ön kontrol başarıyla tamamlandı.</value>
+  </data>
+  <data name="Basvuru.Summary.SuccessText" xml:space="preserve">
+    <value>Başvuru gönderime hazır görünüyor.</value>
+  </data>
+  <data name="Basvuru.Summary.MissingFieldsTitle" xml:space="preserve">
+    <value>Eksik/Hatalı Alanlar</value>
+  </data>
+  <data name="Basvuru.Summary.DetailTitle" xml:space="preserve">
+    <value>Başvuru Özeti</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.TaxNo" xml:space="preserve">
+    <value>Vergi kimlik no:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.MersisNo" xml:space="preserve">
+    <value>MERSİS no:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.InvestmentProvince" xml:space="preserve">
+    <value>Yatırım ili:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.InvestmentType" xml:space="preserve">
+    <value>Yatırım türü:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.SelectedStages" xml:space="preserve">
+    <value>Seçilen aşamalar:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.ApplicantLastNetSales" xml:space="preserve">
+    <value>Başvuru sahibi son yıl net satış hasılatı:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.ApplicantLastAssets" xml:space="preserve">
+    <value>Başvuru sahibi son yıl aktif toplamı:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.ControlLastNetSales" xml:space="preserve">
+    <value>Kontrole esas son yıl net satış hasılatı:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.ControlLastAssets" xml:space="preserve">
+    <value>Kontrole esas son yıl aktif toplamı:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.InvestmentBudget" xml:space="preserve">
+    <value>Yatırım özeti toplam yatırım bütçesi:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.FinanceTotal" xml:space="preserve">
+    <value>Finansman kaynakları toplamı:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.AnnualOperatingExpense" xml:space="preserve">
+    <value>Tam kapasitede yıllık işletme gideri:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.AuditSubject" xml:space="preserve">
+    <value>Bağımsız denetime tabi mi?:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.EsfScope" xml:space="preserve">
+    <value>Çevresel-sosyal yatırım kapsamı:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.EsfExclusion" xml:space="preserve">
+    <value>Kapsam dışı faaliyet beyanı:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.ShareTotal" xml:space="preserve">
+    <value>Ortaklık pay toplamı:</value>
+  </data>
+  <data name="Basvuru.Summary.Detail.PrivateShare" xml:space="preserve">
+    <value>Özel sektör payı:</value>
+  </data>
+  <data name="Basvuru.Summary.Error.PeriodRequired" xml:space="preserve">
+    <value>Başvuru dönemi seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.ProvinceRequired" xml:space="preserve">
+    <value>Başvuru ili seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.CompanyRequired" xml:space="preserve">
+    <value>Firma seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.ContactPersonRequired" xml:space="preserve">
+    <value>İletişim kişisi girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.ContactPhoneRequired" xml:space="preserve">
+    <value>İrtibat telefonu girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.ActiveTwoYearsRequired" xml:space="preserve">
+    <value>Son 2 yıldır faal mi seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.ApplicantTypeRequired" xml:space="preserve">
+    <value>Başvuru sahibi türü seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.LegalTypeRequired" xml:space="preserve">
+    <value>Hukuki tür / şirket türü seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.InvestmentNameRequired" xml:space="preserve">
+    <value>Yatırım adı girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.InvestmentTypeRequired" xml:space="preserve">
+    <value>Yatırım türü seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.InvestmentAddressRequired" xml:space="preserve">
+    <value>En az bir yatırım uygulama yeri girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.ExpenseTypeRequired" xml:space="preserve">
+    <value>En az bir talep edilen harcama türü seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.InvestmentPurposeRequired" xml:space="preserve">
+    <value>Yatırımın amacı girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.InvestmentActivitiesRequired" xml:space="preserve">
+    <value>Yatırım faaliyetleri girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.InvestmentInputsRequired" xml:space="preserve">
+    <value>Yatırım girdileri girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.InvestmentOutputsRequired" xml:space="preserve">
+    <value>Yatırım çıktıları girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.ValueChainRequired" xml:space="preserve">
+    <value>Değer zinciri seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.ValueChainStageRequired" xml:space="preserve">
+    <value>En az bir değer zinciri aşaması seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.FinancialScaleRequired" xml:space="preserve">
+    <value>Mali ölçek kontrolü uygun olmalıdır.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.AuditChoiceRequired" xml:space="preserve">
+    <value>Bağımsız denetime tabi mi seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.AuditFileRequired" xml:space="preserve">
+    <value>Bağımsız denetim raporu yüklenmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.RelatedEnterpriseRequired" xml:space="preserve">
+    <value>Bağlı/ortak işletme ilişkisi seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.ShareTotalRequired" xml:space="preserve">
+    <value>Ortaklık pay oranları toplamı %100 olmalıdır.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.PikkRequired" xml:space="preserve">
+    <value>Uygun harcama ön listesi doldurulmalıdır.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.InvestmentSummaryRequired" xml:space="preserve">
+    <value>Yatırım özeti tablosu doldurulmalıdır.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.RequiredDocumentsRequired" xml:space="preserve">
+    <value>Zorunlu belgelerin tamamı yüklenmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.CriminalPeopleRequired" xml:space="preserve">
+    <value>Adli sicil kontrolüne tabi kişi listesi oluşturulmalıdır.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.CriminalFilesRequired" xml:space="preserve">
+    <value>Adli sicil kontrolüne tabi kişilerin adli sicil dosyaları yüklenmelidir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.EsfRequired" xml:space="preserve">
+    <value>Çevresel ve Sosyal Veri Formu doldurulmalıdır.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.EsfExclusion" xml:space="preserve">
+    <value>Çevresel-sosyal kapsam dışı faaliyet beyanı Evet olarak işaretlenmiştir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.CommitmentRequired" xml:space="preserve">
+    <value>Taahhüt / Beyanlar dokümanı yüklenmelidir.</value>
+  </data>
+  <data name="Basvuru.Common.Back" xml:space="preserve">
+    <value>Geri</value>
+  </data>
+  <data name="Basvuru.Common.Download" xml:space="preserve">
+    <value>İndir</value>
+  </data>
+  <data name="Basvuru.Common.RowNo" xml:space="preserve">
+    <value>Sıra</value>
+  </data>
+  <data name="Basvuru.Applicant.PeriodProvinceTitle" xml:space="preserve">
+    <value>Başvuru Dönemi ve İli</value>
+  </data>
+  <data name="Basvuru.Applicant.Description" xml:space="preserve">
+    <value>Kimlik, iletişim, faaliyet ve hukuki tür bilgileri.</value>
+  </data>
+  <data name="Basvuru.Field.HukukiTurSirketTuru" xml:space="preserve">
+    <value>Hukuki tür / şirket türü</value>
+  </data>
+  <data name="Basvuru.Field.TemsilIlzamKisilerReadonly" xml:space="preserve">
+    <value>Temsil ve ilzama yetkili kişi(ler)</value>
+  </data>
+  <data name="Basvuru.Field.YonetimKuruluAdliSicilKisilerReadonly" xml:space="preserve">
+    <value>Yönetim kurulu üyeleri / adli sicil kontrolüne tabi ek kişiler</value>
+  </data>
+  <data name="Basvuru.Placeholder.TemsilIlzamFromCriminalRecord" xml:space="preserve">
+    <value>Adli sicil bölümüne girilen temsil ve ilzama yetkili kişilerden üretilir.</value>
+  </data>
+  <data name="Basvuru.Placeholder.BoardMembersFromCriminalRecord" xml:space="preserve">
+    <value>Adli sicil bölümüne girilen yönetim kurulu üyeleri ve adli sicil kontrolüne tabi ek kişilerden üretilir.</value>
+  </data>
+  <data name="Basvuru.Criminal.ModalTitle" xml:space="preserve">
+    <value>Adli sicil kontrol kişisi</value>
+  </data>
+  <data name="Basvuru.Criminal.Role" xml:space="preserve">
+    <value>Görev</value>
+  </data>
+  <data name="Basvuru.Criminal.RoleOptions" xml:space="preserve">
+    <value>Şirket Ortağı|Temsil ve ilzama yetkili|Yönetim kurulu üye|Adli Sicil Kontrolüne Tabi Ek Kişi</value>
+  </data>
+  <data name="Basvuru.Criminal.Upload" xml:space="preserve">
+    <value>Adli sicil kaydı yükle</value>
+  </data>
+  <data name="Basvuru.Criminal.FileMissing" xml:space="preserve">
+    <value>Adli sicil kaydı yüklü değil, yükleyiniz</value>
+  </data>
+  <data name="Basvuru.Criminal.SavePersonFirst" xml:space="preserve">
+    <value>Adli sicil kaydı yüklemek için önce kişiyi kaydedin.</value>
+  </data>
+  <data name="Basvuru.Criminal.RequiredFields" xml:space="preserve">
+    <value>TCKN, ad, soyad ve görev girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Criminal.DuplicateTckn" xml:space="preserve">
+    <value>Aynı TCKN ile iki adli sicil kişisi kaydedilemez.</value>
+  </data>
+  <data name="Basvuru.Criminal.InvalidTckn" xml:space="preserve">
+    <value>Geçerli bir TCKN giriniz.</value>
+  </data>
+  <data name="Basvuru.Criminal.Empty" xml:space="preserve">
+    <value>Adli sicil kontrol kişisi eklenmedi.</value>
+  </data>
+  <data name="Basvuru.Criminal.FileColumn" xml:space="preserve">
+    <value>Adli sicil kaydı</value>
+  </data>
+  <data name="Basvuru.Field.Tckn" xml:space="preserve">
+    <value>TCKN</value>
+  </data>
+  <data name="Basvuru.Field.TcknVkn" xml:space="preserve">
+    <value>TCKN / VKN</value>
+  </data>
+  <data name="Basvuru.Field.Ad" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="Basvuru.Field.Soyad" xml:space="preserve">
+    <value>Soyad</value>
+  </data>
+  <data name="Basvuru.Esf.SelectInvestmentScopeFirst" xml:space="preserve">
+    <value>Lütfen yatırımın mevcut tesis modernizasyonu, yeni tesis veya her ikisi olduğunu seçiniz.</value>
+  </data>
+  <data name="Basvuru.Esf.OpenedBySelection" xml:space="preserve">
+    <value>Form seçiminize göre açılmıştır. Dokümanda gri bırakılan ve seçiminizle ilgili olmayan alanlar gösterilmez.</value>
+  </data>
+  <data name="Basvuru.Esf.ShowHideList" xml:space="preserve">
+    <value>Listeyi göster / gizle</value>
+  </data>
+  <data name="Basvuru.Esf.InfoLabel" xml:space="preserve">
+    <value>Bilgilendirme:</value>
+  </data>
+  <data name="Basvuru.Esf.InformativeNote" xml:space="preserve">
+    <value>Bilgilendirici Not:</value>
+  </data>
+  <data name="Basvuru.Esf.PlannedOnlyNote" xml:space="preserve">
+    <value>Bu soru yalnızca planlanan yatırıma ilişkindir; mevcut işletme alanı dokümanda gri olduğu için açılmamıştır.</value>
+  </data>
+  <data name="Basvuru.Esf.GlobalContext" xml:space="preserve">
+    <value>Genel Beyan / Proje Bilgisi</value>
+  </data>
+  <data name="Basvuru.Esf.ExistingContext" xml:space="preserve">
+    <value>Mevcut İşletme/Tesis</value>
+  </data>
+  <data name="Basvuru.Esf.PlannedContext" xml:space="preserve">
+    <value>Planlanan Yatırım</value>
+  </data>
+  <data name="Basvuru.Esf.Placeholder.Explain" xml:space="preserve">
+    <value>Açıklama giriniz</value>
+  </data>
+  <data name="Basvuru.Esf.Placeholder.Text" xml:space="preserve">
+    <value>Bilgi giriniz</value>
+  </data>
+  <data name="Basvuru.Esf.Placeholder.Document" xml:space="preserve">
+    <value>Belge adı / yüklenen destekleyici belge</value>
+  </data>
+  <data name="Basvuru.Esf.ExclusionWarning" xml:space="preserve">
+    <value>Kapsam dışı faaliyet uyarısı: Bu cevap, yatırımın uygunluk açısından olumsuz değerlendirilmesine neden olabilir.</value>
+  </data>
+  <data name="Business.Session.Expired" xml:space="preserve">
+    <value>Oturum süresi doldu.</value>
+  </data>
+  <data name="Business.User.InfoMissing" xml:space="preserve">
+    <value>Kullanıcı bilgisi gelmedi.</value>
+  </data>
+  <data name="Business.User.NotFoundOrPassive" xml:space="preserve">
+    <value>Kullanıcı bulunamadı veya pasif.</value>
+  </data>
+  <data name="Business.User.CreateFailed" xml:space="preserve">
+    <value>Kullanıcı kaydı oluşturulamadı.</value>
+  </data>
+  <data name="Business.User.NotFound" xml:space="preserve">
+    <value>Kullanıcı bulunamadı.</value>
+  </data>
+  <data name="Business.User.InvalidCredentials" xml:space="preserve">
+    <value>Kullanıcı kodu veya şifre hatalı.</value>
+  </data>
+  <data name="Business.User.ReadFailed" xml:space="preserve">
+    <value>Kullanıcı bilgileri okunamadı.</value>
+  </data>
+  <data name="Business.User.TestActiveUserNotFound" xml:space="preserve">
+    <value>Test girişi için aktif kullanıcı bulunamadı.</value>
+  </data>
+  <data name="Business.User.TestUserReadFailed" xml:space="preserve">
+    <value>Test girişi için kullanıcı okunamadı.</value>
+  </data>
+  <data name="Business.User.SimilarRecordExists" xml:space="preserve">
+    <value>Benzer bir kullanıcı kaydı bulunduğu için kayıt yapılamaz.</value>
+  </data>
+  <data name="Business.Database.ConnectionSettingMissing" xml:space="preserve">
+    <value>Veritabanı bağlantı ayarı bulunamadı.</value>
+  </data>
+  <data name="Business.Query.InfoRequired" xml:space="preserve">
+    <value>Sorgulama bilgisi verilmelidir.</value>
+  </data>
+  <data name="Business.Company.NotFound" xml:space="preserve">
+    <value>Firma bulunamadı.</value>
+  </data>
+  <data name="Business.Company.UserNotRelated" xml:space="preserve">
+    <value>Bu firma kullanıcı ile ilişkili değil.</value>
+  </data>
+  <data name="Business.Company.ExistsButUserNotRelated" xml:space="preserve">
+    <value>Firma sistemde var fakat kullanıcı ile ilişkili değil.</value>
+  </data>
+  <data name="Business.Company.SaveFailed" xml:space="preserve">
+    <value>Firma kaydedilemedi.</value>
+  </data>
+  <data name="Business.Application.NotFound" xml:space="preserve">
+    <value>Başvuru bulunamadı.</value>
+  </data>
+  <data name="Business.Application.ViewUnauthorized" xml:space="preserve">
+    <value>Bu başvuruyu görüntüleme yetkiniz yok.</value>
+  </data>
+  <data name="Business.Application.RecordRequired" xml:space="preserve">
+    <value>Başvuru kaydı seçilmelidir.</value>
+  </data>
+  <data name="Business.Application.NotFoundOrUnauthorized" xml:space="preserve">
+    <value>Başvuru kaydı bulunamadı veya bu işlem için yetkiniz yok.</value>
+  </data>
+  <data name="Business.Application.CompanyUserNotRelated" xml:space="preserve">
+    <value>Başvurunun firması ile kullanıcı ilişkili değil.</value>
+  </data>
+  <data name="Business.Application.ApplicantInfoRequired" xml:space="preserve">
+    <value>Başvuru sahibi bilgileri gönderilmelidir.</value>
+  </data>
+  <data name="Business.Application.FileFormUndefined" xml:space="preserve">
+    <value>Dosya formu tanımlı değildir.</value>
+  </data>
+  <data name="Business.Application.FileTypeRequired" xml:space="preserve">
+    <value>Dosya türü seçilmelidir.</value>
+  </data>
+  <data name="Business.Application.FileTypeUndefined" xml:space="preserve">
+    <value>Dosya türü tanımlı değildir.</value>
+  </data>
+  <data name="Business.Application.UboKycDocument" xml:space="preserve">
+    <value>UBO-KYC belgesi</value>
+  </data>
+  <data name="Business.Application.UboKycPartnerRequired" xml:space="preserve">
+    <value>UBO-KYC belgesi yüklemek için ortak önce kaydedilmelidir.</value>
+  </data>
+  <data name="Business.Application.CriminalPersonRequiredBeforeUpload" xml:space="preserve">
+    <value>Adli sicil kaydı yüklemek için kişi önce kaydedilmelidir.</value>
+  </data>
+  <data name="Business.Application.DocumentDescriptionRequired" xml:space="preserve">
+    <value>Belge açıklaması girilmelidir.</value>
+  </data>
+  <data name="Business.Application.DocumentPackageUploaded" xml:space="preserve">
+    <value>Doküman paketi yüklendi.</value>
+  </data>
+  <data name="Business.Application.CommitmentFileUploaded" xml:space="preserve">
+    <value>Taahhüt dosyası yüklendi.</value>
+  </data>
+  <data name="Business.Application.AuditFileUploaded" xml:space="preserve">
+    <value>Bağımsız denetim dosyası yüklendi.</value>
+  </data>
+  <data name="Business.File.ModuleCodeRequired" xml:space="preserve">
+    <value>Modül kodu zorunludur.</value>
+  </data>
+  <data name="Business.File.ViewFilesUnauthorized" xml:space="preserve">
+    <value>Dosyaları görüntüleme yetkiniz yok.</value>
+  </data>
+  <data name="Business.File.ViewFileUnauthorized" xml:space="preserve">
+    <value>Dosyayı görüntüleme yetkiniz yok.</value>
+  </data>
+  <data name="Business.File.ListReadFailed" xml:space="preserve">
+    <value>Dosya listesi okunamadı.</value>
+  </data>
+  <data name="Business.File.ReadFailed" xml:space="preserve">
+    <value>Dosya okunamadı.</value>
+  </data>
+  <data name="Business.File.FileRequired" xml:space="preserve">
+    <value>Dosya seçilmelidir.</value>
+  </data>
+  <data name="Business.File.NotFound" xml:space="preserve">
+    <value>Dosya bulunamadı.</value>
+  </data>
+  <data name="Business.File.AddUnauthorized" xml:space="preserve">
+    <value>Dosya ekleme yetkiniz yok.</value>
+  </data>
+  <data name="Business.File.UpdateUnauthorized" xml:space="preserve">
+    <value>Dosya güncelleme yetkiniz yok.</value>
+  </data>
+  <data name="Business.File.DeleteUnauthorized" xml:space="preserve">
+    <value>Dosya silme yetkiniz yok.</value>
+  </data>
+  <data name="Business.File.Added" xml:space="preserve">
+    <value>Dosya eklendi.</value>
+  </data>
+  <data name="Business.File.Updated" xml:space="preserve">
+    <value>Dosya güncellendi.</value>
+  </data>
+  <data name="Business.File.Uploaded" xml:space="preserve">
+    <value>Dosya yüklendi.</value>
+  </data>
+  <data name="Business.File.Deleted" xml:space="preserve">
+    <value>Dosya silindi.</value>
+  </data>
+  <data name="Business.File.SaveFailed" xml:space="preserve">
+    <value>Dosya kaydedilemedi.</value>
+  </data>
+  <data name="Business.File.DeleteFailed" xml:space="preserve">
+    <value>Dosya silinemedi.</value>
+  </data>
+  <data name="Business.File.ConnectionStringMissing" xml:space="preserve">
+    <value>Dosya yönetimi bağlantı cümlesi tanımlı değil.</value>
+  </data>
+  <data name="Business.File.FormNameRequired" xml:space="preserve">
+    <value>Form adı zorunludur.</value>
+  </data>
+  <data name="Business.File.FormKeyRequired" xml:space="preserve">
+    <value>Form anahtarı zorunludur.</value>
+  </data>
+  <data name="Business.File.FileNoRequired" xml:space="preserve">
+    <value>Dosya no zorunludur.</value>
+  </data>
+  <data name="Business.File.FileNoCannotBeNegative" xml:space="preserve">
+    <value>Dosya no negatif olamaz.</value>
+  </data>
+  <data name="Business.File.FileNameRequired" xml:space="preserve">
+    <value>Dosya adı zorunludur.</value>
+  </data>
+  <data name="Business.File.ContentRequired" xml:space="preserve">
+    <value>Dosya içeriği zorunludur.</value>
+  </data>
+  <data name="Business.Pikk.EquipmentRowRequired" xml:space="preserve">
+    <value>Makine-ekipman harcaması seçildiği için en az bir makine/ekipman satırında ad ve kullanım amacı girilmelidir.</value>
+  </data>
+  <data name="Business.Pikk.ConstructionRowRequired" xml:space="preserve">
+    <value>Yapım işi harcaması seçildiği için en az bir bina/yapım işi satırında ad ve kullanım amacı girilmelidir.</value>
+  </data>
+  <data name="Business.Esf.AnswersReadFailed" xml:space="preserve">
+    <value>Çevresel-sosyal anket cevapları okunamadı.</value>
+  </data>
+  <data name="Business.Esf.UnknownQuestion" xml:space="preserve">
+    <value>Tanımsız çevresel-sosyal anket sorusu: {0}</value>
+  </data>
+  <data name="Business.Criminal.DuplicateTcknWithValue" xml:space="preserve">
+    <value>{0} TCKN ile birden fazla adli sicil kişisi kaydedilemez.</value>
+  </data>
+  <data name="Business.Criminal.PeopleSaved" xml:space="preserve">
+    <value>Adli sicil kişileri kaydedildi.</value>
+  </data>
+  <data name="Business.Address.DistrictNotInApplicationProvince" xml:space="preserve">
+    <value>Seçilen ilçe başvuru iline ait değil veya pasif.</value>
+  </data>
+  <data name="Business.Address.NotFound" xml:space="preserve">
+    <value>Adres kaydı bulunamadı.</value>
+  </data>
+  <data name="Business.Address.SaveFailed" xml:space="preserve">
+    <value>Uygulama adresi kaydedilemedi.</value>
+  </data>
+  <data name="Business.Address.RecordRequired" xml:space="preserve">
+    <value>Adres kaydı seçilmelidir.</value>
+  </data>
+  <data name="Business.Address.DeleteFailed" xml:space="preserve">
+    <value>Uygulama adresi silinemedi.</value>
+  </data>
+  <data name="Business.Partnership.ApplicationRequiredBeforeSave" xml:space="preserve">
+    <value>Başvuru kaydı oluşturulmadan ortaklık bilgileri kaydedilemez.</value>
+  </data>
+  <data name="Business.Partnership.SaveFailed" xml:space="preserve">
+    <value>Ortaklık bilgileri kaydedilemedi.</value>
+  </data>
+  <data name="Business.Documents.PackageDeclarationRequired" xml:space="preserve">
+    <value>Zorunlu belgelerin tamamının tek dokümanda yer aldığı beyan edilmelidir.</value>
+  </data>
+  <data name="Business.Documents.RequiredGroupsUndefined" xml:space="preserve">
+    <value>Zorunlu belge grupları tanımlı değildir.</value>
+  </data>
+  <data name="Business.Documents.RequiredGroupsMustBeSent" xml:space="preserve">
+    <value>Zorunlu belge grupları sunucuya gönderilmelidir.</value>
+  </data>
+  <data name="Business.Documents.RequiredGroupsMustBeChecked" xml:space="preserve">
+    <value>Zorunlu belge gruplarının tamamı işaretlenmelidir.</value>
+  </data>
+  <data name="Başvuru kayıtları listelenemedi." xml:space="preserve">
+    <value>Başvuru kayıtları listelenemedi.</value>
+  </data>
+  <data name="Kullanıcı bilgisi okunamadı." xml:space="preserve">
+    <value>Kullanıcı bilgisi okunamadı.</value>
+  </data>
+  <data name="Başvuru dönemleri listelenemedi." xml:space="preserve">
+    <value>Başvuru dönemleri listelenemedi.</value>
+  </data>
+  <data name="İl listesi okunamadı." xml:space="preserve">
+    <value>İl listesi okunamadı.</value>
+  </data>
+  <data name="İlçe listesi okunamadı." xml:space="preserve">
+    <value>İlçe listesi okunamadı.</value>
+  </data>
+  <data name="Değer zincirleri listelenemedi." xml:space="preserve">
+    <value>Değer zincirleri listelenemedi.</value>
+  </data>
+  <data name="Değer zinciri aşamaları listelenemedi." xml:space="preserve">
+    <value>Değer zinciri aşamaları listelenemedi.</value>
+  </data>
+  <data name="Başvuru kaydı okunamadı." xml:space="preserve">
+    <value>Başvuru kaydı okunamadı.</value>
+  </data>
+  <data name="Firma sorgulanamadı." xml:space="preserve">
+    <value>Firma sorgulanamadı.</value>
+  </data>
+  <data name="Firma kaydedilemedi." xml:space="preserve">
+    <value>Firma kaydedilemedi.</value>
+  </data>
+  <data name="Başvuru kaydedilemedi." xml:space="preserve">
+    <value>Başvuru kaydedilemedi.</value>
+  </data>
+  <data name="Ortaklık bilgileri kaydedilemedi." xml:space="preserve">
+    <value>Ortaklık bilgileri kaydedilemedi.</value>
+  </data>
+  <data name="Ortak/pay sahibi bilgileri kaydedilemedi." xml:space="preserve">
+    <value>Ortak/pay sahibi bilgileri kaydedilemedi.</value>
+  </data>
+  <data name="Başvuru dosyası kaydedilemedi." xml:space="preserve">
+    <value>Başvuru dosyası kaydedilemedi.</value>
+  </data>
+  <data name="Adli sicil kişileri kaydedilemedi." xml:space="preserve">
+    <value>Adli sicil kişileri kaydedilemedi.</value>
+  </data>
+  <data name="Doküman paketi kaydedilemedi." xml:space="preserve">
+    <value>Doküman paketi kaydedilemedi.</value>
+  </data>
+  <data name="Taahhüt dosyası kaydedilemedi." xml:space="preserve">
+    <value>Taahhüt dosyası kaydedilemedi.</value>
+  </data>
+  <data name="Bağımsız denetim dosyası kaydedilemedi." xml:space="preserve">
+    <value>Bağımsız denetim dosyası kaydedilemedi.</value>
+  </data>
+  <data name="Dosya indirilemedi." xml:space="preserve">
+    <value>Dosya indirilemedi.</value>
+  </data>
+  <data name="Uygulama adresi kaydedilemedi." xml:space="preserve">
+    <value>Uygulama adresi kaydedilemedi.</value>
+  </data>
+  <data name="Uygulama adresi silinemedi." xml:space="preserve">
+    <value>Uygulama adresi silinemedi.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.Title" xml:space="preserve">
+    <value>3. Ortaklık ve Yetki Bilgileri</value>
+  </data>
+  <data name="Basvuru.Ortaklik.Lead" xml:space="preserve">
+    <value>Ortak/pay sahibi satırları üzerinden toplam pay oranı ve özel sektör payı sistem tarafından hesaplanır. Gerçek kişi ortaklar için mali veri istenmez; tüzel kişi ortaklar için mali veriler ayrıca alınır ve ortaklık payına göre mali ölçek kontrolüne dahil edilir.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PrivateShareCalculated" xml:space="preserve">
+    <value>Özel sektör payı (%) - sistem hesaplar</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PartnersTableTitle" xml:space="preserve">
+    <value>Ortaklık yapısı detay tablosu</value>
+  </data>
+  <data name="Basvuru.Ortaklik.AddPartner" xml:space="preserve">
+    <value>+ Ortak / pay sahibi ekle</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RelatedEnterpriseTitle" xml:space="preserve">
+    <value>Bağlı / Ortak İşletme Bilgileri</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RelatedEnterpriseNote" xml:space="preserve">
+    <value>Bağlı/ortak işletme ilişkisi ayrıca beyan edilmişse bu işletmeye ilişkin temel mali bilgiler ve belgeler de alınır. Tüzel kişi ortakların mali bilgileri ise yukarıdaki ortaklık tablosu üzerinden ayrıca hesaplamaya dahil edilir.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RelatedEnterpriseTitleField" xml:space="preserve">
+    <value>Bağlı/ortak işletme unvanı</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RelatedEnterpriseIdentityField" xml:space="preserve">
+    <value>Bağlı/ortak işletme VKN/MERSİS</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RelatedDocumentsTitle" xml:space="preserve">
+    <value>Tüzel kişi ortak zorunlu belgeleri</value>
+  </data>
+  <data name="Basvuru.Mali.PreviousYear" xml:space="preserve">
+    <value>Önceki Yıl</value>
+  </data>
+  <data name="Basvuru.Mali.LatestYear" xml:space="preserve">
+    <value>Son Yıl</value>
+  </data>
+  <data name="Basvuru.Ortaklik.Modal.Title" xml:space="preserve">
+    <value>Ortak / pay sahibi bilgisi</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PartnerNameTitle" xml:space="preserve">
+    <value>Ortak / pay sahibi adı-unvanı</value>
+  </data>
+  <data name="Basvuru.Ortaklik.Identity" xml:space="preserve">
+    <value>TCKN / VKN</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PersonType" xml:space="preserve">
+    <value>Gerçek / tüzel kişi</value>
+  </data>
+  <data name="Basvuru.Ortaklik.NaturalPerson" xml:space="preserve">
+    <value>Gerçek Kişi</value>
+  </data>
+  <data name="Basvuru.Ortaklik.LegalEntity" xml:space="preserve">
+    <value>Tüzel Kişi</value>
+  </data>
+  <data name="Basvuru.Ortaklik.ShareRate" xml:space="preserve">
+    <value>Pay oranı (%)</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PrivatePublicType" xml:space="preserve">
+    <value>Özel / kamu niteliği</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PrivateSector" xml:space="preserve">
+    <value>Özel</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PublicSector" xml:space="preserve">
+    <value>Kamu</value>
+  </data>
+  <data name="Basvuru.Ortaklik.BeneficialOwner" xml:space="preserve">
+    <value>Nihai/gerçek faydalanıcı bilgisi</value>
+  </data>
+  <data name="Basvuru.Ortaklik.UboKycDocument" xml:space="preserve">
+    <value>UBO-KYC belgesi</value>
+  </data>
+  <data name="Basvuru.Ortaklik.UboKycUpload" xml:space="preserve">
+    <value>UBO-KYC belgesi yükle</value>
+  </data>
+  <data name="Basvuru.Ortaklik.UboKycMissing" xml:space="preserve">
+    <value>UBO-KYC belgesi yüklü değil, yükleyiniz</value>
+  </data>
+  <data name="Basvuru.Ortaklik.UboKycSavePartnerFirst" xml:space="preserve">
+    <value>UBO-KYC belgesi yüklemek için önce ortağı kaydedin.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.LegalFinancialTitle" xml:space="preserve">
+    <value>Tüzel kişi ortak mali verileri</value>
+  </data>
+  <data name="Basvuru.Ortaklik.IncludedRatePercent" xml:space="preserve">
+    <value>Hesaba dahil oran (%)</value>
+  </data>
+  <data name="Basvuru.Ortaklik.NetSalesShort" xml:space="preserve">
+    <value>net satış</value>
+  </data>
+  <data name="Basvuru.Ortaklik.AssetsShort" xml:space="preserve">
+    <value>aktif</value>
+  </data>
+  <data name="Basvuru.Ortaklik.EmptyPartners" xml:space="preserve">
+    <value>Ortak/pay sahibi eklenmedi.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.TotalShareExceeded" xml:space="preserve">
+    <value>Ortak/pay sahibi toplam pay oranı 100'ü geçemez.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.TotalShareExpected" xml:space="preserve">
+    <value>Toplam pay oranı: {0}%. Toplamın 100 olması beklenir.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.PartnerColumn" xml:space="preserve">
+    <value>Ortak / pay sahibi</value>
+  </data>
+  <data name="Basvuru.Ortaklik.IncludedRate" xml:space="preserve">
+    <value>Hesaba dahil oran</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RequiredNameIdentity" xml:space="preserve">
+    <value>Ortak adı/unvanı ve TCKN/VKN girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.DuplicateIdentity" xml:space="preserve">
+    <value>Aynı TCKN/VKN ile iki ortak kaydedilemez.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.LegalIncludedRateRequired" xml:space="preserve">
+    <value>Tüzel kişi ortak için hesaba dahil oran girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.NetSalesRevenue" xml:space="preserve">
+    <value>net satış hasılatı</value>
+  </data>
+  <data name="Basvuru.Ortaklik.TotalAssets" xml:space="preserve">
+    <value>aktif toplamı</value>
+  </data>
+  <data name="Basvuru.Ortaklik.RequiredEnter" xml:space="preserve">
+    <value>{0} girilmelidir.</value>
+  </data>
+  <data name="Birim.Title" xml:space="preserve">
+    <value>Birimler</value>
+  </data>
+  <data name="Birim.Heading" xml:space="preserve">
+    <value>Birimler</value>
+  </data>
+  <data name="Birim.Description" xml:space="preserve">
+    <value>Kullanıcı birimlerinin merkez/taşra bilgisi, il kodu ve görünüm sırası buradan yönetilir.</value>
+  </data>
+  <data name="Birim.Add" xml:space="preserve">
+    <value>Birim Ekle</value>
+  </data>
+  <data name="Birim.Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+  <data name="Birim.Deactivate" xml:space="preserve">
+    <value>Pasif Yap</value>
+  </data>
+  <data name="Birim.ConfirmDeactivate" xml:space="preserve">
+    <value>Bu birim pasif yapılsın mı?</value>
+  </data>
+  <data name="Birim.Modal.Title" xml:space="preserve">
+    <value>Birim Bilgileri</value>
+  </data>
+  <data name="Birim.Field.Order" xml:space="preserve">
+    <value>Sıra No</value>
+  </data>
+  <data name="Birim.Field.Name" xml:space="preserve">
+    <value>Birim Adı</value>
+  </data>
+  <data name="Birim.Field.Type" xml:space="preserve">
+    <value>Birim Türü</value>
+  </data>
+  <data name="Birim.Field.ProvinceCode" xml:space="preserve">
+    <value>İl Kodu</value>
+  </data>
+  <data name="Birim.Field.Province" xml:space="preserve">
+    <value>İl</value>
+  </data>
+  <data name="Birim.Field.Status" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Birim.Field.Action" xml:space="preserve">
+    <value>İşlem</value>
+  </data>
+  <data name="Birim.Type.Center" xml:space="preserve">
+    <value>Merkez</value>
+  </data>
+  <data name="Birim.Type.Provincial" xml:space="preserve">
+    <value>Taşra</value>
+  </data>
+  <data name="Birim.Status.Active" xml:space="preserve">
+    <value>Aktif</value>
+  </data>
+  <data name="Birim.Status.Passive" xml:space="preserve">
+    <value>Pasif</value>
+  </data>
+  <data name="Business.Authorization.SystemAdminRequired" xml:space="preserve">
+    <value>Bu işlem için sistem yöneticisi yetkisi gerekir.</value>
+  </data>
+  <data name="Business.Unit.ListFailed" xml:space="preserve">
+    <value>Birim listesi okunamadı.</value>
+  </data>
+  <data name="Business.Unit.NotFound" xml:space="preserve">
+    <value>Birim bulunamadı.</value>
+  </data>
+  <data name="Business.Unit.Saved" xml:space="preserve">
+    <value>Birim kaydedildi.</value>
+  </data>
+  <data name="Business.Unit.SaveFailed" xml:space="preserve">
+    <value>Birim kaydedilemedi.</value>
+  </data>
+  <data name="Business.Unit.Deactivated" xml:space="preserve">
+    <value>Birim pasif yapıldı.</value>
+  </data>
+  <data name="Business.Unit.DeactivateFailed" xml:space="preserve">
+    <value>Birim pasif yapılamadı.</value>
+  </data>
+  <data name="Business.Unit.NameRequired" xml:space="preserve">
+    <value>Birim adı girilmelidir.</value>
+  </data>
+  <data name="Business.Unit.TypeRequired" xml:space="preserve">
+    <value>Birim türü seçilmelidir.</value>
+  </data>
+  <data name="Business.Unit.OrderRequired" xml:space="preserve">
+    <value>Sıra numarası girilmelidir.</value>
+  </data>
+  <data name="Business.Unit.ProvinceRequired" xml:space="preserve">
+    <value>Taşra birimi için il kodu seçilmelidir.</value>
+  </data>
+  <data name="Business.Unit.ProvinceNotFound" xml:space="preserve">
+    <value>Seçilen il kodu bulunamadı.</value>
+  </data>
+  <data name="Kullanici.Title" xml:space="preserve">
+    <value>Kullanıcı Yönetimi</value>
+  </data>
+  <data name="Kullanici.Heading" xml:space="preserve">
+    <value>Kullanıcı Yönetimi</value>
+  </data>
+  <data name="Kullanici.Description" xml:space="preserve">
+    <value>Kullanıcı arama, ekleme ve yetki düzenleme</value>
+  </data>
+  <data name="Kullanici.Add" xml:space="preserve">
+    <value>Yeni kullanıcı</value>
+  </data>
+  <data name="Kullanici.All" xml:space="preserve">
+    <value>Tümü</value>
+  </data>
+  <data name="Kullanici.Search" xml:space="preserve">
+    <value>Ara</value>
+  </data>
+  <data name="Kullanici.SearchPrompt" xml:space="preserve">
+    <value>Arama kriterlerini girip Ara tuşuna basınız.</value>
+  </data>
+  <data name="Kullanici.ModalTitle" xml:space="preserve">
+    <value>Kullanıcı</value>
+  </data>
+  <data name="Kullanici.Close" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="Kullanici.Save" xml:space="preserve">
+    <value>Kaydet</value>
+  </data>
+  <data name="Kullanici.Select" xml:space="preserve">
+    <value>Seçiniz</value>
+  </data>
+  <data name="Kullanici.Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+  <data name="Kullanici.Delete" xml:space="preserve">
+    <value>Sil</value>
+  </data>
+  <data name="Kullanici.AddType" xml:space="preserve">
+    <value>Tip ekle</value>
+  </data>
+  <data name="Kullanici.TypesAndRoles" xml:space="preserve">
+    <value>Kullanıcı tipleri ve roller</value>
+  </data>
+  <data name="Kullanici.UsersFailed" xml:space="preserve">
+    <value>Kullanıcılar getirilemedi.</value>
+  </data>
+  <data name="Kullanici.UnitsFailed" xml:space="preserve">
+    <value>Birimler getirilemedi.</value>
+  </data>
+  <data name="Kullanici.NoResults" xml:space="preserve">
+    <value>Arama kriterlerine uygun kullanıcı bulunamadı.</value>
+  </data>
+  <data name="Kullanici.Field.FullName" xml:space="preserve">
+    <value>Ad soyad</value>
+  </data>
+  <data name="Kullanici.Field.Unit" xml:space="preserve">
+    <value>Birim</value>
+  </data>
+  <data name="Kullanici.Field.UserType" xml:space="preserve">
+    <value>Kullanıcı tipi</value>
+  </data>
+  <data name="Kullanici.Field.Role" xml:space="preserve">
+    <value>Rol</value>
+  </data>
+  <data name="Kullanici.Field.TypeRoleUnit" xml:space="preserve">
+    <value>Kullanıcı tipi / rol / birim</value>
+  </data>
+  <data name="Kullanici.Field.Email" xml:space="preserve">
+    <value>E-posta</value>
+  </data>
+  <data name="Kullanici.Field.Phone" xml:space="preserve">
+    <value>Telefon</value>
+  </data>
+  <data name="Kullanici.Field.Status" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Kullanici.Field.TCKN" xml:space="preserve">
+    <value>T.C. kimlik no</value>
+  </data>
+  <data name="Kullanici.Field.Name" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="Kullanici.Field.Surname" xml:space="preserve">
+    <value>Soyad</value>
+  </data>
+  <data name="Kullanici.Field.BirthDate" xml:space="preserve">
+    <value>Doğum tarihi</value>
+  </data>
+  <data name="Kullanici.Field.Gender" xml:space="preserve">
+    <value>Cinsiyet</value>
+  </data>
+  <data name="Kullanici.Field.Password" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="Kullanici.Gender.Female" xml:space="preserve">
+    <value>Kadın</value>
+  </data>
+  <data name="Kullanici.Gender.Male" xml:space="preserve">
+    <value>Erkek</value>
+  </data>
+  <data name="Kullanici.Status.Active" xml:space="preserve">
+    <value>Aktif</value>
+  </data>
+  <data name="Kullanici.Status.Passive" xml:space="preserve">
+    <value>Pasif</value>
+  </data>
+  <data name="Kullanici.Type.SistemYoneticisi" xml:space="preserve">
+    <value>Sistem kullanıcısı</value>
+  </data>
+  <data name="Kullanici.Type.BasvuruKullanicisi" xml:space="preserve">
+    <value>Başvuru kullanıcısı</value>
+  </data>
+  <data name="Kullanici.Type.BirimKullanicisi" xml:space="preserve">
+    <value>Birim kullanıcısı</value>
+  </data>
+  <data name="Kullanici.Role.Gorme" xml:space="preserve">
+    <value>Görme</value>
+  </data>
+  <data name="Kullanici.Role.Yazma" xml:space="preserve">
+    <value>Yazma</value>
+  </data>
+  <data name="Kullanici.Role.Onaylama" xml:space="preserve">
+    <value>Onaylama</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Send" xml:space="preserve">
+    <value>Parola bağlantısı gönder</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Sent" xml:space="preserve">
+    <value>Parola belirleme bağlantısı kullanıcıya gönderildi.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.MailSubject" xml:space="preserve">
+    <value>Parola belirleme bağlantısı</value>
+  </data>
+  <data name="Kullanici.PasswordLink.MailBody" xml:space="preserve">
+    <value>Merhaba {0},&lt;br/&gt;&lt;br/&gt;Parolanızı belirlemek için &lt;a href="{1}"&gt;bu bağlantıya tıklayın&lt;/a&gt;. Bağlantı beş dakika geçerlidir ve yalnızca bir kez kullanılabilir.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Title" xml:space="preserve">
+    <value>Parola belirle</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Description" xml:space="preserve">
+    <value>Hesabınız için yeni bir parola belirleyin.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.PasswordAgain" xml:space="preserve">
+    <value>Parola tekrar</value>
+  </data>
+  <data name="Kullanici.PasswordLink.SetPassword" xml:space="preserve">
+    <value>Parolayı kaydet</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Invalid" xml:space="preserve">
+    <value>Parola bağlantısı geçersiz, kullanılmış veya süresi dolmuş.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Mismatch" xml:space="preserve">
+    <value>Parolalar eşleşmiyor.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Weak" xml:space="preserve">
+    <value>Parola en az 8 karakter olmalı ve yeterli güçte olmalıdır.</value>
+  </data>
+  <data name="Kullanici.PasswordLink.Success" xml:space="preserve">
+    <value>Parolanız başarıyla belirlendi. Giriş yapabilirsiniz.</value>
+  </data>
+  <data name="enumBasvuruDurum_0" xml:space="preserve">
+    <value>Tanımsız</value>
+  </data>
+  <data name="enumBasvuruDurum_1" xml:space="preserve">
+    <value>Ön Başvuru</value>
+  </data>
+  <data name="enumBasvuruDurum_3" xml:space="preserve">
+    <value>İncelemede</value>
+  </data>
+  <data name="enumBasvuruDurum_5" xml:space="preserve">
+    <value>Kabul Edildi</value>
+  </data>
+  <data name="enumBasvuruDurum_7" xml:space="preserve">
+    <value>Reddedildi</value>
+  </data>
+  <data name="enumBasvuruDurum_9" xml:space="preserve">
+    <value>İptal</value>
+  </data>
+  <data name="Basvuru.Review.Title" xml:space="preserve">
+    <value>Ön Başvuru İnceleme Sonuç Listesi</value>
+  </data>
+  <data name="Basvuru.Review.ChecklistNote" xml:space="preserve">
+    <value>Sonuç listesi belirlendiğinde soru, cevap ve açıklama alanları bu bölümde gösterilecektir.</value>
+  </data>
+  <data name="Basvuru.Review.Result" xml:space="preserve">
+    <value>Ön Başvuru değerlendirmesinin Sonucu</value>
+  </data>
+  <data name="Basvuru.Review.Reason" xml:space="preserve">
+    <value>Ön Başvuru değerlendirmesinin Sonuç Gerekçesi</value>
+  </data>
+  <data name="Basvuru.Review.Rejected" xml:space="preserve">
+    <value>Reddedildi</value>
+  </data>
+  <data name="Basvuru.Review.Accepted" xml:space="preserve">
+    <value>Kabul edildi</value>
+  </data>
+  <data name="Basvuru.Review.Returned" xml:space="preserve">
+    <value>Düzeltme için iade edildi</value>
+  </data>
+  <data name="Basvuru.Review.Finalize" xml:space="preserve">
+    <value>Sonuçlandır</value>
+  </data>
+  <data name="Basvuru.Review.Readonly" xml:space="preserve">
+    <value>Bu denetim sonuçlandırılmıştır ve salt okunurdur.</value>
+  </data>
+  <data name="Basvuru.Review.ResultRequired" xml:space="preserve">
+    <value>Denetim sonucu seçilmelidir.</value>
+  </data>
+  <data name="Basvuru.Review.FinalizeConfirm" xml:space="preserve">
+    <value>Denetim sonucu kaydedilecek ve başvurunun durumu değiştirilecektir. Devam edilsin mi?</value>
+  </data>
+  <data name="Basvuru.Review.FieldsRequired" xml:space="preserve">
+    <value>Sonuç ve sonuç gerekçesi birlikte girilmelidir.</value>
+  </data>
+  <data name="ForgotPassword.Title" xml:space="preserve">
+    <value>Şifremi Unuttum</value>
+  </data>
+  <data name="ForgotPassword.Description" xml:space="preserve">
+    <value>Hesabınıza kayıtlı bilgilerin tamamını girin.</value>
+  </data>
+  <data name="ForgotPassword.TCKN" xml:space="preserve">
+    <value>T.C. Kimlik No</value>
+  </data>
+  <data name="ForgotPassword.Name" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="ForgotPassword.Surname" xml:space="preserve">
+    <value>Soyad</value>
+  </data>
+  <data name="ForgotPassword.BirthDate" xml:space="preserve">
+    <value>Doğum tarihi</value>
+  </data>
+  <data name="ForgotPassword.Email" xml:space="preserve">
+    <value>E-posta</value>
+  </data>
+  <data name="ForgotPassword.Phone" xml:space="preserve">
+    <value>Telefon</value>
+  </data>
+  <data name="ForgotPassword.Send" xml:space="preserve">
+    <value>Şifre sıfırlama maili gönder</value>
+  </data>
+  <data name="ForgotPassword.Back" xml:space="preserve">
+    <value>Girişe dön</value>
+  </data>
+  <data name="ForgotPassword.Link" xml:space="preserve">
+    <value>Şifremi unuttum</value>
+  </data>
+  <data name="ForgotPassword.InvalidData" xml:space="preserve">
+    <value>Lütfen verilerin doğruluğunu denetleyip tekrar deneyin.</value>
+  </data>
+  <data name="ForgotPassword.Sent" xml:space="preserve">
+    <value>Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.</value>
+  </data>
+  <data name="ForgotPassword.SendFailed" xml:space="preserve">
+    <value>Şifre sıfırlama e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin.</value>
+  </data>
+  <data name="Basvuru.Step.DbCtp" xml:space="preserve">
+    <value>DB C-TP Teknik Proje</value>
+  </data>
+  <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve">
+    <value>8. DB C-TP Teknik Proje</value>
+  </data>
+  <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve">
+    <value>Yatırımın teknik ön bilgileri, üretim ve kapasite verileri, girdi ihtiyacı, yenilenebilir enerji, makine-ekipman ve bina/yapı listeleri bu bölümde girilir.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.DbCtpRequired" xml:space="preserve">
+    <value>DB C-TP Teknik Proje bölümü doldurulmalıdır.</value>
+  </data>
+  <data name="Basvuru.Summary.Error.DeclarationsRequired" xml:space="preserve">
+    <value>Taahhüt ve beyan bölümündeki tüm beyanlar onaylanmalıdır.</value>
+  </data>
+  <data name="Basvuru.Step.SystemResults" xml:space="preserve">
+    <value>Sistem Sonuçları</value>
+  </data>
+  <data name="Basvuru.Step.ExpertResults" xml:space="preserve">
+    <value>Uzman Sonuçları</value>
+  </data>
+  <data name="Basvuru.Step.Decision" xml:space="preserve">
+    <value>Karar</value>
+  </data>
+  <data name="Basvuru.Review.SystemResultsNote" xml:space="preserve">
+    <value>Bu liste, kayıtlı bir sistem sonucu yoksa başvuru verilerinden ilk açılışta oluşturulur. Kaydettikten sonra kayıtlı sonuçlar gösterilir.</value>
+  </data>
+  <data name="Basvuru.Review.ExpertResultsNote" xml:space="preserve">
+    <value>Uzman değerlendirmesini girip kaydediniz. Sonraki açılışlarda kayıtlı değerlendirme gösterilir.</value>
+  </data>
+  <data name="Basvuru.Message.ListFailed" xml:space="preserve">
+    <value>Başvuru kayıtları listelenemedi.</value>
+  </data>
+  <data name="Basvuru.Message.NewApplicantOnly" xml:space="preserve">
+    <value>Yeni ön başvuru yalnızca başvuru kullanıcıları tarafından oluşturulabilir.</value>
+  </data>
+  <data name="Basvuru.Message.NewScreenFailed" xml:space="preserve">
+    <value>Yeni başvuru ekranı açılamadı.</value>
+  </data>
+  <data name="Basvuru.Message.ReadFailed" xml:space="preserve">
+    <value>Başvuru kaydı okunamadı.</value>
+  </data>
+  <data name="Basvuru.Message.SaveFailed" xml:space="preserve">
+    <value>Başvuru kaydedilemedi.</value>
+  </data>
+  <data name="Basvuru.Message.OwnerReadFailed" xml:space="preserve">
+    <value>Başvuru sahibi bilgileri okunamadı.</value>
+  </data>
+  <data name="Basvuru.Message.AddressListFailed" xml:space="preserve">
+    <value>Uygulama adresleri listelenemedi.</value>
+  </data>
+  <data name="Basvuru.Message.AddressDeleteFailed" xml:space="preserve">
+    <value>Uygulama adresi silinemedi.</value>
+  </data>
+  <data name="Basvuru.Message.PartnershipSaveFailed" xml:space="preserve">
+    <value>Ortaklık bilgileri kaydedilemedi.</value>
+  </data>
+  <data name="Basvuru.Message.StakeholderSaveFailed" xml:space="preserve">
+    <value>Ortak/pay sahibi bilgileri kaydedilemedi.</value>
+  </data>
+  <data name="Basvuru.Message.SessionExpired" xml:space="preserve">
+    <value>Oturum süresi doldu.</value>
+  </data>
+  <data name="Basvuru.Message.DocumentPackageUploadFailed" xml:space="preserve">
+    <value>Doküman paketi yüklenemedi.</value>
+  </data>
+  <data name="Basvuru.Message.CommitmentUploadFailed" xml:space="preserve">
+    <value>Taahhüt dosyası yüklenemedi.</value>
+  </data>
+  <data name="Basvuru.Message.AuditUploadFailed" xml:space="preserve">
+    <value>Bağımsız denetim dosyası yüklenemedi.</value>
+  </data>
+  <data name="Basvuru.Message.PartnershipFileUploadFailed" xml:space="preserve">
+    <value>Ortaklık dosyası yüklenemedi.</value>
+  </data>
+  <data name="Basvuru.Message.CriminalRecordSaveFailed" xml:space="preserve">
+    <value>Adli sicil kişileri kaydedilemedi.</value>
+  </data>
+  <data name="Basvuru.Message.FileDownloadFailed" xml:space="preserve">
+    <value>Dosya indirilemedi.</value>
+  </data>
+  <data name="Basvuru.Message.CompanyNotFound" xml:space="preserve">
+    <value>Firma bulunamadı.</value>
+  </data>
+  <data name="Basvuru.Message.CompanyQueryFailed" xml:space="preserve">
+    <value>Firma sorgulama işlemi tamamlanamadı.</value>
+  </data>
+  <data name="Basvuru.Message.CompanySaveFailed" xml:space="preserve">
+    <value>Firma kaydedilemedi.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.ProjeButcesi" xml:space="preserve">
+    <value>Proje bütçesi yazdırılmadan önce başvuru kaydedilmelidir.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.YatirimOzeti" xml:space="preserve">
+    <value>Yatırım özeti yazdırılmadan önce başvuru kaydedilmelidir.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.IsletmeGideri" xml:space="preserve">
+    <value>İşletme giderleri yazdırılmadan önce başvuru kaydedilmelidir.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.OnBasvuruTamlik" xml:space="preserve">
+    <value>Tamlık kontrolü yazdırılmadan önce başvuru kaydedilmelidir.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.OnBasvuruUygunluk" xml:space="preserve">
+    <value>Uygunluk kontrolü yazdırılmadan önce başvuru kaydedilmelidir.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.OnBilgiler" xml:space="preserve">
+    <value>Ön bilgiler yazdırılmadan önce başvuru kaydedilmelidir.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.MakineEkipman" xml:space="preserve">
+    <value>Makine-ekipman raporu yazdırılmadan önce başvuru kaydedilmelidir.</value>
+  </data>
+  <data name="Basvuru.Report.SaveFirst.BinaListesi" xml:space="preserve">
+    <value>Bina/yapı listesi yazdırılmadan önce başvuru kaydedilmelidir.</value>
+  </data>
+  <data name="Basvuru.Report.TemplateNotFound" xml:space="preserve">
+    <value>Rapor şablonu bulunamadı: {0}</value>
+  </data>
+  <data name="Basvuru.Message.AddressSaved" xml:space="preserve">
+    <value>Uygulama adresi kaydedildi.</value>
+  </data>
+  <data name="Basvuru.Message.AddressSaveFailed" xml:space="preserve">
+    <value>Uygulama adresi kaydedilemedi.</value>
+  </data>
+  <data name="Basvuru.Message.AddressDeleted" xml:space="preserve">
+    <value>Uygulama adresi silindi.</value>
+  </data>
+  <data name="Validation.Tckn.Invalid" xml:space="preserve">
+    <value>TCKN 11 haneli ve geçerli olmalıdır.</value>
+  </data>
+  <data name="Validation.Vkn.Invalid" xml:space="preserve">
+    <value>VKN 10 haneli ve geçerli olmalıdır.</value>
+  </data>
+  <data name="Basvuru.Firma.Select" xml:space="preserve">
+    <value>Seç</value>
+  </data>
+  <data name="Basvuru.Firma.SelectTitle" xml:space="preserve">
+    <value>Firma Seç</value>
+  </data>
+  <data name="Basvuru.Firma.SearchPlaceholder" xml:space="preserve">
+    <value>Firma unvanı, VKN veya MERSİS no</value>
+  </data>
+  <data name="Basvuru.Firma.Searching" xml:space="preserve">
+    <value>Firmalar aranıyor...</value>
+  </data>
+  <data name="Basvuru.Firma.NoResults" xml:space="preserve">
+    <value>Firma bulunamadı.</value>
+  </data>
+  <data name="Basvuru.Common.Search" xml:space="preserve">
+    <value>Ara</value>
+  </data>
+  <data name="Basvuru.Ortaklik.ShareRateRange" xml:space="preserve">
+    <value>Pay oranı zorunludur; 0</value>
+  </data>
+  <data name="MenuBasvuru.onBasvurular" xml:space="preserve">
+    <value>Ön Başvurular</value>
+  </data>
+  <data name="MenuBasvuru.basvurular" xml:space="preserve">
+    <value>Başvurular</value>
+  </data>
+  <data name="Basvuru.Summary.Error.LegalPartnerDocumentsRequired" xml:space="preserve">
+    <value>Tüzel kişi ortak zorunlu belgeleri yüklenmelidir.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.TcknLengthRequired" xml:space="preserve">
+    <value>Gerçek kişi için 11 haneli TCKN girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Ortaklik.VknLengthRequired" xml:space="preserve">
+    <value>Tüzel kişi için 10 haneli VKN girilmelidir.</value>
+  </data>
+  <data name="Basvuru.ApplicationFinancial.Title" xml:space="preserve">
+    <value>Mali Veriler ve Ölçek Kontrolü</value>
+  </data>
+  <data name="Basvuru.ApplicationPartnershipAuthority.Title" xml:space="preserve"><value>Ortaklık ve Yetki</value></data>
+  <data name="Basvuru.ApplicationInvestment.Title" xml:space="preserve"><value>Yatırım Bilgileri</value></data>
 </root>
