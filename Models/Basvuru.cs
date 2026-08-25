@@ -175,6 +175,7 @@ namespace TarimDonusum.Models
         public BasvuruYatirim yatirim { get; set; } = new();
         public BasvuruOrtaklik ortaklik { get; set; } = new();
         public List<BasvuruUygulamaAdresi> YatirimAdresleri { get; set; } = new();
+        public List<BasvuruMakine> Makineler { get; set; } = new();
         public BasvuruFinans finans = new();
         public BasvuruMali mali = new BasvuruMali();
         public BasvuruUygunHarcama uygunHarcama { get; set; } = new();
@@ -275,6 +276,17 @@ namespace TarimDonusum.Models
         public string? organizeAlanTuru { get; set; }
         public DateTime? planlananBaslangicTarihi { get; set; }
         public DateTime? planlananTamamlanmaTarihi { get; set; }
+        public string? ilDegerZinciriEslesmesi { get; set; }
+        public string? tarimGidaBaglantiTuru { get; set; }
+        public string? tarimGidaBaglantiAciklamasi { get; set; }
+        public string? yatirimAlaniTipolojisi { get; set; }
+        public string? degerZinciriUygunlukAciklamasi { get; set; }
+        public string? oncelikliYatirimUyumu { get; set; }
+        public string? oncelikliYatirimKonuKodu { get; set; }
+        public string? ithalatBagimliligiUyumu { get; set; }
+        public string? ithalatBagimliligiUrunKodu { get; set; }
+        public string? hedefUrunlerPazarCiktisi { get; set; }
+        public string? rekabetcilikAciklamasi { get; set; }
 
         public void Dogrula(Sonuc sonuc)
         {
@@ -337,6 +349,17 @@ namespace TarimDonusum.Models
 
             if (degerZinciriAsamalari != null && degerZinciriAsamalari.Any(x => (x.yapilacakFaaliyetler?.Length ?? 0) > 500))
                 sonuc.HataEkle("Yapılacak faaliyetler en fazla 500 karakter olmalıdır.");
+
+            string[] teyitSecenekleri = ["Evet", "Hayır", "Kurum teyidi bekleniyor"];
+            string[] baglantiSecenekleri = ["Yukarı yönlü tedarik bağlantısı", "Tarımsal girdi kullanan ürün", "Gıda odaklı çıktı", "Birden fazla bağlantı"];
+            if (!string.IsNullOrWhiteSpace(ilDegerZinciriEslesmesi) && !teyitSecenekleri.Contains(ilDegerZinciriEslesmesi))
+                sonuc.HataEkle("İl-değer zinciri eşleşmesi seçimi geçersizdir.");
+            if (!string.IsNullOrWhiteSpace(tarimGidaBaglantiTuru) && !baglantiSecenekleri.Contains(tarimGidaBaglantiTuru))
+                sonuc.HataEkle("Doğrudan tarım-gıda bağlantısı türü seçimi geçersizdir.");
+            if (!string.IsNullOrWhiteSpace(oncelikliYatirimUyumu) && !teyitSecenekleri.Contains(oncelikliYatirimUyumu))
+                sonuc.HataEkle("Öncelikli yatırım listesi uyumu seçimi geçersizdir.");
+            if (!string.IsNullOrWhiteSpace(ithalatBagimliligiUyumu) && !teyitSecenekleri.Contains(ithalatBagimliligiUyumu))
+                sonuc.HataEkle("İthalat bağımlılığı listesi uyumu seçimi geçersizdir.");
         }
 
 
@@ -535,6 +558,76 @@ namespace TarimDonusum.Models
         public List<BasvuruAdliSicilKisi> kisiler { get; set; } = new();
     }
 
+    public class BasvuruMakine
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public int siraNo { get; set; }
+        public string ad { get; set; } = "";
+        public string birim { get; set; } = "";
+        public decimal miktar { get; set; }
+        public string aciklama { get; set; } = "";
+        public List<BasvuruMakineOzellik> teknikOzellikler { get; set; } = new();
+        public List<BasvuruMakineTeklif> teklifler { get; set; } = new();
+        public string? uzmanParaBirimi { get; set; }
+        public decimal? uzmanKur { get; set; }
+        public decimal? uzmanMinimumFiyat { get; set; }
+        public decimal? uzmanMaksimumFiyat { get; set; }
+        public int? uzmanSecilenTeklifId { get; set; }
+        public decimal? uzmanOnerilenFiyatTl { get; set; }
+        public string? uzmanKontrolSonucu { get; set; }
+        public string? uzmanAciklama { get; set; }
+    }
+
+    public class BasvuruMakineOzellik
+    {
+        public int id { get; set; }
+        public int makineId { get; set; }
+        public int siraNo { get; set; }
+        public string baslik { get; set; } = "";
+        public string aciklamaAsgariGereklilik { get; set; } = "";
+        public bool zorunluMu { get; set; }
+    }
+
+    public class BasvuruMakineTeklif
+    {
+        public int id { get; set; }
+        public int makineId { get; set; }
+        public int siraNo { get; set; }
+        public bool basvuruyaEsas { get; set; }
+        public string tedarikci { get; set; } = "";
+        public string marka { get; set; } = "";
+        public string model { get; set; } = "";
+        public string paraBirimi { get; set; } = "";
+        public decimal? kur { get; set; }
+        public decimal? birimFiyat { get; set; }
+        public DateTime? teklifTarihi { get; set; }
+        public DateTime? gecerlilikTarihi { get; set; }
+        public int? teklifBelgesiDosyaId { get; set; }
+        public string? teklifBelgesiDosyaAdi { get; set; }
+        public string aciklama { get; set; } = "";
+    }
+
+    public class BasvuruMakineKayitModel
+    {
+        public int basvuruId { get; set; }
+        public List<BasvuruMakine> makineler { get; set; } = new();
+    }
+
+    public class BasvuruMakineUzmanKayitModel
+    {
+        public int basvuruId { get; set; }
+        public int makineId { get; set; }
+        public string? uzmanParaBirimi { get; set; }
+        public decimal? uzmanKur { get; set; }
+        public decimal? uzmanMinimumFiyat { get; set; }
+        public decimal? uzmanMaksimumFiyat { get; set; }
+        public int? uzmanSecilenTeklifId { get; set; }
+        public decimal? uzmanOnerilenFiyatTl { get; set; }
+        public string? uzmanKontrolSonucu { get; set; }
+        public string? uzmanAciklama { get; set; }
+    }
+
     public class BasvuruFinans
     {
         public int basvuruId { get; set; }
@@ -549,6 +642,12 @@ namespace TarimDonusum.Models
         public int? odemeSuresiAy { get; set; }
         public decimal? destekOrani { get; set; }
         public string? digerFinansmanKaynaklariAciklama { get; set; } = "";
+        public string? finansmanParaBirimi { get; set; }
+        public string? digerFinansmanKaynaklari { get; set; }
+        public decimal? oncekiRffOnayliTutar { get; set; }
+        public string? oncekiRffSozlesmesiKapaliMi { get; set; }
+        public string? bankaTeminatMektubuSaglanabilirMi { get; set; }
+        public bool detayliFinansmanKaydi { get; set; }
         public string? yatiriminAmaci { get; set; }
 
         internal void Dogrula(Sonuc<int> sonuc)
@@ -573,6 +672,8 @@ namespace TarimDonusum.Models
 
             if (yatirimSuresiAy == null || yatirimSuresiAy <= 0)
                 sonuc.HataEkle("Yatırım süresi ay olarak girilmelidir.");
+            if (!string.IsNullOrWhiteSpace(finansmanParaBirimi) && !ParaBirimleri.GecerliMi(finansmanParaBirimi))
+                sonuc.HataEkle("Geçerli bir finansman para birimi seçiniz.");
         }
     }
 

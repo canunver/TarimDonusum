@@ -1,0 +1,42 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@using System.Text.Json
+@{
+    bool uzman = Model.DenetciGorunumu;
+    var basvuranVerisi = Model.Basvuru.Makineler.Select(m => new { m.id,m.basvuruId,m.siraNo,m.ad,m.birim,m.miktar,m.aciklama,teknikOzellikler=m.teknikOzellikler,teklifler=m.teklifler });
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruMakineEkipman)">
+    <div class="section-toolbar"><h2 class="mb-0">Makine / Ekipman Listesi</h2>@if(!uzman&&!Model.SaltOkunur){<button type="button" class="btn btn-primary" id="makineYeniBtn">Yeni makine ekle</button>}</div>
+    <script type="application/json" id="makineListeJson">@Html.Raw(JsonSerializer.Serialize(basvuranVerisi))</script>
+    <div id="makineListeAlani"></div>
+    @if(uzman)
+    {
+        <h3 class="mt-4">Kurum Uzmanı Değerlendirmesi</h3>
+        <div class="alert alert-warning">Bu bölümdeki veriler başvuru sahibine gösterilmez.</div>
+        @foreach(var m in Model.Basvuru.Makineler)
+        {
+            <div class="card mb-3 uzman-makine" data-makine-id="@m.id">
+                <div class="card-header"><strong>@m.siraNo - @m.ad</strong></div><div class="card-body">
+                <div class="form-grid">
+                    <label>Uzman para birimi<select class="u-para"><option value="">Seçiniz</option>@foreach(var p in ParaBirimleri.Tum){<option value="@p" selected="@(m.uzmanParaBirimi==p)">@p</option>}</select></label>
+                    <label>Kur<input class="u-kur" type="number" min="0" step="0.000001" value="@m.uzmanKur?.ToString(System.Globalization.CultureInfo.InvariantCulture)" oninput="MakineUzmanHesapla(this)" /></label>
+                    <label>Uzman minimum fiyat<input class="u-min" type="number" min="0" step="0.01" value="@m.uzmanMinimumFiyat?.ToString(System.Globalization.CultureInfo.InvariantCulture)" oninput="MakineUzmanHesapla(this)" /></label>
+                    <label>Uzman maksimum fiyat<input class="u-maks" type="number" min="0" step="0.01" value="@m.uzmanMaksimumFiyat?.ToString(System.Globalization.CultureInfo.InvariantCulture)" oninput="MakineUzmanHesapla(this)" /></label>
+                    <label>Minimum (TL)<input class="u-min-tl" readonly /></label><label>Maksimum (TL)<input class="u-maks-tl" readonly /></label><label>Maksimum + %5 marj (TL)<input class="u-marj" readonly /></label>
+                    <label>Uzmanın seçtiği teklif<select class="u-teklif"><option value="">Seçiniz</option>@foreach(var t in m.teklifler){<option value="@t.id" selected="@(m.uzmanSecilenTeklifId==t.id)">@t.tedarikci - @t.birimFiyat?.ToString("N2") @t.paraBirimi</option>}</select></label>
+                    <label>Uzmanın önerdiği fiyat (TL)<input class="u-oneri" type="number" min="0" step="0.01" value="@m.uzmanOnerilenFiyatTl?.ToString(System.Globalization.CultureInfo.InvariantCulture)" /></label>
+                    <label>Kontrol sonucu<select class="u-sonuc"><option value="">Seçiniz</option>@foreach(var s in new[]{"Eksik","Kabul edilebilir","Minimum fiyat esas alınır"}){<option value="@s" selected="@(m.uzmanKontrolSonucu==s)">@s</option>}</select></label>
+                </div><label class="wide-label">Açıklama<textarea class="u-aciklama">@m.uzmanAciklama</textarea></label>
+                <button type="button" class="btn btn-primary" onclick="MakineUzmanKaydet(this)">Uzman değerlendirmesini kaydet</button></div>
+            </div>
+        }
+    }
+</section>
+@if(!uzman&&!Model.SaltOkunur)
+{
+<div class="modal fade" id="makineModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Makine / Ekipman Detayı</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body" style="max-height:calc(100vh - 180px);overflow-y:auto;">
+    <input type="hidden" id="makineIndex" /><div class="form-grid"><label>Makine sıra no<input id="makineSira" type="number" min="1" /></label><label>Makine/Ekipman adı<input id="makineAd" maxlength="250" /></label><label>Birim<select id="makineBirim">@foreach(var birim in OlcuBirimleri.Tum){<option value="@birim">@birim</option>}</select></label><label>Miktar<input id="makineMiktar" type="number" min="0.001" step="0.001" /></label></div><label class="wide-label">Açıklama<textarea id="makineAciklama" maxlength="2000"></textarea></label>
+    <div class="section-toolbar mt-3"><h3>1- Teknik Özellikler</h3><button type="button" class="btn btn-outline-primary" onclick="MakineOzellikEkle()">Özellik ekle</button></div><div class="table-responsive"><table class="table"><thead><tr><th>Sıra</th><th>Özellik başlığı</th><th>Açıklama / Asgari Gereklilik</th><th>Zorunlu mu?</th></tr></thead><tbody id="makineOzellikler"></tbody></table></div>
+    <div class="section-toolbar mt-3"><h3>2- Teklifler</h3><button type="button" class="btn btn-outline-primary" onclick="MakineTeklifEkle()">Teklif ekle</button></div><div class="table-responsive"><table class="table"><thead><tr><th style="width:90px">Sıra / Esas</th><th>Tedarikçi</th><th>Marka</th><th>Model</th><th>Para</th><th>Kur</th><th>Birim fiyat</th></tr></thead><tbody id="makineTeklifler"></tbody></table></div>
+</div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="MakineKaydet()">Kaydet</button></div></div></div></div>
+}

@@ -2,7 +2,10 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
 @{
-    ViewData["Title"] = Model.Basvuru.Id > 0 ? L["Basvuru.Form.EditTitle"] : L["Basvuru.Form.NewTitle"];
+    bool basvuruKaydi = Model.Basvuru.kayitTuru == TarimDonusum.Models.enumBasvuruKayitTuru.Basvuru;
+    ViewData["Title"] = Model.Basvuru.Id > 0
+        ? L[basvuruKaydi ? "Basvuru.Form.MainEditTitle" : "Basvuru.Form.EditTitle"]
+        : L["Basvuru.Form.NewTitle"];
 }
 
 <form asp-controller="Basvuru" asp-action="Kaydet" method="post" id="basvuruForm">

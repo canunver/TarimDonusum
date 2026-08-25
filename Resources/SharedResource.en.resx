@@ -552,11 +552,17 @@
   <data name="Basvuru.Form.EditTitle" xml:space="preserve">
     <value>Edit Pre-application</value>
   </data>
+  <data name="Basvuru.Form.MainEditTitle" xml:space="preserve">
+    <value>Edit Application</value>
+  </data>
   <data name="Basvuru.Form.AuditTitle" xml:space="preserve">
     <value>Pre-application Review</value>
   </data>
   <data name="Basvuru.Form.ApplicationNo" xml:space="preserve">
     <value>Pre-application No: {0}</value>
+  </data>
+  <data name="Basvuru.Form.MainApplicationNo" xml:space="preserve">
+    <value>Application No: {0}</value>
   </data>
   <data name="Basvuru.Form.ApplicationNoPending" xml:space="preserve">
     <value>Created after the first section is saved</value>
@@ -2726,4 +2732,5 @@
   </data>
   <data name="Basvuru.ApplicationPartnershipAuthority.Title" xml:space="preserve"><value>Partnership and Authority</value></data>
   <data name="Basvuru.ApplicationInvestment.Title" xml:space="preserve"><value>Investment Information</value></data>
+  <data name="Basvuru.Step.MakineEkipman" xml:space="preserve"><value>Machinery / Equipment List</value></data>
 </root>

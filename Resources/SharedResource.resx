@@ -552,11 +552,17 @@
   <data name="Basvuru.Form.EditTitle" xml:space="preserve">
     <value>Ön Başvuru Düzenle</value>
   </data>
+  <data name="Basvuru.Form.MainEditTitle" xml:space="preserve">
+    <value>Başvuru Düzenle</value>
+  </data>
   <data name="Basvuru.Form.AuditTitle" xml:space="preserve">
     <value>Ön Başvuru Denetleme</value>
   </data>
   <data name="Basvuru.Form.ApplicationNo" xml:space="preserve">
     <value>Ön Başvuru No: {0}</value>
+  </data>
+  <data name="Basvuru.Form.MainApplicationNo" xml:space="preserve">
+    <value>Başvuru No: {0}</value>
   </data>
   <data name="Basvuru.Form.ApplicationNoPending" xml:space="preserve">
     <value>İlk bölüm kaydedilince oluşur</value>
@@ -2774,4 +2780,5 @@
   </data>
   <data name="Basvuru.ApplicationPartnershipAuthority.Title" xml:space="preserve"><value>Ortaklık ve Yetki</value></data>
   <data name="Basvuru.ApplicationInvestment.Title" xml:space="preserve"><value>Yatırım Bilgileri</value></data>
+  <data name="Basvuru.Step.MakineEkipman" xml:space="preserve"><value>Makine / Ekipman Listesi</value></data>
 </root>

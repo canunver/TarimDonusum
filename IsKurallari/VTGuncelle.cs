@@ -218,7 +218,7 @@ namespace TarimDonusum.IsKurallari
                         TalepEdilenFinansmanOrani DECIMAL(5,2) NULL,
                         OnBasvuruSahibiKatkisi DECIMAL(18,2) NULL,
                         BasvuruSahibiKatkisi DECIMAL(18,2) NULL,
-                        TalepEdilenVadeSuresiYil INT NULL,
+                        TalepEdilenVadeSuresiAy INT NULL,
                         DestekOrani DECIMAL(5,2) NULL,
                         DigerFinansmanKaynaklariAciklama NVARCHAR(MAX) NULL,
                         PikkListesiJson NVARCHAR(MAX) NULL,
@@ -664,6 +664,59 @@ namespace TarimDonusum.IsKurallari
                   IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'AdresBelgeDosyaId') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD AdresBelgeDosyaId INT NULL, AdresBelgeDosyaAdi NVARCHAR(260) NULL;
                   IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'KullanimHakkiDosyaId') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD KullanimHakkiDosyaId INT NULL, KullanimHakkiDosyaAdi NVARCHAR(260) NULL;
                   IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'KanitDosyaId') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD KanitDosyaId INT NULL, KanitDosyaAdi NVARCHAR(260) NULL;"),
+            new(46,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'IlDegerZinciriEslesmesi') IS NULL ALTER TABLE dbo.Basvuru ADD IlDegerZinciriEslesmesi NVARCHAR(50) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'TarimGidaBaglantiTuru') IS NULL ALTER TABLE dbo.Basvuru ADD TarimGidaBaglantiTuru NVARCHAR(100) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'TarimGidaBaglantiAciklamasi') IS NULL ALTER TABLE dbo.Basvuru ADD TarimGidaBaglantiAciklamasi NVARCHAR(2000) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'YatirimAlaniTipolojisi') IS NULL ALTER TABLE dbo.Basvuru ADD YatirimAlaniTipolojisi NVARCHAR(500) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'DegerZinciriUygunlukAciklamasi') IS NULL ALTER TABLE dbo.Basvuru ADD DegerZinciriUygunlukAciklamasi NVARCHAR(2000) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OncelikliYatirimUyumu') IS NULL ALTER TABLE dbo.Basvuru ADD OncelikliYatirimUyumu NVARCHAR(50) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OncelikliYatirimKonuKodu') IS NULL ALTER TABLE dbo.Basvuru ADD OncelikliYatirimKonuKodu NVARCHAR(500) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'IthalatBagimliligiUyumu') IS NULL ALTER TABLE dbo.Basvuru ADD IthalatBagimliligiUyumu NVARCHAR(50) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'IthalatBagimliligiUrunKodu') IS NULL ALTER TABLE dbo.Basvuru ADD IthalatBagimliligiUrunKodu NVARCHAR(500) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'HedefUrunlerPazarCiktisi') IS NULL ALTER TABLE dbo.Basvuru ADD HedefUrunlerPazarCiktisi NVARCHAR(2000) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'RekabetcilikAciklamasi') IS NULL ALTER TABLE dbo.Basvuru ADD RekabetcilikAciklamasi NVARCHAR(2000) NULL;"),
+            new(47,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'FinansmanParaBirimi') IS NULL ALTER TABLE dbo.Basvuru ADD FinansmanParaBirimi NVARCHAR(20) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'DigerFinansmanKaynaklari') IS NULL ALTER TABLE dbo.Basvuru ADD DigerFinansmanKaynaklari NVARCHAR(1000) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OncekiRffOnayliTutar') IS NULL ALTER TABLE dbo.Basvuru ADD OncekiRffOnayliTutar DECIMAL(18,2) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'OncekiRffSozlesmesiKapaliMi') IS NULL ALTER TABLE dbo.Basvuru ADD OncekiRffSozlesmesiKapaliMi NVARCHAR(20) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'BankaTeminatMektubuSaglanabilirMi') IS NULL ALTER TABLE dbo.Basvuru ADD BankaTeminatMektubuSaglanabilirMi NVARCHAR(10) NULL;"),
+            new(48,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'TalepEdilenVadeSuresiYil') IS NOT NULL
+                      AND COL_LENGTH(N'dbo.Basvuru', N'TalepEdilenVadeSuresiAy') IS NULL
+                    EXEC sp_rename N'dbo.Basvuru.TalepEdilenVadeSuresiYil', N'TalepEdilenVadeSuresiAy', N'COLUMN';
+                  IF COL_LENGTH(N'dbo.Basvuru', N'TalepEdilenVadeSuresiAy') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD TalepEdilenVadeSuresiAy INT NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru', N'TalepEdilenVadeSuresiYil') IS NOT NULL
+                      AND COL_LENGTH(N'dbo.Basvuru', N'TalepEdilenVadeSuresiAy') IS NOT NULL
+                    EXEC(N'UPDATE dbo.Basvuru SET TalepEdilenVadeSuresiAy = COALESCE(TalepEdilenVadeSuresiAy, TalepEdilenVadeSuresiYil);');"),
+            new(49,
+                @"CREATE TABLE dbo.BasvuruMakine(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruMakine PRIMARY KEY,
+                    BasvuruId INT NOT NULL, SiraNo INT NOT NULL, Ad NVARCHAR(250) NOT NULL,
+                    Birim NVARCHAR(50) NOT NULL, Miktar DECIMAL(18,3) NOT NULL, Aciklama NVARCHAR(2000) NULL,
+                    UzmanParaBirimi NVARCHAR(20) NULL, UzmanKur DECIMAL(18,6) NULL,
+                    UzmanMinimumFiyat DECIMAL(18,2) NULL, UzmanMaksimumFiyat DECIMAL(18,2) NULL,
+                    UzmanSecilenTeklifId INT NULL, UzmanOnerilenFiyatTl DECIMAL(18,2) NULL,
+                    UzmanKontrolSonucu NVARCHAR(50) NULL, UzmanAciklama NVARCHAR(2000) NULL,
+                    CONSTRAINT FK_BasvuruMakine_Basvuru FOREIGN KEY(BasvuruId) REFERENCES dbo.Basvuru(Id) ON DELETE CASCADE);
+                  CREATE UNIQUE INDEX UX_BasvuruMakine_BasvuruSira ON dbo.BasvuruMakine(BasvuruId,SiraNo);
+                  CREATE TABLE dbo.BasvuruMakineOzellik(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruMakineOzellik PRIMARY KEY,
+                    MakineId INT NOT NULL, SiraNo INT NOT NULL, Baslik NVARCHAR(250) NOT NULL,
+                    AciklamaAsgariGereklilik NVARCHAR(2000) NOT NULL, ZorunluMu BIT NOT NULL,
+                    CONSTRAINT FK_BasvuruMakineOzellik_Makine FOREIGN KEY(MakineId) REFERENCES dbo.BasvuruMakine(Id) ON DELETE CASCADE);
+                  CREATE UNIQUE INDEX UX_BasvuruMakineOzellik_MakineSira ON dbo.BasvuruMakineOzellik(MakineId,SiraNo);
+                  CREATE TABLE dbo.BasvuruMakineTeklif(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruMakineTeklif PRIMARY KEY,
+                    MakineId INT NOT NULL, SiraNo INT NOT NULL, BasvuruyaEsas BIT NOT NULL,
+                    Tedarikci NVARCHAR(250) NOT NULL, Marka NVARCHAR(150) NULL, Model NVARCHAR(150) NULL,
+                    ParaBirimi NVARCHAR(20) NOT NULL, Kur DECIMAL(18,6) NULL, BirimFiyat DECIMAL(18,2) NULL,
+                    TeklifTarihi DATE NULL, GecerlilikTarihi DATE NULL, TeklifBelgesiDosyaId INT NULL,
+                    TeklifBelgesiDosyaAdi NVARCHAR(260) NULL, Aciklama NVARCHAR(2000) NULL,
+                    CONSTRAINT FK_BasvuruMakineTeklif_Makine FOREIGN KEY(MakineId) REFERENCES dbo.BasvuruMakine(Id) ON DELETE CASCADE);
+                  CREATE UNIQUE INDEX UX_BasvuruMakineTeklif_MakineSira ON dbo.BasvuruMakineTeklif(MakineId,SiraNo);"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

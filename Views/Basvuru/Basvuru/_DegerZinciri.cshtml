@@ -1,0 +1,37 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@{
+    var y = Model.Basvuru.yatirim;
+    bool ro = Model.SaltOkunur;
+    string[] teyitSecenekleri = ["Evet", "Hayır", "Kurum teyidi bekleniyor"];
+    string[] baglantiTurleri = ["Yukarı yönlü tedarik bağlantısı", "Tarımsal girdi kullanan ürün", "Gıda odaklı çıktı", "Birden fazla bağlantı"];
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruDegerZinciri)">
+    <div class="section-toolbar">
+        <h2 class="mb-0">İl Bazlı Değer Zinciri ve Değer Zinciri Aşamaları</h2>
+        <a class="btn btn-outline-primary" href="@Url.Action("DegerZinciriYazdir", "Basvuru", new { id = Model.Basvuru.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+    </div>
+    <div class="alert alert-info">Seçilen değer zinciri yatırım iliyle eşleşmeli ve doğrudan tarım-gıda bağlantısı kanıtlanmalıdır. Ön başvuruda girilen değer zinciri ve aşamalar başvuruya kopyalanır; bilgiler her iki tarafta da korunur.</div>
+    <h3>Değer Zinciri Seçimi</h3>
+    <div class="form-grid">
+        <label for="degerZinciriSelect">Değer zinciri<select id="degerZinciriSelect" name="Basvuru.DegerZinciriId" disabled="@ro"></select></label>
+        <label>İl-değer zinciri eşleşmesi<select name="Basvuru.yatirim.IlDegerZinciriEslesmesi" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in teyitSecenekleri) { <option value="@x" selected="@(y.ilDegerZinciriEslesmesi == x)">@x</option> }</select></label>
+        <label>Doğrudan tarım-gıda bağlantısı türü<select name="Basvuru.yatirim.TarimGidaBaglantiTuru" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in baglantiTurleri) { <option value="@x" selected="@(y.tarimGidaBaglantiTuru == x)">@x</option> }</select></label>
+    </div>
+    <label class="wide-label">Yatırım alanı / tipolojisi<textarea name="Basvuru.yatirim.YatirimAlaniTipolojisi" maxlength="500" disabled="@ro">@y.yatirimAlaniTipolojisi</textarea></label>
+    <label class="wide-label">Bağlantı açıklaması / kanıt<textarea name="Basvuru.yatirim.TarimGidaBaglantiAciklamasi" maxlength="2000" disabled="@ro">@y.tarimGidaBaglantiAciklamasi</textarea></label>
+    <label class="wide-label">Uygunluk açıklaması<textarea name="Basvuru.yatirim.DegerZinciriUygunlukAciklamasi" maxlength="2000" disabled="@ro">@y.degerZinciriUygunlukAciklamasi</textarea></label>
+    <h3>Yatırım Kapsamındaki Değer Zinciri Aşaması</h3>
+    <div class="table-responsive deger-zinciri-asama-wrap"><table class="table deger-zinciri-asama-table"><thead><tr><th>Seçim</th><th>Değer zinciri aşaması</th><th>Kısa açıklama</th><th>Yapılacak faaliyetler</th></tr></thead><tbody id="degerZinciriAsamaListesi"></tbody></table></div>
+    <h3 class="mt-4">Rekabetçilik ve Sıralama Eşleşmeleri</h3>
+    <div class="form-grid">
+        <label>Öncelikli Desteklenecek Yatırım Listesi ile uyum<select name="Basvuru.yatirim.OncelikliYatirimUyumu" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in teyitSecenekleri) { <option value="@x" selected="@(y.oncelikliYatirimUyumu == x)">@x</option> }</select></label>
+        <label>Konu / kod<input name="Basvuru.yatirim.OncelikliYatirimKonuKodu" value="@y.oncelikliYatirimKonuKodu" maxlength="500" disabled="@ro" /></label>
+    </div>
+    <div class="form-grid mt-3">
+        <label>Yüksek İthalat Bağımlılığı Olan Ürünler Listesi ile uyum<select name="Basvuru.yatirim.IthalatBagimliligiUyumu" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in teyitSecenekleri) { <option value="@x" selected="@(y.ithalatBagimliligiUyumu == x)">@x</option> }</select></label>
+        <label>Ürün / kod<input name="Basvuru.yatirim.IthalatBagimliligiUrunKodu" value="@y.ithalatBagimliligiUrunKodu" maxlength="500" disabled="@ro" /></label>
+    </div>
+    <label class="wide-label">Hedeflenen ürünler ve pazar çıktısı<textarea name="Basvuru.yatirim.HedefUrunlerPazarCiktisi" maxlength="2000" disabled="@ro">@y.hedefUrunlerPazarCiktisi</textarea></label>
+    <label class="wide-label">Açıklama<textarea name="Basvuru.yatirim.RekabetcilikAciklamasi" maxlength="2000" disabled="@ro">@y.rekabetcilikAciklamasi</textarea></label>
+</section>

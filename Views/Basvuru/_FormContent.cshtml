@@ -11,6 +11,9 @@
     BasvuruBolumTanim ilkBolum = bolumler.First();
 
     string T(string key) => L[key].Value;
+    bool basvuruKaydi = b.kayitTuru == enumBasvuruKayitTuru.Basvuru;
+    string formBasligi = basvuruKaydi ? T("Basvuru.Form.MainEditTitle") : T("Basvuru.Form.EditTitle");
+    string formNoMetni = basvuruKaydi ? T("Basvuru.Form.MainApplicationNo") : T("Basvuru.Form.ApplicationNo");
 
     string basvuruIlAdi = b.basvuruFirma.il?.ad ?? "";
     if (string.IsNullOrWhiteSpace(basvuruIlAdi) && b.basvuruFirma.il.id > 0)
@@ -31,8 +34,8 @@
 <div class="basvuru-page">
     <div class="basvuru-titlebar">
         <div>
-            <h1>@(Model.DenetciGorunumu ? T("Basvuru.Form.AuditTitle") : (b.Id > 0 ? T("Basvuru.Form.EditTitle") : T("Basvuru.Form.NewTitle")))</h1>
-            <p>@string.Format(T("Basvuru.Form.ApplicationNo"), b.Id > 0 ? b.Id.ToString() : T("Basvuru.Form.ApplicationNoPending"))</p>
+            <h1>@(Model.DenetciGorunumu ? T("Basvuru.Form.AuditTitle") : (b.Id > 0 ? formBasligi : T("Basvuru.Form.NewTitle")))</h1>
+            <p>@string.Format(formNoMetni, b.Id > 0 ? b.Id.ToString() : T("Basvuru.Form.ApplicationNoPending"))</p>
         </div>
     </div>
 
@@ -384,6 +387,11 @@
     const bolumBasvuruMaliVeriler = @((int)enumBasvuruBolum.BasvuruMaliVeriler);
     const bolumBasvuruOrtaklikYetki = @((int)enumBasvuruBolum.BasvuruOrtaklikYetki);
     const bolumBasvuruYatirimBilgileri = @((int)enumBasvuruBolum.BasvuruYatirimBilgileri);
+    const bolumBasvuruDegerZinciri = @((int)enumBasvuruBolum.BasvuruDegerZinciri);
+    const bolumBasvuruFinansman = @((int)enumBasvuruBolum.BasvuruFinansman);
+    const bolumBasvuruMakineEkipman = @((int)enumBasvuruBolum.BasvuruMakineEkipman);
+    const genelParaBirimleri = @Html.Raw(JsonSerializer.Serialize(ParaBirimleri.Tum));
+    const genelOlcuBirimleri = @Html.Raw(JsonSerializer.Serialize(OlcuBirimleri.Tum));
     const bolumIrtibat = @((int)enumBasvuruBolum.Irtibat);
     const bolumYatirim = @((int)enumBasvuruBolum.Yatirim);
     const bolumUygulamaAdresi = @((int)enumBasvuruBolum.UygulamaAdresi);
@@ -695,6 +703,8 @@
             bolumBasvuruSahibi,
             bolumBasvuruMaliVeriler,
             bolumBasvuruYatirimBilgileri,
+            bolumBasvuruDegerZinciri,
+            bolumBasvuruFinansman,
             bolumIrtibat,
             bolumYatirim,
             bolumUygulamaAdresi,
@@ -738,12 +748,14 @@
         }
 
         if (bolum === bolumFirma || bolum === bolumBasvuruSahibi) FirmaBolumuIlklendir();
-        if (bolum === bolumYatirim) YatirimBolumuIlklendir();
+        if (bolum === bolumYatirim || bolum === bolumBasvuruDegerZinciri) YatirimBolumuIlklendir();
         if (bolum === bolumUygulamaAdresi || bolum === bolumBasvuruYatirimBilgileri) UygulamaAdresiBolumuIlklendir();
-        if (bolum === bolumFinans || bolum === bolumMali || bolum === bolumBasvuruMaliVeriler || bolum === bolumOrtaklik) ParaTamsayiAyarla();
+        if (bolum === bolumFinans || bolum === bolumBasvuruFinansman || bolum === bolumMali || bolum === bolumBasvuruMaliVeriler || bolum === bolumOrtaklik) ParaTamsayiAyarla();
+        if (bolum === bolumFinans || bolum === bolumBasvuruFinansman) FinansTutarlariniHesapla();
         if (bolum === bolumMali) MaliBolumuIlklendir();
         if (bolum === bolumBasvuruMaliVeriler) BasvuruMaliBolumuIlklendir();
         if (bolum === bolumBasvuruOrtaklikYetki) BasvuruOrtaklikYetkiBolumuIlklendir();
+        if (bolum === bolumBasvuruMakineEkipman) MakineBolumuIlklendir();
         if (bolum === bolumOrtaklik) OrtaklikBolumuIlklendir();
         if (bolum === bolumUygunHarcama) UygunHarcamaBolumuIlklendir();
         if (bolum === bolumYatirimOzeti) YatirimOzetiBolumuIlklendir();
@@ -2195,7 +2207,18 @@
                 const id = parseInt(this.value);
                 const faaliyet = $(`textarea.deger-zinciri-faaliyet[data-asama-id="${id}"]`).val() || '';
                 return { id: id, yapilacakFaaliyetler: faaliyet };
-            }).get()
+            }).get(),
+            ilDegerZinciriEslesmesi: degerStr('Basvuru.yatirim.IlDegerZinciriEslesmesi'),
+            tarimGidaBaglantiTuru: degerStr('Basvuru.yatirim.TarimGidaBaglantiTuru'),
+            tarimGidaBaglantiAciklamasi: degerStr('Basvuru.yatirim.TarimGidaBaglantiAciklamasi'),
+            yatirimAlaniTipolojisi: degerStr('Basvuru.yatirim.YatirimAlaniTipolojisi'),
+            degerZinciriUygunlukAciklamasi: degerStr('Basvuru.yatirim.DegerZinciriUygunlukAciklamasi'),
+            oncelikliYatirimUyumu: degerStr('Basvuru.yatirim.OncelikliYatirimUyumu'),
+            oncelikliYatirimKonuKodu: degerStr('Basvuru.yatirim.OncelikliYatirimKonuKodu'),
+            ithalatBagimliligiUyumu: degerStr('Basvuru.yatirim.IthalatBagimliligiUyumu'),
+            ithalatBagimliligiUrunKodu: degerStr('Basvuru.yatirim.IthalatBagimliligiUrunKodu'),
+            hedefUrunlerPazarCiktisi: degerStr('Basvuru.yatirim.HedefUrunlerPazarCiktisi'),
+            rekabetcilikAciklamasi: degerStr('Basvuru.yatirim.RekabetcilikAciklamasi')
         };
         AjaxPost('/Basvuru/KaydetDegerZinciri', yatirim, sonuc => SonucGosterVeDirtyTemizle(sonuc, afterSuccess));
     }
@@ -2219,7 +2242,15 @@
             basvuruSahibiKatkisi: degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
             onBasvuruSahibiKatkisi: degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
             talepEdilenVadeSuresiAy: degerInt('Basvuru.finans.TalepEdilenVadeSuresiAy'),
-            yatirimSuresiAy: degerInt('Basvuru.finans.YatirimSuresiAy')
+            yatirimSuresiAy: degerInt('Basvuru.finans.YatirimSuresiAy'),
+            odemeSuresiAy: degerInt('Basvuru.finans.OdemeSuresiAy'),
+            finansmanParaBirimi: degerStr('Basvuru.finans.FinansmanParaBirimi'),
+            digerFinansmanKaynaklari: degerStr('Basvuru.finans.DigerFinansmanKaynaklari'),
+            oncekiRffOnayliTutar: degerDec('Basvuru.finans.OncekiRffOnayliTutar'),
+            oncekiRffSozlesmesiKapaliMi: degerStr('Basvuru.finans.OncekiRffSozlesmesiKapaliMi'),
+            bankaTeminatMektubuSaglanabilirMi: degerStr('Basvuru.finans.BankaTeminatMektubuSaglanabilirMi'),
+            digerFinansmanKaynaklariAciklama: degerStr('Basvuru.finans.DigerFinansmanKaynaklariAciklama'),
+            detayliFinansmanKaydi: active === bolumBasvuruFinansman
         };
         AjaxPost('/Basvuru/KaydetFinans', model, sonuc => SonucGosterVeDirtyTemizle(sonuc, afterSuccess));
     }
@@ -2238,11 +2269,17 @@
         const ozKaynakAlani = document.querySelector('[name="Basvuru.finans.BasvuruSahibiKatkisi"]');
         if (finansmanAlani) finansmanAlani.value = Math.round(finansman).toLocaleString('tr-TR');
         if (ozKaynakAlani) ozKaynakAlani.value = Math.round(ozKaynak).toLocaleString('tr-TR');
+        const onceki = degerDec('Basvuru.finans.OncekiRffOnayliTutar') || 0;
+        const kumulatif = document.getElementById('finansKumulatifKontrol');
+        const islem = document.getElementById('finansIslemKontrol');
+        const teminat = document.getElementById('finansTeminatTutari');
+        if (kumulatif) kumulatif.value = onceki + finansman <= 10000000 ? 'UYGUN' : 'UYGUN DEĞİL';
+        if (islem) islem.value = finansman >= 100000 && finansman <= 10000000 ? 'UYGUN' : 'UYGUN DEĞİL';
+        if (teminat) teminat.value = Math.round(finansman * 1.1).toLocaleString('tr-TR');
     }
 
     // Form partial olarak DOMContentLoaded sonrasında yüklense de hesaplama çalışsın.
     window.FinansTutarlariniHesapla = FinansTutarlariniHesapla;
-    FinansTutarlariniHesapla();
 
     function MaliKaydet(afterSuccess) {
         const model = {
@@ -2788,11 +2825,7 @@
 
     const yatirimOzetiBirimSecenekleri = [
         { value: '', label: '(Yok)' },
-        { value: 'Adet', label: 'Adet' },
-        { value: 'Ton', label: 'Ton' },
-        { value: 'Kişi/Yıl', label: 'Kişi/Yıl' },
-        { value: 'kWh', label: 'kWh' },
-        { value: 'Yıl', label: 'Yıl' }
+        ...genelOlcuBirimleri.map(x => ({ value: x, label: x }))
     ];
 
     function YatirimOzetiBirimSecenekleriHtml(selectedValue) {
@@ -3140,6 +3173,31 @@
         BasvuruMaliKonsolideGuncelle();
     }
 
+    var basvuruMakineleri = [];
+    function MakineBolumuIlklendir() {
+        try { basvuruMakineleri = JSON.parse(document.getElementById('makineListeJson')?.textContent || '[]'); } catch { basvuruMakineleri = []; }
+        MakineListeRender();
+        document.getElementById('makineYeniBtn')?.addEventListener('click', () => MakineModalAc(-1));
+        document.querySelectorAll('.uzman-makine').forEach(x => MakineUzmanHesapla(x.querySelector('.u-kur')));
+    }
+    function MakineListeRender() {
+        const alan=document.getElementById('makineListeAlani'); if(!alan)return;
+        if(!basvuruMakineleri.length){alan.innerHTML='<div class="alert alert-info">Henüz makine/ekipman eklenmedi.</div>';return;}
+        const duzenlenebilir=!!document.getElementById('makineYeniBtn');
+        alan.innerHTML=`<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Sıra</th><th>Makine/Ekipman</th><th>Birim</th><th>Miktar</th><th>Açıklama</th><th>Özellik</th><th>Teklif</th><th></th></tr></thead><tbody>${basvuruMakineleri.map((m,i)=>`<tr><td>${htmlEncode(m.siraNo)}</td><td>${htmlEncode(m.ad)}</td><td>${htmlEncode(m.birim)}</td><td>${htmlEncode(m.miktar)}</td><td>${htmlEncode(m.aciklama)}</td><td>${(m.teknikOzellikler||[]).length}</td><td>${(m.teklifler||[]).length}</td><td>${duzenlenebilir?`<button type="button" class="btn btn-sm btn-outline-primary" onclick="MakineModalAc(${i})">Güncelle</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
+    }
+    function MakineModalAc(index){const m=index>=0?basvuruMakineleri[index]:{id:0,basvuruId:BasvuruId(),siraNo:basvuruMakineleri.length+1,ad:'',birim:'Adet',miktar:1,aciklama:'',teknikOzellikler:[],teklifler:[]};document.getElementById('makineIndex').value=index;document.getElementById('makineIndex').dataset.model=JSON.stringify(m);document.getElementById('makineSira').value=m.siraNo||'';document.getElementById('makineAd').value=m.ad||'';document.getElementById('makineBirim').value=m.birim||'';document.getElementById('makineMiktar').value=m.miktar||'';document.getElementById('makineAciklama').value=m.aciklama||'';MakineOzellikRender(m.teknikOzellikler||[]);MakineTeklifRender(m.teklifler||[]);$('#makineModal').modal('show');}
+    function MakineOzellikRender(list){const b=document.getElementById('makineOzellikler');b.innerHTML=list.map((o,i)=>`<tr data-id="${o.id||0}"><td><input class="o-sira form-control" type="number" min="1" value="${o.siraNo||i+1}"></td><td><input class="o-baslik form-control" value="${htmlEncode(o.baslik||'')}"></td><td><textarea class="o-aciklama form-control">${htmlEncode(o.aciklamaAsgariGereklilik||'')}</textarea></td><td><select class="o-zorunlu form-control"><option value="true" ${o.zorunluMu?'selected':''}>Evet</option><option value="false" ${!o.zorunluMu?'selected':''}>Hayır</option></select></td></tr>`).join('');}
+    function MakineOzellikEkle(){const b=document.getElementById('makineOzellikler');b.insertAdjacentHTML('beforeend',`<tr data-id="0"><td><input class="o-sira form-control" type="number" min="1" value="${b.children.length+1}"></td><td><input class="o-baslik form-control"></td><td><textarea class="o-aciklama form-control"></textarea></td><td><select class="o-zorunlu form-control"><option value="true">Evet</option><option value="false">Hayır</option></select></td></tr>`);}
+    function MakineTeklifRender(list){const b=document.getElementById('makineTeklifler');b.innerHTML=list.map((t,i)=>MakineTeklifSatir(t,i)).join('');}
+    function MakineTeklifSatir(t,i){return `<tr class="makine-teklif" data-id="${t.id||0}" style="border-top:3px solid #8da2b8"><td rowspan="2" style="width:90px;min-width:90px;vertical-align:middle;text-align:center;background:#f2f5f9;border-right:2px solid #8da2b8;border-bottom:3px solid #8da2b8"><div class="d-flex flex-column align-items-center"><input class="t-sira form-control text-center" type="number" min="1" max="99" style="width:58px;min-width:58px;font-size:1.15rem;font-weight:700" value="${t.siraNo||i+1}"><label class="mt-2 mb-0 font-weight-bold" title="Başvuruya esas teklif"><input class="t-esas" type="radio" name="makineEsasTeklif" ${t.basvuruyaEsas?'checked':''}> Esas</label></div></td><td><input class="t-tedarikci form-control" value="${htmlEncode(t.tedarikci||'')}"></td><td><input class="t-marka form-control" value="${htmlEncode(t.marka||'')}"></td><td><input class="t-model form-control" value="${htmlEncode(t.model||'')}"></td><td><select class="t-para form-control">${genelParaBirimleri.map(x=>`<option ${t.paraBirimi===x?'selected':''}>${x}</option>`).join('')}</select></td><td><input class="t-kur form-control" type="number" min="0" step="0.000001" value="${t.kur||''}"></td><td><input class="t-fiyat form-control" type="text" inputmode="decimal" value="${t.birimFiyat?htmlEncode(YatirimOzetiParaKuruslu(YatirimOzetiSayi(t.birimFiyat))):''}" onblur="MakineTeklifBirimFiyatCikis(this)"></td></tr><tr class="makine-teklif-detay" style="border-bottom:3px solid #8da2b8"><td colspan="6"><div style="display:grid;grid-template-columns:190px 190px minmax(320px,1fr) minmax(240px,.75fr);gap:16px;align-items:start"><label class="mb-0">Teklif tarihi<input class="t-tarih form-control" type="date" value="${(t.teklifTarihi||'').substring(0,10)}"></label><label class="mb-0">Geçerlilik tarihi<input class="t-gecerlilik form-control" type="date" value="${(t.gecerlilikTarihi||'').substring(0,10)}"></label><label class="mb-0">Açıklama<textarea class="t-aciklama form-control">${htmlEncode(t.aciklama||'')}</textarea></label><label class="mb-0">Teklif belgesi<input class="t-dosya form-control-file mt-1" type="file" data-teklif-id="${t.id||0}" onchange="MakineTeklifDosyasiYukle(this)" ${t.id?'':'disabled'}><small class="t-dosya-adi">${htmlEncode(t.teklifBelgesiDosyaAdi||'')}${t.id?'':' (Belge için önce teklifi kaydedin)'}</small></label></div></td></tr>`;}
+    function MakineTeklifEkle(){const b=document.getElementById('makineTeklifler'),adet=b.querySelectorAll('.makine-teklif').length;b.insertAdjacentHTML('beforeend',MakineTeklifSatir({siraNo:adet+1,paraBirimi:'USD',basvuruyaEsas:adet===0},adet));}
+    function MakineKaydet(){const eski=JSON.parse(document.getElementById('makineIndex').dataset.model||'{}');const model={id:eski.id||0,basvuruId:BasvuruId(),siraNo:Number(document.getElementById('makineSira').value),ad:document.getElementById('makineAd').value,birim:document.getElementById('makineBirim').value,miktar:Number(document.getElementById('makineMiktar').value),aciklama:document.getElementById('makineAciklama').value,teknikOzellikler:[...document.querySelectorAll('#makineOzellikler tr')].map(r=>({id:Number(r.dataset.id||0),siraNo:Number(r.querySelector('.o-sira').value),baslik:r.querySelector('.o-baslik').value,aciklamaAsgariGereklilik:r.querySelector('.o-aciklama').value,zorunluMu:r.querySelector('.o-zorunlu').value==='true'})),teklifler:[...document.querySelectorAll('#makineTeklifler .makine-teklif')].map(r=>{const d=r.nextElementSibling;return {id:Number(r.dataset.id||0),siraNo:Number(r.querySelector('.t-sira').value),basvuruyaEsas:r.querySelector('.t-esas').checked,tedarikci:r.querySelector('.t-tedarikci').value,marka:r.querySelector('.t-marka').value,model:r.querySelector('.t-model').value,paraBirimi:r.querySelector('.t-para').value,kur:Number(r.querySelector('.t-kur').value)||null,birimFiyat:YatirimOzetiSayi(r.querySelector('.t-fiyat').value)||null,teklifTarihi:d.querySelector('.t-tarih').value||null,gecerlilikTarihi:d.querySelector('.t-gecerlilik').value||null,teklifBelgesiDosyaId:(eski.teklifler||[]).find(x=>x.id===Number(r.dataset.id||0))?.teklifBelgesiDosyaId||null,teklifBelgesiDosyaAdi:(eski.teklifler||[]).find(x=>x.id===Number(r.dataset.id||0))?.teklifBelgesiDosyaAdi||'',aciklama:d.querySelector('.t-aciklama').value};})};AjaxPost('/Basvuru/MakineKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){const i=Number(document.getElementById('makineIndex').value);if(i>=0)basvuruMakineleri[i]=sonuc.nesne;else basvuruMakineleri.push(sonuc.nesne);$('#makineModal').modal('hide');MakineListeRender();dirty=false;}});}
+    function MakineTeklifDosyasiYukle(input){const teklifId=Number(input.dataset.teklifId||0);if(!teklifId||!input.files?.length)return;const fd=new FormData();fd.append('basvuruId',BasvuruId());fd.append('formAd','BMT_'+teklifId);fd.append('dosyaNo','1');fd.append('dosya',input.files[0]);fetch('/Basvuru/BasvuruDosyasiYukle',{method:'POST',headers:{'RequestVerificationToken':antiForgeryToken()},body:fd}).then(r=>r.json()).then(sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){input.closest('td').querySelector('.t-dosya-adi').textContent=sonuc.nesne?.dosyaAdi||input.files[0].name;}});}
+    function MakineTeklifBirimFiyatCikis(input){const deger=YatirimOzetiSayi(input.value);input.value=input.value.trim()===''?'':YatirimOzetiParaKuruslu(deger);}
+    function MakineUzmanHesapla(el){const kart=el?.closest('.uzman-makine');if(!kart)return;const kur=Number(kart.querySelector('.u-kur').value)||0,min=Number(kart.querySelector('.u-min').value)||0,maks=Number(kart.querySelector('.u-maks').value)||0;kart.querySelector('.u-min-tl').value=(kur*min).toLocaleString('tr-TR');kart.querySelector('.u-maks-tl').value=(kur*maks).toLocaleString('tr-TR');kart.querySelector('.u-marj').value=(kur*maks*1.05).toLocaleString('tr-TR');}
+    function MakineUzmanKaydet(btn){const k=btn.closest('.uzman-makine');AjaxPost('/Denetleme/MakineUzmanKaydet',{basvuruId:BasvuruId(),makineId:Number(k.dataset.makineId),uzmanParaBirimi:k.querySelector('.u-para').value,uzmanKur:Number(k.querySelector('.u-kur').value)||null,uzmanMinimumFiyat:Number(k.querySelector('.u-min').value)||null,uzmanMaksimumFiyat:Number(k.querySelector('.u-maks').value)||null,uzmanSecilenTeklifId:Number(k.querySelector('.u-teklif').value)||null,uzmanOnerilenFiyatTl:Number(k.querySelector('.u-oneri').value)||null,uzmanKontrolSonucu:k.querySelector('.u-sonuc').value,uzmanAciklama:k.querySelector('.u-aciklama').value},SonucGoster);}
+
     function BasvuruMaliIsletmeleriRender() {
         const container = document.getElementById('basvuruMaliIsletmeler');
         if (!container) return;
@@ -3237,10 +3295,10 @@
     function PaneliKaydet(afterSuccess) {
         if (active === bolumFirma || active === bolumBasvuruSahibi) BasvuruSahibiKaydet(afterSuccess);
         else if (active === bolumIrtibat) FirmaIrtibatKaydet(afterSuccess);
-        else if (active === bolumYatirim) DegerZinciriKaydet(afterSuccess);
+        else if (active === bolumYatirim || active === bolumBasvuruDegerZinciri) DegerZinciriKaydet(afterSuccess);
         else if (active === bolumUygulamaAdresi || active === bolumBasvuruYatirimBilgileri) YatirimBilgileriKaydet(afterSuccess);
         else if (active === bolumUygunHarcama) UygunHarcamaKaydet(afterSuccess);
-        else if (active === bolumFinans) FinansKaydet(afterSuccess);
+        else if (active === bolumFinans || active === bolumBasvuruFinansman) FinansKaydet(afterSuccess);
         else if (active === bolumYatirimOzeti) YatirimOzetiKaydet(afterSuccess);
         else if (active === bolumDbCtpTeknikProje) DbCtpKaydet(afterSuccess);
         else if (active === bolumTaahhutBeyan) TaahhutBeyanlariKaydet(afterSuccess);

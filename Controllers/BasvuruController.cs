@@ -129,6 +129,14 @@ namespace TarimDonusum.Controllers
             RaporYazdirAsync(id, new RPROB_YatirimBilgileri(_environment.ContentRootPath), "Yatırım bilgileri yazdırılmadan önce kaydedilmelidir.");
         [OturumKontrol]
         [HttpGet]
+        public Task<IActionResult> DegerZinciriYazdir(int id) =>
+            RaporYazdirAsync(id, new RPROB_DegerZinciri(_environment.ContentRootPath), "Değer zinciri bilgileri yazdırılmadan önce kaydedilmelidir.", false, true);
+        [OturumKontrol]
+        [HttpGet]
+        public Task<IActionResult> FinansmanYazdir(int id) =>
+            RaporYazdirAsync(id, new RPROB_Finansman(_environment.ContentRootPath), "Finansman bilgileri yazdırılmadan önce kaydedilmelidir.");
+        [OturumKontrol]
+        [HttpGet]
         public Task<IActionResult> OnBasvuruSahibiYazdir(int id) =>
             RaporYazdirAsync(id, new RPROB_BasvuruSahibi(_environment.ContentRootPath, true), "Ön başvuru sahibi bilgileri yazdırılmadan önce kaydedilmelidir.");
         [OturumKontrol]
@@ -164,7 +172,7 @@ namespace TarimDonusum.Controllers
         public Task<IActionResult> BinaListesiYazdir(int id) =>
             RaporYazdirAsync(id, new RPROB_BinaListesi(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.BinaListesi"].ToString());
 
-        private async Task<IActionResult> RaporYazdirAsync(int id, IRPROB rapor, string kayitUyarisi, bool denetciRaporu = false)
+        private async Task<IActionResult> RaporYazdirAsync(int id, IRPROB rapor, string kayitUyarisi, bool denetciRaporu = false, bool tumDegerZinciriAsamalariniYukle = false)
         {
             if (id <= 0) return BadRequest(kayitUyarisi);
             Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
@@ -176,6 +184,22 @@ namespace TarimDonusum.Controllers
                 return NotFound(sonuc.hatalar.Count > 0 ? string.Join(" ", sonuc.hatalar) : L["Basvuru.Message.NotFound"].ToString());
 
             if (denetciRaporu) _basvuruIsKurallari.DenetimListeleriniIlkDegerle(sonuc.nesne);
+            if (tumDegerZinciriAsamalariniYukle && sonuc.nesne.yatirim.degerZinciriId.GetValueOrDefault() > 0)
+            {
+                int degerZinciriId = sonuc.nesne.yatirim.degerZinciriId!.Value;
+                string degerZinciriAdi = sonuc.nesne.yatirim.degerZinciriAsamalari
+                    .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.dz?.ad))?.dz.ad ?? "";
+                Sonuc<List<DegerZinciriAsama>> asamaSonucu = await _basvuruIsKurallari.DegerZinciriAsamalariListeleAsync(
+                    kullanici, degerZinciriId, id);
+                if (!asamaSonucu.basarili)
+                    return BadRequest(asamaSonucu.hatalar.Count > 0 ? string.Join(" ", asamaSonucu.hatalar) : "Değer zinciri aşamaları alınamadı.");
+                sonuc.nesne.yatirim.degerZinciriAsamalari = asamaSonucu.nesne ?? [];
+                foreach (DegerZinciriAsama asama in sonuc.nesne.yatirim.degerZinciriAsamalari)
+                {
+                    asama.dz.id = degerZinciriId;
+                    asama.dz.ad = degerZinciriAdi;
+                }
+            }
             try
             {
                 RaporDosyasi dosya = rapor.Olustur(sonuc.nesne, id);
@@ -662,6 +686,14 @@ namespace TarimDonusum.Controllers
             }
 
             return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MakineKaydet([FromBody] BasvuruMakine model)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruMakinesiKaydetAsync(model,kullanici));
         }
 
         [OturumKontrol]

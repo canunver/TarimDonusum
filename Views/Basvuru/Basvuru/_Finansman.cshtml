@@ -1,0 +1,37 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@{
+    var f = Model.Basvuru.finans;
+    bool ro = Model.SaltOkunur;
+    decimal? finansman = f.toplamYatirimTutari.HasValue && f.talepEdilenFinansmanOrani.HasValue
+        ? Math.Round(f.toplamYatirimTutari.Value * f.talepEdilenFinansmanOrani.Value / 100m, 2)
+        : f.talepEdilenDestekTutari;
+    decimal? katkı = f.toplamYatirimTutari.HasValue && finansman.HasValue ? f.toplamYatirimTutari - finansman : f.basvuruSahibiKatkisi;
+    string[] evetHayir = ["Evet", "Hayır"];
+    string[] sozlesmeDurumlari = ["Evet", "Hayır", "Uygulanamaz"];
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruFinansman)">
+    <div class="section-toolbar">
+        <h2 class="mb-0">Finansman</h2>
+        <a class="btn btn-outline-primary" href="@Url.Action("FinansmanYazdir", "Basvuru", new { id = Model.Basvuru.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+    </div>
+    <div class="alert alert-info">Ön başvuruda girilen finansman bilgileri başvuruya kopyalanır; bilgiler her iki tarafta da korunur. Başvuruya özel ek alanları burada tamamlayabilirsiniz.</div>
+    <div class="form-grid">
+        <label>Toplam yatırım tutarı (USD)<input class="money-integer" name="Basvuru.finans.ToplamYatirimTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(f.toplamYatirimTutari)" oninput="FinansTutarlariniHesapla()" disabled="@ro" /></label>
+        <label>Talep edilen RFF tutarı (USD)<input class="money-integer" name="Basvuru.finans.TalepEdilenDestekTutari" type="text" value="@IsimBul.MetneCevirKurussuz(finansman)" readonly /></label>
+        <label>Talep edilen finansman oranı (%)<input name="Basvuru.finans.TalepEdilenFinansmanOrani" type="number" min="1" max="@Model.Basvuru.basvuruFirma.donem.destekOrani?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" step="0.01" value="@f.talepEdilenFinansmanOrani?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" oninput="FinansTutarlariniHesapla()" disabled="@ro" /></label>
+        <label>Başvuru sahibi katkısı (USD)<input class="money-integer" name="Basvuru.finans.BasvuruSahibiKatkisi" type="text" value="@IsimBul.MetneCevirKurussuz(katkı)" readonly /></label>
+        <label>Talep edilen vade (ay)<input name="Basvuru.finans.TalepEdilenVadeSuresiAy" type="number" min="1" step="1" value="@f.talepEdilenVadeSuresiAy" disabled="@ro" /></label>
+        <label>Talep edilen ödemesiz dönem (ay)<input name="Basvuru.finans.OdemeSuresiAy" type="number" min="0" step="1" value="@f.odemeSuresiAy" disabled="@ro" /></label>
+        <label>Yatırım süresi (ay)<input name="Basvuru.finans.YatirimSuresiAy" type="number" min="1" step="1" value="@f.yatirimSuresiAy" disabled="@ro" /></label>
+        <label>Finansman para birimi<select name="Basvuru.finans.FinansmanParaBirimi" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in ParaBirimleri.Tum) { <option value="@x" selected="@(f.finansmanParaBirimi == x)">@x</option> }</select></label>
+        <label>Diğer finansman kaynakları<input name="Basvuru.finans.DigerFinansmanKaynaklari" maxlength="1000" value="@f.digerFinansmanKaynaklari" disabled="@ro" /></label>
+        <label>Önceki RFF onaylı tutar (USD)<input class="money-integer" name="Basvuru.finans.OncekiRffOnayliTutar" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(f.oncekiRffOnayliTutar)" oninput="FinansTutarlariniHesapla()" disabled="@ro" /></label>
+        <label>Önceki RFF sözleşmesi kapalı mı?<select name="Basvuru.finans.OncekiRffSozlesmesiKapaliMi" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in sozlesmeDurumlari) { <option value="@x" selected="@(f.oncekiRffSozlesmesiKapaliMi == x)">@x</option> }</select></label>
+        <label>Kümülatif limit kontrolü<input id="finansKumulatifKontrol" type="text" readonly /></label>
+        <label>İşlem tutarı kontrolü<input id="finansIslemKontrol" type="text" readonly /></label>
+        <label>Banka teminat mektubu sağlanabilir mi?<select name="Basvuru.finans.BankaTeminatMektubuSaglanabilirMi" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in evetHayir) { <option value="@x" selected="@(f.bankaTeminatMektubuSaglanabilirMi == x)">@x</option> }</select></label>
+        <label>Tahmini teminat mektubu tutarı (USD)<input id="finansTeminatTutari" class="money-integer" type="text" readonly /></label>
+    </div>
+    <label class="wide-label">Diğer finansman kaynakları açıklaması<textarea name="Basvuru.finans.DigerFinansmanKaynaklariAciklama" maxlength="2000" disabled="@ro">@f.digerFinansmanKaynaklariAciklama</textarea></label>
+</section>

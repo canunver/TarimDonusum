@@ -67,11 +67,16 @@ namespace TarimDonusum.Tablolar
                     B.TalepEdilenFinansmanOrani,
                     B.OnBasvuruSahibiKatkisi,
                     B.BasvuruSahibiKatkisi,
-                    B.TalepEdilenVadeSuresiYil,
+                    B.TalepEdilenVadeSuresiAy,
                     B.YatirimSuresiAy,
                     B.OdemeSuresiAy,
                     B.DestekOrani,
                     B.DigerFinansmanKaynaklariAciklama,
+                    B.FinansmanParaBirimi,
+                    B.DigerFinansmanKaynaklari,
+                    B.OncekiRffOnayliTutar,
+                    B.OncekiRffSozlesmesiKapaliMi,
+                    B.BankaTeminatMektubuSaglanabilirMi,
                     B.YatiriminAmaci,
                     B.YatirimFaaliyetleri,
                     B.YatirimGirdileri,
@@ -315,10 +320,16 @@ namespace TarimDonusum.Tablolar
                     TalepEdilenFinansmanOrani = @TalepEdilenFinansmanOrani,
                     OnBasvuruSahibiKatkisi = @OnBasvuruSahibiKatkisi,
                     BasvuruSahibiKatkisi = @BasvuruSahibiKatkisi,
-                    TalepEdilenVadeSuresiYil = @TalepEdilenVadeSuresiAy,
+                    TalepEdilenVadeSuresiAy = @TalepEdilenVadeSuresiAy,
                     YatirimSuresiAy = @YatirimSuresiAy,
+                    OdemeSuresiAy = @OdemeSuresiAy,
                     DestekOrani = @DestekOrani,
-                    DigerFinansmanKaynaklariAciklama = @DigerFinansmanKaynaklariAciklama
+                    DigerFinansmanKaynaklariAciklama = @DigerFinansmanKaynaklariAciklama,
+                    FinansmanParaBirimi = @FinansmanParaBirimi,
+                    DigerFinansmanKaynaklari = @DigerFinansmanKaynaklari,
+                    OncekiRffOnayliTutar = @OncekiRffOnayliTutar,
+                    OncekiRffSozlesmesiKapaliMi = @OncekiRffSozlesmesiKapaliMi,
+                    BankaTeminatMektubuSaglanabilirMi = @BankaTeminatMektubuSaglanabilirMi
                 WHERE Id = @Id;";
 
             await using SqlCommand command = KomutOlustur(sql);
@@ -331,8 +342,14 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@BasvuruSahibiKatkisi", DbNull(finans.basvuruSahibiKatkisi));
             command.Parameters.AddWithValue("@TalepEdilenVadeSuresiAy", DbNull(finans.talepEdilenVadeSuresiAy));
             command.Parameters.AddWithValue("@YatirimSuresiAy", DbNull(finans.yatirimSuresiAy));
+            command.Parameters.AddWithValue("@OdemeSuresiAy", DbNull(finans.odemeSuresiAy));
             command.Parameters.AddWithValue("@DestekOrani", DbNull(finans.destekOrani));
             command.Parameters.AddWithValue("@DigerFinansmanKaynaklariAciklama", DbNull(finans.digerFinansmanKaynaklariAciklama));
+            command.Parameters.AddWithValue("@FinansmanParaBirimi", DbNull(finans.finansmanParaBirimi));
+            command.Parameters.AddWithValue("@DigerFinansmanKaynaklari", DbNull(finans.digerFinansmanKaynaklari));
+            command.Parameters.AddWithValue("@OncekiRffOnayliTutar", DbNull(finans.oncekiRffOnayliTutar));
+            command.Parameters.AddWithValue("@OncekiRffSozlesmesiKapaliMi", DbNull(finans.oncekiRffSozlesmesiKapaliMi));
+            command.Parameters.AddWithValue("@BankaTeminatMektubuSaglanabilirMi", DbNull(finans.bankaTeminatMektubuSaglanabilirMi));
             command.Parameters.AddWithValue("@Id", finans.basvuruId);
 
             await command.ExecuteNonQueryAsync();
@@ -725,6 +742,18 @@ namespace TarimDonusum.Tablolar
                     SELECT @YeniBasvuruId, DegerZinciriAsamaId, YapilacakFaaliyetler
                     FROM dbo.BasvuruDegerZinciriAsama WHERE BasvuruId = @KaynakBasvuruId;
 
+                DECLARE @MakineEsleme TABLE(EskiId INT NOT NULL, YeniId INT NOT NULL);
+                MERGE dbo.BasvuruMakine AS hedef
+                USING (SELECT Id,SiraNo,Ad,Birim,Miktar,Aciklama FROM dbo.BasvuruMakine WHERE BasvuruId=@KaynakBasvuruId) AS kaynak
+                ON 1=0
+                WHEN NOT MATCHED THEN INSERT(BasvuruId,SiraNo,Ad,Birim,Miktar,Aciklama)
+                    VALUES(@YeniBasvuruId,kaynak.SiraNo,kaynak.Ad,kaynak.Birim,kaynak.Miktar,kaynak.Aciklama)
+                OUTPUT kaynak.Id,inserted.Id INTO @MakineEsleme(EskiId,YeniId);
+                INSERT dbo.BasvuruMakineOzellik(MakineId,SiraNo,Baslik,AciklamaAsgariGereklilik,ZorunluMu)
+                    SELECT e.YeniId,o.SiraNo,o.Baslik,o.AciklamaAsgariGereklilik,o.ZorunluMu FROM dbo.BasvuruMakineOzellik o INNER JOIN @MakineEsleme e ON e.EskiId=o.MakineId;
+                INSERT dbo.BasvuruMakineTeklif(MakineId,SiraNo,BasvuruyaEsas,Tedarikci,Marka,Model,ParaBirimi,Kur,BirimFiyat,TeklifTarihi,GecerlilikTarihi,TeklifBelgesiDosyaId,TeklifBelgesiDosyaAdi,Aciklama)
+                    SELECT e.YeniId,t.SiraNo,t.BasvuruyaEsas,t.Tedarikci,t.Marka,t.Model,t.ParaBirimi,t.Kur,t.BirimFiyat,t.TeklifTarihi,t.GecerlilikTarihi,t.TeklifBelgesiDosyaId,t.TeklifBelgesiDosyaAdi,t.Aciklama FROM dbo.BasvuruMakineTeklif t INNER JOIN @MakineEsleme e ON e.EskiId=t.MakineId;
+
                 INSERT INTO dbo.BasvuruUygulamaAdresleri
                     (BasvuruId, SiraNo, IlceId, TamAdres, YatirimYeriStatusu,
                      KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, SegeKademesi,
@@ -833,7 +862,11 @@ namespace TarimDonusum.Tablolar
 
                 UPDATE dbo.BasvuruAdliSicilKisiler
                 SET DosyaId = @YeniId
-                WHERE BasvuruId = @BasvuruId AND DosyaId = @EskiId;";
+                WHERE BasvuruId = @BasvuruId AND DosyaId = @EskiId;
+
+                UPDATE t SET TeklifBelgesiDosyaId=@YeniId
+                FROM dbo.BasvuruMakineTeklif t INNER JOIN dbo.BasvuruMakine m ON m.Id=t.MakineId
+                WHERE m.BasvuruId=@BasvuruId AND t.TeklifBelgesiDosyaId=@EskiId;";
 
             foreach ((int eskiId, int yeniId) in dosyaIdEslemeleri)
             {
@@ -990,6 +1023,11 @@ namespace TarimDonusum.Tablolar
             basvuru.finans.odemeSuresiAy = NullOkuInt(reader, kol++);
             basvuru.finans.destekOrani = NullOkuDecimal(reader, kol++);
             basvuru.finans.digerFinansmanKaynaklariAciklama = NullOkuString(reader, kol++);
+            basvuru.finans.finansmanParaBirimi = NullOkuString(reader, kol++);
+            basvuru.finans.digerFinansmanKaynaklari = NullOkuString(reader, kol++);
+            basvuru.finans.oncekiRffOnayliTutar = NullOkuDecimal(reader, kol++);
+            basvuru.finans.oncekiRffSozlesmesiKapaliMi = NullOkuString(reader, kol++);
+            basvuru.finans.bankaTeminatMektubuSaglanabilirMi = NullOkuString(reader, kol++);
             basvuru.finans.yatiriminAmaci = NullOkuString(reader, kol++);
             basvuru.yatirim.yatiriminAmaci = basvuru.finans.yatiriminAmaci;
             basvuru.yatirim.yatirimFaaliyetleri = NullOkuString(reader, kol++);
@@ -1128,6 +1166,29 @@ namespace TarimDonusum.Tablolar
 
         public async Task DegerZinciriKaydetAsync(BasvuruYatirim yatirim)
         {
+            const string sql = @"UPDATE dbo.Basvuru SET
+                IlDegerZinciriEslesmesi=@IlDegerZinciriEslesmesi, TarimGidaBaglantiTuru=@TarimGidaBaglantiTuru,
+                TarimGidaBaglantiAciklamasi=@TarimGidaBaglantiAciklamasi, YatirimAlaniTipolojisi=@YatirimAlaniTipolojisi,
+                DegerZinciriUygunlukAciklamasi=@DegerZinciriUygunlukAciklamasi, OncelikliYatirimUyumu=@OncelikliYatirimUyumu,
+                OncelikliYatirimKonuKodu=@OncelikliYatirimKonuKodu, IthalatBagimliligiUyumu=@IthalatBagimliligiUyumu,
+                IthalatBagimliligiUrunKodu=@IthalatBagimliligiUrunKodu, HedefUrunlerPazarCiktisi=@HedefUrunlerPazarCiktisi,
+                RekabetcilikAciklamasi=@RekabetcilikAciklamasi WHERE Id=@BasvuruId;";
+            await using (SqlCommand command = KomutOlustur(sql))
+            {
+                command.Parameters.AddWithValue("@BasvuruId", yatirim.basvuruId);
+                command.Parameters.AddWithValue("@IlDegerZinciriEslesmesi", DbNull(yatirim.ilDegerZinciriEslesmesi));
+                command.Parameters.AddWithValue("@TarimGidaBaglantiTuru", DbNull(yatirim.tarimGidaBaglantiTuru));
+                command.Parameters.AddWithValue("@TarimGidaBaglantiAciklamasi", DbNull(yatirim.tarimGidaBaglantiAciklamasi));
+                command.Parameters.AddWithValue("@YatirimAlaniTipolojisi", DbNull(yatirim.yatirimAlaniTipolojisi));
+                command.Parameters.AddWithValue("@DegerZinciriUygunlukAciklamasi", DbNull(yatirim.degerZinciriUygunlukAciklamasi));
+                command.Parameters.AddWithValue("@OncelikliYatirimUyumu", DbNull(yatirim.oncelikliYatirimUyumu));
+                command.Parameters.AddWithValue("@OncelikliYatirimKonuKodu", DbNull(yatirim.oncelikliYatirimKonuKodu));
+                command.Parameters.AddWithValue("@IthalatBagimliligiUyumu", DbNull(yatirim.ithalatBagimliligiUyumu));
+                command.Parameters.AddWithValue("@IthalatBagimliligiUrunKodu", DbNull(yatirim.ithalatBagimliligiUrunKodu));
+                command.Parameters.AddWithValue("@HedefUrunlerPazarCiktisi", DbNull(yatirim.hedefUrunlerPazarCiktisi));
+                command.Parameters.AddWithValue("@RekabetcilikAciklamasi", DbNull(yatirim.rekabetcilikAciklamasi));
+                await command.ExecuteNonQueryAsync();
+            }
             await DegerZinciriAsamalariniSilAsync(yatirim.basvuruId);
             await DegerZinciriAsamalariEkleAsync(yatirim);
         }
@@ -1505,7 +1566,24 @@ namespace TarimDonusum.Tablolar
                 SELECT Id, BasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId
                 FROM dbo.BasvuruAdliSicilKisiler
                 WHERE BasvuruId = @BasvuruId
-                ORDER BY SiraNo, Id;";
+                ORDER BY SiraNo, Id;
+
+                SELECT IlDegerZinciriEslesmesi, TarimGidaBaglantiTuru, TarimGidaBaglantiAciklamasi,
+                    YatirimAlaniTipolojisi, DegerZinciriUygunlukAciklamasi, OncelikliYatirimUyumu,
+                    OncelikliYatirimKonuKodu, IthalatBagimliligiUyumu, IthalatBagimliligiUrunKodu,
+                    HedefUrunlerPazarCiktisi, RekabetcilikAciklamasi
+                FROM dbo.Basvuru WHERE Id=@BasvuruId;
+
+                SELECT Id,BasvuruId,SiraNo,Ad,Birim,Miktar,Aciklama,UzmanParaBirimi,UzmanKur,UzmanMinimumFiyat,
+                    UzmanMaksimumFiyat,UzmanSecilenTeklifId,UzmanOnerilenFiyatTl,UzmanKontrolSonucu,UzmanAciklama
+                FROM dbo.BasvuruMakine WHERE BasvuruId=@BasvuruId ORDER BY SiraNo,Id;
+                SELECT o.Id,o.MakineId,o.SiraNo,o.Baslik,o.AciklamaAsgariGereklilik,o.ZorunluMu
+                FROM dbo.BasvuruMakineOzellik o INNER JOIN dbo.BasvuruMakine m ON m.Id=o.MakineId
+                WHERE m.BasvuruId=@BasvuruId ORDER BY o.MakineId,o.SiraNo,o.Id;
+                SELECT t.Id,t.MakineId,t.SiraNo,t.BasvuruyaEsas,t.Tedarikci,t.Marka,t.Model,t.ParaBirimi,t.Kur,t.BirimFiyat,
+                    t.TeklifTarihi,t.GecerlilikTarihi,t.TeklifBelgesiDosyaId,t.TeklifBelgesiDosyaAdi,t.Aciklama
+                FROM dbo.BasvuruMakineTeklif t INNER JOIN dbo.BasvuruMakine m ON m.Id=t.MakineId
+                WHERE m.BasvuruId=@BasvuruId ORDER BY t.MakineId,t.SiraNo,t.Id;";
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@BasvuruId", basvuru.Id);
@@ -1566,6 +1644,47 @@ namespace TarimDonusum.Tablolar
                 adliSicilKisileri.Add(BasvuruAdliSicilKisiOku(reader));
             }
 
+            await reader.NextResultAsync();
+            if (await reader.ReadAsync())
+            {
+                int kolNo = 0;
+                basvuru.yatirim.ilDegerZinciriEslesmesi = NullOkuString(reader, kolNo++);
+                basvuru.yatirim.tarimGidaBaglantiTuru = NullOkuString(reader, kolNo++);
+                basvuru.yatirim.tarimGidaBaglantiAciklamasi = NullOkuString(reader, kolNo++);
+                basvuru.yatirim.yatirimAlaniTipolojisi = NullOkuString(reader, kolNo++);
+                basvuru.yatirim.degerZinciriUygunlukAciklamasi = NullOkuString(reader, kolNo++);
+                basvuru.yatirim.oncelikliYatirimUyumu = NullOkuString(reader, kolNo++);
+                basvuru.yatirim.oncelikliYatirimKonuKodu = NullOkuString(reader, kolNo++);
+                basvuru.yatirim.ithalatBagimliligiUyumu = NullOkuString(reader, kolNo++);
+                basvuru.yatirim.ithalatBagimliligiUrunKodu = NullOkuString(reader, kolNo++);
+                basvuru.yatirim.hedefUrunlerPazarCiktisi = NullOkuString(reader, kolNo++);
+                basvuru.yatirim.rekabetcilikAciklamasi = NullOkuString(reader, kolNo++);
+            }
+
+            await reader.NextResultAsync();
+            List<BasvuruMakine> makineler = new();
+            while (await reader.ReadAsync())
+            {
+                int k=0;
+                makineler.Add(new BasvuruMakine { id=NullDuzeltInt(reader,k++), basvuruId=NullDuzeltInt(reader,k++), siraNo=NullDuzeltInt(reader,k++), ad=NullOkuString(reader,k++), birim=NullOkuString(reader,k++), miktar=NullOkuDecimal(reader,k++).GetValueOrDefault(), aciklama=NullOkuString(reader,k++), uzmanParaBirimi=NullOkuString(reader,k++), uzmanKur=NullOkuDecimal(reader,k++), uzmanMinimumFiyat=NullOkuDecimal(reader,k++), uzmanMaksimumFiyat=NullOkuDecimal(reader,k++), uzmanSecilenTeklifId=NullOkuInt(reader,k++), uzmanOnerilenFiyatTl=NullOkuDecimal(reader,k++), uzmanKontrolSonucu=NullOkuString(reader,k++), uzmanAciklama=NullOkuString(reader,k++) });
+            }
+            await reader.NextResultAsync();
+            while (await reader.ReadAsync())
+            {
+                int k=0; BasvuruMakineOzellik o=new() { id=NullDuzeltInt(reader,k++), makineId=NullDuzeltInt(reader,k++), siraNo=NullDuzeltInt(reader,k++), baslik=NullOkuString(reader,k++), aciklamaAsgariGereklilik=NullOkuString(reader,k++), zorunluMu=reader.GetBoolean(k++) };
+                makineler.FirstOrDefault(x=>x.id==o.makineId)?.teknikOzellikler.Add(o);
+            }
+            await reader.NextResultAsync();
+            while (await reader.ReadAsync())
+            {
+                int k=0;
+                int id=NullDuzeltInt(reader,k++), makineId=NullDuzeltInt(reader,k++), siraNo=NullDuzeltInt(reader,k++); bool esas=reader.GetBoolean(k++);
+                string tedarikci=NullOkuString(reader,k++), marka=NullOkuString(reader,k++), model=NullOkuString(reader,k++), para=NullOkuString(reader,k++);
+                decimal? kur=NullOkuDecimal(reader,k++), fiyat=NullOkuDecimal(reader,k++); DateTime? tarih=reader.IsDBNull(k)?null:reader.GetDateTime(k); k++; DateTime? gecerlilik=reader.IsDBNull(k)?null:reader.GetDateTime(k); k++;
+                BasvuruMakineTeklif t=new() { id=id,makineId=makineId,siraNo=siraNo,basvuruyaEsas=esas,tedarikci=tedarikci,marka=marka,model=model,paraBirimi=para,kur=kur,birimFiyat=fiyat,teklifTarihi=tarih,gecerlilikTarihi=gecerlilik,teklifBelgesiDosyaId=NullOkuInt(reader,k++),teklifBelgesiDosyaAdi=NullOkuString(reader,k++),aciklama=NullOkuString(reader,k++) };
+                makineler.FirstOrDefault(x=>x.id==t.makineId)?.teklifler.Add(t);
+            }
+
             basvuru.YatirimAdresleri = adresler;
 
             basvuru.yatirim.harcamaTurleri = harcamaTurleri;
@@ -1582,7 +1701,21 @@ namespace TarimDonusum.Tablolar
 
             basvuru.ortaklik.ortaklar = ortaklar;
             basvuru.AdliSicilKisileri = adliSicilKisileri;
+            basvuru.Makineler = makineler;
         }
+        public async Task BasvuruMakineTeklifDosyasiGuncelleAsync(int basvuruId,int teklifId,int dosyaId,string dosyaAdi){const string sql=@"UPDATE t SET TeklifBelgesiDosyaId=@DosyaId,TeklifBelgesiDosyaAdi=@DosyaAdi FROM dbo.BasvuruMakineTeklif t INNER JOIN dbo.BasvuruMakine m ON m.Id=t.MakineId WHERE t.Id=@TeklifId AND m.BasvuruId=@BasvuruId;";await using SqlCommand c=KomutOlustur(sql);c.Parameters.AddWithValue("@DosyaId",dosyaId);c.Parameters.AddWithValue("@DosyaAdi",dosyaAdi);c.Parameters.AddWithValue("@TeklifId",teklifId);c.Parameters.AddWithValue("@BasvuruId",basvuruId);await c.ExecuteNonQueryAsync();}
+
+        public async Task BasvuruMakinesiKaydetAsync(BasvuruMakine m)
+        {
+            if(m.id>0){await using SqlCommand c=KomutOlustur(@"UPDATE dbo.BasvuruMakine SET SiraNo=@SiraNo,Ad=@Ad,Birim=@Birim,Miktar=@Miktar,Aciklama=@Aciklama WHERE Id=@Id AND BasvuruId=@BasvuruId;");MakineParametreleri(c,m);c.Parameters.AddWithValue("@Id",m.id);if(await c.ExecuteNonQueryAsync()==0)throw new InvalidOperationException("Makine kaydı başvuruya ait değil.");}
+            else{await using SqlCommand c=KomutOlustur(@"INSERT dbo.BasvuruMakine(BasvuruId,SiraNo,Ad,Birim,Miktar,Aciklama) OUTPUT INSERTED.Id VALUES(@BasvuruId,@SiraNo,@Ad,@Birim,@Miktar,@Aciklama);");MakineParametreleri(c,m);m.id=Convert.ToInt32(await c.ExecuteScalarAsync());}
+            foreach(BasvuruMakineOzellik o in m.teknikOzellikler){o.makineId=m.id;if(o.id>0){await using SqlCommand c=KomutOlustur(@"UPDATE dbo.BasvuruMakineOzellik SET SiraNo=@SiraNo,Baslik=@Baslik,AciklamaAsgariGereklilik=@Aciklama,ZorunluMu=@Zorunlu WHERE Id=@Id AND MakineId=@MakineId;");OzellikParametreleri(c,o);c.Parameters.AddWithValue("@Id",o.id);if(await c.ExecuteNonQueryAsync()==0)throw new InvalidOperationException("Teknik özellik kaydı makineye ait değil.");}else{await using SqlCommand c=KomutOlustur(@"INSERT dbo.BasvuruMakineOzellik(MakineId,SiraNo,Baslik,AciklamaAsgariGereklilik,ZorunluMu) OUTPUT INSERTED.Id VALUES(@MakineId,@SiraNo,@Baslik,@Aciklama,@Zorunlu);");OzellikParametreleri(c,o);o.id=Convert.ToInt32(await c.ExecuteScalarAsync());}}
+            foreach(BasvuruMakineTeklif t in m.teklifler){t.makineId=m.id;if(t.id>0){await using SqlCommand c=KomutOlustur(@"UPDATE dbo.BasvuruMakineTeklif SET SiraNo=@SiraNo,BasvuruyaEsas=@Esas,Tedarikci=@Tedarikci,Marka=@Marka,Model=@Model,ParaBirimi=@ParaBirimi,Kur=@Kur,BirimFiyat=@BirimFiyat,TeklifTarihi=@TeklifTarihi,GecerlilikTarihi=@GecerlilikTarihi,Aciklama=@Aciklama WHERE Id=@Id AND MakineId=@MakineId;");TeklifParametreleri(c,t);c.Parameters.AddWithValue("@Id",t.id);if(await c.ExecuteNonQueryAsync()==0)throw new InvalidOperationException("Teklif kaydı makineye ait değil.");}else{await using SqlCommand c=KomutOlustur(@"INSERT dbo.BasvuruMakineTeklif(MakineId,SiraNo,BasvuruyaEsas,Tedarikci,Marka,Model,ParaBirimi,Kur,BirimFiyat,TeklifTarihi,GecerlilikTarihi,Aciklama) OUTPUT INSERTED.Id VALUES(@MakineId,@SiraNo,@Esas,@Tedarikci,@Marka,@Model,@ParaBirimi,@Kur,@BirimFiyat,@TeklifTarihi,@GecerlilikTarihi,@Aciklama);");TeklifParametreleri(c,t);t.id=Convert.ToInt32(await c.ExecuteScalarAsync());}}
+        }
+        private static void MakineParametreleri(SqlCommand c,BasvuruMakine m){c.Parameters.AddWithValue("@BasvuruId",m.basvuruId);c.Parameters.AddWithValue("@SiraNo",m.siraNo);c.Parameters.AddWithValue("@Ad",m.ad);c.Parameters.AddWithValue("@Birim",m.birim);c.Parameters.AddWithValue("@Miktar",m.miktar);c.Parameters.AddWithValue("@Aciklama",DbNull(m.aciklama));}
+        private static void OzellikParametreleri(SqlCommand c,BasvuruMakineOzellik o){c.Parameters.AddWithValue("@MakineId",o.makineId);c.Parameters.AddWithValue("@SiraNo",o.siraNo);c.Parameters.AddWithValue("@Baslik",o.baslik);c.Parameters.AddWithValue("@Aciklama",o.aciklamaAsgariGereklilik);c.Parameters.AddWithValue("@Zorunlu",o.zorunluMu);}
+        private static void TeklifParametreleri(SqlCommand c,BasvuruMakineTeklif t){c.Parameters.AddWithValue("@MakineId",t.makineId);c.Parameters.AddWithValue("@SiraNo",t.siraNo);c.Parameters.AddWithValue("@Esas",t.basvuruyaEsas);c.Parameters.AddWithValue("@Tedarikci",t.tedarikci);c.Parameters.AddWithValue("@Marka",DbNull(t.marka));c.Parameters.AddWithValue("@Model",DbNull(t.model));c.Parameters.AddWithValue("@ParaBirimi",t.paraBirimi);c.Parameters.AddWithValue("@Kur",DbNull(t.kur));c.Parameters.AddWithValue("@BirimFiyat",DbNull(t.birimFiyat));c.Parameters.AddWithValue("@TeklifTarihi",t.teklifTarihi.HasValue?t.teklifTarihi.Value.Date:DBNull.Value);c.Parameters.AddWithValue("@GecerlilikTarihi",t.gecerlilikTarihi.HasValue?t.gecerlilikTarihi.Value.Date:DBNull.Value);c.Parameters.AddWithValue("@Aciklama",DbNull(t.aciklama));}
+        public async Task BasvuruMakineUzmanGuncelleAsync(BasvuruMakineUzmanKayitModel m){const string sql=@"UPDATE dbo.BasvuruMakine SET UzmanParaBirimi=@ParaBirimi,UzmanKur=@Kur,UzmanMinimumFiyat=@Min,UzmanMaksimumFiyat=@Maks,UzmanSecilenTeklifId=@TeklifId,UzmanOnerilenFiyatTl=@Oneri,UzmanKontrolSonucu=@Sonuc,UzmanAciklama=@Aciklama WHERE Id=@Id AND BasvuruId=@BasvuruId AND (@TeklifId IS NULL OR EXISTS(SELECT 1 FROM dbo.BasvuruMakineTeklif WHERE Id=@TeklifId AND MakineId=@Id));";await using SqlCommand c=KomutOlustur(sql);c.Parameters.AddWithValue("@ParaBirimi",DbNull(m.uzmanParaBirimi));c.Parameters.AddWithValue("@Kur",DbNull(m.uzmanKur));c.Parameters.AddWithValue("@Min",DbNull(m.uzmanMinimumFiyat));c.Parameters.AddWithValue("@Maks",DbNull(m.uzmanMaksimumFiyat));c.Parameters.AddWithValue("@TeklifId",DbNull(m.uzmanSecilenTeklifId));c.Parameters.AddWithValue("@Oneri",DbNull(m.uzmanOnerilenFiyatTl));c.Parameters.AddWithValue("@Sonuc",DbNull(m.uzmanKontrolSonucu));c.Parameters.AddWithValue("@Aciklama",DbNull(m.uzmanAciklama));c.Parameters.AddWithValue("@Id",m.makineId);c.Parameters.AddWithValue("@BasvuruId",m.basvuruId);if(await c.ExecuteNonQueryAsync()==0)throw new InvalidOperationException("Makine veya seçilen teklif bulunamadı.");}
 
         public async Task<List<BasvuruAdliSicilKisi>> BasvuruAdliSicilKisileriKaydetAsync(int basvuruId, List<BasvuruAdliSicilKisi>? kisiler)
         {
