@@ -562,7 +562,7 @@
     <value>Ön Başvuru No: {0}</value>
   </data>
   <data name="Basvuru.Form.MainApplicationNo" xml:space="preserve">
-    <value>Başvuru No: {0}</value>
+    <value>Başvuru ID: {0}</value>
   </data>
   <data name="Basvuru.Form.ApplicationNoPending" xml:space="preserve">
     <value>İlk bölüm kaydedilince oluşur</value>
@@ -2737,5 +2737,8 @@
     <value>Mali Veriler ve Ölçek Kontrolü</value>
   </data>
   <data name="Basvuru.ApplicationInvestment.Title" xml:space="preserve"><value>Yatırım Bilgileri</value></data>
-  <data name="Basvuru.Step.MakineEkipman" xml:space="preserve"><value>Makine / Ekipman Listesi</value></data>
+  <data name="Basvuru.Step.MakineEkipman" xml:space="preserve"><value>Yeni Makine Ekipman Listesi</value></data>
+  <data name="Basvuru.Step.YatirimdaKullanilacakEkipmanlar" xml:space="preserve"><value>Yatırımda Kullanılacak Ekipmanlar</value></data>
+  <data name="Basvuru.Step.YatirimOnBilgileri" xml:space="preserve"><value>Yatırım Ön Bilgileri</value></data>
+  <data name="Basvuru.Step.UrunSurecMakine" xml:space="preserve"><value>Ürün, Süreç ve Makine İlişkileri</value></data>
 </root>

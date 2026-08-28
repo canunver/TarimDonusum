@@ -137,6 +137,14 @@ namespace TarimDonusum.Controllers
             RaporYazdirAsync(id, new RPROB_Finansman(_environment.ContentRootPath), "Finansman bilgileri yazdırılmadan önce kaydedilmelidir.");
         [OturumKontrol]
         [HttpGet]
+        public Task<IActionResult> YatirimOnBilgileriYazdir(int id) =>
+            RaporYazdirAsync(id, new RPROB_YatirimOnBilgileri(_environment.ContentRootPath), "Yatırım ön bilgileri yazdırılmadan önce kaydedilmelidir.");
+        [OturumKontrol]
+        [HttpGet]
+        public Task<IActionResult> YatirimMakineEkipmanListesiYazdir(int id) =>
+            RaporYazdirAsync(id, new RPROB_YatirimMakineEkipmanListesi(_environment.ContentRootPath), "Makine-ekipman listesi yazdırılmadan önce başvuru kaydedilmelidir.");
+        [OturumKontrol]
+        [HttpGet]
         public Task<IActionResult> OnBasvuruSahibiYazdir(int id) =>
             RaporYazdirAsync(id, new RPROB_BasvuruSahibi(_environment.ContentRootPath, true), "Ön başvuru sahibi bilgileri yazdırılmadan önce kaydedilmelidir.");
         [OturumKontrol]
@@ -167,6 +175,8 @@ namespace TarimDonusum.Controllers
         [HttpGet]
         public Task<IActionResult> MakineEkipmanYazdir(int id) =>
             RaporYazdirAsync(id, new RPROB_MakineEkipman(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.MakineEkipman"].ToString());
+        [OturumKontrol][HttpGet]
+        public Task<IActionResult> UrunSurecMakineYazdir(int id)=>RaporYazdirAsync(id,new RPROB_UrunSurecMakine(_environment.ContentRootPath),"Ürün süreçleri yazdırılmadan önce başvuru kaydedilmelidir.");
         [OturumKontrol]
         [HttpGet]
         public Task<IActionResult> BinaListesiYazdir(int id) =>
@@ -178,6 +188,8 @@ namespace TarimDonusum.Controllers
             Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
             if (kullanici == null) return Unauthorized();
             if (denetciRaporu && BasvuruKullanicisiMi(kullanici)) return Forbid();
+            if (rapor is RPROB_MakineEkipman makineRaporu)
+                makineRaporu.UzmanCiktisi = !BasvuruKullanicisiMi(kullanici);
 
             Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
             if (!sonuc.basarili || sonuc.nesne == null)
@@ -691,10 +703,36 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> YatirimOnBilgisiKaydet([FromBody] BasvuruYatirimOnBilgi model)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruYatirimOnBilgisiKaydetAsync(model,kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> YatirimOnBilgisiSil([FromBody] BasvuruYatirimOnBilgi model)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruYatirimOnBilgisiSilAsync(model.basvuruId,model.id,kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MakineKaydet([FromBody] BasvuruMakine model)
         {
             Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruMakinesiKaydetAsync(model,kullanici));
         }
+        [OturumKontrol][HttpPost][ValidateAntiForgeryToken]
+        public async Task<IActionResult> UrunSureciKaydet([FromBody] BasvuruUrunSurec model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruUrunSureciKaydetAsync(model,kullanici));}
+        [OturumKontrol][HttpPost][ValidateAntiForgeryToken]
+        public async Task<IActionResult> UrunSureciSil([FromBody] BasvuruUrunSurec model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruUrunSureciSilAsync(model.basvuruId,model.id,kullanici));}
+
+        [HttpPost]
+        public async Task<IActionResult> UrunSurecMakinesiKaydet([FromBody] BasvuruUrunSurecMakine model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruUrunSurecMakinesiKaydetAsync(model,kullanici));}
+
+        [HttpPost]
+        public async Task<IActionResult> UrunSurecMakinesiSil([FromBody] BasvuruUrunSurecMakine model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruUrunSurecMakinesiSilAsync(model.basvuruId,model.id,kullanici));}
 
         [OturumKontrol]
         [HttpPost]

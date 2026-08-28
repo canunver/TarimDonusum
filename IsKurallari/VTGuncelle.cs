@@ -717,6 +717,50 @@ namespace TarimDonusum.IsKurallari
                     TeklifBelgesiDosyaAdi NVARCHAR(260) NULL, Aciklama NVARCHAR(2000) NULL,
                     CONSTRAINT FK_BasvuruMakineTeklif_Makine FOREIGN KEY(MakineId) REFERENCES dbo.BasvuruMakine(Id) ON DELETE CASCADE);
                   CREATE UNIQUE INDEX UX_BasvuruMakineTeklif_MakineSira ON dbo.BasvuruMakineTeklif(MakineId,SiraNo);"),
+            new(50,
+                @"IF OBJECT_ID(N'dbo.BasvuruYatirimOnBilgi', N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruYatirimOnBilgi(
+                      Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruYatirimOnBilgi PRIMARY KEY,
+                      BasvuruId INT NOT NULL, Tur INT NOT NULL, SiraNo INT NOT NULL,
+                      Ad NVARCHAR(250) NOT NULL, Miktar DECIMAL(18,3) NULL, Birim NVARCHAR(50) NULL,
+                      TekPanelGucu DECIMAL(18,3) NULL, TekPanelGucuBirim NVARCHAR(50) NULL,
+                      ToplamGuc DECIMAL(18,3) NULL, ToplamGucBirim NVARCHAR(50) NULL,
+                      CONSTRAINT CK_BasvuruYatirimOnBilgi_Tur CHECK(Tur BETWEEN 1 AND 5),
+                      CONSTRAINT FK_BasvuruYatirimOnBilgi_Basvuru FOREIGN KEY(BasvuruId) REFERENCES dbo.Basvuru(Id) ON DELETE CASCADE);
+                    CREATE UNIQUE INDEX UX_BasvuruYatirimOnBilgi_BasvuruTurSira ON dbo.BasvuruYatirimOnBilgi(BasvuruId,Tur,SiraNo);
+                  END"),
+            new(51,
+                @"IF COL_LENGTH(N'dbo.BasvuruMakine',N'Marka') IS NULL ALTER TABLE dbo.BasvuruMakine ADD Marka NVARCHAR(150) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruMakine',N'Model') IS NULL ALTER TABLE dbo.BasvuruMakine ADD Model NVARCHAR(150) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruMakine',N'KapasiteOzellikleri') IS NULL ALTER TABLE dbo.BasvuruMakine ADD KapasiteOzellikleri NVARCHAR(2000) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruMakine',N'YerlesimPlaniSiraNo') IS NULL ALTER TABLE dbo.BasvuruMakine ADD YerlesimPlaniSiraNo INT NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruMakine',N'KullanimAmaci') IS NULL ALTER TABLE dbo.BasvuruMakine ADD KullanimAmaci NVARCHAR(2000) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruMakine',N'Durum') IS NULL ALTER TABLE dbo.BasvuruMakine ADD Durum NVARCHAR(50) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruMakine',N'KapasiteSecimGerekcesi') IS NULL ALTER TABLE dbo.BasvuruMakine ADD KapasiteSecimGerekcesi NVARCHAR(4000) NULL;"),
+            new(52,
+                @"IF OBJECT_ID(N'dbo.BasvuruMakineUzmanDokuman', N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruMakineUzmanDokuman(
+                      Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruMakineUzmanDokuman PRIMARY KEY,
+                      MakineId INT NOT NULL, SiraNo INT NOT NULL,
+                      DokumanAdi NVARCHAR(250) NOT NULL, DokumanTuru NVARCHAR(100) NOT NULL,
+                      KaynakTedarikci NVARCHAR(250) NOT NULL, BelgeTarihi DATE NULL,
+                      Aciklama NVARCHAR(2000) NULL, DosyaId INT NULL, DosyaAdi NVARCHAR(260) NULL,
+                      CONSTRAINT FK_BasvuruMakineUzmanDokuman_Makine FOREIGN KEY(MakineId) REFERENCES dbo.BasvuruMakine(Id) ON DELETE CASCADE);
+                    CREATE UNIQUE INDEX UX_BasvuruMakineUzmanDokuman_MakineSira ON dbo.BasvuruMakineUzmanDokuman(MakineId,SiraNo);
+                  END"),
+            new(53,
+                @"IF OBJECT_ID(N'dbo.BasvuruUrunSurec',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruUrunSurec(Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruUrunSurec PRIMARY KEY,BasvuruId INT NOT NULL,UrunId INT NOT NULL,SiraNo INT NOT NULL,SurecAdi NVARCHAR(250) NOT NULL,CONSTRAINT FK_BasvuruUrunSurec_Basvuru FOREIGN KEY(BasvuruId) REFERENCES dbo.Basvuru(Id) ON DELETE CASCADE,CONSTRAINT FK_BasvuruUrunSurec_Urun FOREIGN KEY(UrunId) REFERENCES dbo.BasvuruYatirimOnBilgi(Id));
+                    CREATE UNIQUE INDEX UX_BasvuruUrunSurec_BasvuruUrunSira ON dbo.BasvuruUrunSurec(BasvuruId,UrunId,SiraNo);
+                    CREATE TABLE dbo.BasvuruUrunSurecMakine(Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruUrunSurecMakine PRIMARY KEY,SurecId INT NOT NULL,MakineId INT NOT NULL,SiraNo INT NOT NULL,Adet DECIMAL(18,3) NOT NULL,YerlesimPlaniNo NVARCHAR(100) NULL,GirdilerMiktarlar NVARCHAR(2000) NULL,CiktilarMiktarlar NVARCHAR(2000) NULL,IslemeKapasitesi NVARCHAR(500) NULL,GunlukCalismaSuresi DECIMAL(18,2) NULL,Aciklama NVARCHAR(2000) NULL,CONSTRAINT FK_BasvuruUrunSurecMakine_Surec FOREIGN KEY(SurecId) REFERENCES dbo.BasvuruUrunSurec(Id) ON DELETE CASCADE,CONSTRAINT FK_BasvuruUrunSurecMakine_Makine FOREIGN KEY(MakineId) REFERENCES dbo.BasvuruMakine(Id));
+                    CREATE UNIQUE INDEX UX_BasvuruUrunSurecMakine_SurecSira ON dbo.BasvuruUrunSurecMakine(SurecId,SiraNo);
+                  END"),
+            new(54,
+                @"IF COL_LENGTH(N'dbo.BasvuruUrunSurecMakine',N'GunlukCalismaSuresiBirimi') IS NULL
+                    ALTER TABLE dbo.BasvuruUrunSurecMakine ADD GunlukCalismaSuresiBirimi NVARCHAR(10) NOT NULL CONSTRAINT DF_BasvuruUrunSurecMakine_SureBirimi DEFAULT N'Saat';"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

@@ -687,17 +687,12 @@ namespace TarimDonusum.Araclar
         {
             Worksheet sheet = XLS.Worksheets[aktifSheet];
 
-            //Accessing the collection of merged cells as an ArrayList
             System.Collections.ArrayList mergedCells = sheet.Cells.MergedCells;
-
-            //Iterating through each WebCellArea object stored in merged cells
             foreach (CellArea wca in mergedCells)
             {
-                //Checking if a desired range of merged cells are found
                 if (wca.StartRow == satir && wca.StartColumn == sutun)
                 {
-                    //Removing the specific WebCellArea object and breaking the loop
-                    mergedCells.Remove(wca);
+                    sheet.Cells.UnMerge(wca.StartRow,wca.StartColumn,wca.EndRow-wca.StartRow+1,wca.EndColumn-wca.StartColumn+1);
                     break;
                 }
             }

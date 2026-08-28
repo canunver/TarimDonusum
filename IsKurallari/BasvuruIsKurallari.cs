@@ -20,6 +20,7 @@ namespace TarimDonusum.IsKurallari
         private const string BasvuruOrtakUboKycFormAdPrefix = "OBOKYC_";
         private const string BasvuruYatirimYeriFormAdPrefix = "BYAT_";
         private const string BasvuruMakineTeklifFormAdPrefix = "BMT_";
+        private const string BasvuruMakineUzmanDokumanFormAdPrefix = "BMUD_";
         private static readonly IReadOnlyDictionary<int, string> ZorunluBelgeTurleri = new Dictionary<int, string>
         {
             [1] = "Basvuru.Documents.Required.1",
@@ -2122,13 +2123,56 @@ namespace TarimDonusum.IsKurallari
             catch (Exception ex) { BeklenmeyenHata(sonuc, ex, "Ortak silinemedi. BasvuruId: {BasvuruId}", "Ortak silinemedi.", basvuruId); }
             return sonuc;
         }
+        public async Task<Sonuc<BasvuruYatirimOnBilgi>> BasvuruYatirimOnBilgisiKaydetAsync(BasvuruYatirimOnBilgi model, Kullanici kullanici)
+        {
+            Sonuc<BasvuruYatirimOnBilgi> sonuc=new();
+            if(model.basvuruId<=0||!Enum.IsDefined(typeof(enumYatirimOnBilgiTuru),model.tur)||model.siraNo<=0||model.siraNo>99||string.IsNullOrWhiteSpace(model.ad)||model.ad.Length>250)sonuc.HataEkle("Bölüm, 1-99 arasında sıra ve en fazla 250 karakterlik ad bilgileri eksiksiz girilmelidir.");
+            if(model.tur==enumYatirimOnBilgiTuru.EnerjiKullanimi){if((model.miktar.HasValue&&(model.miktar<=0||!OlcuBirimleri.GecerliMi(model.birim)))||(model.tekPanelGucu.HasValue&&(model.tekPanelGucu<=0||!OlcuBirimleri.GecerliMi(model.tekPanelGucuBirim)))||(model.toplamGuc.HasValue&&(model.toplamGuc<=0||!OlcuBirimleri.GecerliMi(model.toplamGucBirim))))sonuc.HataEkle("Enerji kullanımı değerleri pozitif olmalı ve girilen her değerin birimi seçilmelidir.");}else if(model.miktar is null or <=0||!OlcuBirimleri.GecerliMi(model.birim))sonuc.HataEkle("Miktar ve geçerli birim girilmelidir.");
+            if(!sonuc.basarili)return sonuc;
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}if(mevcut.kayitTuru!=enumBasvuruKayitTuru.Basvuru){sonuc.HataEkle("Yatırım ön bilgileri başvuru kaydında girilmelidir.");return sonuc;}if(mevcut.YatirimOnBilgileri.Any(x=>x.id!=model.id&&x.tur==model.tur&&x.siraNo==model.siraNo)){sonuc.HataEkle("Bu bölümde aynı sıra numarası zaten kullanılıyor.");return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{await new TABBasvuru(connection,null,tr).BasvuruYatirimOnBilgisiKaydetAsync(model);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruYatirimOnBilgisiKaydet",model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj=model.tur switch{enumYatirimOnBilgiTuru.MevcutUrun=>"Mevcut ürün kaydedildi.",enumYatirimOnBilgiTuru.UretilecekUrun=>"Üretilecek ürün kaydedildi.",enumYatirimOnBilgiTuru.Girdi=>"Girdi kaydedildi.",enumYatirimOnBilgiTuru.EnerjiKullanimi=>"Enerji kullanımı kaydedildi.",enumYatirimOnBilgiTuru.KuruluGuc=>"Kurulu güç kaydedildi.",_=>"Kayıt kaydedildi."};}catch{await tr.RollbackAsync();throw;}}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Yatırım ön bilgisi kaydedilemedi. BasvuruId: {BasvuruId}","Yatırım ön bilgisi kaydedilemedi.",model.basvuruId);}return sonuc;
+        }
+
+        public async Task<Sonuc> BasvuruYatirimOnBilgisiSilAsync(int basvuruId,int id,Kullanici kullanici)
+        {
+            Sonuc sonuc=new();if(basvuruId<=0||id<=0){sonuc.HataEkle("Silinecek yatırım ön bilgisi belirtilmelidir.");return sonuc;}
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}if(mevcut.kayitTuru!=enumBasvuruKayitTuru.Basvuru){sonuc.HataEkle("Yatırım ön bilgileri başvuru kaydında silinebilir.");return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{TABBasvuru tab=new(connection,null,tr);if(!await tab.BasvuruYatirimOnBilgisiSilAsync(basvuruId,id)){sonuc.HataEkle("Silinecek kayıt bulunamadı.");await tr.RollbackAsync();return sonuc;}await new TABBasvuruLog(connection,null,tr).EkleAsync(basvuruId,kullanici,"BasvuruYatirimOnBilgisiSil",new{id});await tr.CommitAsync();sonuc.mesaj="Yatırım ön bilgisi silindi.";}catch{await tr.RollbackAsync();throw;}}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Yatırım ön bilgisi silinemedi. BasvuruId: {BasvuruId}","Yatırım ön bilgisi silinemedi.",basvuruId);}return sonuc;
+        }
+
+        public async Task<Sonuc<List<BasvuruYatirimOnBilgi>>> BasvuruYatirimOnBilgileriKaydetAsync(BasvuruYatirimOnBilgiKayitModel model, Kullanici kullanici)
+        {
+            Sonuc<List<BasvuruYatirimOnBilgi>> sonuc=new();
+            model.kayitlar ??= new();
+            if(model.basvuruId<=0)sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
+            if(model.kayitlar.Any(x=>!Enum.IsDefined(typeof(enumYatirimOnBilgiTuru),x.tur)||x.siraNo<=0||x.siraNo>99||string.IsNullOrWhiteSpace(x.ad)||x.ad.Length>250))sonuc.HataEkle("Bölüm, 1-99 arasında sıra ve en fazla 250 karakterlik ad bilgileri eksiksiz girilmelidir.");
+            if(model.kayitlar.GroupBy(x=>new{x.tur,x.siraNo}).Any(g=>g.Count()>1))sonuc.HataEkle("Aynı bölümde sıra numaraları tekrarlanamaz.");
+            foreach(BasvuruYatirimOnBilgi x in model.kayitlar)
+            {
+                if(x.tur==enumYatirimOnBilgiTuru.EnerjiKullanimi)
+                {
+                    if((x.miktar.HasValue&&(x.miktar<=0||!OlcuBirimleri.GecerliMi(x.birim)))||(x.tekPanelGucu.HasValue&&(x.tekPanelGucu<=0||!OlcuBirimleri.GecerliMi(x.tekPanelGucuBirim)))||(x.toplamGuc.HasValue&&(x.toplamGuc<=0||!OlcuBirimleri.GecerliMi(x.toplamGucBirim))))sonuc.HataEkle("Enerji kullanımı değerleri pozitif olmalı ve girilen her değerin birimi seçilmelidir.");
+                }
+                else if(x.miktar is null or <=0||!OlcuBirimleri.GecerliMi(x.birim))sonuc.HataEkle("Ürün, girdi ve kurulu güç kayıtlarında miktar ve geçerli birim girilmelidir.");
+            }
+            if(!sonuc.basarili)return sonuc;
+            try
+            {
+                await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}if(mevcut.kayitTuru!=enumBasvuruKayitTuru.Basvuru){sonuc.HataEkle("Yatırım ön bilgileri başvuru kaydında girilmelidir.");return sonuc;}
+                await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{TABBasvuru tab=new(connection,null,tr);await tab.BasvuruYatirimOnBilgileriKaydetAsync(model.basvuruId,model.kayitlar);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruYatirimOnBilgileriKaydet",model);await tr.CommitAsync();sonuc.nesne=model.kayitlar;sonuc.mesaj="Yatırım ön bilgileri kaydedildi.";}catch{await tr.RollbackAsync();throw;}
+            }
+            catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Yatırım ön bilgileri kaydedilemedi. BasvuruId: {BasvuruId}","Yatırım ön bilgileri kaydedilemedi.",model.basvuruId);}return sonuc;
+        }
+
         public async Task<Sonuc<BasvuruMakine>> BasvuruMakinesiKaydetAsync(BasvuruMakine makine, Kullanici kullanici)
         {
             Sonuc<BasvuruMakine> sonuc=new();
+            if(makine.teklifKontroluYapilsin&&string.IsNullOrWhiteSpace(makine.durum))makine.durum="YENİ DESTEK İSTENİYOR";
             if(makine.basvuruId<=0||makine.siraNo<=0||string.IsNullOrWhiteSpace(makine.ad)||!OlcuBirimleri.GecerliMi(makine.birim)||makine.miktar<=0) sonuc.HataEkle("Makine sıra no, adı, geçerli birimi ve miktarı girilmelidir.");
+            string[] ekipmanDurumlari=["YENİ DESTEK İSTENİYOR","YENİ DESTEK İSTEMİYOR","MEVCUT KULLANILACAK","MEVCUT KULLANILMAYACAK"];
+            if(!string.IsNullOrWhiteSpace(makine.durum)&&!ekipmanDurumlari.Contains(makine.durum))sonuc.HataEkle("Makine/ekipman durumu geçersizdir.");
+            if(makine.durum.StartsWith("YENİ",StringComparison.Ordinal)){makine.marka="";makine.model="";}
             if(makine.teknikOzellikler.Any(x=>x.siraNo<=0||string.IsNullOrWhiteSpace(x.baslik)||string.IsNullOrWhiteSpace(x.aciklamaAsgariGereklilik))) sonuc.HataEkle("Teknik özellik bilgileri eksiksiz girilmelidir.");
-            if(makine.teklifler.Count(x=>x.basvuruyaEsas)!=1) sonuc.HataEkle("Başvuruya esas olarak tam bir teklif seçilmelidir.");
-            if(makine.teklifler.Any(x=>x.siraNo<=0||x.siraNo>99||string.IsNullOrWhiteSpace(x.tedarikci)||!ParaBirimleri.GecerliMi(x.paraBirimi)||x.birimFiyat<=0)) sonuc.HataEkle("Teklif sıra no 1-99 arasında olmalı; tedarikçi, geçerli para birimi ve birim fiyat bilgileri girilmelidir.");
+            if(makine.teklifKontroluYapilsin&&makine.teklifler.Count(x=>x.basvuruyaEsas)!=1) sonuc.HataEkle("Başvuruya esas olarak tam bir teklif seçilmelidir.");
+            if(makine.teklifKontroluYapilsin&&makine.teklifler.Any(x=>x.siraNo<=0||x.siraNo>99||string.IsNullOrWhiteSpace(x.tedarikci)||!ParaBirimleri.GecerliMi(x.paraBirimi)||x.birimFiyat<=0)) sonuc.HataEkle("Teklif sıra no 1-99 arasında olmalı; tedarikçi, geçerli para birimi ve birim fiyat bilgileri girilmelidir.");
             if(!sonuc.basarili)return sonuc;
             try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,makine.basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}if(mevcut.kayitTuru!=enumBasvuruKayitTuru.Basvuru){sonuc.HataEkle("Makine/ekipman listesi başvuru kaydında girilmelidir.");return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{TABBasvuru tab=new(connection,null,tr);await tab.BasvuruMakinesiKaydetAsync(makine);await new TABBasvuruLog(connection,null,tr).EkleAsync(makine.basvuruId,kullanici,"BasvuruMakinesiKaydet",makine);await tr.CommitAsync();sonuc.nesne=makine;sonuc.mesaj="Makine/ekipman kaydedildi.";}catch{await tr.RollbackAsync();throw;}}
             catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Makine kaydedilemedi. BasvuruId: {BasvuruId}","Makine/ekipman kaydedilemedi.",makine.basvuruId);}return sonuc;
@@ -2138,6 +2182,38 @@ namespace TarimDonusum.IsKurallari
         {
             Sonuc sonuc=new();if(BasvuruKullanicisiMi(kullanici)){sonuc.HataEkle("Başvuru kullanıcıları uzman değerlendirmesi kaydedemez.");return sonuc;}string[] durumlar=["Eksik","Kabul edilebilir","Minimum fiyat esas alınır"];if(!string.IsNullOrWhiteSpace(model.uzmanKontrolSonucu)&&!durumlar.Contains(model.uzmanKontrolSonucu))sonuc.HataEkle("Kontrol sonucu geçersizdir.");if(!string.IsNullOrWhiteSpace(model.uzmanParaBirimi)&&!ParaBirimleri.GecerliMi(model.uzmanParaBirimi))sonuc.HataEkle("Uzman para birimi geçersizdir.");if(model.uzmanKur<0||model.uzmanMinimumFiyat<0||model.uzmanMaksimumFiyat<0||model.uzmanOnerilenFiyatTl<0)sonuc.HataEkle("Uzman fiyatları negatif olamaz.");if(!sonuc.basarili)return sonuc;try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{await new TABBasvuru(connection,null,tr).BasvuruMakineUzmanGuncelleAsync(model);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruMakineUzmanKaydet",model);await tr.CommitAsync();sonuc.mesaj="Uzman değerlendirmesi kaydedildi.";}catch{await tr.RollbackAsync();throw;}}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Makine uzman değerlendirmesi kaydedilemedi. BasvuruId: {BasvuruId}","Uzman değerlendirmesi kaydedilemedi.",model.basvuruId);}return sonuc;
         }
+
+        public async Task<Sonuc<BasvuruMakineUzmanDokuman>> BasvuruMakineUzmanDokumaniKaydetAsync(BasvuruMakineUzmanDokuman model,Kullanici kullanici)
+        {
+            Sonuc<BasvuruMakineUzmanDokuman> sonuc=new();
+            if(BasvuruKullanicisiMi(kullanici)){sonuc.HataEkle("Başvuru kullanıcıları uzman araştırması kaydedemez.");return sonuc;}
+            model.dokumanAdi=model.dokumanAdi?.Trim()??"";model.dokumanTuru=model.dokumanTuru?.Trim()??"";model.kaynakTedarikci=model.kaynakTedarikci?.Trim()??"";model.aciklama=model.aciklama?.Trim()??"";
+            if(model.basvuruId<=0||model.makineId<=0||string.IsNullOrWhiteSpace(model.dokumanAdi)||string.IsNullOrWhiteSpace(model.dokumanTuru)||string.IsNullOrWhiteSpace(model.kaynakTedarikci))sonuc.HataEkle("Doküman/yazışma adı, doküman türü ve kaynak/tedarikçi girilmelidir.");
+            if(model.dokumanAdi.Length>250||model.dokumanTuru.Length>100||model.kaynakTedarikci.Length>250||model.aciklama.Length>2000)sonuc.HataEkle("Uzman araştırması alanlarından biri izin verilen uzunluğu aşıyor.");
+            if(!sonuc.basarili)return sonuc;
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{TABBasvuru tab=new(connection,null,tr);await tab.BasvuruMakineUzmanDokumaniKaydetAsync(model);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruMakineUzmanDokumaniKaydet",model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj="Uzman araştırma dokümanı kaydedildi.";}catch{await tr.RollbackAsync();throw;}}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Uzman araştırma dokümanı kaydedilemedi. BasvuruId: {BasvuruId}","Uzman araştırma dokümanı kaydedilemedi.",model.basvuruId);}return sonuc;
+        }
+
+        public async Task<Sonuc<BasvuruUrunSurec>> BasvuruUrunSureciKaydetAsync(BasvuruUrunSurec model,Kullanici kullanici)
+        {
+            Sonuc<BasvuruUrunSurec> sonuc=new();model.surecAdi=model.surecAdi?.Trim()??"";
+            if(model.basvuruId<=0||model.urunId<=0||model.siraNo<=0||model.siraNo>99||string.IsNullOrWhiteSpace(model.surecAdi)||model.surecAdi.Length>250)sonuc.HataEkle("Ürün, 1-99 arasında süreç sırası ve süreç adı girilmelidir.");
+            if(!sonuc.basarili)return sonuc;
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}if(mevcut.kayitTuru!=enumBasvuruKayitTuru.Basvuru){sonuc.HataEkle("Ürün süreçleri başvuru kaydında girilmelidir.");return sonuc;}if(!mevcut.YatirimOnBilgileri.Any(x=>x.id==model.urunId&&x.tur==enumYatirimOnBilgiTuru.UretilecekUrun)){sonuc.HataEkle("Seçilen üretilecek ürün bulunamadı.");return sonuc;}if(mevcut.UrunSurecleri.Any(x=>x.id!=model.id&&x.urunId==model.urunId&&x.siraNo==model.siraNo)){sonuc.HataEkle("Bu ürün için aynı süreç sıra numarası zaten kullanılıyor.");return sonuc;}model.makineler=mevcut.UrunSurecleri.FirstOrDefault(x=>x.id==model.id)?.makineler??[];await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{await new TABBasvuru(connection,null,tr).BasvuruUrunSureciKaydetAsync(model);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruUrunSureciKaydet",model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj="Ürün ve süreç ilişkisi kaydedildi.";}catch{await tr.RollbackAsync();throw;}}
+            catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Ürün süreci kaydedilemedi. BasvuruId: {BasvuruId}","Ürün süreci kaydedilemedi.",model.basvuruId);}return sonuc;
+        }
+        public async Task<Sonuc> BasvuruUrunSureciSilAsync(int basvuruId,int id,Kullanici kullanici){Sonuc sonuc=new();try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{if(!await new TABBasvuru(connection,null,tr).BasvuruUrunSureciSilAsync(basvuruId,id)){sonuc.HataEkle("Silinecek ürün süreci bulunamadı.");await tr.RollbackAsync();return sonuc;}await new TABBasvuruLog(connection,null,tr).EkleAsync(basvuruId,kullanici,"BasvuruUrunSureciSil",new{id});await tr.CommitAsync();sonuc.mesaj="Ürün süreci silindi.";}catch{await tr.RollbackAsync();throw;}}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Ürün süreci silinemedi. BasvuruId: {BasvuruId}","Ürün süreci silinemedi.",basvuruId);}return sonuc;}
+
+        public async Task<Sonuc<BasvuruUrunSurecMakine>> BasvuruUrunSurecMakinesiKaydetAsync(BasvuruUrunSurecMakine model,Kullanici kullanici)
+        {
+            Sonuc<BasvuruUrunSurecMakine> sonuc=new();model.yerlesimPlaniNo=model.yerlesimPlaniNo?.Trim()??"";model.girdilerMiktarlar=model.girdilerMiktarlar?.Trim()??"";model.ciktilarMiktarlar=model.ciktilarMiktarlar?.Trim()??"";model.islemeKapasitesi=model.islemeKapasitesi?.Trim()??"";model.aciklama=model.aciklama?.Trim()??"";model.gunlukCalismaSuresiBirimi=model.gunlukCalismaSuresiBirimi?.Trim()??"";
+            if(model.basvuruId<=0||model.surecId<=0||model.makineId<=0||model.siraNo<=0||model.adet<=0)sonuc.HataEkle("Sıra, makine ve kullanılacak adet girilmelidir.");
+            if(model.gunlukCalismaSuresi<0||!new[]{"Dakika","Saat"}.Contains(model.gunlukCalismaSuresiBirimi)||model.yerlesimPlaniNo.Length>100||model.girdilerMiktarlar.Length>2000||model.ciktilarMiktarlar.Length>2000||model.islemeKapasitesi.Length>500||model.aciklama.Length>2000)sonuc.HataEkle("Çalışma süresi birimi dakika veya saat olmalı; makine kullanım bilgileri izin verilen uzunlukları aşmamalıdır.");
+            if(!sonuc.basarili)return sonuc;
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}BasvuruUrunSurec? surec=mevcut.UrunSurecleri.FirstOrDefault(x=>x.id==model.surecId);if(surec==null||mevcut.Makineler.All(x=>x.id!=model.makineId)){sonuc.HataEkle("Seçilen süreç veya makine bulunamadı.");return sonuc;}if(surec.makineler.Any(x=>x.id!=model.id&&x.siraNo==model.siraNo)){sonuc.HataEkle("Bu süreçte aynı makine sıra numarası zaten kullanılıyor.");return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{await new TABBasvuru(connection,null,tr).BasvuruUrunSurecMakinesiKaydetAsync(model);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruUrunSurecMakinesiKaydet",model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj="Süreçte kullanılan makine kaydedildi.";}catch{await tr.RollbackAsync();throw;}}
+            catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Süreç makinesi kaydedilemedi. BasvuruId: {BasvuruId}","Süreçte kullanılan makine kaydedilemedi.",model.basvuruId);}return sonuc;
+        }
+        public async Task<Sonuc> BasvuruUrunSurecMakinesiSilAsync(int basvuruId,int id,Kullanici kullanici){Sonuc sonuc=new();try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{if(!await new TABBasvuru(connection,null,tr).BasvuruUrunSurecMakinesiSilAsync(basvuruId,id)){sonuc.HataEkle("Silinecek süreç makinesi bulunamadı.");await tr.RollbackAsync();return sonuc;}await new TABBasvuruLog(connection,null,tr).EkleAsync(basvuruId,kullanici,"BasvuruUrunSurecMakinesiSil",new{id});await tr.CommitAsync();sonuc.mesaj="Süreç makinesi silindi.";}catch{await tr.RollbackAsync();throw;}}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Süreç makinesi silinemedi. BasvuruId: {BasvuruId}","Süreç makinesi silinemedi.",basvuruId);}return sonuc;}
 
         public async Task<Sonuc<BasvuruDosyaYuklemeSonucu>> BasvuruDosyasiKaydetAsync(int basvuruId, string formAd, int dosyaNo, string dosyaAdi, byte[] icerik, Kullanici kullanici)
         {
@@ -2168,6 +2244,12 @@ namespace TarimDonusum.IsKurallari
                 Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
                 if (!sonuc.basarili || mevcut == null)
                     return sonuc;
+
+                if (MakineUzmanDokumanFormAdMi(formAd) && BasvuruKullanicisiMi(kullanici))
+                {
+                    sonuc.HataEkle("Başvuru kullanıcıları uzman araştırması dosyası yükleyemez.");
+                    return sonuc;
+                }
 
                 if (YatirimYeriBelgeFormAdMi(formAd))
                 {
@@ -2279,6 +2361,12 @@ namespace TarimDonusum.IsKurallari
                     string idMetni=formAd[BasvuruMakineTeklifFormAdPrefix.Length..];
                     if(!int.TryParse(idMetni,out int teklifId) || !await BasvuruMakineTeklifiVarMiAsync(connection,basvuruId,teklifId)){sonuc.HataEkle("Önce teklif kaydedilmelidir.");return sonuc;}
                 }
+                if (MakineUzmanDokumanFormAdMi(formAd))
+                {
+                    if(BasvuruKullanicisiMi(kullanici)){sonuc.HataEkle("Başvuru kullanıcıları uzman araştırması dosyası yükleyemez.");return sonuc;}
+                    string idMetni=formAd[BasvuruMakineUzmanDokumanFormAdPrefix.Length..];
+                    if(!int.TryParse(idMetni,out int dokumanId) || !await BasvuruMakineUzmanDokumaniVarMiAsync(connection,basvuruId,dokumanId)){sonuc.HataEkle("Önce uzman araştırma dokümanı kaydedilmelidir.");return sonuc;}
+                }
                 if (YatirimYeriBelgeFormAdMi(formAd)
                     && int.TryParse(formAd[BasvuruYatirimYeriFormAdPrefix.Length..], out int yatirimYeriId))
                 {
@@ -2314,6 +2402,8 @@ namespace TarimDonusum.IsKurallari
                 }
                 if(MakineTeklifBelgeFormAdMi(formAd)&&int.TryParse(formAd[BasvuruMakineTeklifFormAdPrefix.Length..],out int makineTeklifId))
                     await new TABBasvuru(connection).BasvuruMakineTeklifDosyasiGuncelleAsync(basvuruId,makineTeklifId,dosyaSonuc.nesne.Id,dosyaSonuc.nesne.DosyaAdi);
+                if(MakineUzmanDokumanFormAdMi(formAd)&&int.TryParse(formAd[BasvuruMakineUzmanDokumanFormAdPrefix.Length..],out int uzmanDokumanId))
+                    await new TABBasvuru(connection).BasvuruMakineUzmanDokumaniDosyaGuncelleAsync(basvuruId,uzmanDokumanId,dosyaSonuc.nesne.Id,dosyaSonuc.nesne.DosyaAdi);
 
                 sonuc.nesne = new BasvuruDosyaYuklemeSonucu
                 {
@@ -2721,6 +2811,11 @@ namespace TarimDonusum.IsKurallari
                 }
 
                 Dosya dosyaBilgisi = dosyaSonuc.nesne!;
+                if (MakineUzmanDokumanFormAdMi(dosyaBilgisi.FormAd) && BasvuruKullanicisiMi(kullanici))
+                {
+                    sonuc.HataEkle("Bu dosyayı görüntüleme yetkiniz bulunmuyor.");
+                    return sonuc;
+                }
                 int basvuruId = BasvuruIdDosyaFormAnahtarindanOku(dosyaBilgisi.FormAnahtar);
                 int dosyaNo = dosyaBilgisi.DosyaNo;
                 if (basvuruId <= 0 || dosyaNo <= 0)
@@ -3502,6 +3597,8 @@ namespace TarimDonusum.IsKurallari
 
             if (MakineTeklifBelgeFormAdMi(formAd) && dosyaNo == 1)
                 return "Makine/ekipman teklif belgesi";
+            if (MakineUzmanDokumanFormAdMi(formAd) && dosyaNo == 1)
+                return "Makine/ekipman uzman araştırma dokümanı";
 
             return "";
         }
@@ -3525,7 +3622,9 @@ namespace TarimDonusum.IsKurallari
                 && formAd.Length > BasvuruOrtakUboKycFormAdPrefix.Length;
         }
         private static bool MakineTeklifBelgeFormAdMi(string? formAd)=>!string.IsNullOrWhiteSpace(formAd)&&formAd.StartsWith(BasvuruMakineTeklifFormAdPrefix,StringComparison.OrdinalIgnoreCase)&&formAd.Length>BasvuruMakineTeklifFormAdPrefix.Length;
+        private static bool MakineUzmanDokumanFormAdMi(string? formAd)=>!string.IsNullOrWhiteSpace(formAd)&&formAd.StartsWith(BasvuruMakineUzmanDokumanFormAdPrefix,StringComparison.OrdinalIgnoreCase)&&formAd.Length>BasvuruMakineUzmanDokumanFormAdPrefix.Length;
         private static async Task<bool> BasvuruMakineTeklifiVarMiAsync(SqlConnection connection,int basvuruId,int teklifId){const string sql=@"SELECT COUNT(1) FROM dbo.BasvuruMakineTeklif t INNER JOIN dbo.BasvuruMakine m ON m.Id=t.MakineId WHERE t.Id=@TeklifId AND m.BasvuruId=@BasvuruId;";await using SqlCommand c=new(sql,connection);c.Parameters.AddWithValue("@TeklifId",teklifId);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return Convert.ToInt32(await c.ExecuteScalarAsync())>0;}
+        private static async Task<bool> BasvuruMakineUzmanDokumaniVarMiAsync(SqlConnection connection,int basvuruId,int dokumanId){const string sql=@"SELECT COUNT(1) FROM dbo.BasvuruMakineUzmanDokuman d INNER JOIN dbo.BasvuruMakine m ON m.Id=d.MakineId WHERE d.Id=@DokumanId AND m.BasvuruId=@BasvuruId;";await using SqlCommand c=new(sql,connection);c.Parameters.AddWithValue("@DokumanId",dokumanId);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return Convert.ToInt32(await c.ExecuteScalarAsync())>0;}
 
         private static string UboKycFormAdKimlikOku(string formAd)
         {
@@ -3690,7 +3789,8 @@ namespace TarimDonusum.IsKurallari
                 || string.Equals(formAd, BasvuruImzaYetkiFormAd, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(formAd, BasvuruOrtakUboKycFormAd, StringComparison.OrdinalIgnoreCase)
                 || UboKycFormAdMi(formAd)
-                || MakineTeklifBelgeFormAdMi(formAd);
+                || MakineTeklifBelgeFormAdMi(formAd)
+                || MakineUzmanDokumanFormAdMi(formAd);
         }
 
         private static void UygulamaAdresiNormalizeEt(BasvuruUygulamaAdresi adres)

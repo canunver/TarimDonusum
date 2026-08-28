@@ -1,0 +1,26 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@using System.Text.Json
+@{bool edit=!Model.DenetciGorunumu&&!Model.SaltOkunur;var urunler=Model.Basvuru.YatirimOnBilgileri.Where(x=>x.tur==enumYatirimOnBilgiTuru.UretilecekUrun).Select(x=>new{x.id,x.ad,x.siraNo});var makineler=Model.Basvuru.Makineler.Select(x=>new{x.id,x.ad,x.siraNo,x.marka,x.model});}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruUrunSurecMakine)">
+ <div class="section-toolbar"><h2 class="mb-0">Ürün İşleme Süreçleri ve Kullanılan Makineler</h2><div class="d-flex" style="gap:8px"><a class="btn btn-outline-primary" href="@Url.Action("UrunSurecMakineYazdir","Basvuru",new{id=Model.Basvuru.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>@if(edit){<button type="button" class="btn btn-primary" id="urunSurecYeniBtn">Ürün / süreç ekle</button>}</div></div>
+ <div class="alert alert-info">Üretilecek ürün ile süreç aşamasını bağlayın; ardından süreçte kullanılan makineleri ekleyin. Aynı makine farklı amaçlarla birden fazla kez seçilebilir.</div>
+ <script type="application/json" id="urunSurecJson">@Html.Raw(JsonSerializer.Serialize(Model.Basvuru.UrunSurecleri))</script>
+ <script type="application/json" id="urunSurecUrunJson">@Html.Raw(JsonSerializer.Serialize(urunler))</script>
+ <script type="application/json" id="urunSurecMakineJson">@Html.Raw(JsonSerializer.Serialize(makineler))</script>
+ <div id="urunSurecListe"></div>
+@if(edit){
+<div class="modal fade" id="urunSurecModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Ürün / Süreç</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body">
+ <input type="hidden" id="usIndex"><input type="hidden" id="usId"><div class="form-grid"><label>Üretilecek ürün<select id="usUrun"></select></label><label>Süreç sıra no<input id="usSira" type="number" min="1" max="99"></label><label>Süreç aşaması / adı<input id="usAd" maxlength="250"></label></div>
+</div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="UrunSurecKaydet()">Kaydet</button></div></div></div></div>
+
+<div class="modal fade" id="urunSurecMakineModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="usmBaslik">Süreç Makinesi</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body" style="max-height:calc(100vh - 180px);overflow:auto">
+ <input type="hidden" id="usmSurecIndex"><input type="hidden" id="usmMakineIndex"><input type="hidden" id="usmId">
+ <div class="form-grid"><label>Sıra<input id="usmSira" type="number" min="1"></label><label>Makine / Ekipman<select id="usmMakine"></select></label><label>Kullanılacak adet<input id="usmAdet" type="number" min="0.001" step="0.001"></label><label>Yerleşim planı no<input id="usmPlan" maxlength="100"></label></div>
+ <label class="wide-label mt-2">Girdiler ve miktarları<textarea id="usmGirdi" maxlength="2000" rows="3"></textarea></label>
+ <label class="wide-label">Çıktılar ve miktarları<textarea id="usmCikti" maxlength="2000" rows="3"></textarea></label>
+ <div class="form-grid mt-2"><label>İşleme kapasitesi<input id="usmKapasite" maxlength="500"></label><label>Günlük çalışma süresi<input id="usmSure" type="number" min="0" step="0.01"></label><label>Süre birimi<select id="usmSureBirimi"><option value="Dakika">Dakika</option><option value="Saat">Saat</option></select></label></div>
+ <label class="wide-label">Açıklamalar<textarea id="usmAciklama" maxlength="2000"></textarea></label>
+ </div><div class="modal-footer"><button type="button" class="btn btn-outline-danger mr-auto" id="usmSilBtn" onclick="UrunSurecMakineSil()">Sil</button><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="UrunSurecMakineKaydet()">Kaydet</button></div></div></div></div>
+}
+</section>

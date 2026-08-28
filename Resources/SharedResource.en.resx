@@ -562,7 +562,7 @@
     <value>Pre-application No: {0}</value>
   </data>
   <data name="Basvuru.Form.MainApplicationNo" xml:space="preserve">
-    <value>Application No: {0}</value>
+    <value>Application ID: {0}</value>
   </data>
   <data name="Basvuru.Form.ApplicationNoPending" xml:space="preserve">
     <value>Created after the first section is saved</value>
@@ -2732,5 +2732,8 @@
   </data>
   <data name="Basvuru.ApplicationPartnershipAuthority.Title" xml:space="preserve"><value>Partnership and Authority</value></data>
   <data name="Basvuru.ApplicationInvestment.Title" xml:space="preserve"><value>Investment Information</value></data>
-  <data name="Basvuru.Step.MakineEkipman" xml:space="preserve"><value>Machinery / Equipment List</value></data>
+  <data name="Basvuru.Step.MakineEkipman" xml:space="preserve"><value>New Machinery Equipment List</value></data>
+  <data name="Basvuru.Step.YatirimdaKullanilacakEkipmanlar" xml:space="preserve"><value>Equipment to Be Used in the Investment</value></data>
+  <data name="Basvuru.Step.YatirimOnBilgileri" xml:space="preserve"><value>Preliminary Investment Information</value></data>
+  <data name="Basvuru.Step.UrunSurecMakine" xml:space="preserve"><value>Product, Process and Machinery Relations</value></data>
 </root>

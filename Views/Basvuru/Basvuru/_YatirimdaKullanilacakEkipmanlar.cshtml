@@ -1,0 +1,30 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@using System.Text.Json
+@{ bool duzenlenebilir = !Model.DenetciGorunumu && !Model.SaltOkunur; }
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar)">
+ <div class="section-toolbar"><h2 class="mb-0">YATIRIMDA KULLANILACAK EKİPMANLAR</h2><div class="d-flex align-items-center" style="gap:8px"><a class="btn btn-outline-primary" href="@Url.Action("YatirimMakineEkipmanListesiYazdir","Basvuru",new{id=Model.Basvuru.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>@if(duzenlenebilir){<button type="button" class="btn btn-primary" id="yatirimEkipmanYeniBtn">Yeni ekipman ekle</button>}</div></div>
+ <script type="application/json" id="yatirimEkipmanJson">@Html.Raw(JsonSerializer.Serialize(Model.Basvuru.Makineler.Select(m => new { m.id,m.basvuruId,m.siraNo,m.ad,m.birim,m.miktar,m.aciklama,m.marka,m.model,m.kapasiteOzellikleri,m.yerlesimPlaniSiraNo,m.kullanimAmaci,m.durum,m.kapasiteSecimGerekcesi,m.teklifKontroluYapilsin,teknikOzellikler=m.teknikOzellikler,teklifler=m.teklifler })))</script>
+ <div id="yatirimEkipmanListeAlani"></div>
+</section>
+@if(duzenlenebilir)
+{
+<div class="modal fade" id="yatirimEkipmanModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
+ <div class="modal-header"><h5 class="modal-title">Yatırımda Kullanılacak Ekipman</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+ <div class="modal-body" style="max-height:calc(100vh - 180px);overflow-y:auto">
+  <input type="hidden" id="yatirimEkipmanIndex" />
+  <div class="form-grid">
+   <label>Makine-ekipmanın adı<input id="yeAd" maxlength="250" /></label>
+   <label>Markası<input id="yeMarka" maxlength="150" /></label>
+   <label>Modeli<input id="yeModel" maxlength="150" /></label>
+   <label>Adedi<input id="yeAdet" type="number" min="0.001" step="0.001" /></label>
+   <label>Yerleşim planı ve listesindeki sıra numarası<input id="yePlanSira" type="number" min="1" max="9999" /></label>
+   <label>Durum<select id="yeDurum" onchange="YatirimEkipmanDurumAlanlariGuncelle()"><option value="">Seçiniz</option><option>YENİ DESTEK İSTENİYOR</option><option>YENİ DESTEK İSTEMİYOR</option><option>MEVCUT KULLANILACAK</option><option>MEVCUT KULLANILMAYACAK</option></select></label>
+  </div>
+  <label class="wide-label">İşleme kapasitesi veya kapasite belirleyici özellikleri<textarea id="yeKapasite" maxlength="2000"></textarea></label>
+  <label class="wide-label">Kullanım amacı<textarea id="yeKullanimAmaci" maxlength="2000"></textarea></label>
+  <label class="wide-label">Makine-ekipman kapasitesi seçim gerekçesi ve kapasiteyi belirleyen hususlar<textarea id="yeKapasiteGerekcesi" maxlength="4000"></textarea></label>
+ </div>
+ <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="YatirimEkipmanKaydet()">Kaydet</button></div>
+</div></div></div>
+}

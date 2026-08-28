@@ -104,6 +104,14 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MakineUzmanDokumaniKaydet([FromBody] BasvuruMakineUzmanDokuman model)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();if(BasvuruKullanicisiMi(kullanici))return Forbid();return Json(await _basvuruIsKurallari.BasvuruMakineUzmanDokumaniKaydetAsync(model,kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> OnBasvuruDenetimiKaydet([FromBody] Basvuru denetim, [FromQuery] bool sonuclandir = false)
         {
             Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);

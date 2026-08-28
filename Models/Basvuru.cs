@@ -176,6 +176,8 @@ namespace TarimDonusum.Models
         public BasvuruOrtaklik ortaklik { get; set; } = new();
         public List<BasvuruUygulamaAdresi> YatirimAdresleri { get; set; } = new();
         public List<BasvuruMakine> Makineler { get; set; } = new();
+        public List<BasvuruUrunSurec> UrunSurecleri { get; set; } = new();
+        public List<BasvuruYatirimOnBilgi> YatirimOnBilgileri { get; set; } = new();
         public BasvuruFinans finans = new();
         public BasvuruMali mali = new BasvuruMali();
         public BasvuruUygunHarcama uygunHarcama { get; set; } = new();
@@ -558,6 +560,36 @@ namespace TarimDonusum.Models
         public List<BasvuruAdliSicilKisi> kisiler { get; set; } = new();
     }
 
+    public enum enumYatirimOnBilgiTuru
+    {
+        MevcutUrun = 1,
+        UretilecekUrun = 2,
+        Girdi = 3,
+        EnerjiKullanimi = 4,
+        KuruluGuc = 5
+    }
+
+    public class BasvuruYatirimOnBilgi
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public enumYatirimOnBilgiTuru tur { get; set; }
+        public int siraNo { get; set; }
+        public string ad { get; set; } = "";
+        public decimal? miktar { get; set; }
+        public string? birim { get; set; }
+        public decimal? tekPanelGucu { get; set; }
+        public string? tekPanelGucuBirim { get; set; }
+        public decimal? toplamGuc { get; set; }
+        public string? toplamGucBirim { get; set; }
+    }
+
+    public class BasvuruYatirimOnBilgiKayitModel
+    {
+        public int basvuruId { get; set; }
+        public List<BasvuruYatirimOnBilgi> kayitlar { get; set; } = new();
+    }
+
     public class BasvuruMakine
     {
         public int id { get; set; }
@@ -567,8 +599,17 @@ namespace TarimDonusum.Models
         public string birim { get; set; } = "";
         public decimal miktar { get; set; }
         public string aciklama { get; set; } = "";
+        public string marka { get; set; } = "";
+        public string model { get; set; } = "";
+        public string kapasiteOzellikleri { get; set; } = "";
+        public int? yerlesimPlaniSiraNo { get; set; }
+        public string kullanimAmaci { get; set; } = "";
+        public string durum { get; set; } = "";
+        public string kapasiteSecimGerekcesi { get; set; } = "";
+        public bool teklifKontroluYapilsin { get; set; }
         public List<BasvuruMakineOzellik> teknikOzellikler { get; set; } = new();
         public List<BasvuruMakineTeklif> teklifler { get; set; } = new();
+        public List<BasvuruMakineUzmanDokuman> uzmanDokumanlari { get; set; } = new();
         public string? uzmanParaBirimi { get; set; }
         public decimal? uzmanKur { get; set; }
         public decimal? uzmanMinimumFiyat { get; set; }
@@ -626,6 +667,48 @@ namespace TarimDonusum.Models
         public decimal? uzmanOnerilenFiyatTl { get; set; }
         public string? uzmanKontrolSonucu { get; set; }
         public string? uzmanAciklama { get; set; }
+    }
+
+    public class BasvuruMakineUzmanDokuman
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public int makineId { get; set; }
+        public int siraNo { get; set; }
+        public string dokumanAdi { get; set; } = "";
+        public string dokumanTuru { get; set; } = "";
+        public string kaynakTedarikci { get; set; } = "";
+        public DateTime? belgeTarihi { get; set; }
+        public string aciklama { get; set; } = "";
+        public int? dosyaId { get; set; }
+        public string? dosyaAdi { get; set; }
+    }
+
+    public class BasvuruUrunSurec
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public int urunId { get; set; }
+        public int siraNo { get; set; }
+        public string surecAdi { get; set; } = "";
+        public List<BasvuruUrunSurecMakine> makineler { get; set; } = new();
+    }
+
+    public class BasvuruUrunSurecMakine
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public int surecId { get; set; }
+        public int makineId { get; set; }
+        public int siraNo { get; set; }
+        public decimal adet { get; set; }
+        public string yerlesimPlaniNo { get; set; } = "";
+        public string girdilerMiktarlar { get; set; } = "";
+        public string ciktilarMiktarlar { get; set; } = "";
+        public string islemeKapasitesi { get; set; } = "";
+        public decimal? gunlukCalismaSuresi { get; set; }
+        public string gunlukCalismaSuresiBirimi { get; set; } = "Saat";
+        public string aciklama { get; set; } = "";
     }
 
     public class BasvuruFinans

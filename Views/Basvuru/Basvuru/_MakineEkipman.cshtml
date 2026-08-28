@@ -3,17 +3,18 @@
 @using System.Text.Json
 @{
     bool uzman = Model.DenetciGorunumu;
-    var basvuranVerisi = Model.Basvuru.Makineler.Select(m => new { m.id,m.basvuruId,m.siraNo,m.ad,m.birim,m.miktar,m.aciklama,teknikOzellikler=m.teknikOzellikler,teklifler=m.teklifler });
+    var yeniMakineler = Model.Basvuru.Makineler.Where(m => string.Equals(m.durum, "YENİ DESTEK İSTENİYOR", StringComparison.Ordinal)).ToList();
+    var basvuranVerisi = yeniMakineler.Select(m => new { m.id,m.basvuruId,m.siraNo,m.ad,m.birim,m.miktar,m.aciklama,m.marka,m.model,m.kapasiteOzellikleri,m.yerlesimPlaniSiraNo,m.kullanimAmaci,m.durum,m.kapasiteSecimGerekcesi,teknikOzellikler=m.teknikOzellikler,teklifler=m.teklifler });
 }
 <section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruMakineEkipman)">
-    <div class="section-toolbar"><h2 class="mb-0">Makine / Ekipman Listesi</h2>@if(!uzman&&!Model.SaltOkunur){<button type="button" class="btn btn-primary" id="makineYeniBtn">Yeni makine ekle</button>}</div>
+    <div class="section-toolbar"><h2 class="mb-0">Yeni Makine Ekipman Listesi</h2><div class="d-flex align-items-center" style="gap:8px"><a class="btn btn-outline-primary" href="@Url.Action("MakineEkipmanYazdir","Basvuru",new{id=Model.Basvuru.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>@if(!uzman&&!Model.SaltOkunur){<button type="button" class="btn btn-primary" id="makineYeniBtn">Yeni makine ekle</button>}</div></div>
     <script type="application/json" id="makineListeJson">@Html.Raw(JsonSerializer.Serialize(basvuranVerisi))</script>
     <div id="makineListeAlani"></div>
     @if(uzman)
     {
         <h3 class="mt-4">Kurum Uzmanı Değerlendirmesi</h3>
         <div class="alert alert-warning">Bu bölümdeki veriler başvuru sahibine gösterilmez.</div>
-        @foreach(var m in Model.Basvuru.Makineler)
+        @foreach(var m in yeniMakineler)
         {
             <div class="card mb-3 uzman-makine" data-makine-id="@m.id">
                 <div class="card-header"><strong>@m.siraNo - @m.ad</strong></div><div class="card-body">
@@ -27,7 +28,18 @@
                     <label>Uzmanın önerdiği fiyat (TL)<input class="u-oneri" type="number" min="0" step="0.01" value="@m.uzmanOnerilenFiyatTl?.ToString(System.Globalization.CultureInfo.InvariantCulture)" /></label>
                     <label>Kontrol sonucu<select class="u-sonuc"><option value="">Seçiniz</option>@foreach(var s in new[]{"Eksik","Kabul edilebilir","Minimum fiyat esas alınır"}){<option value="@s" selected="@(m.uzmanKontrolSonucu==s)">@s</option>}</select></label>
                 </div><label class="wide-label">Açıklama<textarea class="u-aciklama">@m.uzmanAciklama</textarea></label>
-                <button type="button" class="btn btn-primary" onclick="MakineUzmanKaydet(this)">Uzman değerlendirmesini kaydet</button></div>
+                <button type="button" class="btn btn-primary" onclick="MakineUzmanKaydet(this)">Uzman değerlendirmesini kaydet</button>
+                <hr />
+                <div class="section-toolbar mt-3"><h4 class="mb-0">Araştırma Bulguları ve Ek Dokümanlar</h4><button type="button" class="btn btn-outline-primary btn-sm" onclick="MakineUzmanDokumanEkle(this)">Doküman ekle</button></div>
+                <div class="u-dokuman-form border rounded p-3 mt-2" style="display:none">
+                    <input type="hidden" class="ud-index" value="-1" /><input type="hidden" class="ud-id" value="0" />
+                    <div class="form-grid"><label>Doküman / Yazışma Adı<input class="ud-ad" maxlength="250" /></label><label>Doküman Türü<input class="ud-tur" maxlength="100" /></label><label>Kaynak / Tedarikçi<input class="ud-kaynak" maxlength="250" /></label><label>Belge Tarihi<input class="ud-tarih" type="date" /></label></div>
+                    <label class="wide-label">Açıklama<textarea class="ud-aciklama" maxlength="2000"></textarea></label>
+                    <div class="text-right"><button type="button" class="btn btn-outline-secondary btn-sm" onclick="this.closest('.u-dokuman-form').style.display='none'">İptal</button> <button type="button" class="btn btn-primary btn-sm" onclick="MakineUzmanDokumanKaydet(this)">Doküman bilgisini kaydet</button></div>
+                </div>
+                <script type="application/json" class="u-dokuman-json">@Html.Raw(JsonSerializer.Serialize(m.uzmanDokumanlari))</script>
+                <div class="u-dokumanlar"></div>
+                </div>
             </div>
         }
     }
