@@ -8,7 +8,7 @@
     <div class="section-toolbar"><h2 class="mb-0">Yatırım Ön Bilgileri</h2><a class="btn btn-outline-primary" href="@Url.Action("YatirimOnBilgileriYazdir", "Basvuru", new { id = Model.Basvuru.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div>
     <script type="application/json" id="yatirimOnBilgiJson">@Html.Raw(JsonSerializer.Serialize(Model.Basvuru.YatirimOnBilgileri))</script>
     @if(duzenlenebilir){<span id="yobiDuzenlenebilir" hidden></span>}
-    <div class="alert alert-info">Miktar ve güç değerlerinin birimlerini ayrı sütundan seçiniz.</div>
+    <div class="alert alert-info">Ürünler, Girdiler ve Enerji kullanımı girişi</div>
 
     <div class="section-toolbar mt-3"><h3>1- Mevcut Ürünler</h3>@if(duzenlenebilir){<button type="button" class="btn btn-outline-primary" onclick="YatirimOnBilgiModalAc(1,-1)">Ürün ekle</button>}</div>
     <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Sıra</th><th>Ürün / Hayvan Türü</th><th>Tam kapasitede yıllık miktar / Hayvan sayısı</th><th>Birim</th><th></th></tr></thead><tbody id="yobi-1"></tbody></table></div>

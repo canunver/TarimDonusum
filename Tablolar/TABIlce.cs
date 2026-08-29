@@ -15,7 +15,7 @@ namespace TarimDonusum.Tablolar
         public async Task<List<Ilce>> ListeleAsync(int? ilId = null, bool sadeceAktif = true)
         {
             const string sql = @"
-                SELECT Id, IlId, Ad, Aktif
+                SELECT Id, IlId, Ad, SegeKademesi, Aktif
                 FROM dbo.Ilce
                 WHERE (@IlId IS NULL OR IlId = @IlId)
                     AND (@SadeceAktif = 0 OR Aktif = 1)
@@ -34,7 +34,8 @@ namespace TarimDonusum.Tablolar
                     Id = reader.GetInt32(0),
                     IlId = reader.GetInt32(1),
                     Ad = reader.GetString(2),
-                    Aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(3)) == 1
+                    SegeKademesi = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                    Aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(4)) == 1
                 });
             }
 
@@ -44,7 +45,7 @@ namespace TarimDonusum.Tablolar
         public async Task<Ilce?> OkuAsync(int id)
         {
             const string sql = @"
-                SELECT Id, IlId, Ad, Aktif
+                SELECT Id, IlId, Ad, SegeKademesi, Aktif
                 FROM dbo.Ilce
                 WHERE Id = @Id;";
 
@@ -60,14 +61,15 @@ namespace TarimDonusum.Tablolar
                 Id = reader.GetInt32(0),
                 IlId = reader.GetInt32(1),
                 Ad = reader.GetString(2),
-                Aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(3)) == 1
+                SegeKademesi = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                Aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(4)) == 1
             };
         }
 
         public async Task<int> EkleAsync(Ilce ilce)
         {
-            const string sql = @"INSERT INTO dbo.Ilce (IlId, Ad, Aktif)
-                                 OUTPUT INSERTED.Id VALUES (@IlId, @Ad, @Aktif);";
+            const string sql = @"INSERT INTO dbo.Ilce (IlId, Ad, SegeKademesi, Aktif)
+                                 OUTPUT INSERTED.Id VALUES (@IlId, @Ad, @SegeKademesi, @Aktif);";
             await using SqlCommand command = KomutOlustur(sql);
             ParametreleriEkle(command, ilce);
             return Convert.ToInt32(await command.ExecuteScalarAsync());
@@ -75,7 +77,7 @@ namespace TarimDonusum.Tablolar
 
         public async Task<bool> GuncelleAsync(Ilce ilce)
         {
-            const string sql = @"UPDATE dbo.Ilce SET Ad=@Ad, Aktif=@Aktif
+            const string sql = @"UPDATE dbo.Ilce SET Ad=@Ad, SegeKademesi=@SegeKademesi, Aktif=@Aktif
                                  WHERE Id=@Id AND IlId=@IlId;";
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@Id", ilce.Id);
@@ -87,6 +89,7 @@ namespace TarimDonusum.Tablolar
         {
             command.Parameters.AddWithValue("@IlId", ilce.IlId);
             command.Parameters.AddWithValue("@Ad", ilce.Ad.Trim());
+            command.Parameters.AddWithValue("@SegeKademesi", ilce.SegeKademesi);
             command.Parameters.AddWithValue("@Aktif", ilce.Aktif ? 1 : 0);
         }
     }

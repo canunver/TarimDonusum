@@ -77,6 +77,8 @@ namespace TarimDonusum.IsKurallari
             if (string.IsNullOrWhiteSpace(il.ad)) sonuc.HataEkle("İl adı zorunludur.");
             if (il.ilceler.Any(x => string.IsNullOrWhiteSpace(x.Ad)))
                 sonuc.HataEkle("İlçe adı boş bırakılamaz.");
+            if (il.ilceler.Any(x => x.SegeKademesi < 1 || x.SegeKademesi > 6))
+                sonuc.HataEkle("SEGE kademesi 1 ile 6 arasında bir tamsayı olmalıdır.");
             if (il.ilceler.GroupBy(x => x.Ad.Trim(), StringComparer.CurrentCultureIgnoreCase).Any(x => x.Count() > 1))
                 sonuc.HataEkle("Aynı ilçe adı birden fazla kez kullanılamaz.");
             if (!sonuc.basarili) return sonuc;

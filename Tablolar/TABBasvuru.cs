@@ -765,6 +765,11 @@ namespace TarimDonusum.Tablolar
                 OUTPUT kaynak.Id,inserted.Id INTO @SurecEsleme(EskiId,YeniId);
                 INSERT dbo.BasvuruUrunSurecMakine(SurecId,MakineId,SiraNo,Adet,YerlesimPlaniNo,GirdilerMiktarlar,CiktilarMiktarlar,IslemeKapasitesi,GunlukCalismaSuresi,GunlukCalismaSuresiBirimi,Aciklama)
                     SELECT se.YeniId,me.YeniId,sm.SiraNo,sm.Adet,sm.YerlesimPlaniNo,sm.GirdilerMiktarlar,sm.CiktilarMiktarlar,sm.IslemeKapasitesi,sm.GunlukCalismaSuresi,sm.GunlukCalismaSuresiBirimi,sm.Aciklama FROM dbo.BasvuruUrunSurecMakine sm INNER JOIN @SurecEsleme se ON se.EskiId=sm.SurecId INNER JOIN @MakineEsleme me ON me.EskiId=sm.MakineId;
+                DECLARE @BinaEsleme TABLE(EskiId INT NOT NULL,YeniId INT NOT NULL);
+                MERGE dbo.BasvuruBina AS hedef USING(SELECT Id,SiraNo,Ad,MevcutYeni,YatirimSekli,DestekTalebi,VaziyetPlaniNo FROM dbo.BasvuruBina WHERE BasvuruId=@KaynakBasvuruId) AS kaynak ON 1=0
+                WHEN NOT MATCHED THEN INSERT(BasvuruId,SiraNo,Ad,MevcutYeni,YatirimSekli,DestekTalebi,VaziyetPlaniNo) VALUES(@YeniBasvuruId,kaynak.SiraNo,kaynak.Ad,kaynak.MevcutYeni,kaynak.YatirimSekli,kaynak.DestekTalebi,kaynak.VaziyetPlaniNo)
+                OUTPUT kaynak.Id,inserted.Id INTO @BinaEsleme(EskiId,YeniId);
+                INSERT dbo.BasvuruBinaMahal(BinaId,SiraNo,MahalAdi,AlanM2) SELECT e.YeniId,m.SiraNo,m.MahalAdi,m.AlanM2 FROM dbo.BasvuruBinaMahal m INNER JOIN @BinaEsleme e ON e.EskiId=m.BinaId;
 
                 INSERT INTO dbo.BasvuruUygulamaAdresleri
                     (BasvuruId, SiraNo, IlceId, TamAdres, YatirimYeriStatusu,
@@ -1604,10 +1609,41 @@ namespace TarimDonusum.Tablolar
                 WHERE m.BasvuruId=@BasvuruId ORDER BY d.MakineId,d.SiraNo,d.Id;
                 SELECT Id,BasvuruId,UrunId,SiraNo,SurecAdi FROM dbo.BasvuruUrunSurec WHERE BasvuruId=@BasvuruId ORDER BY UrunId,SiraNo,Id;
                 SELECT sm.Id,sm.SurecId,sm.MakineId,sm.SiraNo,sm.Adet,sm.YerlesimPlaniNo,sm.GirdilerMiktarlar,sm.CiktilarMiktarlar,sm.IslemeKapasitesi,sm.GunlukCalismaSuresi,sm.GunlukCalismaSuresiBirimi,sm.Aciklama
-                FROM dbo.BasvuruUrunSurecMakine sm INNER JOIN dbo.BasvuruUrunSurec s ON s.Id=sm.SurecId WHERE s.BasvuruId=@BasvuruId ORDER BY sm.SurecId,sm.SiraNo,sm.Id;";
+                FROM dbo.BasvuruUrunSurecMakine sm INNER JOIN dbo.BasvuruUrunSurec s ON s.Id=sm.SurecId WHERE s.BasvuruId=@BasvuruId ORDER BY sm.SurecId,sm.SiraNo,sm.Id;
+                SELECT Id,BasvuruId,SiraNo,Ad,MevcutYeni,YatirimSekli,DestekTalebi,VaziyetPlaniNo FROM dbo.BasvuruBina WHERE BasvuruId=@BasvuruId ORDER BY SiraNo,Id;
+                SELECT m.Id,m.BinaId,m.SiraNo,m.MahalAdi,m.AlanM2 FROM dbo.BasvuruBinaMahal m INNER JOIN dbo.BasvuruBina b ON b.Id=m.BinaId WHERE b.BasvuruId=@BasvuruId ORDER BY m.BinaId,m.SiraNo,m.Id;
+
+                SELECT ISNULL(SUM(OncekiBasvuru.TalepEdilenDestekTutari), 0)
+                FROM dbo.Basvuru MevcutBasvuru
+                INNER JOIN dbo.BasvuruAna MevcutAna ON MevcutAna.Id = MevcutBasvuru.BasvuruAnaId
+                INNER JOIN dbo.Donem MevcutDonem ON MevcutDonem.Id = MevcutAna.DonemId
+                INNER JOIN dbo.BasvuruAna OncekiAna ON OncekiAna.FirmaId = MevcutAna.FirmaId
+                    AND OncekiAna.Durum = @KabulEdildiDurumu
+                INNER JOIN dbo.Donem OncekiDonem ON OncekiDonem.Id = OncekiAna.DonemId
+                    AND (OncekiDonem.Yil < MevcutDonem.Yil
+                        OR (OncekiDonem.Yil = MevcutDonem.Yil AND OncekiDonem.Id < MevcutDonem.Id))
+                CROSS APPLY
+                (
+                    SELECT TOP (1) B.TalepEdilenDestekTutari
+                    FROM dbo.Basvuru B
+                    WHERE B.BasvuruAnaId = OncekiAna.Id
+                        AND B.KayitTuru = @BasvuruKayitTuru
+                    ORDER BY B.RevizyonNo DESC, B.Id DESC
+                ) OncekiBasvuru
+                WHERE MevcutBasvuru.Id = @BasvuruId;
+
+                SELECT IstihdamJson, IstihdamSgkDosyaId, IstihdamSgkDosyaAdi
+                FROM dbo.Basvuru WHERE Id=@BasvuruId;
+                SELECT Id,BasvuruId,SiraNo,BirimUnite,GorevUretimHatti,Cinsiyet,YasDurumu,MevcutCalisan,NetCalisanArtisi,BazAylikBrutUcret,HedefAylikBrutUcret FROM dbo.BasvuruIstihdamSatir WHERE BasvuruId=@BasvuruId ORDER BY SiraNo,Id;
+                SELECT t.Id,t.BasvuruId,t.UrunId,t.TarimsalUrun,t.IlId,t.IlceId,il.Ad,ilce.Ad,ilce.SegeKademesi,t.Birim,t.MevcutYillikMiktar,t.HedefYillikMiktar,t.MevcutKayitliCiftci,t.EklenecekKayitliCiftci,t.TedarikSekli,t.DayanakBelgeDosyaId,t.DayanakBelgeDosyaAdi,t.KisaAciklama
+                FROM dbo.BasvuruTedarikciEntegrasyonu t INNER JOIN dbo.Il il ON il.Id=t.IlId INNER JOIN dbo.Ilce ilce ON ilce.Id=t.IlceId
+                WHERE t.BasvuruId=@BasvuruId ORDER BY t.UrunId,t.Id;
+                SELECT TedarikciEntegrasyonuAciklama FROM dbo.Basvuru WHERE Id=@BasvuruId;";
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@BasvuruId", basvuru.Id);
+            command.Parameters.AddWithValue("@KabulEdildiDurumu", (int)enumBasvuruDurum.KabulEdildiDurumu);
+            command.Parameters.AddWithValue("@BasvuruKayitTuru", (int)enumBasvuruKayitTuru.Basvuru);
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
 
             List<BasvuruUygulamaAdresi> adresler = new List<BasvuruUygulamaAdresi>();
@@ -1725,6 +1761,32 @@ namespace TarimDonusum.Tablolar
             while(await reader.ReadAsync()){int k=0;urunSurecleri.Add(new BasvuruUrunSurec{id=NullDuzeltInt(reader,k++),basvuruId=NullDuzeltInt(reader,k++),urunId=NullDuzeltInt(reader,k++),siraNo=NullDuzeltInt(reader,k++),surecAdi=NullOkuString(reader,k++)});}
             await reader.NextResultAsync();
             while(await reader.ReadAsync()){int k=0;BasvuruUrunSurecMakine sm=new(){id=NullDuzeltInt(reader,k++),surecId=NullDuzeltInt(reader,k++),makineId=NullDuzeltInt(reader,k++),siraNo=NullDuzeltInt(reader,k++),adet=NullOkuDecimal(reader,k++).GetValueOrDefault(),yerlesimPlaniNo=NullOkuString(reader,k++),girdilerMiktarlar=NullOkuString(reader,k++),ciktilarMiktarlar=NullOkuString(reader,k++),islemeKapasitesi=NullOkuString(reader,k++),gunlukCalismaSuresi=NullOkuDecimal(reader,k++),gunlukCalismaSuresiBirimi=NullOkuString(reader,k++),aciklama=NullOkuString(reader,k++)};urunSurecleri.FirstOrDefault(x=>x.id==sm.surecId)?.makineler.Add(sm);}
+            await reader.NextResultAsync();List<BasvuruBina> binalar=[];
+            while(await reader.ReadAsync()){int k=0;binalar.Add(new BasvuruBina{id=NullDuzeltInt(reader,k++),basvuruId=NullDuzeltInt(reader,k++),siraNo=NullDuzeltInt(reader,k++),ad=NullOkuString(reader,k++),mevcutYeni=NullOkuString(reader,k++),yatirimSekli=NullOkuString(reader,k++),destekTalebi=NullOkuString(reader,k++),vaziyetPlaniNo=NullOkuString(reader,k++)});}
+            await reader.NextResultAsync();
+            while(await reader.ReadAsync()){int k=0;BasvuruBinaMahal m=new(){id=NullDuzeltInt(reader,k++),binaId=NullDuzeltInt(reader,k++),siraNo=NullDuzeltInt(reader,k++),mahalAdi=NullOkuString(reader,k++),alanM2=NullOkuDecimal(reader,k++).GetValueOrDefault(),basvuruId=basvuru.Id};binalar.FirstOrDefault(x=>x.id==m.binaId)?.mahaller.Add(m);}
+            await reader.NextResultAsync();
+            if (await reader.ReadAsync())
+                basvuru.finans.oncekiRffOnayliTutar = reader.GetDecimal(0);
+            await reader.NextResultAsync();
+            if (await reader.ReadAsync())
+            {
+                string json = NullOkuString(reader, 0);
+                if (!string.IsNullOrWhiteSpace(json))
+                {
+                    try { basvuru.istihdam = System.Text.Json.JsonSerializer.Deserialize<BasvuruIstihdam>(json) ?? new(); }
+                    catch { basvuru.istihdam = new(); }
+                }
+                basvuru.istihdam.basvuruId = basvuru.Id;
+                basvuru.istihdam.sgkDosyaId = NullOkuInt(reader, 1);
+                basvuru.istihdam.sgkDosyaAdi = NullOkuString(reader, 2);
+            }
+            await reader.NextResultAsync();List<BasvuruIstihdamSatir> istihdamSatirlari=[];
+            while(await reader.ReadAsync()){int k=0;istihdamSatirlari.Add(new BasvuruIstihdamSatir{id=NullDuzeltInt(reader,k++),basvuruId=NullDuzeltInt(reader,k++),siraNo=NullDuzeltInt(reader,k++),birimUnite=NullOkuString(reader,k++),gorevUretimHatti=NullOkuString(reader,k++),cinsiyet=NullOkuString(reader,k++),yasDurumu=NullOkuString(reader,k++),mevcutCalisan=NullOkuDecimal(reader,k++).GetValueOrDefault(),netCalisanArtisi=NullOkuDecimal(reader,k++).GetValueOrDefault(),bazAylikBrutUcret=NullOkuDecimal(reader,k++).GetValueOrDefault(),hedefAylikBrutUcret=NullOkuDecimal(reader,k++).GetValueOrDefault()});}
+            if(istihdamSatirlari.Count>0||basvuru.istihdam.satirlar.Count==0)basvuru.istihdam.satirlar=istihdamSatirlari;
+            await reader.NextResultAsync();List<BasvuruTedarikciEntegrasyonu> tedarikler=[];
+            while(await reader.ReadAsync()){int k=0;tedarikler.Add(new BasvuruTedarikciEntegrasyonu{id=NullDuzeltInt(reader,k++),basvuruId=NullDuzeltInt(reader,k++),urunId=NullDuzeltInt(reader,k++),tarimsalUrun=NullOkuString(reader,k++),ilId=NullDuzeltInt(reader,k++),ilceId=NullDuzeltInt(reader,k++),ilAdi=NullOkuString(reader,k++),ilceAdi=NullOkuString(reader,k++),segeKademesi=NullOkuInt(reader,k++),birim=NullOkuString(reader,k++),mevcutYillikMiktar=NullOkuDecimal(reader,k++).GetValueOrDefault(),hedefYillikMiktar=NullOkuDecimal(reader,k++).GetValueOrDefault(),mevcutKayitliCiftci=NullDuzeltInt(reader,k++),eklenecekKayitliCiftci=NullDuzeltInt(reader,k++),tedarikSekli=NullDuzeltInt(reader,k++),dayanakBelgeDosyaId=NullOkuInt(reader,k++),dayanakBelgeDosyaAdi=NullOkuString(reader,k++),kisaAciklama=NullOkuString(reader,k++)});}
+            await reader.NextResultAsync();if(await reader.ReadAsync())basvuru.tedarikciEntegrasyonuAciklama=NullOkuString(reader,0);
 
             basvuru.YatirimAdresleri = adresler;
 
@@ -1745,6 +1807,8 @@ namespace TarimDonusum.Tablolar
             basvuru.YatirimOnBilgileri = yatirimOnBilgileri;
             basvuru.Makineler = makineler;
             basvuru.UrunSurecleri = urunSurecleri;
+            basvuru.Binalar = binalar;
+            basvuru.TedarikciEntegrasyonlari = tedarikler;
         }
 
         public async Task BasvuruYatirimOnBilgileriKaydetAsync(int basvuruId, List<BasvuruYatirimOnBilgi> kayitlar)
@@ -1821,6 +1885,28 @@ namespace TarimDonusum.Tablolar
             if(m.id>0){c.Parameters.AddWithValue("@Id",m.id);if(await c.ExecuteNonQueryAsync()==0)throw new InvalidOperationException("Süreç makine kaydı bulunamadı.");}else m.id=Convert.ToInt32(await c.ExecuteScalarAsync()??throw new InvalidOperationException("Süreç veya makine bulunamadı."));
         }
         public async Task<bool> BasvuruUrunSurecMakinesiSilAsync(int basvuruId,int id){await using SqlCommand c=KomutOlustur("DELETE sm FROM dbo.BasvuruUrunSurecMakine sm INNER JOIN dbo.BasvuruUrunSurec s ON s.Id=sm.SurecId WHERE sm.Id=@Id AND s.BasvuruId=@BasvuruId;");c.Parameters.AddWithValue("@Id",id);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return await c.ExecuteNonQueryAsync()>0;}
+        public async Task BasvuruBinasiKaydetAsync(BasvuruBina b)
+        {
+            const string ekle="INSERT dbo.BasvuruBina(BasvuruId,SiraNo,Ad,MevcutYeni,YatirimSekli,DestekTalebi,VaziyetPlaniNo) OUTPUT INSERTED.Id VALUES(@BasvuruId,@SiraNo,@Ad,@MevcutYeni,@YatirimSekli,@DestekTalebi,@VaziyetPlaniNo);";
+            const string guncelle="UPDATE dbo.BasvuruBina SET SiraNo=@SiraNo,Ad=@Ad,MevcutYeni=@MevcutYeni,YatirimSekli=@YatirimSekli,DestekTalebi=@DestekTalebi,VaziyetPlaniNo=@VaziyetPlaniNo WHERE Id=@Id AND BasvuruId=@BasvuruId;";
+            await using SqlCommand c=KomutOlustur(b.id>0?guncelle:ekle);c.Parameters.AddWithValue("@BasvuruId",b.basvuruId);c.Parameters.AddWithValue("@SiraNo",b.siraNo);c.Parameters.AddWithValue("@Ad",b.ad);c.Parameters.AddWithValue("@MevcutYeni",DbNull(b.mevcutYeni));c.Parameters.AddWithValue("@YatirimSekli",DbNull(b.yatirimSekli));c.Parameters.AddWithValue("@DestekTalebi",DbNull(b.destekTalebi));c.Parameters.AddWithValue("@VaziyetPlaniNo",DbNull(b.vaziyetPlaniNo));if(b.id>0){c.Parameters.AddWithValue("@Id",b.id);if(await c.ExecuteNonQueryAsync()==0)throw new InvalidOperationException("Bina bulunamadı.");}else b.id=Convert.ToInt32(await c.ExecuteScalarAsync());
+        }
+        public async Task BasvuruBinaMahaliKaydetAsync(BasvuruBinaMahal m)
+        {
+            const string ekle="INSERT dbo.BasvuruBinaMahal(BinaId,SiraNo,MahalAdi,AlanM2) SELECT @BinaId,@SiraNo,@MahalAdi,@AlanM2 WHERE EXISTS(SELECT 1 FROM dbo.BasvuruBina WHERE Id=@BinaId AND BasvuruId=@BasvuruId); SELECT CAST(SCOPE_IDENTITY() AS INT);";
+            const string guncelle="UPDATE m SET SiraNo=@SiraNo,MahalAdi=@MahalAdi,AlanM2=@AlanM2 FROM dbo.BasvuruBinaMahal m INNER JOIN dbo.BasvuruBina b ON b.Id=m.BinaId WHERE m.Id=@Id AND m.BinaId=@BinaId AND b.BasvuruId=@BasvuruId;";
+            await using SqlCommand c=KomutOlustur(m.id>0?guncelle:ekle);c.Parameters.AddWithValue("@BasvuruId",m.basvuruId);c.Parameters.AddWithValue("@BinaId",m.binaId);c.Parameters.AddWithValue("@SiraNo",m.siraNo);c.Parameters.AddWithValue("@MahalAdi",m.mahalAdi);c.Parameters.AddWithValue("@AlanM2",m.alanM2);if(m.id>0){c.Parameters.AddWithValue("@Id",m.id);if(await c.ExecuteNonQueryAsync()==0)throw new InvalidOperationException("Bölüm/mahal bulunamadı.");}else m.id=Convert.ToInt32(await c.ExecuteScalarAsync()??throw new InvalidOperationException("Bina bulunamadı."));
+        }
+        public async Task<bool> BasvuruBinaMahaliSilAsync(int basvuruId,int id){await using SqlCommand c=KomutOlustur("DELETE m FROM dbo.BasvuruBinaMahal m INNER JOIN dbo.BasvuruBina b ON b.Id=m.BinaId WHERE m.Id=@Id AND b.BasvuruId=@BasvuruId;");c.Parameters.AddWithValue("@Id",id);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return await c.ExecuteNonQueryAsync()>0;}
+        public async Task<bool> BasvuruBinasiSilAsync(int basvuruId,int id){await using SqlCommand c=KomutOlustur("DELETE FROM dbo.BasvuruBina WHERE Id=@Id AND BasvuruId=@BasvuruId;");c.Parameters.AddWithValue("@Id",id);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return await c.ExecuteNonQueryAsync()>0;}
+        public async Task IstihdamKaydetAsync(BasvuruIstihdam model){const string sql="UPDATE dbo.Basvuru SET IstihdamJson=@Json WHERE Id=@BasvuruId;";await using SqlCommand c=KomutOlustur(sql);c.Parameters.AddWithValue("@BasvuruId",model.basvuruId);c.Parameters.AddWithValue("@Json",System.Text.Json.JsonSerializer.Serialize(model));if(await c.ExecuteNonQueryAsync()!=1)throw new InvalidOperationException("İstihdam kaydı bulunamadı.");}
+        public async Task IstihdamSgkDosyasiGuncelleAsync(int basvuruId,int dosyaId,string dosyaAdi){const string sql="UPDATE dbo.Basvuru SET IstihdamSgkDosyaId=@DosyaId,IstihdamSgkDosyaAdi=@DosyaAdi WHERE Id=@BasvuruId;";await using SqlCommand c=KomutOlustur(sql);c.Parameters.AddWithValue("@BasvuruId",basvuruId);c.Parameters.AddWithValue("@DosyaId",dosyaId);c.Parameters.AddWithValue("@DosyaAdi",dosyaAdi);if(await c.ExecuteNonQueryAsync()!=1)throw new InvalidOperationException("İstihdam kaydı bulunamadı.");}
+        public async Task IstihdamSatiriKaydetAsync(BasvuruIstihdamSatir x){const string ekle="INSERT dbo.BasvuruIstihdamSatir(BasvuruId,SiraNo,BirimUnite,GorevUretimHatti,Cinsiyet,YasDurumu,MevcutCalisan,NetCalisanArtisi,BazAylikBrutUcret,HedefAylikBrutUcret) OUTPUT INSERTED.Id VALUES(@BasvuruId,@SiraNo,@Birim,@Gorev,@Cinsiyet,@Yas,@Mevcut,@Artis,@Baz,@Hedef);";const string guncelle="UPDATE dbo.BasvuruIstihdamSatir SET SiraNo=@SiraNo,BirimUnite=@Birim,GorevUretimHatti=@Gorev,Cinsiyet=@Cinsiyet,YasDurumu=@Yas,MevcutCalisan=@Mevcut,NetCalisanArtisi=@Artis,BazAylikBrutUcret=@Baz,HedefAylikBrutUcret=@Hedef WHERE Id=@Id AND BasvuruId=@BasvuruId;";await using SqlCommand c=KomutOlustur(x.id>0?guncelle:ekle);c.Parameters.AddWithValue("@BasvuruId",x.basvuruId);c.Parameters.AddWithValue("@SiraNo",x.siraNo);c.Parameters.AddWithValue("@Birim",x.birimUnite);c.Parameters.AddWithValue("@Gorev",x.gorevUretimHatti);c.Parameters.AddWithValue("@Cinsiyet",x.cinsiyet);c.Parameters.AddWithValue("@Yas",x.yasDurumu);c.Parameters.AddWithValue("@Mevcut",x.mevcutCalisan);c.Parameters.AddWithValue("@Artis",x.netCalisanArtisi);c.Parameters.AddWithValue("@Baz",x.bazAylikBrutUcret);c.Parameters.AddWithValue("@Hedef",x.hedefAylikBrutUcret);if(x.id>0){c.Parameters.AddWithValue("@Id",x.id);if(await c.ExecuteNonQueryAsync()!=1)throw new InvalidOperationException("İstihdam planı satırı bulunamadı.");}else x.id=Convert.ToInt32(await c.ExecuteScalarAsync());}
+        public async Task<bool> IstihdamSatiriSilAsync(int basvuruId,int id){await using SqlCommand c=KomutOlustur("DELETE FROM dbo.BasvuruIstihdamSatir WHERE Id=@Id AND BasvuruId=@BasvuruId;");c.Parameters.AddWithValue("@Id",id);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return await c.ExecuteNonQueryAsync()==1;}
+        public async Task TedarikciEntegrasyonuKaydetAsync(BasvuruTedarikciEntegrasyonu x){const string ekle=@"INSERT dbo.BasvuruTedarikciEntegrasyonu(BasvuruId,UrunId,TarimsalUrun,IlId,IlceId,Birim,MevcutYillikMiktar,HedefYillikMiktar,MevcutKayitliCiftci,EklenecekKayitliCiftci,TedarikSekli,KisaAciklama) OUTPUT INSERTED.Id VALUES(@BasvuruId,@UrunId,@TarimsalUrun,@IlId,@IlceId,@Birim,@MevcutMiktar,@HedefMiktar,@MevcutCiftci,@EklenecekCiftci,@TedarikSekli,@Aciklama);";const string guncelle=@"UPDATE dbo.BasvuruTedarikciEntegrasyonu SET UrunId=@UrunId,TarimsalUrun=@TarimsalUrun,IlId=@IlId,IlceId=@IlceId,Birim=@Birim,MevcutYillikMiktar=@MevcutMiktar,HedefYillikMiktar=@HedefMiktar,MevcutKayitliCiftci=@MevcutCiftci,EklenecekKayitliCiftci=@EklenecekCiftci,TedarikSekli=@TedarikSekli,KisaAciklama=@Aciklama WHERE Id=@Id AND BasvuruId=@BasvuruId;";await using SqlCommand c=KomutOlustur(x.id>0?guncelle:ekle);c.Parameters.AddWithValue("@BasvuruId",x.basvuruId);c.Parameters.AddWithValue("@UrunId",x.urunId);c.Parameters.AddWithValue("@TarimsalUrun",x.tarimsalUrun);c.Parameters.AddWithValue("@IlId",x.ilId);c.Parameters.AddWithValue("@IlceId",x.ilceId);c.Parameters.AddWithValue("@Birim",x.birim);c.Parameters.AddWithValue("@MevcutMiktar",x.mevcutYillikMiktar);c.Parameters.AddWithValue("@HedefMiktar",x.hedefYillikMiktar);c.Parameters.AddWithValue("@MevcutCiftci",x.mevcutKayitliCiftci);c.Parameters.AddWithValue("@EklenecekCiftci",x.eklenecekKayitliCiftci);c.Parameters.AddWithValue("@TedarikSekli",x.tedarikSekli);c.Parameters.AddWithValue("@Aciklama",DbNull(x.kisaAciklama));if(x.id>0){c.Parameters.AddWithValue("@Id",x.id);if(await c.ExecuteNonQueryAsync()!=1)throw new InvalidOperationException("Tedarik kaydı bulunamadı.");}else x.id=Convert.ToInt32(await c.ExecuteScalarAsync());}
+        public async Task<bool> TedarikciEntegrasyonuSilAsync(int basvuruId,int id){await using SqlCommand c=KomutOlustur("DELETE FROM dbo.BasvuruTedarikciEntegrasyonu WHERE Id=@Id AND BasvuruId=@BasvuruId;");c.Parameters.AddWithValue("@Id",id);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return await c.ExecuteNonQueryAsync()==1;}
+        public async Task TedarikciEntegrasyonuDosyasiGuncelleAsync(int basvuruId,int id,int dosyaId,string dosyaAdi){await using SqlCommand c=KomutOlustur("UPDATE dbo.BasvuruTedarikciEntegrasyonu SET DayanakBelgeDosyaId=@DosyaId,DayanakBelgeDosyaAdi=@DosyaAdi WHERE Id=@Id AND BasvuruId=@BasvuruId;");c.Parameters.AddWithValue("@Id",id);c.Parameters.AddWithValue("@BasvuruId",basvuruId);c.Parameters.AddWithValue("@DosyaId",dosyaId);c.Parameters.AddWithValue("@DosyaAdi",dosyaAdi);if(await c.ExecuteNonQueryAsync()!=1)throw new InvalidOperationException("Tedarik kaydı bulunamadı.");}
+        public async Task TedarikciEntegrasyonuAciklamaKaydetAsync(int basvuruId,string aciklama){await using SqlCommand c=KomutOlustur("UPDATE dbo.Basvuru SET TedarikciEntegrasyonuAciklama=@Aciklama WHERE Id=@BasvuruId;");c.Parameters.AddWithValue("@BasvuruId",basvuruId);c.Parameters.AddWithValue("@Aciklama",DbNull(aciklama));if(await c.ExecuteNonQueryAsync()!=1)throw new InvalidOperationException("Başvuru bulunamadı.");}
         private static void SurecParametreleri(SqlCommand c,BasvuruUrunSurec s){c.Parameters.AddWithValue("@BasvuruId",s.basvuruId);c.Parameters.AddWithValue("@UrunId",s.urunId);c.Parameters.AddWithValue("@SiraNo",s.siraNo);c.Parameters.AddWithValue("@SurecAdi",s.surecAdi);}
         public async Task<bool> BasvuruUrunSureciSilAsync(int basvuruId,int id){await using SqlCommand c=KomutOlustur("DELETE FROM dbo.BasvuruUrunSurec WHERE Id=@Id AND BasvuruId=@BasvuruId;");c.Parameters.AddWithValue("@Id",id);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return await c.ExecuteNonQueryAsync()>0;}
 

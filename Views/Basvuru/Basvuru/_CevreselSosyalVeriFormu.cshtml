@@ -1,0 +1,42 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@using System.Text.Json
+@{
+    var b = Model.Basvuru;
+    bool duzenlenebilir = !Model.DenetciGorunumu && !Model.SaltOkunur;
+    var otomatik = CevreselSosyalVeriFormuTanimlari.OtomatikCevaplar(b);
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruCevreselSosyal)">
+    <div class="section-toolbar">
+        <h2 class="mb-0">Çevresel ve Sosyal Veri Formu</h2>
+        <a class="btn btn-outline-primary" href="@Url.Action("CevreselSosyalVeriFormuYazdir", "Basvuru", new { id = b.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+    </div>
+    <p class="lead">İlk dört cevap başvuru bilgilerinden otomatik alınır. Diğer soruların cevaplarını ve uygulanacak önlemleri giriniz.</p>
+    <script type="application/json" id="basvuruCevreselSosyalJson">@Html.Raw(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson) ? "{}" : b.cevreselSosyal.cevreselSosyalJson)</script>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead><tr><th style="width:70px">Kod</th><th style="width:120px">Konu</th><th>Soru</th><th style="width:100px">Kapsam</th><th style="width:22%">Yanıt</th><th style="width:25%">Açıklama/Önlem</th></tr></thead>
+            <tbody id="basvuruCevreselSosyalSatirlari">
+            @foreach (var soru in CevreselSosyalVeriFormuTanimlari.Tum)
+            {
+                bool bilinen = otomatik.ContainsKey(soru.Kod);
+                <tr data-kod="@soru.Kod">
+                    <td>@soru.Kod</td><td>@soru.Konu</td><td>@soru.Soru</td><td>@soru.Kapsam</td>
+                    <td>
+                        @if (bilinen) { <textarea class="form-control cs-yanit" rows="2" readonly>@otomatik[soru.Kod]</textarea> }
+                        else if (soru.Secenekler.Count > 0)
+                        {
+                            <select class="form-control cs-yanit" disabled="@(!duzenlenebilir)">
+                                <option value="">Seçiniz</option>
+                                @foreach (string secenek in soru.Secenekler) { <option value="@secenek">@secenek</option> }
+                            </select>
+                        }
+                        else { <textarea class="form-control cs-yanit" rows="2" maxlength="2000" disabled="@(!duzenlenebilir)"></textarea> }
+                    </td>
+                    <td><textarea class="form-control cs-onlem" rows="2" maxlength="2000" disabled="@(bilinen || !duzenlenebilir)"></textarea></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

@@ -1,0 +1,20 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@using System.Text.Json
+@{bool edit=!Model.DenetciGorunumu&&!Model.SaltOkunur;}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruBinaListesi)">
+ <div class="section-toolbar"><h2 class="mb-0">Bina Listesi ve Bölüm/Mahaller</h2><div>@if(edit){<button type="button" class="btn btn-success mr-2" onclick="BinaModalAc(-1)"><i class="fas fa-plus mr-1"></i>Yeni bina ekle</button>}<a class="btn btn-outline-primary" href="@Url.Action("BinaBolumListesiYazdir","Basvuru",new{id=Model.Basvuru.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div></div>
+ <div class="alert alert-info">Bina ve bölüm/mahal girişi</div>
+ <script type="application/json" id="binaListeJson">@Html.Raw(JsonSerializer.Serialize(Model.Basvuru.Binalar))</script>
+ <script type="application/json" id="binaKaynakJson">@Html.Raw(string.IsNullOrWhiteSpace(Model.Basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson)?"{}":Model.Basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson)</script>
+ <script type="application/json" id="binaOnKaynakJson">@Html.Raw(string.IsNullOrWhiteSpace(Model.Basvuru.uygunHarcama.pikkListesiJson)?"{}":Model.Basvuru.uygunHarcama.pikkListesiJson)</script>
+ <div id="binaListeAlani"></div>
+ @if(edit){
+ <div class="modal fade" id="binaModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Bina Bilgileri</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body">
+  <input type="hidden" id="binaIndex"><input type="hidden" id="binaId"><div class="form-grid"><label>Sıra no<input id="binaSira" type="number" min="1"></label><label>Bina / yapı adı<input id="binaAd" maxlength="250"></label><label>Mevcut / Yeni<select id="binaDurum"><option value="">Seçiniz</option><option value="Mevcut">Mevcut</option><option value="Yeni">Yeni</option></select></label><label>Yatırım şekli<input id="binaYatirimSekli" maxlength="100"></label><label>Destek talebi<select id="binaDestekTalebi"><option value="">Seçiniz</option><option value="Evet">Evet</option><option value="Hayır">Hayır</option></select></label><label>Vaziyet planındaki no<input id="binaVaziyetNo" maxlength="100"></label></div>
+ </div><div class="modal-footer"><button type="button" class="btn btn-outline-danger mr-auto" id="binaSilBtn" onclick="BinaSil()">Sil</button><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="BinaKaydet()">Kaydet</button></div></div></div></div>
+ <div class="modal fade" id="binaMahalModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="binaMahalBaslik">Bölüm / Mahal</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body">
+  <input type="hidden" id="binaMahalBinaIndex"><input type="hidden" id="binaMahalIndex"><input type="hidden" id="binaMahalId"><div class="form-grid"><label>Sıra no<input id="binaMahalSira" type="number" min="1"></label><label>Bölüm / Mahal Adı<input id="binaMahalAd" maxlength="250"></label><label>Alanı (m²)<input id="binaMahalAlan" type="number" min="0.01" step="0.01"></label></div>
+ </div><div class="modal-footer"><button type="button" class="btn btn-outline-danger mr-auto" id="binaMahalSilBtn" onclick="BinaMahalSil()">Sil</button><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="BinaMahalKaydet()">Kaydet</button></div></div></div></div>
+ }
+</section>

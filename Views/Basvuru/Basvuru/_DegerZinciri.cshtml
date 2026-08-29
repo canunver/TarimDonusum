@@ -11,10 +11,10 @@
         <h2 class="mb-0">İl Bazlı Değer Zinciri ve Değer Zinciri Aşamaları</h2>
         <a class="btn btn-outline-primary" href="@Url.Action("DegerZinciriYazdir", "Basvuru", new { id = Model.Basvuru.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
     </div>
-    <div class="alert alert-info">Seçilen değer zinciri yatırım iliyle eşleşmeli ve doğrudan tarım-gıda bağlantısı kanıtlanmalıdır. Ön başvuruda girilen değer zinciri ve aşamalar başvuruya kopyalanır; bilgiler her iki tarafta da korunur.</div>
+    <div class="alert alert-info">Değer zincirinin tarım-gıda bağlantısı kanıtlanmalıdır.</div>
     <h3>Değer Zinciri Seçimi</h3>
     <div class="form-grid">
-        <label for="degerZinciriSelect">Değer zinciri<select id="degerZinciriSelect" name="Basvuru.DegerZinciriId" disabled="@ro"></select></label>
+        <label for="degerZinciriSelect">Değer zinciri<select id="degerZinciriSelect" name="Basvuru.DegerZinciriId" disabled></select></label>
         <label>İl-değer zinciri eşleşmesi<select name="Basvuru.yatirim.IlDegerZinciriEslesmesi" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in teyitSecenekleri) { <option value="@x" selected="@(y.ilDegerZinciriEslesmesi == x)">@x</option> }</select></label>
         <label>Doğrudan tarım-gıda bağlantısı türü<select name="Basvuru.yatirim.TarimGidaBaglantiTuru" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in baglantiTurleri) { <option value="@x" selected="@(y.tarimGidaBaglantiTuru == x)">@x</option> }</select></label>
     </div>

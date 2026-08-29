@@ -25,7 +25,7 @@
                 <button class="btn btn-sm btn-outline-primary" type="button" onclick="ilceEkle()">Yeni İlçe Satırı</button>
             </div>
             <div class="ilce-scroll table-responsive"><table class="table table-sm table-hover mb-0">
-                <thead><tr><th>İlçe Adı</th><th>Durum</th><th class="text-right">İşlem</th></tr></thead>
+                <thead><tr><th>İlçe Adı</th><th>SEGE Kademesi</th><th>Durum</th><th class="text-right">İşlem</th></tr></thead>
                 <tbody id="ilceListe"></tbody>
             </table></div>
         </div>
@@ -60,20 +60,22 @@ function ilAc(id) {
 }
 
 function ilceSatiri(x) {
-    const id = Number(x.id || x.Id || 0), ad = x.ad || x.Ad || '', aktif = (x.aktif ?? x.Aktif) !== false;
+    const id = Number(x.id || x.Id || 0), ad = x.ad || x.Ad || '', segeKademesi = Number(x.segeKademesi ?? x.SegeKademesi ?? 0), aktif = (x.aktif ?? x.Aktif) !== false;
     const islem = id === 0 ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest('tr').remove()">Sil</button>` : '<span class="text-muted">Silinemez</span>';
     $('#ilceListe').append(`<tr data-id="${id}"><td><input class="form-control form-control-sm ilce-ad" maxlength="100" value="${attr(ad)}"></td>
+        <td><input class="form-control form-control-sm ilce-sege" type="number" min="1" max="6" step="1" value="${segeKademesi || ''}"></td>
         <td><select class="form-control form-control-sm ilce-aktif"><option value="true"${aktif ? ' selected' : ''}>Aktif</option><option value="false"${!aktif ? ' selected' : ''}>Pasif</option></select></td>
         <td class="text-right">${islem}</td></tr>`);
 }
 
-function ilceEkle() { ilceSatiri({ id: 0, ad: '', aktif: true }); }
+function ilceEkle() { ilceSatiri({ id: 0, ad: '', segeKademesi: '', aktif: true }); }
 
 function ilKaydet() {
     const m = { id: Number($('#ilId').val() || 0), kod: Number($('#ilKod').val() || 0), ad: $('#ilAd').val(),
         aktif: $('#ilAktif').val() === 'true', ilceler: [] };
     $('#ilceListe tr').each(function () {
         m.ilceler.push({ id: Number($(this).data('id') || 0), ilId: m.id, ad: $(this).find('.ilce-ad').val(),
+            segeKademesi: Number($(this).find('.ilce-sege').val() || 0),
             aktif: $(this).find('.ilce-aktif').val() === 'true' });
     });
     AjaxPost('/Il/Kaydet', m, s => {

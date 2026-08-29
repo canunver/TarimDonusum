@@ -10,7 +10,9 @@
     string[] evetHayir = ["Evet", "Hayır"];
     string[] sozlesmeDurumlari = ["Evet", "Hayır", "Uygulanamaz"];
 }
-<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruFinansman)">
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruFinansman)"
+         data-finans-alt-limit="@Model.Basvuru.basvuruFirma.donem.minimumYatirimTutari?.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+         data-finans-ust-limit="@Model.Basvuru.basvuruFirma.donem.maksimumYatirimTutari?.ToString(System.Globalization.CultureInfo.InvariantCulture)">
     <div class="section-toolbar">
         <h2 class="mb-0">Finansman</h2>
         <a class="btn btn-outline-primary" href="@Url.Action("FinansmanYazdir", "Basvuru", new { id = Model.Basvuru.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
@@ -26,7 +28,7 @@
         <label>Yatırım süresi (ay)<input name="Basvuru.finans.YatirimSuresiAy" type="number" min="1" step="1" value="@f.yatirimSuresiAy" disabled="@ro" /></label>
         <label>Finansman para birimi<select name="Basvuru.finans.FinansmanParaBirimi" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in ParaBirimleri.Tum) { <option value="@x" selected="@(f.finansmanParaBirimi == x)">@x</option> }</select></label>
         <label>Diğer finansman kaynakları<input name="Basvuru.finans.DigerFinansmanKaynaklari" maxlength="1000" value="@f.digerFinansmanKaynaklari" disabled="@ro" /></label>
-        <label>Önceki RFF onaylı tutar (USD)<input class="money-integer" name="Basvuru.finans.OncekiRffOnayliTutar" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(f.oncekiRffOnayliTutar)" oninput="FinansTutarlariniHesapla()" disabled="@ro" /></label>
+        <label>Önceki RFF onaylı tutar (USD)<input class="money-integer" name="Basvuru.finans.OncekiRffOnayliTutar" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(f.oncekiRffOnayliTutar)" readonly /></label>
         <label>Önceki RFF sözleşmesi kapalı mı?<select name="Basvuru.finans.OncekiRffSozlesmesiKapaliMi" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in sozlesmeDurumlari) { <option value="@x" selected="@(f.oncekiRffSozlesmesiKapaliMi == x)">@x</option> }</select></label>
         <label>Kümülatif limit kontrolü<input id="finansKumulatifKontrol" type="text" readonly /></label>
         <label>İşlem tutarı kontrolü<input id="finansIslemKontrol" type="text" readonly /></label>

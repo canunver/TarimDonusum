@@ -2736,4 +2736,6 @@
   <data name="Basvuru.Step.YatirimdaKullanilacakEkipmanlar" xml:space="preserve"><value>Equipment to Be Used in the Investment</value></data>
   <data name="Basvuru.Step.YatirimOnBilgileri" xml:space="preserve"><value>Preliminary Investment Information</value></data>
   <data name="Basvuru.Step.UrunSurecMakine" xml:space="preserve"><value>Product, Process and Machinery Relations</value></data>
+  <data name="Basvuru.Step.BinaListesi" xml:space="preserve"><value>Building List and Rooms</value></data>
+  <data name="Basvuru.Step.Istihdam" xml:space="preserve"><value>Employment</value></data>
 </root>

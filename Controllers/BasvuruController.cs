@@ -154,7 +154,7 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpGet]
         public Task<IActionResult> YatirimOzetiYazdir(int id) =>
-            RaporYazdirAsync(id, new RPROB_YatirimOzeti(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.YatirimOzeti"].ToString());
+            RaporYazdirAsync(id, new RPROB_YatirimOzetiYonlendirici(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.YatirimOzeti"].ToString());
         [OturumKontrol]
         [HttpGet]
         public Task<IActionResult> IsletmeGideriYazdir(int id) =>
@@ -181,6 +181,15 @@ namespace TarimDonusum.Controllers
         [HttpGet]
         public Task<IActionResult> BinaListesiYazdir(int id) =>
             RaporYazdirAsync(id, new RPROB_BinaListesi(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.BinaListesi"].ToString());
+        [OturumKontrol][HttpGet]
+        public Task<IActionResult> BinaBolumListesiYazdir(int id)=>RaporYazdirAsync(id,new RPROB_BinaBolumListesi(_environment.ContentRootPath),"Bina bölüm/mahal listesi yazdırılmadan önce başvuru kaydedilmelidir.");
+        [OturumKontrol][HttpGet]
+        public Task<IActionResult> IstihdamYazdir(int id)=>RaporYazdirAsync(id,new RPROB_Istihdam(_environment.ContentRootPath),"İstihdam bilgileri yazdırılmadan önce başvuru kaydedilmelidir.");
+        public Task<IActionResult> TedarikciEntegrasyonuYazdir(int id)=>RaporYazdirAsync(id,new RPROB_TedarikciEntegrasyonu(_environment.ContentRootPath),"Tedarikçi entegrasyonu yazdırılmadan önce başvuru kaydedilmelidir.");
+        [OturumKontrol][HttpGet]
+        public Task<IActionResult> BeyanYazdir(int id)=>RaporYazdirAsync(id,new RPROB_Beyan(_environment.ContentRootPath),"Taahhüt/beyan bilgileri yazdırılmadan önce başvuru kaydedilmelidir.");
+        [OturumKontrol][HttpGet]
+        public Task<IActionResult> CevreselSosyalVeriFormuYazdir(int id)=>RaporYazdirAsync(id,new RPROB_CevreselSosyalVeriFormu(_environment.ContentRootPath),"Çevresel ve sosyal veri formu yazdırılmadan önce başvuru kaydedilmelidir.");
 
         private async Task<IActionResult> RaporYazdirAsync(int id, IRPROB rapor, string kayitUyarisi, bool denetciRaporu = false, bool tumDegerZinciriAsamalariniYukle = false)
         {
@@ -733,6 +742,33 @@ namespace TarimDonusum.Controllers
 
         [HttpPost]
         public async Task<IActionResult> UrunSurecMakinesiSil([FromBody] BasvuruUrunSurecMakine model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruUrunSurecMakinesiSilAsync(model.basvuruId,model.id,kullanici));}
+
+        [HttpPost]
+        public async Task<IActionResult> BinaKaydet([FromBody] BasvuruBina model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruBinasiKaydetAsync(model,kullanici));}
+
+        [HttpPost]
+        public async Task<IActionResult> BinaSil([FromBody] BasvuruBina model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruBinasiSilAsync(model.basvuruId,model.id,kullanici));}
+
+        [HttpPost]
+        public async Task<IActionResult> IstihdamKaydet([FromBody] BasvuruIstihdam model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.IstihdamKaydetAsync(model,kullanici));}
+        [HttpPost]
+        public async Task<IActionResult> IstihdamSatiriKaydet([FromBody] BasvuruIstihdamSatir model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.IstihdamSatiriKaydetAsync(model,kullanici));}
+        [HttpPost]
+        public async Task<IActionResult> IstihdamSatiriSil([FromBody] BasvuruIstihdamSatir model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.IstihdamSatiriSilAsync(model.basvuruId,model.id,kullanici));}
+        [HttpPost,ValidateAntiForgeryToken]
+        public async Task<IActionResult> TedarikciEntegrasyonuKaydet([FromBody] BasvuruTedarikciEntegrasyonu model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.TedarikciEntegrasyonuKaydetAsync(model,kullanici));}
+        [HttpPost,ValidateAntiForgeryToken]
+        public async Task<IActionResult> TedarikciEntegrasyonuSil([FromBody] BasvuruTedarikciEntegrasyonu model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.TedarikciEntegrasyonuSilAsync(model.basvuruId,model.id,kullanici));}
+        [HttpPost,ValidateAntiForgeryToken]
+        public async Task<IActionResult> TedarikciEntegrasyonuAciklamaKaydet([FromBody] Basvuru model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.TedarikciEntegrasyonuAciklamaKaydetAsync(model.Id,model.tedarikciEntegrasyonuAciklama,kullanici));}
+        [HttpGet]
+        public async Task<IActionResult> TedarikIlceleriListele(int ilId){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.IlceleriListeleAsync(ilId));}
+
+        [HttpPost]
+        public async Task<IActionResult> BinaMahaliKaydet([FromBody] BasvuruBinaMahal model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruBinaMahaliKaydetAsync(model,kullanici));}
+
+        [HttpPost]
+        public async Task<IActionResult> BinaMahaliSil([FromBody] BasvuruBinaMahal model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruBinaMahaliSilAsync(model.basvuruId,model.id,kullanici));}
 
         [OturumKontrol]
         [HttpPost]

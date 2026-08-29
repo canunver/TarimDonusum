@@ -1,0 +1,52 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@{
+    var b = Model.Basvuru;
+    bool duzenlenebilir = !Model.DenetciGorunumu && !Model.SaltOkunur;
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruTaahhutBeyan)">
+    <div class="section-toolbar">
+        <h2 class="mb-0">Taahhüt / Beyan</h2>
+        <a class="btn btn-outline-primary" href="@Url.Action("BeyanYazdir", "Basvuru", new { id = b.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+    </div>
+    <p class="lead">Her madde için kabul durumunu seçiniz ve gerekiyorsa açıklama giriniz.</p>
+    <script type="application/json" id="basvuruBeyanJson">@Html.Raw(string.IsNullOrWhiteSpace(b.TaahhutBeyanlarJson) ? "{}" : b.TaahhutBeyanlarJson)</script>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead><tr><th style="width:60px">No</th><th>Beyan / taahhüt metni</th><th style="width:130px">Kabul</th><th style="width:28%">Açıklama</th></tr></thead>
+            <tbody id="basvuruBeyanSatirlari">
+            @for (int i = 0; i < BeyanTanimlari.Maddeler.Count; i++)
+            {
+                <tr data-no="@(i + 1)">
+                    <td class="text-center">@(i + 1)</td><td>@BeyanTanimlari.Maddeler[i]</td>
+                    <td><select class="form-control beyan-kabul" disabled="@(!duzenlenebilir)"><option value="">Seçiniz</option><option value="1">Evet</option><option value="2">Hayır</option></select></td>
+                    <td><textarea class="form-control beyan-aciklama" rows="2" maxlength="1000" disabled="@(!duzenlenebilir)"></textarea></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="form-grid mt-4">
+        <label>Yetkili kişi<input id="beyanYetkiliKisi" maxlength="250" disabled="@(!duzenlenebilir)" /></label>
+        <label>Görevi<input id="beyanGorevi" maxlength="250" disabled="@(!duzenlenebilir)" /></label>
+    </div>
+    <label class="wide-label">Genel açıklama<textarea id="beyanGenelAciklama" name="Basvuru.TaahhutAciklama" maxlength="1000" disabled="@(!duzenlenebilir)">@b.TaahhutAciklama</textarea></label>
+
+    <div class="document-upload-box commitment-upload-box mt-3">
+        <div class="commitment-file-line">
+            <strong>Taahhüt / Beyan Dosyası</strong>
+            <span id="taahhutDosyaSecim" class="document-file-name">@(string.IsNullOrWhiteSpace(b.TaahhutDosyaAdi) ? "Dosya yüklenmedi" : b.TaahhutDosyaAdi)</span>
+            @if (duzenlenebilir)
+            {
+                <label class="btn btn-primary mb-0" for="taahhutDosya">Dosya seç ve yükle</label>
+                <input id="taahhutDosya" type="file" class="document-file-input" accept=".pdf,.jpg,.jpeg,.png" />
+            }
+            <a class="btn btn-outline-primary document-download-action @(b.TaahhutDosyaId.HasValue ? "" : "d-none")" id="taahhutIndirBtn"
+               href="@(b.TaahhutDosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = b.TaahhutDosyaId.Value }) : "#")" target="_blank" rel="noopener">Dosyayı indir</a>
+        </div>
+        <input name="Basvuru.TaahhutDosyaAdi" type="hidden" value="@b.TaahhutDosyaAdi" />
+        <input name="Basvuru.TaahhutDosyaId" type="hidden" value="@b.TaahhutDosyaId" />
+    </div>
+</section>

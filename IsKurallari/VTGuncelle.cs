@@ -761,6 +761,56 @@ namespace TarimDonusum.IsKurallari
             new(54,
                 @"IF COL_LENGTH(N'dbo.BasvuruUrunSurecMakine',N'GunlukCalismaSuresiBirimi') IS NULL
                     ALTER TABLE dbo.BasvuruUrunSurecMakine ADD GunlukCalismaSuresiBirimi NVARCHAR(10) NOT NULL CONSTRAINT DF_BasvuruUrunSurecMakine_SureBirimi DEFAULT N'Saat';"),
+            new(55,
+                @"IF OBJECT_ID(N'dbo.BasvuruBina',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruBina(Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruBina PRIMARY KEY,BasvuruId INT NOT NULL,SiraNo INT NOT NULL,Ad NVARCHAR(250) NOT NULL,MevcutYeni NVARCHAR(50) NULL,YatirimSekli NVARCHAR(100) NULL,DestekTalebi NVARCHAR(20) NULL,VaziyetPlaniNo NVARCHAR(100) NULL,CONSTRAINT FK_BasvuruBina_Basvuru FOREIGN KEY(BasvuruId) REFERENCES dbo.Basvuru(Id) ON DELETE CASCADE);
+                    CREATE UNIQUE INDEX UX_BasvuruBina_BasvuruSira ON dbo.BasvuruBina(BasvuruId,SiraNo);
+                    CREATE TABLE dbo.BasvuruBinaMahal(Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruBinaMahal PRIMARY KEY,BinaId INT NOT NULL,SiraNo INT NOT NULL,MahalAdi NVARCHAR(250) NOT NULL,AlanM2 DECIMAL(18,2) NOT NULL,CONSTRAINT FK_BasvuruBinaMahal_Bina FOREIGN KEY(BinaId) REFERENCES dbo.BasvuruBina(Id) ON DELETE CASCADE);
+                    CREATE UNIQUE INDEX UX_BasvuruBinaMahal_BinaSira ON dbo.BasvuruBinaMahal(BinaId,SiraNo);
+                  END"),
+            new(56,
+                @"IF COL_LENGTH(N'dbo.Basvuru',N'IstihdamJson') IS NULL ALTER TABLE dbo.Basvuru ADD IstihdamJson NVARCHAR(MAX) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru',N'IstihdamSgkDosyaId') IS NULL ALTER TABLE dbo.Basvuru ADD IstihdamSgkDosyaId INT NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru',N'IstihdamSgkDosyaAdi') IS NULL ALTER TABLE dbo.Basvuru ADD IstihdamSgkDosyaAdi NVARCHAR(260) NULL;"),
+            new(57,
+                @"IF OBJECT_ID(N'dbo.BasvuruIstihdamSatir',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruIstihdamSatir(Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruIstihdamSatir PRIMARY KEY,BasvuruId INT NOT NULL,SiraNo INT NOT NULL,BirimUnite NVARCHAR(250) NOT NULL,GorevUretimHatti NVARCHAR(250) NOT NULL,Cinsiyet NVARCHAR(20) NOT NULL,YasDurumu NVARCHAR(30) NOT NULL,MevcutCalisan DECIMAL(18,2) NOT NULL,NetCalisanArtisi DECIMAL(18,2) NOT NULL,BazAylikBrutUcret DECIMAL(18,2) NOT NULL,HedefAylikBrutUcret DECIMAL(18,2) NOT NULL,CONSTRAINT FK_BasvuruIstihdamSatir_Basvuru FOREIGN KEY(BasvuruId) REFERENCES dbo.Basvuru(Id) ON DELETE CASCADE);
+                    CREATE UNIQUE INDEX UX_BasvuruIstihdamSatir_BasvuruSira ON dbo.BasvuruIstihdamSatir(BasvuruId,SiraNo);
+                  END"),
+            new(58, @"IF COL_LENGTH(N'dbo.Ilce',N'SegeKademesi') IS NULL ALTER TABLE dbo.Ilce ADD SegeKademesi INT NULL;"),
+            new(59,
+                @"IF OBJECT_ID(N'dbo.BasvuruTedarikciEntegrasyonu',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruTedarikciEntegrasyonu(
+                      Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruTedarikciEntegrasyonu PRIMARY KEY,
+                      BasvuruId INT NOT NULL, UrunId INT NOT NULL, TarimsalUrun NVARCHAR(250) NOT NULL,
+                      IlId INT NOT NULL, IlceId INT NOT NULL, Birim NVARCHAR(50) NOT NULL,
+                      MevcutYillikMiktar DECIMAL(18,3) NOT NULL, HedefYillikMiktar DECIMAL(18,3) NOT NULL,
+                      MevcutKayitliCiftci INT NOT NULL, EklenecekKayitliCiftci INT NOT NULL,
+                      TedarikSekli NVARCHAR(250) NOT NULL, DayanakBelgeDosyaId INT NULL,
+                      DayanakBelgeDosyaAdi NVARCHAR(260) NULL, KisaAciklama NVARCHAR(1000) NULL,
+                      CONSTRAINT FK_BasvuruTedarikciEntegrasyonu_Basvuru FOREIGN KEY(BasvuruId) REFERENCES dbo.Basvuru(Id) ON DELETE CASCADE,
+                      CONSTRAINT FK_BasvuruTedarikciEntegrasyonu_Urun FOREIGN KEY(UrunId) REFERENCES dbo.BasvuruYatirimOnBilgi(Id),
+                      CONSTRAINT FK_BasvuruTedarikciEntegrasyonu_Il FOREIGN KEY(IlId) REFERENCES dbo.Il(Id),
+                      CONSTRAINT FK_BasvuruTedarikciEntegrasyonu_Ilce FOREIGN KEY(IlceId) REFERENCES dbo.Ilce(Id),
+                      CONSTRAINT CK_BasvuruTedarikciEntegrasyonu_Degerler CHECK(MevcutYillikMiktar>=0 AND HedefYillikMiktar>=0 AND MevcutKayitliCiftci>=0 AND EklenecekKayitliCiftci>=0));
+                    CREATE INDEX IX_BasvuruTedarikciEntegrasyonu_BasvuruUrun ON dbo.BasvuruTedarikciEntegrasyonu(BasvuruId,UrunId);
+                  END"),
+            new(60,
+                @"IF COL_LENGTH(N'dbo.BasvuruTedarikciEntegrasyonu',N'TedarikSekli') IS NOT NULL
+                  BEGIN
+                    UPDATE dbo.BasvuruTedarikciEntegrasyonu
+                    SET TedarikSekli = CASE
+                      WHEN TRY_CONVERT(INT,TedarikSekli) IN (1,2) THEN CONVERT(NVARCHAR(10),TRY_CONVERT(INT,TedarikSekli))
+                      WHEN TedarikSekli LIKE N'%Niyet%' OR TedarikSekli LIKE N'%protokol%' THEN N'2'
+                      ELSE N'1' END;
+                    ALTER TABLE dbo.BasvuruTedarikciEntegrasyonu ALTER COLUMN TedarikSekli INT NOT NULL;
+                  END"),
+            new(61,
+                @"IF COL_LENGTH(N'dbo.Basvuru',N'TedarikciEntegrasyonuAciklama') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD TedarikciEntegrasyonuAciklama NVARCHAR(2000) NULL;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

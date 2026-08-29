@@ -1,0 +1,24 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@using System.Text.Json
+@{ var i=Model.Basvuru.istihdam; bool edit=!Model.DenetciGorunumu&&!Model.SaltOkunur; }
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruIstihdam)" data-istihdam-basvuru-yili="@Model.Basvuru.basvuruFirma.donem.yil">
+ <div class="section-toolbar"><h2 class="mb-0">İstihdam</h2><a class="btn btn-outline-primary" href="@Url.Action("IstihdamYazdir","Basvuru",new{id=Model.Basvuru.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div>
+ <div class="alert alert-info">Son iki tamamlanmış yılın tam zamanlı istihdam bilgileri ile yatırım öncesi ve sonrası istihdam/ücret planını giriniz.</div>
+ <script type="application/json" id="istihdamJson">@Html.Raw(JsonSerializer.Serialize(i))</script>
+ <h5>Son iki yılda tam zamanlı istihdam</h5>
+ <div class="form-grid mb-3">
+  <label>Önceki yıl<input id="istOncekiYil" type="number" readonly></label>
+  <label>Kadın çalışan<input id="istOncekiKadin" type="number" min="0" step="1" disabled="@(!edit)"></label>
+  <label>Erkek çalışan<input id="istOncekiErkek" type="number" min="0" step="1" disabled="@(!edit)"></label>
+  <label>Son yıl<input id="istSonYil" type="number" readonly></label>
+  <label>Kadın çalışan<input id="istSonKadin" type="number" min="0" step="1" disabled="@(!edit)"></label>
+  <label>Erkek çalışan<input id="istSonErkek" type="number" min="0" step="1" disabled="@(!edit)"></label>
+ </div>
+ <div class="d-flex justify-content-between align-items-center mb-2"><h5 class="mb-0">Bölüm bazında istihdam ve ücret planı</h5>@if(edit){<button type="button" class="btn btn-sm btn-success" onclick="IstihdamSatirModalAc(-1)"><i class="fas fa-plus mr-1"></i>Yeni kayıt</button>}</div>
+ <div id="istihdamSatirAlani"></div>
+ <div class="form-group mt-3"><label for="istihdamGerekce"><strong>GEREKÇE, VARSAYIMLAR VE DOĞRULAMA YAKLAŞIMI</strong></label><textarea id="istihdamGerekce" class="form-control" rows="5" maxlength="4000" disabled="@(!edit)" placeholder="İstihdam artışının gerekçesini, hesaplamada kullanılan varsayımları ve gerçekleşmenin nasıl doğrulanacağını açıklayınız."></textarea></div>
+ <div class="form-group mt-3"><label><strong>SGK destek belgesi</strong></label><div class="d-flex align-items-center"><input id="istihdamSgkDosya" type="file" class="form-control-file" disabled="@(!edit)"><button type="button" class="btn btn-outline-primary mr-2" onclick="IstihdamSgkYukle()" disabled="@(!edit)">Yükle</button><a id="istihdamSgkIndir" class="btn btn-outline-secondary @(i.sgkDosyaId.HasValue?"":"d-none")" href="@(i.sgkDosyaId.HasValue?Url.Action("DosyaIndir","Basvuru",new{id=i.sgkDosyaId.Value}):"#")" target="_blank">İndir</a><span id="istihdamSgkAdi" class="ml-2 text-muted">@i.sgkDosyaAdi</span></div></div>
+ @if(edit){<div class="text-right"><button type="button" class="btn btn-primary" onclick="IstihdamKaydet()">Kaydet</button></div>}
+ @if(edit){<div class="modal fade" id="istihdamSatirModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="istihdamSatirBaslik">İstihdam Planı Kaydı</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body"><input type="hidden" id="istSatirIndex"><input type="hidden" id="istSatirId"><div class="form-grid"><label>Sıra no<input id="istSatirSira" type="number" min="1"></label><label>Birim / Ünite<input id="istSatirBirim" maxlength="250"></label><label>Görev / Üretim Hattı<input id="istSatirGorev" maxlength="250"></label><label>Cinsiyet<select id="istSatirCinsiyet"><option>Kadın</option><option>Erkek</option></select></label><label>Yaş durumu<select id="istSatirYas"><option>Genç</option><option>40 yaş ve üstü</option></select></label><label>Yatırım öncesi çalışan<input id="istSatirMevcut" type="number" min="0" step="0.01"></label><label>Çalışan sayısı artışı<input id="istSatirArtis" type="number" step="0.01"></label><label>Baz aylık brüt ücret (TL)<input id="istSatirBaz" type="number" min="0" step="0.01"></label><label>Hedef aylık brüt ücret (TL)<input id="istSatirHedef" type="number" min="0" step="0.01"></label></div></div><div class="modal-footer"><button type="button" id="istSatirSilBtn" class="btn btn-outline-danger mr-auto" onclick="IstihdamSatirSil()">Sil</button><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="IstihdamSatirKaydet()">Kaydet</button></div></div></div></div>}
+</section>

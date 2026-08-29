@@ -177,6 +177,10 @@ namespace TarimDonusum.Models
         public List<BasvuruUygulamaAdresi> YatirimAdresleri { get; set; } = new();
         public List<BasvuruMakine> Makineler { get; set; } = new();
         public List<BasvuruUrunSurec> UrunSurecleri { get; set; } = new();
+        public List<BasvuruTedarikciEntegrasyonu> TedarikciEntegrasyonlari { get; set; } = new();
+        public string tedarikciEntegrasyonuAciklama { get; set; } = "";
+        public List<BasvuruBina> Binalar { get; set; } = new();
+        public BasvuruIstihdam istihdam { get; set; } = new();
         public List<BasvuruYatirimOnBilgi> YatirimOnBilgileri { get; set; } = new();
         public BasvuruFinans finans = new();
         public BasvuruMali mali = new BasvuruMali();
@@ -711,6 +715,81 @@ namespace TarimDonusum.Models
         public string aciklama { get; set; } = "";
     }
 
+    public class BasvuruTedarikciEntegrasyonu
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public int urunId { get; set; }
+        public string tarimsalUrun { get; set; } = "";
+        public int ilId { get; set; }
+        public int ilceId { get; set; }
+        public string ilAdi { get; set; } = "";
+        public string ilceAdi { get; set; } = "";
+        public int? segeKademesi { get; set; }
+        public string birim { get; set; } = "";
+        public decimal mevcutYillikMiktar { get; set; }
+        public decimal hedefYillikMiktar { get; set; }
+        public int mevcutKayitliCiftci { get; set; }
+        public int eklenecekKayitliCiftci { get; set; }
+        public int tedarikSekli { get; set; }
+        public int? dayanakBelgeDosyaId { get; set; }
+        public string dayanakBelgeDosyaAdi { get; set; } = "";
+        public string kisaAciklama { get; set; } = "";
+    }
+
+    public class BasvuruIstihdam
+    {
+        public int basvuruId { get; set; }
+        public int oncekiYil { get; set; }
+        public int oncekiYilKadin { get; set; }
+        public int oncekiYilErkek { get; set; }
+        public int sonYil { get; set; }
+        public int sonYilKadin { get; set; }
+        public int sonYilErkek { get; set; }
+        public int? sgkDosyaId { get; set; }
+        public string sgkDosyaAdi { get; set; } = "";
+        public string gerekceVarsayimlarDogrulamaYaklasimi { get; set; } = "";
+        public List<BasvuruIstihdamSatir> satirlar { get; set; } = new();
+    }
+
+    public class BasvuruIstihdamSatir
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public int siraNo { get; set; }
+        public string birimUnite { get; set; } = "";
+        public string gorevUretimHatti { get; set; } = "";
+        public string cinsiyet { get; set; } = "";
+        public string yasDurumu { get; set; } = "";
+        public decimal mevcutCalisan { get; set; }
+        public decimal netCalisanArtisi { get; set; }
+        public decimal bazAylikBrutUcret { get; set; }
+        public decimal hedefAylikBrutUcret { get; set; }
+    }
+
+    public class BasvuruBina
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public int siraNo { get; set; }
+        public string ad { get; set; } = "";
+        public string mevcutYeni { get; set; } = "";
+        public string yatirimSekli { get; set; } = "";
+        public string destekTalebi { get; set; } = "";
+        public string vaziyetPlaniNo { get; set; } = "";
+        public List<BasvuruBinaMahal> mahaller { get; set; } = new();
+    }
+
+    public class BasvuruBinaMahal
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public int binaId { get; set; }
+        public int siraNo { get; set; }
+        public string mahalAdi { get; set; } = "";
+        public decimal alanM2 { get; set; }
+    }
+
     public class BasvuruFinans
     {
         public int basvuruId { get; set; }
@@ -862,13 +941,18 @@ namespace TarimDonusum.Models
     {
         public int basvuruId { get; set; }
         public string? taahhutBeyanlarJson { get; set; } = "";
+        public bool basvuruSayfasi { get; set; }
+        public string yetkiliKisi { get; set; } = "";
+        public string gorevi { get; set; } = "";
+        public string aciklama { get; set; } = "";
 
         internal void Dogrula(Sonuc<int> sonuc)
         {
             if (basvuruId <= 0) sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
             if (string.IsNullOrWhiteSpace(taahhutBeyanlarJson))
                 sonuc.HataEkle("Taahhüt ve beyanlar onaylanmalıdır.");
-            if (!string.IsNullOrWhiteSpace(taahhutBeyanlarJson) && taahhutBeyanlarJson.Length > 20000)
+            int azamiUzunluk = basvuruSayfasi ? 50000 : 20000;
+            if (!string.IsNullOrWhiteSpace(taahhutBeyanlarJson) && taahhutBeyanlarJson.Length > azamiUzunluk)
                 sonuc.HataEkle("Taahhüt ve beyan verisi çok uzun.");
         }
     }
@@ -889,6 +973,7 @@ namespace TarimDonusum.Models
     public class BasvuruCevreselSosyal
     {
         public int basvuruId { get; set; }
+        public bool basvuruSayfasi { get; set; }
         public string? cevreselSosyalJson { get; set; } = "";
 
         internal void Dogrula(Sonuc<int> sonuc)
@@ -962,6 +1047,7 @@ namespace TarimDonusum.Models
         public int Id { get; set; }
         public int IlId { get; set; }
         public string Ad { get; set; } = "";
+        public int SegeKademesi { get; set; }
         public bool Aktif { get; set; } = true;
     }
 }

@@ -7,7 +7,12 @@
 }
 
 <section class="basvuru-panel active" data-panel="11">
-    <h2>@L["Basvuru.Section.YatirimOzeti.Title"]</h2>
+    <div class="section-toolbar">
+        <h2 class="mb-0">@L["Basvuru.Section.YatirimOzeti.Title"]</h2>
+        <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="YatirimOzetiYazdir" asp-route-id="@b.Id">
+            <i class="fas fa-file-excel mr-1"></i>Yazdır
+        </a>
+    </div>
     <p class="lead">@L["Basvuru.YatirimOzeti.Description"]</p>
 
     <input type="hidden" id="yatirimOzetiJson" value="@b.yatirimOzeti.yatirimOzetiJson" />
