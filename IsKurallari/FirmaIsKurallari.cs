@@ -25,17 +25,14 @@ namespace TarimDonusum.IsKurallari
             Sonuc<List<Firma>> sonuc = new();
             if (!KullaniciKontrolEt(kullanici, sonuc)) return sonuc;
             string metin = arama.AramaMetni?.Trim() ?? "";
-            bool basvuran = kullanici!.Yetkiler.Any(x => x.Rol == KullaniciRol.BasvuruKullanicisi);
-            if (string.IsNullOrWhiteSpace(metin) && !basvuran)
-            {
-                sonuc.HataEkle("Arama metni girilmelidir.");
-                return sonuc;
-            }
+            bool firmaErisimiKisitli = FirmaErisimiKisitliMi(kullanici!);
             try
             {
                 await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
-                sonuc.nesne = await new TABFirma(connection).AraAsync(metin, basvuran ? kullanici.Id : null);
+                kullanici.Yetkiler = await new TABKullaniciYetki(connection).KullaniciYetkileriniListeleAsync(kullanici.Id);
+                firmaErisimiKisitli = FirmaErisimiKisitliMi(kullanici);
+                sonuc.nesne = await new TABFirma(connection).AraAsync(metin, firmaErisimiKisitli ? kullanici.Id : null);
             }
             catch (Exception ex) { Hata(sonuc, ex, "Firmalar aranamadı."); }
             return sonuc;
@@ -86,7 +83,7 @@ namespace TarimDonusum.IsKurallari
                 if (yeni)
                 {
                     await tab.EkleAsync(firma);
-                    if (kullanici!.Yetkiler.Any(x => x.Rol == KullaniciRol.BasvuruKullanicisi))
+                    if (FirmaErisimiKisitliMi(kullanici!))
                     {
                         await new TABFirmaKullanici(connection, null, tx).EkleYoksaAsync(new FirmaKullanici
                         {
@@ -179,8 +176,16 @@ namespace TarimDonusum.IsKurallari
 
         private static async Task<bool> FirmaErisimiVarMiAsync(SqlConnection connection, int firmaId, Kullanici kullanici)
         {
-            if (!kullanici.Yetkiler.Any(x => x.Rol == KullaniciRol.BasvuruKullanicisi)) return true;
+            if (!FirmaErisimiKisitliMi(kullanici)) return true;
             return await new TABFirmaKullanici(connection).IliskiVarMiAsync(firmaId, kullanici.Id);
+        }
+
+        private static bool FirmaErisimiKisitliMi(Kullanici kullanici)
+        {
+            bool basvuruKullanicisi = kullanici.Yetkiler.Any(x => x.Rol == KullaniciRol.BasvuruKullanicisi);
+            bool kurumKullanicisi = kullanici.Yetkiler.Any(x =>
+                x.Rol == KullaniciRol.SistemYoneticisi || x.Rol == KullaniciRol.BirimKullanicisi);
+            return basvuruKullanicisi || !kurumKullanicisi;
         }
 
         private bool KullaniciKontrolEt(Kullanici? kullanici, Sonuc sonuc)

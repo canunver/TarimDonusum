@@ -76,7 +76,6 @@
 
     function FirmaAra() {
         const aramaMetni = ($('#firmaArama').val() || '').trim();
-        if (!aramaMetni) return PopupMesajGoster('Arama metni girilmelidir.', false);
         AjaxGet('/Firma/Ara', { aramaMetni }, sonuc => {
             if (!sonuc || !sonuc.basarili) return hata(sonuc);
             firmalar = sonuc.nesne || [];

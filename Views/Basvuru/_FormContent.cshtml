@@ -288,7 +288,7 @@
                                 </select>
                             </label>
                         </div>
-                        <div class="form-grid mt-3">
+                        <div class="adli-sicil-text-grid mt-3">
                             <label id="ortakDogumTarihiLabel">Doğum tarihi<input id="ortakDogumTarihi" type="date" /></label>
                             <label id="ortakCinsiyetLabel">Cinsiyet<select id="ortakCinsiyet"><option value="">Seçiniz</option><option value="Kadın">Kadın</option><option value="Erkek">Erkek</option></select></label>
                             <label>Sıralamada sahiplik niteliği<input id="ortakSahiplikNiteligi" readonly /></label>
@@ -352,22 +352,24 @@
                                 </select>
                             </label>
                         </div>
-                        <div class="form-grid mt-3">
-                            <label>Yetki kapsamı<textarea id="adliSicilYetkiKapsami" maxlength="500"></textarea></label>
-                            <label>Açıklama<textarea id="adliSicilAciklama" maxlength="1000"></textarea></label>
+                        <div class="row mt-3 adli-sicil-text-grid">
+                            <div class="col-md-6"><label class="w-100">Yetki kapsamı<textarea class="form-control d-block w-100" id="adliSicilYetkiKapsami" maxlength="500" rows="3"></textarea></label></div>
+                            <div class="col-md-6"><label class="w-100">Açıklama<textarea class="form-control d-block w-100" id="adliSicilAciklama" maxlength="1000" rows="3"></textarea></label></div>
                         </div>
-                        <div class="document-upload-box mt-3" id="imzaYetkiDosyaBox">
-                            <label>İmza/Yetki belgesi ref.</label>
-                            <div class="document-file-row"><label class="btn btn-primary mb-0 disabled" for="imzaYetkiDosya" id="imzaYetkiDosyaSecBtn">Yükle</label><input id="imzaYetkiDosya" type="file" class="document-file-input" disabled /><span id="imzaYetkiDosyaAdi" class="document-file-name">Dosya seçilmedi</span><a id="imzaYetkiIndirBtn" class="btn btn-outline-primary d-none" href="#" target="_blank" rel="noopener">İndir</a></div>
+                        <div class="adli-sicil-document-grid mt-3">
+                          <div class="document-upload-box adli-sicil-document-box" id="imzaYetkiDosyaBox">
+                            <div class="document-file-row"><label class="btn btn-primary mb-0 disabled" for="imzaYetkiDosya" id="imzaYetkiDosyaSecBtn">İmza/Yetki belgesi yükle</label><input id="imzaYetkiDosya" type="file" class="document-file-input" disabled /><span id="imzaYetkiDosyaAdi" class="document-file-name">Dosya seçilmedi</span><a id="imzaYetkiIndirBtn" class="btn btn-outline-primary d-none" href="#" target="_blank" rel="noopener">İndir</a></div>
                             <div class="document-note" id="imzaYetkiDosyaNot">Belge yüklemek için önce kişiyi kaydediniz.</div>
-                        </div>                        <div class="document-upload-box mt-3" id="adliSicilDosyaBox">
+                          </div>
+                          <div class="document-upload-box adli-sicil-document-box" id="adliSicilDosyaBox">
                             <div class="document-file-row">
-                                <label class="btn btn-primary mb-0 disabled" for="adliSicilDosya" id="adliSicilDosyaSecBtn">@L["Basvuru.Criminal.Upload"]</label>
+                                <label class="btn btn-primary mb-0 disabled" for="adliSicilDosya" id="adliSicilDosyaSecBtn">Adli sicil kaydı yükle</label>
                                 <input id="adliSicilDosya" type="file" class="document-file-input" disabled />
                                 <span id="adliSicilDosyaAdi" class="document-file-name">@L["Basvuru.Criminal.FileMissing"]</span>
                                 <a id="adliSicilIndirBtn" class="btn btn-outline-primary d-none" href="#" target="_blank" rel="noopener">@L["Basvuru.Common.Download"]</a>
                             </div>
                             <div class="document-note" id="adliSicilDosyaNot">@L["Basvuru.Criminal.SavePersonFirst"]</div>
+                          </div>
                         </div>
                     </div>
                     <div class="text-danger mt-2" id="adliSicilModalHata"></div>
@@ -1178,20 +1180,21 @@
         else {
             basvuruAdliSicilKisileri.forEach((kisi, index) => {
                 const dosyaYuklu = !!kisi.dosyaId;
-                const href = dosyaYuklu ? `/Basvuru/DosyaIndir/${kisi.dosyaId}` : '#';
+                const imzaYetkiYuklu = !!kisi.imzaYetkiDosyaId;
+                const adliSicilHref = dosyaYuklu ? `/Basvuru/DosyaIndir/${kisi.dosyaId}` : '#';
+                const imzaYetkiHref = imzaYetkiYuklu ? `/Basvuru/DosyaIndir/${kisi.imzaYetkiDosyaId}` : '#';
                 html += `<tr>
                     <td>${index + 1}</td>
                     <td>${htmlEncode(kisi.tckn)}</td>
                     <td>${htmlEncode((kisi.ad || '') + ' ' + (kisi.soyad || ''))}</td>
                     <td>${htmlEncode(kisi.gorev)}</td>
                     <td>${htmlEncode(kisi.yetkiKapsami || '')}</td>
-                    <td>${htmlEncode(kisi.imzaYetkiDosyaAdi || 'Dosya seçilmedi')}</td>
-                    <td><span class="adli-sicil-file-name">${htmlEncode(dosyaYuklu ? kisi.dosyaAdi : adliSicilMetinleri.fileMissing)}</span></td>
+                    <td><span class="adli-sicil-file-name">${htmlEncode(imzaYetkiYuklu ? kisi.imzaYetkiDosyaAdi : 'Dosya seçilmedi')}</span>${imzaYetkiYuklu ? `<br><a class="btn btn-sm btn-outline-primary mt-1" href="${imzaYetkiHref}" target="_blank" rel="noopener">İmza/Yetki Belgesi İndir</a>` : ''}</td>
+                    <td><span class="adli-sicil-file-name">${htmlEncode(dosyaYuklu ? kisi.dosyaAdi : adliSicilMetinleri.fileMissing)}</span>${dosyaYuklu ? `<br><a class="btn btn-sm btn-outline-primary mt-1" href="${adliSicilHref}" target="_blank" rel="noopener">Adli Sicil Belgesi İndir</a>` : ''}</td>
                     <td>${htmlEncode(kisi.aciklama || '')}</td>
                     <td class="text-nowrap">
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="AdliSicilModalAc(${index})" ${basvuruReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.edit)}</button>
                         <button type="button" class="btn btn-sm btn-outline-danger" onclick="AdliSicilSil(${index})" ${basvuruReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.delete)}</button>
-                        ${dosyaYuklu ? `<a class="btn btn-sm btn-outline-primary" href="${href}" target="_blank" rel="noopener">${htmlEncode(ortakMetinleri.download)}</a>` : ''}
                     </td>
                 </tr>`;
             });
@@ -3280,6 +3283,7 @@
     function IstihdamSatirKaydet(){const index=Number(document.getElementById('istSatirIndex').value),model=IstihdamSatirModeli();AjaxPost('/Basvuru/IstihdamSatiriKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){if(index>=0)basvuruIstihdam.satirlar[index]=sonuc.nesne;else basvuruIstihdam.satirlar.push(sonuc.nesne);basvuruIstihdam.satirlar.sort((a,b)=>a.siraNo-b.siraNo);$('#istihdamSatirModal').modal('hide');IstihdamSatirlariRender();dirty=false;}});}
     function IstihdamSatirSil(){const index=Number(document.getElementById('istSatirIndex').value),x=basvuruIstihdam.satirlar[index];if(!x||!confirm('Bu istihdam planı kaydını silmek istediğinize emin misiniz?'))return;AjaxPost('/Basvuru/IstihdamSatiriSil',{id:x.id,basvuruId:BasvuruId()},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){basvuruIstihdam.satirlar.splice(index,1);$('#istihdamSatirModal').modal('hide');IstihdamSatirlariRender();dirty=false;}});}
     function IstihdamKaydet(){const model={...basvuruIstihdam,basvuruId:BasvuruId(),oncekiYil:Number(document.getElementById('istOncekiYil').value),oncekiYilKadin:Number(document.getElementById('istOncekiKadin').value)||0,oncekiYilErkek:Number(document.getElementById('istOncekiErkek').value)||0,sonYil:Number(document.getElementById('istSonYil').value),sonYilKadin:Number(document.getElementById('istSonKadin').value)||0,sonYilErkek:Number(document.getElementById('istSonErkek').value)||0,gerekceVarsayimlarDogrulamaYaklasimi:document.getElementById('istihdamGerekce').value};AjaxPost('/Basvuru/IstihdamKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){basvuruIstihdam=sonuc.nesne;dirty=false;}});}
+    function IstihdamSgkDosyaSecildi(input){const ad=input?.files?.[0]?.name||'Dosya seçilmedi';const alan=document.getElementById('istihdamSgkAdi');if(alan)alan.textContent=ad;}
     function IstihdamSgkYukle(){const f=document.getElementById('istihdamSgkDosya')?.files?.[0];if(!f){alert('SGK belgesini seçiniz.');return;}const d=new FormData();d.append('basvuruId',BasvuruId());d.append('formAd','Basvuru_IstihdamSgk');d.append('dosyaNo','1');d.append('dosya',f);DosyaAjaxPost('/Basvuru/BasvuruDosyasiYukle',d,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){const n=sonuc.nesne,id=n.dosyaId||n.DosyaId,ad=n.dosyaAdi||n.DosyaAdi||'';basvuruIstihdam.sgkDosyaId=id;basvuruIstihdam.sgkDosyaAdi=ad;document.getElementById('istihdamSgkAdi').textContent=ad;const l=document.getElementById('istihdamSgkIndir');l.href='/Basvuru/DosyaIndir?id='+id;l.classList.remove('d-none');dirty=false;}});}
 
     let tedarikKayitlari=[],tedarikUrunleri=[];

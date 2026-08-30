@@ -431,6 +431,74 @@ body {
   gap: 12px;
 }
 
+.adli-sicil-text-grid {
+  margin-right: -6px;
+  margin-left: -6px;
+}
+
+.adli-sicil-text-grid > div {
+  padding-right: 6px;
+  padding-left: 6px;
+}
+
+.adli-sicil-text-grid label {
+  display: block !important;
+  min-width: 0;
+  font-size: .82rem;
+  font-weight: 700;
+  color: #344054;
+}
+
+.adli-sicil-text-grid textarea {
+  display: block !important;
+  box-sizing: border-box;
+  width: 100% !important;
+  min-height: 82px;
+  margin-top: 6px;
+  padding: 9px 10px;
+  resize: vertical;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  color: #101828;
+  font-size: .95rem;
+  font-weight: 400;
+}
+
+.adli-sicil-document-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.adli-sicil-document-box {
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.adli-sicil-document-box .document-file-row {
+  display: grid;
+  grid-template-columns: auto minmax(60px, 1fr) auto;
+  gap: 8px;
+  margin: 0;
+  align-items: center;
+}
+
+.adli-sicil-document-box .document-file-row strong,
+.adli-sicil-document-box .document-file-name {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.adli-sicil-document-box .document-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adli-sicil-document-box .document-note {
+  margin-top: 5px;
+}
+
 .birim-form-grid {
   display: flex;
   flex-direction: column;
@@ -1202,6 +1270,12 @@ body {
   padding-right: 6px;
 }
 
+#adliSicilModal .firma-modal-fields {
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
+}
+
 .firma-modal .modal-footer {
   border-top: 1px solid #d8e0ea;
   background: #f8fafc;
@@ -1759,7 +1833,8 @@ body {
   .form-grid,
   .check-grid,
   .metric-grid,
-  .document-two-column {
+  .document-two-column,
+  .adli-sicil-document-grid {
     grid-template-columns: 1fr;
   }
 

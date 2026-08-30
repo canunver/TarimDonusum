@@ -17,7 +17,6 @@
         <h2 class="mb-0">Finansman</h2>
         <a class="btn btn-outline-primary" href="@Url.Action("FinansmanYazdir", "Basvuru", new { id = Model.Basvuru.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
     </div>
-    <div class="alert alert-info">Ön başvuruda girilen finansman bilgileri başvuruya kopyalanır; bilgiler her iki tarafta da korunur. Başvuruya özel ek alanları burada tamamlayabilirsiniz.</div>
     <div class="form-grid">
         <label>Toplam yatırım tutarı (USD)<input class="money-integer" name="Basvuru.finans.ToplamYatirimTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(f.toplamYatirimTutari)" oninput="FinansTutarlariniHesapla()" disabled="@ro" /></label>
         <label>Talep edilen RFF tutarı (USD)<input class="money-integer" name="Basvuru.finans.TalepEdilenDestekTutari" type="text" value="@IsimBul.MetneCevirKurussuz(finansman)" readonly /></label>
