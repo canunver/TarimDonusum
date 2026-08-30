@@ -188,6 +188,9 @@ namespace TarimDonusum.Models
         public BasvuruYatirimOzeti yatirimOzeti { get; set; } = new();
         public BasvuruDbCtpTeknikProje dbCtpTeknikProje { get; set; } = new();
         public BasvuruCevreselSosyal cevreselSosyal { get; set; } = new();
+        public BasvuruOzetiKurum basvuruOzetiKurum { get; set; } = new();
+        public BasvuruIzlemeUstBilgi izlemeUstBilgi { get; set; } = new();
+        public List<BasvuruIzlemeGostergesi> IzlemeGostergeleri { get; set; } = new();
 
         public string BelgePaketiDosyaAdi { get; set; } = "";
         public int? BelgePaketiDosyaId { get; set; }
@@ -199,6 +202,7 @@ namespace TarimDonusum.Models
         public string TaahhutBeyanlarJson { get; set; } = "";
         public List<string> BelgeGruplari { get; set; } = new();
         public List<BasvuruOrtaklikDosya> ZorunluBelgeler { get; set; } = new();
+        public List<DosyaBilgisi> TumBasvuruDosyalari { get; set; } = new();
         public List<BasvuruAdliSicilKisi> AdliSicilKisileri { get; set; } = new();
 
         public string DenetimAnketi { get; set; } = "";
@@ -712,6 +716,32 @@ namespace TarimDonusum.Models
         public string islemeKapasitesi { get; set; } = "";
         public decimal? gunlukCalismaSuresi { get; set; }
         public string gunlukCalismaSuresiBirimi { get; set; } = "Saat";
+        public string aciklama { get; set; } = "";
+    }
+
+    public class BasvuruOzetiKurum
+    {
+        public int basvuruId { get; set; }
+        public string kurumJson { get; set; } = "";
+    }
+
+    public class BasvuruIzlemeUstBilgi
+    {
+        public int basvuruId { get; set; }
+        public DateTime? baslangicTarihi { get; set; }
+        public DateTime? hedefTarihi { get; set; }
+        public string veriSorumlusu { get; set; } = "";
+    }
+
+    public class BasvuruIzlemeGostergesi
+    {
+        public int id { get; set; }
+        public int basvuruId { get; set; }
+        public string gostergeKodu { get; set; } = "";
+        public string baslangicDegeri { get; set; } = "";
+        public string hedefDeger { get; set; } = "";
+        public string kadinKirilimi { get; set; } = "";
+        public string gencKirilimi { get; set; } = "";
         public string aciklama { get; set; } = "";
     }
 

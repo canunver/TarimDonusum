@@ -50,7 +50,7 @@ public sealed class RPROB_TedarikciEntegrasyonu(string uygulamaRootPath) : RPROB
             t.HucreDegerYaz(r, 0, i + 1);
             t.HucreDegerYaz(r, 1, urunler.GetValueOrDefault(x.urunId, ""));
             t.HucreDegerYaz(r, 2, x.tarimsalUrun); t.HucreDegerYaz(r, 3, x.ilAdi); t.HucreDegerYaz(r, 4, x.ilceAdi);
-            t.HucreDegerYaz(r, 5, x.birim); t.HucreDegerYaz(r, 6, x.mevcutYillikMiktar); t.HucreDegerYaz(r, 7, x.hedefYillikMiktar);
+            t.HucreDegerYaz(r, 5, "Ton"); t.HucreDegerYaz(r, 6, x.mevcutYillikMiktar); t.HucreDegerYaz(r, 7, x.hedefYillikMiktar);
             t.HucreDegerYaz(r, 8, x.mevcutKayitliCiftci); t.HucreDegerYaz(r, 9, x.eklenecekKayitliCiftci);
             t.HucreDegerYaz(r, 10, x.tedarikSekli == 1 ? "Sözleşmeli tedarik" : $"Niyet / protokol{Environment.NewLine}etiketi");
             string belgeDurumu = string.IsNullOrWhiteSpace(x.dayanakBelgeDosyaAdi) ? "Belge Yok" : "Belge Var";

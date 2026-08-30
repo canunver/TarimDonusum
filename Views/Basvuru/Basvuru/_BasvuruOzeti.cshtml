@@ -1,0 +1,30 @@
+@using TarimDonusum.Models
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@{
+    var b=Model.Basvuru;
+    var o=BasvuruOzetiHesaplayici.Hesapla(b);
+    bool uzman=Model.DenetciGorunumu;
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruOzeti)">
+    <div class="section-toolbar">
+        <div><h2 class="mb-0">Başvuru Özeti</h2><p class="text-muted mb-0">Tamlık ve puan sonuçları yardımcı ön kontroldür; Kurumun uygunluk ve puan kararının yerine geçmez.</p></div>
+        <a class="btn btn-outline-primary" href="@Url.Action("BasvuruOzetiYazdir","Basvuru",new{id=b.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+    </div>
+    @if(uzman){<script type="application/json" id="basvuruOzetiKurumJson">@Html.Raw(string.IsNullOrWhiteSpace(b.basvuruOzetiKurum.kurumJson)?"{}":b.basvuruOzetiKurum.kurumJson)</script>}
+    <div class="basvuru-card mb-3"><h3>Başvuru Kimliği</h3><div class="form-grid">
+        <label>Başvuru sahibi<input readonly value="@b.basvuruFirma.firma.ticaretUnvani"></label>
+        <label>Yatırım adı<input readonly value="@b.yatirim.yatirimAdi"></label>
+        <label>Yatırım ili/ilçesi<input readonly value="@o.YatirimYeri"></label>
+        <label>Değer zinciri<input readonly value="@o.DegerZinciri"></label>
+        <label>Talep edilen RFF (USD)<input readonly value="@IsimBul.MetneCevirKurussuz(b.finans.talepEdilenDestekTutari)"></label>
+        <label>Ön sıralama puanı<input readonly value="@(o.OnSiralamaPuani?.ToString("0.##")??"Hesaplanmadı")"></label>
+        <label>Belge tamamlanma oranı<input readonly value="%@((o.BelgeTamamlanmaOrani*100).ToString("0.##"))"></label>
+        <label>Genel başvuru durumu<input readonly value="@o.GenelDurum"></label>
+    </div></div>
+    <div class="basvuru-card mb-3"><h3>Bölüm Tamlık Ön Kontrolü</h3><div class="table-responsive"><table class="table table-bordered table-sm"><thead><tr><th>Bölüm</th><th>Beklenen</th><th>Dolu</th><th>Durum</th><th>Kaynak</th><th>Kritik not</th>@if(uzman){<th>Kurum teyidi</th><th>Açıklama</th>}</tr></thead><tbody>
+    @foreach(var x in o.Tamlik){<tr data-ozet-tamlik="@x.Kod"><td>@x.Bolum</td><td>@x.Beklenen</td><td>@x.Dolu</td><td><span class="badge @(x.Durum=="Uygun"?"badge-success":"badge-warning")">@x.Durum</span></td><td>@x.Kaynak</td><td>@x.KritikNot</td>@if(uzman){<td><select class="ozet-kurum-teyit"><option value="">Seçiniz</option><option>Uygun</option><option>Eksik</option><option>Teyit Bekliyor</option></select></td><td><textarea class="ozet-kurum-aciklama" maxlength="1000"></textarea></td>}</tr>}
+    </tbody></table></div></div>
+    <div class="basvuru-card"><h3>Uygunluk Ön Kontrolü</h3><div class="table-responsive"><table class="table table-bordered table-sm"><thead><tr><th>Kriter</th><th>Başvuru değeri</th><th>Ön sonuç</th><th>Kaynak</th><th>Belge/teyit</th>@if(uzman){<th>Kurum sonucu</th><th>Kurum notu</th><th>Nihai</th>}</tr></thead><tbody>
+    @foreach(var x in o.Uygunluk){<tr data-ozet-uygunluk="@x.Kod"><td>@x.Kriter</td><td>@x.BasvuruDegeri</td><td>@x.OnSonuc</td><td>@x.Kaynak</td><td>@x.BelgeTeyit</td>@if(uzman){<td><select class="ozet-kurum-sonuc"><option value="">Seçiniz</option><option>Uygun</option><option>Eksik</option><option>Uygun Değil</option><option>Teyit Bekliyor</option></select></td><td><textarea class="ozet-kurum-not" maxlength="1000"></textarea></td><td><select class="ozet-kurum-nihai"><option value="">Seçiniz</option><option>Uygun</option><option>Eksik</option><option>Uygun Değil</option><option>Teyit Bekliyor</option></select></td>}</tr>}
+    </tbody></table></div>@if(uzman){<div class="text-right mt-3"><button type="button" class="btn btn-primary" onclick="BasvuruOzetiKurumKaydet()">Kurum değerlendirmesini kaydet</button></div>}</div>
+</section>

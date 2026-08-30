@@ -1,0 +1,21 @@
+@using System.Text.Json
+@using TarimDonusum.Models
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@{
+    var b=Model.Basvuru;
+    bool edit=!Model.DenetciGorunumu&&(!Model.SaltOkunur||
+        (b.kayitTuru==enumBasvuruKayitTuru.Basvuru&&
+         b.durum==enumBasvuruDurum.KabulEdildiDurumu&&
+         b.basvuruFirma.siraNo==0));
+    int baslangicDonemi=(b.basvuruFirma.donem.yil>0?b.basvuruFirma.donem.yil:DateTime.Today.Year)-1;
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruIzlemeGostergeleri)">
+ <div class="section-toolbar"><div><h2 class="mb-0">İzleme Göstergeleri</h2><p class="text-muted mb-0">Başlangıç değerleri yatırım öncesi son tamamlanmış dönemi temsil etmelidir.</p></div><a class="btn btn-outline-primary" href="@Url.Action("IzlemeGostergeleriYazdir","Basvuru",new{id=b.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div>
+ @if(edit){<div class="alert alert-light border">Her gösterge için soldaki <strong>Gir</strong> düğmesini kullanarak başlangıç ve hedef değerlerini kaydedebilirsiniz.</div>}
+ @if(!edit){<div class="alert alert-info">İzleme göstergeleri bu görünümde salt okunurdur. Değerler başvuru sahibi tarafından güncel başvuru kaydında girilir.</div>}
+ <script type="application/json" id="izlemeTanimJson">@Html.Raw(JsonSerializer.Serialize(IzlemeGostergesiTanimlari.Tum.Select(x=>new{kod=x.Kod,ad=x.Ad,birim=x.Birim,veriKaynagi=x.VeriKaynagi,siklik=x.Siklik})))</script>
+ <script type="application/json" id="izlemeKayitJson">@Html.Raw(JsonSerializer.Serialize(b.IzlemeGostergeleri))</script>
+ <div class="basvuru-card mb-3"><div class="form-grid"><label>Başlangıç dönemi<input readonly value="@baslangicDonemi"></label><label>Başlangıç tarihi<input id="izlemeUstBaslangic" type="date" value="@b.izlemeUstBilgi.baslangicTarihi?.ToString("yyyy-MM-dd")" @(edit?null:"readonly")></label><label>Hedef tarihi<input id="izlemeUstHedef" type="date" value="@b.izlemeUstBilgi.hedefTarihi?.ToString("yyyy-MM-dd")" @(edit?null:"readonly")></label><label>Veri sorumlusu<input id="izlemeUstSorumlu" maxlength="250" value="@b.izlemeUstBilgi.veriSorumlusu" @(edit?null:"readonly")></label></div>@if(edit){<div class="text-right mt-3"><button type="button" class="btn btn-primary" onclick="IzlemeUstBilgiKaydet()">Üst Bilgileri Kaydet</button></div>}</div>
+ <div id="izlemeGostergeleriAlani" data-edit="@(edit?"true":"false")"></div>
+ @if(edit){<div class="modal fade" id="izlemeGostergesiModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="izlemeModalBaslik">İzleme Göstergesi</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body"><input type="hidden" id="izlemeId"><input type="hidden" id="izlemeKod"><div class="form-grid"><label>Gösterge<input id="izlemeAd" readonly></label><label>Birim<input id="izlemeBirim" readonly></label><label>Başlangıç değeri<input id="izlemeBaslangic" maxlength="250"></label><label>Hedef değer<input id="izlemeHedef" maxlength="250"></label><label>Kadın kırılımı<input id="izlemeKadin" maxlength="250"></label><label>Genç kırılımı<input id="izlemeGenc" maxlength="250"></label><label>Veri kaynağı / kanıt<input id="izlemeKaynak" readonly></label><label>Sıklık<input id="izlemeSiklik" readonly></label></div><label class="wide-label mt-3">Başvuru sahibi açıklaması<textarea id="izlemeAciklama" maxlength="2000"></textarea></label></div><div class="modal-footer"><button id="izlemeSilBtn" type="button" class="btn btn-outline-danger mr-auto" onclick="IzlemeGostergesiSil()">Sil</button><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="IzlemeGostergesiKaydet()">Kaydet</button></div></div></div></div>}
+</section>

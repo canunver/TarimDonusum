@@ -11,7 +11,7 @@
         <h2 class="mb-0">Çevresel ve Sosyal Veri Formu</h2>
         <a class="btn btn-outline-primary" href="@Url.Action("CevreselSosyalVeriFormuYazdir", "Basvuru", new { id = b.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
     </div>
-    <p class="lead">İlk dört cevap başvuru bilgilerinden otomatik alınır. Diğer soruların cevaplarını ve uygulanacak önlemleri giriniz.</p>
+    <p class="lead">Başvuru ve istihdam bilgilerinden üretilebilen cevaplar otomatik alınır. Diğer soruların cevaplarını ve uygulanacak önlemleri giriniz.</p>
     <script type="application/json" id="basvuruCevreselSosyalJson">@Html.Raw(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson) ? "{}" : b.cevreselSosyal.cevreselSosyalJson)</script>
     <div class="table-responsive">
         <table class="table table-bordered table-striped">

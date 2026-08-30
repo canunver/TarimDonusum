@@ -811,6 +811,27 @@ namespace TarimDonusum.IsKurallari
             new(61,
                 @"IF COL_LENGTH(N'dbo.Basvuru',N'TedarikciEntegrasyonuAciklama') IS NULL
                     ALTER TABLE dbo.Basvuru ADD TedarikciEntegrasyonuAciklama NVARCHAR(2000) NULL;"),
+            new(62,
+                @"IF COL_LENGTH(N'dbo.Basvuru',N'BasvuruOzetiKurumJson') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD BasvuruOzetiKurumJson NVARCHAR(MAX) NULL;"),
+            new(63,
+                @"IF OBJECT_ID(N'dbo.BasvuruIzlemeGostergesi',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruIzlemeGostergesi(
+                      Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruIzlemeGostergesi PRIMARY KEY,
+                      BasvuruId INT NOT NULL,GostergeKodu NVARCHAR(50) NOT NULL,
+                      BaslangicDegeri NVARCHAR(250) NULL,HedefDeger NVARCHAR(250) NULL,
+                      KadinKirilimi NVARCHAR(250) NULL,GencKirilimi NVARCHAR(250) NULL,Aciklama NVARCHAR(2000) NULL,
+                      CONSTRAINT FK_BasvuruIzlemeGostergesi_Basvuru FOREIGN KEY(BasvuruId) REFERENCES dbo.Basvuru(Id) ON DELETE CASCADE);
+                    CREATE UNIQUE INDEX UX_BasvuruIzlemeGostergesi_BasvuruKod ON dbo.BasvuruIzlemeGostergesi(BasvuruId,GostergeKodu);
+                  END"),
+            new(64,
+                @"IF COL_LENGTH(N'dbo.Basvuru',N'IzlemeBaslangicTarihi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD IzlemeBaslangicTarihi DATE NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru',N'IzlemeHedefTarihi') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD IzlemeHedefTarihi DATE NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru',N'IzlemeVeriSorumlusu') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD IzlemeVeriSorumlusu NVARCHAR(250) NULL;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

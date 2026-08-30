@@ -67,7 +67,35 @@ public static class CevreselSosyalVeriFormuTanimlari
             ["1.1"] = b.basvuruFirma.firma.ticaretUnvani ?? "",
             ["1.2"] = b.yatirim.yatirimAdi ?? "",
             ["1.3"] = adres,
-            ["1.4"] = string.Join(", ", (b.yatirim.yatirimTurleri ?? []).Select(Tur).Where(x => x.Length > 0))
+            ["1.4"] = string.Join(", ", (b.yatirim.yatirimTurleri ?? []).Select(Tur).Where(x => x.Length > 0)),
+            ["2.2"] = HarcamaTurleri(b),
+            ["3.2"] = PersonelPlani(b)
         };
+    }
+
+    private static string HarcamaTurleri(Basvuru b)
+    {
+        static string Ad(int deger) => ((enumHarcamaTuru)deger) switch
+        {
+            enumHarcamaTuru.YapimIsleri => "Yapım işi",
+            enumHarcamaTuru.MakineEkipman => "Makine Ekipman",
+            enumHarcamaTuru.Danismanlik => "Danışmanlık",
+            enumHarcamaTuru.TedarikciGelistirmeHarcamalari => "Tedarikçi Geliştirme Harcamaları",
+            enumHarcamaTuru.YazilimDonanım => "Yazılım / Donanım",
+            _ => ""
+        };
+        return string.Join(", ", (b.yatirim.harcamaTurleri ?? []).Select(Ad).Where(x => x.Length > 0));
+    }
+
+    private static string PersonelPlani(Basvuru b)
+    {
+        static string Sayi(decimal deger) => deger.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("tr-TR"));
+        return string.Join(Environment.NewLine, (b.istihdam.satirlar ?? [])
+            .OrderBy(x => x.siraNo).ThenBy(x => x.id)
+            .Select(x =>
+            {
+                string grup = string.Join(" / ", new[] { x.birimUnite, x.gorevUretimHatti, x.cinsiyet, x.yasDurumu }.Where(y => !string.IsNullOrWhiteSpace(y)));
+                return $"{grup}: yatırım öncesi {Sayi(x.mevcutCalisan)}, yatırım sonrası {Sayi(x.mevcutCalisan + x.netCalisanArtisi)}";
+            }));
     }
 }

@@ -1,0 +1,75 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@{
+    var b = Model.Basvuru;
+    bool edit = !Model.DenetciGorunumu && !Model.SaltOkunur;
+    IReadOnlyDictionary<int, string> ilgiliSayfalar = new Dictionary<int, string>
+    {
+        [1] = "Mali Veriler ve Ölçek Kontrolü", [2] = "Mali Veriler ve Ölçek Kontrolü",
+        [7] = "Ortaklık ve Yetki", [8] = "Mali Veriler ve Ölçek Kontrolü",
+        [9] = "Mali Veriler ve Ölçek Kontrolü", [10] = "Ortaklık ve Yetki",
+        [11] = "Ortaklık ve Yetki", [14] = "Tedarikçi Entegrasyonu",
+        [15] = "İstihdam", [16] = "Mali Veriler ve Ölçek Kontrolü",
+        [19] = "Makine Ekipman Teklifleri", [23] = "Yatırım Bilgileri",
+        [25] = "Yatırım Bilgileri", [26] = "Yatırım Bilgileri",
+        [48] = "Taahhüt / Beyan"
+    };
+    List<DosyaBilgisi> Iliskili(int no)
+    {
+        IEnumerable<DosyaBilgisi> d = b.TumBasvuruDosyalari;
+        bool Eslesir(DosyaBilgisi x) => x.FormAd == "Basvuru_ZorunluBelgeMerkezi" && x.DosyaNo == no
+            || no == 1 && x.FormAd == "Basvuru_MaliBelge" && x.DosyaNo is 1 or 2
+            || no == 2 && x.FormAd == "Basvuru_MaliBelge" && x.DosyaNo is 3 or 4
+            || no == 7 && x.FormAd == "Basvuru_ImzaYetki"
+            || no == 8 && b.mali.denetimDosyaId == x.Id
+            || no == 9 && x.FormAd.StartsWith("BOMALI_")
+            || no == 10 && (x.FormAd.StartsWith("OBOKYC_") || x.FormAd == "Basvuru_OrtakUboKyc")
+            || no == 11 && x.FormAd == "Basvuru_AdliSicil"
+            || no == 14 && x.FormAd.StartsWith("BTED_")
+            || no == 15 && (x.FormAd == "Basvuru_IstihdamSgk" || x.FormAd == "Basvuru_MaliBelge" && x.DosyaNo is 7 or 8)
+            || no == 16 && x.FormAd == "Basvuru_MaliBelge" && x.DosyaNo is 5 or 6
+            || no == 19 && x.FormAd.StartsWith("BMT_")
+            || no == 23 && x.FormAd.StartsWith("BYAT_") && x.DosyaNo == 3
+            || no == 25 && x.FormAd.StartsWith("BYAT_") && x.DosyaNo == 2
+            || no == 26 && x.FormAd.StartsWith("BYAT_") && x.DosyaNo == 1
+            || no == 48 && b.TaahhutDosyaId == x.Id;
+        return d.Where(Eslesir).GroupBy(x => x.Id).Select(x => x.First()).ToList();
+    }
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruZorunluBelgeler)">
+    <h2>Zorunlu Belgeler</h2>
+    <p class="lead">Diğer başvuru sayfalarında yüklenen belgeler burada otomatik gösterilir. Buradan yüklenen belgeler de ilgili belge grubuyla ilişkilendirilir.</p>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped" style="min-width:1150px">
+            <thead><tr><th style="width:55px">No</th><th style="width:130px">Belge grubu</th><th>Belge / doküman adı</th><th style="width:110px">Durum</th><th>Açıklama</th><th style="width:290px">Dosyalar</th></tr></thead>
+            <tbody>
+            @foreach (ZorunluBelgeTanimi belge in ZorunluBelgeTanimlari.Tum)
+            {
+                List<DosyaBilgisi> dosyalar = Iliskili(belge.No);
+                string? ilgiliSayfa = ilgiliSayfalar.GetValueOrDefault(belge.No);
+                <tr data-belge-no="@belge.No">
+                    <td>@belge.No</td><td>@belge.Grup</td><td><strong>@belge.Ad</strong></td>
+                    <td><span class="badge @(dosyalar.Count > 0 ? "badge-success" : belge.Uygulanabilirlik == "Evet" ? "badge-danger" : "badge-secondary")">@(dosyalar.Count > 0 ? "Yüklendi" : belge.Uygulanabilirlik)</span></td>
+                    <td>@belge.Aciklama</td>
+                    <td class="zorunlu-belge-dosyalar">
+                        <div class="zorunlu-belge-linkler">
+                        @foreach (DosyaBilgisi dosya in dosyalar)
+                        { <div><a href="@Url.Action("DosyaIndir", "Basvuru", new { id = dosya.Id })" target="_blank"><i class="fas fa-download mr-1"></i>@dosya.DosyaAdi</a></div> }
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(ilgiliSayfa))
+                        {
+                            <div class="small text-muted mt-2"><i class="fas fa-info-circle mr-1"></i>Bu belge <strong>@ilgiliSayfa</strong> sayfasından yüklenmelidir.</div>
+                        }
+                        else if (edit)
+                        {
+                            string inputId = $"merkeziBelge_{belge.No}";
+                            <label class="btn btn-sm btn-outline-primary mt-2 mb-0" for="@inputId">Yükle / değiştir</label>
+                            <input id="@inputId" type="file" class="document-file-input merkezi-zorunlu-belge-input" data-belge-no="@belge.No" />
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

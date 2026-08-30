@@ -400,6 +400,9 @@
     const bolumBasvuruTedarikciEntegrasyonu = @((int)enumBasvuruBolum.BasvuruTedarikciEntegrasyonu);
     const bolumBasvuruTaahhutBeyan = @((int)enumBasvuruBolum.BasvuruTaahhutBeyan);
     const bolumBasvuruCevreselSosyal = @((int)enumBasvuruBolum.BasvuruCevreselSosyal);
+    const bolumBasvuruZorunluBelgeler = @((int)enumBasvuruBolum.BasvuruZorunluBelgeler);
+    const bolumBasvuruOzeti = @((int)enumBasvuruBolum.BasvuruOzeti);
+    const bolumBasvuruIzlemeGostergeleri = @((int)enumBasvuruBolum.BasvuruIzlemeGostergeleri);
     const genelParaBirimleri = @Html.Raw(JsonSerializer.Serialize(ParaBirimleri.Tum));
     const genelOlcuBirimleri = @Html.Raw(JsonSerializer.Serialize(OlcuBirimleri.Tum));
     const bolumIrtibat = @((int)enumBasvuruBolum.Irtibat);
@@ -754,6 +757,7 @@
         const container = document.getElementById('basvuruBolumContainer');
         if (BolumKayitGerektirir(bolum)) {
             container?.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.dataset.autoSave === 'true') return;
                 el.addEventListener('change', () => dirty = true);
                 el.addEventListener('input', () => dirty = true);
             });
@@ -776,6 +780,9 @@
         if (bolum === bolumBasvuruTedarikciEntegrasyonu) TedarikciEntegrasyonuIlklendir();
         if (bolum === bolumBasvuruTaahhutBeyan) BasvuruBeyanBolumuIlklendir();
         if (bolum === bolumBasvuruCevreselSosyal) BasvuruCevreselSosyalBolumuIlklendir();
+        if (bolum === bolumBasvuruZorunluBelgeler) ZorunluBelgeMerkeziIlklendir();
+        if (bolum === bolumBasvuruOzeti) BasvuruOzetiIlklendir();
+        if (bolum === bolumBasvuruIzlemeGostergeleri) IzlemeGostergeleriIlklendir();
         if (bolum === bolumOrtaklik) OrtaklikBolumuIlklendir();
         if (bolum === bolumUygunHarcama) UygunHarcamaBolumuIlklendir();
         if (bolum === bolumYatirimOzeti) YatirimOzetiBolumuIlklendir();
@@ -3287,7 +3294,7 @@
                 const belge=x.dayanakBelgeDosyaId
                     ? `<a href="/Basvuru/DosyaIndir?id=${Number(x.dayanakBelgeDosyaId)}" target="_blank" class="small"><i class="fas fa-download mr-1"></i>Dayanak Belge İndir</a>`
                     : '<span class="small text-muted">Dayanak yüklenmedi</span>';
-                return `<div class="border rounded p-2 mb-2 d-flex justify-content-between"><div><strong>${htmlEncode(x.tarimsalUrun)}</strong><br><small>${htmlEncode(x.ilAdi)} / ${htmlEncode(x.ilceAdi)} · ${sayiYaz(x.mevcutYillikMiktar)} → ${sayiYaz(x.hedefYillikMiktar)} ${htmlEncode(x.birim)} · Çiftçi: ${htmlEncode(x.mevcutKayitliCiftci)} + ${htmlEncode(x.eklenecekKayitliCiftci)}</small><br>${belge}</div>${basvuruReadonly?'':`<button type="button" class="btn btn-sm btn-outline-primary" onclick="TedarikModalAc(${tedarikKayitlari.indexOf(x)},${u.id})">Düzenle</button>`}</div>`;
+                return `<div class="border rounded p-2 mb-2 d-flex justify-content-between"><div><strong>${htmlEncode(x.tarimsalUrun)}</strong><br><small>${htmlEncode(x.ilAdi)} / ${htmlEncode(x.ilceAdi)} · ${sayiYaz(x.mevcutYillikMiktar)} → ${sayiYaz(x.hedefYillikMiktar)} Ton · Çiftçi: ${htmlEncode(x.mevcutKayitliCiftci)} + ${htmlEncode(x.eklenecekKayitliCiftci)}</small><br>${belge}</div>${basvuruReadonly?'':`<button type="button" class="btn btn-sm btn-outline-primary" onclick="TedarikModalAc(${tedarikKayitlari.indexOf(x)},${u.id})">Düzenle</button>`}</div>`;
             }).join(''):'<span class="text-muted">Kayıt yok.</span>'}${basvuruReadonly?'':`<button type="button" class="btn btn-sm btn-success mt-1" onclick="TedarikModalAc(-1,${u.id})"><i class="fas fa-plus mr-1"></i>Alınacak ürün ekle</button>`}</td></tr>`;
         }).join('')}</tbody></table></div>`;
     }
@@ -3345,6 +3352,31 @@
             cevreselSosyalJson: JSON.stringify({ cevaplar })
         }, sonuc => SonucGosterVeDirtyTemizle(sonuc, afterSuccess));
     }
+
+    function ZorunluBelgeMerkeziIlklendir() {
+        document.querySelectorAll('.merkezi-zorunlu-belge-input').forEach(input =>
+            input.addEventListener('change', () => ZorunluBelgeMerkeziYukle(input)));
+    }
+
+    function ZorunluBelgeMerkeziYukle(input) {
+        const file = input?.files?.[0], belgeNo = Number(input?.dataset?.belgeNo || 0);
+        if (!file || !belgeNo) return;
+        const data = new FormData();
+        data.append('basvuruId', BasvuruId());
+        data.append('dosya', file);
+        let url = '/Basvuru/BasvuruDosyasiYukle';
+        data.append('formAd', 'Basvuru_ZorunluBelgeMerkezi');
+        data.append('dosyaNo', String(belgeNo));
+        DosyaAjaxPost(url, data, sonuc => {
+            SonucGoster(sonuc);
+            if (!sonuc?.basarili || !sonuc.nesne) return;
+            const n = sonuc.nesne, id = n.dosyaId || n.DosyaId, ad = n.dosyaAdi || n.DosyaAdi || file.name;
+            const row = input.closest('tr'), links = row?.querySelector('.zorunlu-belge-linkler');
+            if (links) links.innerHTML = `<div><a href="/Basvuru/DosyaIndir?id=${Number(id)}" target="_blank"><i class="fas fa-download mr-1"></i>${htmlEncode(ad)}</a></div>`;
+            const badge = row?.querySelector('.badge'); if (badge) { badge.textContent = 'Yüklendi'; badge.className = 'badge badge-success'; }
+            input.value = ''; dirty = false;
+        });
+    }
     async function TedarikIlceleriYukle(secili){const ilId=Number(document.getElementById('tedIl').value)||0,$s=$('#tedIlce');$s.html('<option value="">Seçiniz</option>');if(!ilId)return;AjaxGet('/Basvuru/TedarikIlceleriListele',{ilId},sonuc=>{(sonuc?.nesne||[]).forEach(x=>$s.append($('<option>').val(x.id??x.Id).text(x.ad??x.Ad)));if(secili)$s.val(String(secili));});}
     function TedarikModalAc(index,urunId){const yeni=index<0,x=yeni?{id:0,urunId,tarimsalUrun:'',ilId:'',ilceId:'',birim:'Kg',mevcutYillikMiktar:0,hedefYillikMiktar:0,mevcutKayitliCiftci:0,eklenecekKayitliCiftci:0,tedarikSekli:1,kisaAciklama:''}:tedarikKayitlari[index];$('#tedIndex').val(index);$('#tedId').val(x.id||0);$('#tedUrunId').val(x.urunId||urunId);$('#tedTarimsalUrun').val(x.tarimsalUrun||'');$('#tedIl').val(x.ilId||'');TedarikIlceleriYukle(x.ilceId);$('#tedBirim').val(x.birim||'Kg');$('#tedMevcutMiktar').val(x.mevcutYillikMiktar||0);$('#tedHedefMiktar').val(x.hedefYillikMiktar||0);$('#tedMevcutCiftci').val(x.mevcutKayitliCiftci||0);$('#tedEklenecekCiftci').val(x.eklenecekKayitliCiftci||0);$('#tedTedarikSekli').val(String(x.tedarikSekli||1));$('#tedAciklama').val(x.kisaAciklama||'');$('#tedDosya').val('').prop('disabled',yeni);$('#tedDosyaBilgi').text(yeni?'Kayıttan sonra belge yüklenebilir.':'');$('#tedDosyaAdi').text(x.dayanakBelgeDosyaAdi||'');const l=$('#tedDosyaIndir');if(x.dayanakBelgeDosyaId)l.attr('href','/Basvuru/DosyaIndir?id='+x.dayanakBelgeDosyaId).removeClass('d-none');else l.addClass('d-none');$('#tedSilBtn').toggle(!yeni);$('#tedarikEntegrasyonModal').modal('show');}
     function TedarikModeli(){return{id:Number($('#tedId').val()),basvuruId:BasvuruId(),urunId:Number($('#tedUrunId').val()),tarimsalUrun:$('#tedTarimsalUrun').val(),ilId:Number($('#tedIl').val()),ilceId:Number($('#tedIlce').val()),birim:$('#tedBirim').val(),mevcutYillikMiktar:Number($('#tedMevcutMiktar').val())||0,hedefYillikMiktar:Number($('#tedHedefMiktar').val())||0,mevcutKayitliCiftci:Number($('#tedMevcutCiftci').val())||0,eklenecekKayitliCiftci:Number($('#tedEklenecekCiftci').val())||0,tedarikSekli:Number($('#tedTedarikSekli').val())||0,kisaAciklama:$('#tedAciklama').val()};}
@@ -3352,6 +3384,26 @@
     function TedarikDayanakBelgesiYukle(){const id=Number($('#tedId').val()),index=Number($('#tedIndex').val()),input=document.getElementById('tedDosya');if(!id||!input?.files?.length)return;BasvuruDosyasiYukle('BTED_'+id,1,input,'tedDosyaAdi','tedDosyaIndir',sonuc=>{const n=sonuc?.nesne||{},x=tedarikKayitlari[index];if(x){x.dayanakBelgeDosyaId=n.dosyaId||n.DosyaId;x.dayanakBelgeDosyaAdi=n.dosyaAdi||n.DosyaAdi||'';}TedarikciEntegrasyonuRender();dirty=false;});}
     function TedarikPlaniAciklamaKaydet(){AjaxPost('/Basvuru/TedarikciEntegrasyonuAciklamaKaydet',{id:BasvuruId(),tedarikciEntegrasyonuAciklama:$('#tedarikPlanAciklama').val()},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)dirty=false;});}
     function TedarikKaydiSil(){const index=Number($('#tedIndex').val()),x=tedarikKayitlari[index];if(!x||!confirm('Bu tedarik kaydını silmek istediğinize emin misiniz?'))return;AjaxPost('/Basvuru/TedarikciEntegrasyonuSil',{id:x.id,basvuruId:BasvuruId()},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){tedarikKayitlari.splice(index,1);$('#tedarikEntegrasyonModal').modal('hide');TedarikciEntegrasyonuRender();dirty=false;}});}
+
+    function BasvuruOzetiIlklendir(){
+        const el=document.getElementById('basvuruOzetiKurumJson');if(!el)return;let data={};try{data=JSON.parse(el.textContent||'{}');}catch{data={};}
+        document.querySelectorAll('[data-ozet-tamlik]').forEach(r=>{const x=data.tamlik?.[r.dataset.ozetTamlik]||{};r.querySelector('.ozet-kurum-teyit').value=x.teyit||'';r.querySelector('.ozet-kurum-aciklama').value=x.aciklama||'';});
+        document.querySelectorAll('[data-ozet-uygunluk]').forEach(r=>{const x=data.uygunluk?.[r.dataset.ozetUygunluk]||{};r.querySelector('.ozet-kurum-sonuc').value=x.sonuc||'';r.querySelector('.ozet-kurum-not').value=x.not||'';r.querySelector('.ozet-kurum-nihai').value=x.nihai||'';});
+    }
+    function BasvuruOzetiKurumKaydet(){
+        const data={tamlik:{},uygunluk:{}};
+        document.querySelectorAll('[data-ozet-tamlik]').forEach(r=>data.tamlik[r.dataset.ozetTamlik]={teyit:r.querySelector('.ozet-kurum-teyit').value,aciklama:r.querySelector('.ozet-kurum-aciklama').value});
+        document.querySelectorAll('[data-ozet-uygunluk]').forEach(r=>data.uygunluk[r.dataset.ozetUygunluk]={sonuc:r.querySelector('.ozet-kurum-sonuc').value,not:r.querySelector('.ozet-kurum-not').value,nihai:r.querySelector('.ozet-kurum-nihai').value});
+        AjaxPost('/Denetleme/BasvuruOzetiKurumKaydet',{basvuruId:BasvuruId(),kurumJson:JSON.stringify(data)},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)dirty=false;});
+    }
+
+    let izlemeTanimlari=[],izlemeKayitlari=[];
+    function IzlemeGostergeleriIlklendir(){try{izlemeTanimlari=JSON.parse(document.getElementById('izlemeTanimJson')?.textContent||'[]');izlemeKayitlari=JSON.parse(document.getElementById('izlemeKayitJson')?.textContent||'[]');}catch{izlemeTanimlari=[];izlemeKayitlari=[];}IzlemeGostergeleriRender();}
+    function IzlemeGostergeleriRender(){const a=document.getElementById('izlemeGostergeleriAlani');if(!a)return;const edit=a.dataset.edit==='true';a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover table-sm" style="min-width:1300px"><thead><tr>${edit?'<th style="width:90px">İşlem</th>':''}<th>Gösterge</th><th>Başlangıç</th><th>Hedef</th><th>Birim</th><th>Kadın kırılımı</th><th>Genç kırılımı</th><th>Veri kaynağı / kanıt</th><th>Sıklık</th><th>Açıklama</th></tr></thead><tbody>${izlemeTanimlari.map(t=>{const x=izlemeKayitlari.find(k=>k.gostergeKodu===t.kod)||{};return `<tr>${edit?`<td><button type="button" class="btn btn-sm btn-outline-primary" onclick="IzlemeGostergesiModalAc('${t.kod}')">${x.id?'Düzenle':'Gir'}</button></td>`:''}<td>${htmlEncode(t.ad)}</td><td>${htmlEncode(x.baslangicDegeri||'')}</td><td>${htmlEncode(x.hedefDeger||'')}</td><td>${htmlEncode(t.birim)}</td><td>${htmlEncode(x.kadinKirilimi||'')}</td><td>${htmlEncode(x.gencKirilimi||'')}</td><td>${htmlEncode(t.veriKaynagi)}</td><td>${htmlEncode(t.siklik)}</td><td>${htmlEncode(x.aciklama||'')}</td></tr>`;}).join('')}</tbody></table></div>`;}
+    function IzlemeGostergesiModalAc(kod){const t=izlemeTanimlari.find(x=>x.kod===kod),x=izlemeKayitlari.find(x=>x.gostergeKodu===kod)||{id:0,gostergeKodu:kod};if(!t)return;$('#izlemeId').val(x.id||0);$('#izlemeKod').val(kod);$('#izlemeAd').val(t.ad);$('#izlemeBirim').val(t.birim);$('#izlemeBaslangic').val(x.baslangicDegeri||'');$('#izlemeHedef').val(x.hedefDeger||'');$('#izlemeKadin').val(x.kadinKirilimi||'');$('#izlemeGenc').val(x.gencKirilimi||'');$('#izlemeKaynak').val(t.veriKaynagi);$('#izlemeSiklik').val(t.siklik);$('#izlemeAciklama').val(x.aciklama||'');$('#izlemeSilBtn').toggle(Boolean(x.id));$('#izlemeGostergesiModal').modal('show');}
+    function IzlemeGostergesiKaydet(){const m={id:Number($('#izlemeId').val()),basvuruId:BasvuruId(),gostergeKodu:$('#izlemeKod').val(),baslangicDegeri:$('#izlemeBaslangic').val(),hedefDeger:$('#izlemeHedef').val(),kadinKirilimi:$('#izlemeKadin').val(),gencKirilimi:$('#izlemeGenc').val(),aciklama:$('#izlemeAciklama').val()};AjaxPost('/Basvuru/IzlemeGostergesiKaydet',m,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){const i=izlemeKayitlari.findIndex(x=>x.gostergeKodu===m.gostergeKodu);if(i>=0)izlemeKayitlari[i]=sonuc.nesne;else izlemeKayitlari.push(sonuc.nesne);$('#izlemeGostergesiModal').modal('hide');IzlemeGostergeleriRender();dirty=false;}});}
+    function IzlemeUstBilgiKaydet(){const m={basvuruId:BasvuruId(),baslangicTarihi:$('#izlemeUstBaslangic').val()||null,hedefTarihi:$('#izlemeUstHedef').val()||null,veriSorumlusu:$('#izlemeUstSorumlu').val()};AjaxPost('/Basvuru/IzlemeUstBilgiKaydet',m,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)dirty=false;});}
+    function IzlemeGostergesiSil(){const id=Number($('#izlemeId').val()),kod=$('#izlemeKod').val();if(!id||!confirm('İzleme göstergesi kaydını silmek istediğinize emin misiniz?'))return;AjaxPost('/Basvuru/IzlemeGostergesiSil',{id,basvuruId:BasvuruId()},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){izlemeKayitlari=izlemeKayitlari.filter(x=>x.id!==id&&x.gostergeKodu!==kod);$('#izlemeGostergesiModal').modal('hide');IzlemeGostergeleriRender();dirty=false;}});}
 
     function BasvuruMaliIsletmeleriRender() {
         const container = document.getElementById('basvuruMaliIsletmeler');

@@ -35,7 +35,10 @@ namespace TarimDonusum.Models
         BasvuruIstihdam = 30,
         BasvuruTedarikciEntegrasyonu = 31,
         BasvuruTaahhutBeyan = 32,
-        BasvuruCevreselSosyal = 33
+        BasvuruCevreselSosyal = 33,
+        BasvuruZorunluBelgeler = 34,
+        BasvuruOzeti = 35,
+        BasvuruIzlemeGostergeleri = 36
     }
 
     public sealed record BasvuruBolumTanim(
@@ -65,6 +68,9 @@ namespace TarimDonusum.Models
             new(enumBasvuruBolum.BasvuruTedarikciEntegrasyonu, 27, "Tedarikçi Entegrasyonu", "Basvuru/_TedarikciEntegrasyonu"),
             new(enumBasvuruBolum.BasvuruTaahhutBeyan, 28, "Taahhüt / Beyan", "Basvuru/_TaahhutBeyan"),
             new(enumBasvuruBolum.BasvuruCevreselSosyal, 29, "Çevresel ve Sosyal Veri Formu", "Basvuru/_CevreselSosyalVeriFormu"),
+            new(enumBasvuruBolum.BasvuruZorunluBelgeler, 30, "Zorunlu Belgeler", "Basvuru/_ZorunluBelgeler"),
+            new(enumBasvuruBolum.BasvuruOzeti, 31, "Başvuru Özeti", "Basvuru/_BasvuruOzeti"),
+            new(enumBasvuruBolum.BasvuruIzlemeGostergeleri, 32, "İzleme Göstergeleri", "Basvuru/_IzlemeGostergeleri"),
             new(enumBasvuruBolum.Mali, 20, "Basvuru.Step.6", "Bolumler/_Mali"),
             new(enumBasvuruBolum.Ortaklik, 30, "Basvuru.Step.Ortaklik", "Bolumler/_Ortaklik"),
             new(enumBasvuruBolum.UygulamaAdresi, 40, "Basvuru.Step.4", "Bolumler/_UygulamaAdresi"),
@@ -86,7 +92,7 @@ namespace TarimDonusum.Models
             if (kayitTuru == enumBasvuruKayitTuru.Basvuru)
             {
                 return Tanimlar
-                    .Where(x => x.Bolum == enumBasvuruBolum.BasvuruSahibi || x.Bolum == enumBasvuruBolum.BasvuruMaliVeriler || x.Bolum == enumBasvuruBolum.BasvuruOrtaklikYetki || x.Bolum == enumBasvuruBolum.BasvuruYatirimBilgileri || x.Bolum == enumBasvuruBolum.BasvuruDegerZinciri || x.Bolum == enumBasvuruBolum.BasvuruFinansman || x.Bolum == enumBasvuruBolum.BasvuruYatirimOnBilgileri || x.Bolum == enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar || x.Bolum == enumBasvuruBolum.BasvuruMakineEkipman || x.Bolum == enumBasvuruBolum.BasvuruUrunSurecMakine || x.Bolum == enumBasvuruBolum.BasvuruBinaListesi || x.Bolum == enumBasvuruBolum.BasvuruIstihdam || x.Bolum == enumBasvuruBolum.BasvuruTedarikciEntegrasyonu || x.Bolum == enumBasvuruBolum.BasvuruTaahhutBeyan || x.Bolum == enumBasvuruBolum.BasvuruCevreselSosyal || x.Bolum == enumBasvuruBolum.YatirimOzeti)
+                    .Where(x => x.Bolum == enumBasvuruBolum.BasvuruSahibi || x.Bolum == enumBasvuruBolum.BasvuruMaliVeriler || x.Bolum == enumBasvuruBolum.BasvuruOrtaklikYetki || x.Bolum == enumBasvuruBolum.BasvuruYatirimBilgileri || x.Bolum == enumBasvuruBolum.BasvuruDegerZinciri || x.Bolum == enumBasvuruBolum.BasvuruFinansman || x.Bolum == enumBasvuruBolum.BasvuruYatirimOnBilgileri || x.Bolum == enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar || x.Bolum == enumBasvuruBolum.BasvuruMakineEkipman || x.Bolum == enumBasvuruBolum.BasvuruUrunSurecMakine || x.Bolum == enumBasvuruBolum.BasvuruBinaListesi || x.Bolum == enumBasvuruBolum.BasvuruIstihdam || x.Bolum == enumBasvuruBolum.BasvuruTedarikciEntegrasyonu || x.Bolum == enumBasvuruBolum.BasvuruTaahhutBeyan || x.Bolum == enumBasvuruBolum.BasvuruCevreselSosyal || x.Bolum == enumBasvuruBolum.BasvuruZorunluBelgeler || x.Bolum == enumBasvuruBolum.BasvuruOzeti || x.Bolum == enumBasvuruBolum.BasvuruIzlemeGostergeleri || x.Bolum == enumBasvuruBolum.YatirimOzeti)
                     .ToList();
             }
 
@@ -106,6 +112,9 @@ namespace TarimDonusum.Models
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruTedarikciEntegrasyonu)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruTaahhutBeyan)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruCevreselSosyal)
+                .Where(x => x.Bolum != enumBasvuruBolum.BasvuruZorunluBelgeler)
+                .Where(x => x.Bolum != enumBasvuruBolum.BasvuruOzeti)
+                .Where(x => x.Bolum != enumBasvuruBolum.BasvuruIzlemeGostergeleri)
                 .Where(x => denetciGorunumu || !x.DenetciBolumu)
                 .OrderBy(x => x.Sira)
                 .ToList();

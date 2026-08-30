@@ -58,7 +58,7 @@
             <label>Bağımsız denetim raporu ref.</label>
             <div class="document-file-row">
                 @if (!ro) { <label class="btn btn-primary mb-0" for="denetimDosya">Yükle</label> }
-                <input id="denetimDosya" type="file" class="document-file-input" disabled="@ro" />
+                <input id="denetimDosya" type="file" class="document-file-input" data-auto-save="true" disabled="@ro" />
                 <span id="denetimDosyaSecim" class="document-file-name">@(string.IsNullOrWhiteSpace(b.mali.denetimDosyaAdi) ? "Dosya seçilmedi" : b.mali.denetimDosyaAdi)</span>
                 <a id="denetimIndirBtn" class="btn btn-outline-primary @(b.mali.denetimDosyaId.HasValue ? "" : "d-none")" href="@(b.mali.denetimDosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = b.mali.denetimDosyaId.Value }) : "#")" target="_blank" rel="noopener">İndir</a>
             </div>
@@ -83,7 +83,7 @@
                     <label>@oncekiYil aktif<input id="basvuruMaliOrtakOncekiAktif" class="money-integer" /></label>
                     <label>@sonYil aktif<input id="basvuruMaliOrtakSonAktif" class="money-integer" /></label>
                 </div>
-                <div class="document-upload-box mt-3"><label>Belge ref.</label><div class="document-file-row"><label id="basvuruMaliOrtakBelgeSecBtn" class="btn btn-primary mb-0" for="basvuruMaliOrtakBelge">Yükle</label><input id="basvuruMaliOrtakBelge" type="file" class="document-file-input" /><span id="basvuruMaliOrtakBelgeAdi" class="document-file-name">Dosya seçilmedi</span><a id="basvuruMaliOrtakBelgeIndir" class="btn btn-outline-primary d-none" href="#" target="_blank" rel="noopener">İndir</a></div><div id="basvuruMaliOrtakBelgeNot" class="document-note">Yeni işletmede belge yüklemek için önce kaydediniz.</div></div>
+                <div class="document-upload-box mt-3"><label>Belge ref.</label><div class="document-file-row"><label id="basvuruMaliOrtakBelgeSecBtn" class="btn btn-primary mb-0" for="basvuruMaliOrtakBelge">Yükle</label><input id="basvuruMaliOrtakBelge" type="file" class="document-file-input" data-auto-save="true" /><span id="basvuruMaliOrtakBelgeAdi" class="document-file-name">Dosya seçilmedi</span><a id="basvuruMaliOrtakBelgeIndir" class="btn btn-outline-primary d-none" href="#" target="_blank" rel="noopener">İndir</a></div><div id="basvuruMaliOrtakBelgeNot" class="document-note">Yeni işletmede belge yüklemek için önce kaydediniz.</div></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-outline-secondary basvuru-mali-modal-kapat">İptal</button><button type="button" class="btn btn-primary" id="basvuruMaliIsletmeKaydetBtn">Kaydet</button></div>
         </div></div>
@@ -93,7 +93,7 @@
 @functions {
     private Microsoft.AspNetCore.Html.IHtmlContent MaliDosyaAlani(string anahtar, int dosyaNo, string id, bool saltOkunur)
     {
-        string yukle = saltOkunur ? "" : $"<label class=\"btn btn-sm btn-outline-primary mb-0\" for=\"{id}\">Yükle</label><input id=\"{id}\" type=\"file\" class=\"document-file-input mali-belge-input\" data-ref-key=\"{anahtar}\" data-dosya-no=\"{dosyaNo}\" data-name-target=\"{id}Adi\" data-download-target=\"{id}Indir\" />";
+        string yukle = saltOkunur ? "" : $"<label class=\"btn btn-sm btn-outline-primary mb-0\" for=\"{id}\">Yükle</label><input id=\"{id}\" type=\"file\" class=\"document-file-input mali-belge-input\" data-auto-save=\"true\" data-ref-key=\"{anahtar}\" data-dosya-no=\"{dosyaNo}\" data-name-target=\"{id}Adi\" data-download-target=\"{id}Indir\" />";
         return new Microsoft.AspNetCore.Html.HtmlString($"<div class=\"mali-ref-file\"><span id=\"{id}Adi\" class=\"document-file-name\">Dosya seçilmedi</span>{yukle}<a id=\"{id}Indir\" class=\"btn btn-sm btn-outline-secondary d-none\" href=\"#\" target=\"_blank\" rel=\"noopener\">İndir</a></div>");
     }
 }

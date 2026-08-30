@@ -21,7 +21,7 @@
    <label>Çiftçilerden Alınan Tarımsal Ürün<input id="tedTarimsalUrun" maxlength="250"></label>
    <label>Tedarik İli<select id="tedIl" onchange="TedarikIlceleriYukle()"><option value="">Seçiniz</option>@foreach(var il in Model.Iller){<option value="@il.id">@il.ad</option>}</select></label>
    <label>Tedarik İlçesi<select id="tedIlce"><option value="">Seçiniz</option></select></label>
-   <label>Birim<select id="tedBirim">@foreach(var x in OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label>
+   <label>Birim<input value="Ton" readonly></label>
    <label>Mevcut Yıllık Miktar<input id="tedMevcutMiktar" type="number" min="0" step="0.001"></label><label>Hedef Yıllık Miktar<input id="tedHedefMiktar" type="number" min="0" step="0.001"></label>
    <label>Mevcut Kayıtlı Çiftçi<input id="tedMevcutCiftci" type="number" min="0" step="1"></label><label>Eklenecek Kayıtlı Çiftçi<input id="tedEklenecekCiftci" type="number" min="0" step="1"></label>
    <label>Tedarik Şekli<select id="tedTedarikSekli"><option value="1">Sözleşmeli tedarik</option><option value="2">Niyet / protokol etiketi</option></select></label>
