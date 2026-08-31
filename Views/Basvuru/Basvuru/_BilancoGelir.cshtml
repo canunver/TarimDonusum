@@ -1,0 +1,26 @@
+@using System.Globalization
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@{
+    var b=Model.Basvuru; bool ro=Model.SaltOkunur; int dyil=b.basvuruFirma.donem?.yil??0;
+    var degerler=b.bilancoGelir.satirlar.ToDictionary(x=>x.kod,StringComparer.OrdinalIgnoreCase);
+    decimal? Y(string kod,int s){if(!degerler.TryGetValue(kod,out var x))return null;return s==1?x.yil_1:s==2?x.yil_2:x.yil_3;}
+    string G(decimal? x)=>IsimBul.MetneCevirKurussuz(x);
+}
+<section class="basvuru-panel active bilanco-gelir-panel" data-panel="@((int)enumBasvuruBolum.BasvuruBilancoGelir)">
+ <div class="section-toolbar"><div><h2>Bilanço, Gelir Tablosu ve Analiz</h2><p class="lead">Tutarları pozitif olarak giriniz; (-) işaretli satırlar hesaplamada otomatik düşülür.</p></div>
+ <a class="btn btn-outline-primary" href="@Url.Action("BilancoGelirYazdir","Basvuru",new{id=b.Id})">Excel'e Yazdır</a></div>
+ <div class="table-responsive"><table class="table table-bordered bilanco-gelir-table"><thead><tr><th>Kalem</th><th>@(dyil>0?dyil-1:0)</th><th>@(dyil>0?dyil-2:0)</th><th>@(dyil>0?dyil-3:0)</th></tr></thead><tbody>
+ @foreach(var t in BilancoGelirTanimlari.GirisSatirlari)
+ {
+   <tr><td>@t.Aciklama</td>@for(int s=1;s<=3;s++){<td><input class="bilanco-gelir-input money-integer" data-kod="@t.Kod" data-yil="@s" inputmode="numeric" value="@G(Y(t.Kod,s))" disabled="@ro" /></td>}</tr>
+   string? hesapKodu=t.Kod switch{"DURAN_VARLIKLAR"=>"AKTIF_TOPLAMI","OZ_KAYNAKLAR"=>"PASIF_TOPLAMI","SATIS_INDIRIMLERI"=>"NET_SATISLAR","SATISLARIN_MALIYETI"=>"BRUT_SATIS_KARI","FAALIYET_GIDERLERI"=>"FAALIYET_KARI","FINANSMAN_GIDERLERI"=>"OLAGAN_KAR","OLAGANDISI_GIDER_ZARARLAR"=>"DONEM_KARI","VERGI_YASAL_YUKUMLULUK"=>"NET_KAR",_=>null};
+   string? hesapAdi=hesapKodu switch{"AKTIF_TOPLAMI"=>"Aktif Toplamı","PASIF_TOPLAMI"=>"Pasif Toplamı","NET_SATISLAR"=>"Net Satışlar","BRUT_SATIS_KARI"=>"Brüt Satış Kârı / Zararı","FAALIYET_KARI"=>"Faaliyet Kârı / Zararı","OLAGAN_KAR"=>"Olağan Kâr / Zarar","DONEM_KARI"=>"Dönem Kârı / Zararı","NET_KAR"=>"Net Kâr / Zarar",_=>null};
+   if(hesapKodu!=null){<tr class="bilanco-ara-toplam"><td>@hesapAdi</td>@for(int s=1;s<=3;s++){<td class="bilanco-hesap" data-hesap="@hesapKodu" data-yil="@s"></td>}</tr>}
+ }
+ </tbody></table></div>
+ <h3 class="subhead mt-4">Bilanço Analizi</h3>
+ <div class="table-responsive"><table class="table table-bordered bilanco-analiz-table"><thead><tr><th>Hesaplanan değer</th><th>@(dyil>0?dyil-1:0)</th><th>@(dyil>0?dyil-2:0)</th><th>@(dyil>0?dyil-3:0)</th></tr></thead><tbody>
+ @{var analiz=new[]{("NET_ISLETME_SERMAYESI","Net İşletme Sermayesi"),("CARI_ORAN","Cari Oran"),("LIKIDITE_ORANI","Likidite Oranı"),("FINANSMAN_ORANI","Finansman Oranı (%)"),("FAALIYET_KARLILIGI","Faaliyet Kârlılığı (%)"),("BILANCO_KARLILIGI","Bilanço Kârlılığı (%)"),("OZSERMAYE_KARLILIGI","Özsermaye Kârlılığı (%)"),("AKTIF_KARLILIGI","Aktif Kârlılığı (%)"),("FAVOK","FAVÖK (EBITDA)")};}
+ @foreach(var a in analiz){<tr><td>@a.Item2</td>@for(int s=1;s<=3;s++){<td class="bilanco-hesap" data-hesap="@a.Item1" data-yil="@s"></td>}</tr>}
+ </tbody></table></div>
+</section>

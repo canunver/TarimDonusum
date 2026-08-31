@@ -2738,4 +2738,5 @@
   <data name="Basvuru.Step.UrunSurecMakine" xml:space="preserve"><value>Product, Process and Machinery Relations</value></data>
   <data name="Basvuru.Step.BinaListesi" xml:space="preserve"><value>Building List and Rooms</value></data>
   <data name="Basvuru.Step.Istihdam" xml:space="preserve"><value>Employment</value></data>
+  <data name="MenuBasvuru.tahminAyarlari" xml:space="preserve"><value>Exchange Rate and Inflation Forecasts</value></data>
 </root>

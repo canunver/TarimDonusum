@@ -194,6 +194,8 @@ namespace TarimDonusum.Controllers
         public Task<IActionResult> BasvuruOzetiYazdir(int id)=>RaporYazdirAsync(id,new RPROB_BasvuruOzeti(_environment.ContentRootPath),"Başvuru özeti yazdırılmadan önce başvuru kaydedilmelidir.");
         [OturumKontrol][HttpGet]
         public Task<IActionResult> IzlemeGostergeleriYazdir(int id)=>RaporYazdirAsync(id,new RPROB_IzlemeGostergeleri(_environment.ContentRootPath),"İzleme göstergeleri yazdırılmadan önce başvuru kaydedilmelidir.");
+        [OturumKontrol][HttpGet]
+        public Task<IActionResult> BilancoGelirYazdir(int id)=>RaporYazdirAsync(id,new RPROB_BilancoGelir(_environment.ContentRootPath),"Bilanço ve gelir tablosu yazdırılmadan önce başvuru kaydedilmelidir.");
 
         private async Task<IActionResult> RaporYazdirAsync(int id, IRPROB rapor, string kayitUyarisi, bool denetciRaporu = false, bool tumDegerZinciriAsamalariniYukle = false)
         {
@@ -558,6 +560,16 @@ namespace TarimDonusum.Controllers
                 return Json(sonuc);
             }
 
+            return Json(sonuc);
+        }
+
+        [OturumKontrol][HttpPost][ValidateAntiForgeryToken]
+        public async Task<IActionResult> KaydetBilancoGelir([FromBody] BasvuruBilancoGelir model)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if(kullanici==null)return Unauthorized();
+            Sonuc<int> sonuc=await _basvuruIsKurallari.KaydetBilancoGelirAsync(model,kullanici);
+            if(sonuc.basarili)sonuc.mesaj=L["kayitBasarili"];
             return Json(sonuc);
         }
 

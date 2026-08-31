@@ -2786,4 +2786,5 @@
   <data name="Basvuru.Step.UrunSurecMakine" xml:space="preserve"><value>Ürün, Süreç ve Makine İlişkileri</value></data>
   <data name="Basvuru.Step.BinaListesi" xml:space="preserve"><value>Bina Listesi ve Bölüm/Mahaller</value></data>
   <data name="Basvuru.Step.Istihdam" xml:space="preserve"><value>İstihdam</value></data>
+  <data name="MenuBasvuru.tahminAyarlari" xml:space="preserve"><value>Kur ve Enflasyon Tahminleri</value></data>
 </root>

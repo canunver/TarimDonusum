@@ -1,0 +1,23 @@
+@model List<TarimDonusum.Models.Donem>
+@{ViewData["Title"]="Kur ve Enflasyon Tahminleri";}
+<div class="basvuru-page">
+ <div class="basvuru-titlebar"><div><h1>Kur ve Enflasyon Tahminleri</h1><p>Dönem yılını izleyen yedi yıl için kur (TL) ve enflasyon tahminlerini yönetin.</p></div></div>
+ @Html.AntiForgeryToken()
+ <div class="basvuru-card tahmin-ayar-kart">
+  <div class="form-group"><label for="tahminDonem"><strong>Dönem</strong></label><select id="tahminDonem" class="form-control"><option value="">Dönem seçiniz</option>@foreach(var d in Model.OrderByDescending(x=>x.yil)){<option value="@d.id" data-yil="@d.yil">@d.yil - @d.ad</option>}</select></div>
+  <div id="tahminBosMesaj" class="text-muted py-4">Tahminleri görüntülemek için dönem seçiniz.</div>
+  <div id="tahminIcerik" class="d-none">
+   <div class="alert alert-info"><span id="tahminYilAraligi"></span> yılları için kur tahminini TL, enflasyon tahminini yüzde olarak giriniz.</div>
+   <div class="table-responsive"><table class="table table-bordered tahmin-ayar-tablo"><thead><tr><th>Yıl</th><th>Kur tahmini (TL)</th><th>Enflasyon tahmini (%)</th></tr></thead><tbody id="tahminSatirlari"></tbody></table></div>
+   <div class="text-right"><button type="button" id="tahminKaydetBtn" class="btn btn-primary">Kaydet</button></div>
+  </div>
+ </div>
+</div>
+@section Scripts{
+<script>
+ let tahminModel=null;
+ const tahminSayi=x=>{const s=String(x??'').trim().replace(',','.');if(!s)return null;const n=Number(s);return Number.isFinite(n)?n:null;};
+ function TahminleriYukle(){const id=Number($('#tahminDonem').val()||0);tahminModel=null;$('#tahminIcerik').addClass('d-none');$('#tahminBosMesaj').removeClass('d-none').text(id?'Tahminler yükleniyor...':'Tahminleri görüntülemek için dönem seçiniz.');if(!id)return;AjaxGet('/TahminAyarlari/Listele',{donemId:id},s=>{if(!s?.basarili){PopupMesajGoster(s?.hataStr||'Tahminler alınamadı.',false);return;}tahminModel=s.nesne;const rows=(tahminModel?.tahminler||[]).map(x=>`<tr><td><strong>${x.yil}</strong></td><td><input class="form-control tahmin-kur" data-yil="${x.yil}" type="number" min="0.0001" step="0.0001" value="${x.kurTahminiTL??''}" /></td><td><input class="form-control tahmin-enflasyon" data-yil="${x.yil}" type="number" min="0" max="1000" step="0.01" value="${x.enflasyonTahminiYuzde??''}" /></td></tr>`).join('');$('#tahminSatirlari').html(rows);$('#tahminYilAraligi').text(`${tahminModel.donemYili+1}-${tahminModel.donemYili+7}`);$('#tahminBosMesaj').addClass('d-none');$('#tahminIcerik').removeClass('d-none');});}
+ function TahminleriKaydet(){if(!tahminModel)return;const tahminler=[];document.querySelectorAll('#tahminSatirlari tr').forEach(tr=>{const k=tr.querySelector('.tahmin-kur'),e=tr.querySelector('.tahmin-enflasyon');tahminler.push({yil:Number(k.dataset.yil),kurTahminiTL:tahminSayi(k.value),enflasyonTahminiYuzde:tahminSayi(e.value)});});AjaxPost('/TahminAyarlari/Kaydet',{donemId:tahminModel.donemId,donemYili:tahminModel.donemYili,tahminler},s=>{PopupMesajGoster(s?.basarili?(s.mesaj||'Tahminler kaydedildi.'):(s?.hataStr||'Tahminler kaydedilemedi.'),s?.basarili===true);});}
+ $(function(){PopupMesajIlklendir();$('#tahminDonem').on('change',TahminleriYukle);$('#tahminKaydetBtn').on('click',TahminleriKaydet);});
+</script>}

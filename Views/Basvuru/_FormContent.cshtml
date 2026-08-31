@@ -389,6 +389,7 @@
     const bolumFirma = @((int)enumBasvuruBolum.Firma);
     const bolumBasvuruSahibi = @((int)enumBasvuruBolum.BasvuruSahibi);
     const bolumBasvuruMaliVeriler = @((int)enumBasvuruBolum.BasvuruMaliVeriler);
+    const bolumBasvuruBilancoGelir = @((int)enumBasvuruBolum.BasvuruBilancoGelir);
     const bolumBasvuruOrtaklikYetki = @((int)enumBasvuruBolum.BasvuruOrtaklikYetki);
     const bolumBasvuruYatirimBilgileri = @((int)enumBasvuruBolum.BasvuruYatirimBilgileri);
     const bolumBasvuruDegerZinciri = @((int)enumBasvuruBolum.BasvuruDegerZinciri);
@@ -717,6 +718,7 @@
             bolumFirma,
             bolumBasvuruSahibi,
             bolumBasvuruMaliVeriler,
+            bolumBasvuruBilancoGelir,
             bolumBasvuruYatirimBilgileri,
             bolumBasvuruDegerZinciri,
             bolumBasvuruFinansman,
@@ -768,7 +770,8 @@
         if (bolum === bolumFirma || bolum === bolumBasvuruSahibi) FirmaBolumuIlklendir();
         if (bolum === bolumYatirim || bolum === bolumBasvuruDegerZinciri) YatirimBolumuIlklendir();
         if (bolum === bolumUygulamaAdresi || bolum === bolumBasvuruYatirimBilgileri) UygulamaAdresiBolumuIlklendir();
-        if (bolum === bolumFinans || bolum === bolumBasvuruFinansman || bolum === bolumMali || bolum === bolumBasvuruMaliVeriler || bolum === bolumOrtaklik) ParaTamsayiAyarla();
+        if (bolum === bolumFinans || bolum === bolumBasvuruFinansman || bolum === bolumMali || bolum === bolumBasvuruMaliVeriler || bolum === bolumOrtaklik || bolum === bolumBasvuruBilancoGelir) ParaTamsayiAyarla();
+        if (bolum === bolumBasvuruBilancoGelir) BilancoGelirBolumuIlklendir();
         if (bolum === bolumFinans || bolum === bolumBasvuruFinansman) FinansTutarlariniHesapla();
         if (bolum === bolumMali) MaliBolumuIlklendir();
         if (bolum === bolumBasvuruMaliVeriler) BasvuruMaliBolumuIlklendir();
@@ -3303,6 +3306,20 @@
         }).join('')}</tbody></table></div>`;
     }
 
+    function BilancoGelirSayiOku(input) {
+        const temizDeger=paraTamsayiDegeri(input?.value||'');
+        if(!temizDeger)return null;
+        const n=Number(temizDeger); return Number.isFinite(n)?n:null;
+    }
+    function BilancoGelirBolumuIlklendir(){document.querySelectorAll('.bilanco-gelir-input').forEach(x=>x.addEventListener('input',BilancoGelirHesapla));BilancoGelirHesapla();}
+    function BilancoGelirHesapla(){
+        const v=(kod,yil)=>BilancoGelirSayiOku(document.querySelector(`.bilanco-gelir-input[data-kod="${kod}"][data-yil="${yil}"]`))||0;
+        const yaz=(kod,yil,deger)=>{const e=document.querySelector(`.bilanco-hesap[data-hesap="${kod}"][data-yil="${yil}"]`);if(e)e.textContent=deger==null?'':deger.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+        for(let y=1;y<=3;y++){const donen=v('DONEN_VARLIKLAR',y),aktif=donen+v('DURAN_VARLIKLAR',y),kvyk=v('KISA_VADELI_YABANCI_KAYNAKLAR',y),uvyk=v('UZUN_VADELI_YABANCI_KAYNAKLAR',y),oz=v('OZ_KAYNAKLAR',y),pasif=kvyk+uvyk+oz,netSatis=v('BRUT_SATISLAR',y)-v('SATIS_INDIRIMLERI',y),brut=netSatis-v('SATISLARIN_MALIYETI',y),faaliyet=brut-v('FAALIYET_GIDERLERI',y),olagan=faaliyet+v('DIGER_OLAGAN_GELIR_KARLAR',y)-v('DIGER_OLAGAN_GIDER_ZARARLAR',y)-v('FINANSMAN_GIDERLERI',y),donem=olagan+v('OLAGANDISI_GELIR_KARLAR',y)-v('OLAGANDISI_GIDER_ZARARLAR',y),net=donem-v('VERGI_YASAL_YUKUMLULUK',y),bol=(a,b,c=1)=>b===0?null:a/b*c;
+        const h={AKTIF_TOPLAMI:aktif,PASIF_TOPLAMI:pasif,NET_SATISLAR:netSatis,BRUT_SATIS_KARI:brut,FAALIYET_KARI:faaliyet,OLAGAN_KAR:olagan,DONEM_KARI:donem,NET_KAR:net,NET_ISLETME_SERMAYESI:donen-kvyk,CARI_ORAN:bol(donen,kvyk),LIKIDITE_ORANI:bol(donen-v('STOKLAR',y),kvyk),FINANSMAN_ORANI:bol(kvyk+uvyk,oz,100),FAALIYET_KARLILIGI:bol(faaliyet,netSatis,100),BILANCO_KARLILIGI:bol(donem,kvyk,100),OZSERMAYE_KARLILIGI:bol(net,oz,100),AKTIF_KARLILIGI:bol(net,aktif,100),FAVOK:faaliyet+v('DONEM_AMORTISMAN',y)};Object.entries(h).forEach(([k,d])=>yaz(k,y,d));}
+    }
+    function BilancoGelirKaydet(afterSuccess){const rows={};document.querySelectorAll('.bilanco-gelir-input').forEach(x=>{rows[x.dataset.kod]??={kod:x.dataset.kod,yil_1:null,yil_2:null,yil_3:null};rows[x.dataset.kod]['yil_'+x.dataset.yil]=BilancoGelirSayiOku(x);});AjaxPost('/Basvuru/KaydetBilancoGelir',{...BasvuruKimlikleri(),satirlar:Object.values(rows)},sonuc=>SonucGosterVeDirtyTemizle(sonuc,afterSuccess));}
+
     function BasvuruBeyanBolumuIlklendir() {
         let data = {};
         try { data = JSON.parse(document.getElementById('basvuruBeyanJson')?.textContent || '{}'); } catch { data = {}; }
@@ -3516,6 +3533,7 @@
         else if (active === bolumBasvuruTaahhutBeyan) BasvuruBeyanKaydet(afterSuccess);
         else if (active === bolumBasvuruCevreselSosyal) BasvuruCevreselSosyalKaydet(afterSuccess);
         else if (active === bolumMali || active === bolumBasvuruMaliVeriler) MaliKaydet(afterSuccess);
+        else if (active === bolumBasvuruBilancoGelir) BilancoGelirKaydet(afterSuccess);
         else if (active === bolumOrtaklik) OrtaklikKaydet(afterSuccess);
         else if (active === bolumCevreselSosyal) CevreselSosyalKaydet(afterSuccess);
         else if (active === bolumSistemSonuclari || active === bolumUzmanSonuclari) {

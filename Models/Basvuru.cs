@@ -184,6 +184,7 @@ namespace TarimDonusum.Models
         public List<BasvuruYatirimOnBilgi> YatirimOnBilgileri { get; set; } = new();
         public BasvuruFinans finans = new();
         public BasvuruMali mali = new BasvuruMali();
+        public BasvuruBilancoGelir bilancoGelir { get; set; } = new();
         public BasvuruUygunHarcama uygunHarcama { get; set; } = new();
         public BasvuruYatirimOzeti yatirimOzeti { get; set; } = new();
         public BasvuruDbCtpTeknikProje dbCtpTeknikProje { get; set; } = new();

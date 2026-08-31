@@ -322,6 +322,8 @@ namespace TarimDonusum.IsKurallari
                 }
 
                 await BasvuruDosyaListeleriniYukleAsync(basvuru);
+                basvuru.bilancoGelir.basvuruId = basvuru.Id;
+                basvuru.bilancoGelir.satirlar = await new TABBasvuruBilancoGelir(connection, _localizer).OkuAsync(basvuru.Id);
                 sonuc.nesne = basvuru;
             }
             catch (Exception ex)
@@ -1540,6 +1542,7 @@ namespace TarimDonusum.IsKurallari
                     sonuc.HataEkle($"Talep edilen finansman oranı dönem için tanımlanan %{azamiFinansmanOrani:0.##} oranını aşamaz.");
                     return sonuc;
                 }
+
                 finans.oncekiRffOnayliTutar = mevcut?.finans.oncekiRffOnayliTutar ?? 0;
                 if (!finans.detayliFinansmanKaydi)
                 {
@@ -1573,6 +1576,29 @@ namespace TarimDonusum.IsKurallari
             {
                 BeklenmeyenHata(sonuc, ex, "Firma basvurusu  kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", finans.basvuruId, kullanici.Id);
             }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> KaydetBilancoGelirAsync(BasvuruBilancoGelir model, Kullanici kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            HashSet<string> kodlar = BilancoGelirTanimlari.GirisSatirlari.Select(x => x.Kod).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (model.basvuruId <= 0) sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
+            if (model.satirlar.Any(x => !kodlar.Contains(x.kod))) sonuc.HataEkle("Geçersiz bilanço/gelir satırı gönderildi.");
+            if (model.satirlar.GroupBy(x => x.kod, StringComparer.OrdinalIgnoreCase).Any(x => x.Count() > 1)) sonuc.HataEkle("Aynı bilanço/gelir satırı birden fazla gönderilemez.");
+            if (model.satirlar.Any(x => x.yil_1 < 0 || x.yil_2 < 0 || x.yil_3 < 0)) sonuc.HataEkle("Bilanço ve gelir tablosu tutarları negatif olamaz; eksi nitelikli kalemleri pozitif tutar olarak giriniz.");
+            if (!sonuc.basarili) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new(_connectionString); await connection.OpenAsync();
+                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, model.basvuruId, kullanici, sonuc);
+                if (mevcut == null || !sonuc.basarili) return sonuc;
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                await new TABBasvuruBilancoGelir(connection, _localizer, transaction).KaydetAsync(model);
+                await new TABBasvuruLog(connection, _localizer, transaction).EkleAsync(model.basvuruId, kullanici, "KaydetBilancoGelirAsync", model);
+                await transaction.CommitAsync(); sonuc.nesne = model.basvuruId;
+            }
+            catch (Exception ex) { BeklenmeyenHata(sonuc, ex, "Bilanço/gelir tablosu kaydedilemedi. BasvuruId: {BasvuruId}", "Bilanço/gelir tablosu kaydedilemedi.", model.basvuruId); }
             return sonuc;
         }
 

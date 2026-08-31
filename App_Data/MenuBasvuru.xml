@@ -14,5 +14,6 @@
     <Item type="Url" id="iller" text="Iller" url="/Il" icon="far fa-map" roles="SistemYoneticisi" />
     <Item type="Url" id="degerZincirleri" text="Deger Zincirleri" url="/DegerZinciri" icon="fas fa-link" roles="SistemYoneticisi" />
     <Item type="Url" id="donemler" text="Donemler" url="/Donem" icon="far fa-calendar" roles="SistemYoneticisi" />
+    <Item type="Url" id="tahminAyarlari" text="Kur ve Enflasyon Tahminleri" url="/TahminAyarlari" icon="fas fa-percentage" roles="SistemYoneticisi" />
   </Item>
 </Menu>

@@ -832,6 +832,38 @@ namespace TarimDonusum.IsKurallari
                     ALTER TABLE dbo.Basvuru ADD IzlemeHedefTarihi DATE NULL;
                   IF COL_LENGTH(N'dbo.Basvuru',N'IzlemeVeriSorumlusu') IS NULL
                     ALTER TABLE dbo.Basvuru ADD IzlemeVeriSorumlusu NVARCHAR(250) NULL;"),
+            new(65,
+                @"IF OBJECT_ID(N'dbo.BasvuruBilancoGelir',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruBilancoGelir(
+                      BasvuruId INT NOT NULL,
+                      Kod NVARCHAR(80) NOT NULL,
+                      Yil_1 DECIMAL(18,2) NULL,
+                      Yil_2 DECIMAL(18,2) NULL,
+                      Yil_3 DECIMAL(18,2) NULL,
+                      CONSTRAINT PK_BasvuruBilancoGelir PRIMARY KEY(BasvuruId,Kod),
+                      CONSTRAINT FK_BasvuruBilancoGelir_Basvuru FOREIGN KEY(BasvuruId) REFERENCES dbo.Basvuru(Id) ON DELETE CASCADE
+                    );
+                  END"),
+            new(66,
+                @"IF OBJECT_ID(N'dbo.DonemTahmini',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.DonemTahmini(
+                      DonemId INT NOT NULL,
+                      Yil INT NOT NULL,
+                      KurTahminiTL DECIMAL(18,4) NOT NULL,
+                      EnflasyonTahminiYuzde DECIMAL(9,4) NOT NULL,
+                      CONSTRAINT PK_DonemTahmini PRIMARY KEY(DonemId,Yil),
+                      CONSTRAINT FK_DonemTahmini_Donem FOREIGN KEY(DonemId) REFERENCES dbo.Donem(Id) ON DELETE CASCADE
+                    );
+                  END"),
+            new(67,
+                @"IF COL_LENGTH(N'dbo.DonemTahmini',N'KurTahminiYuzde') IS NOT NULL
+                    AND COL_LENGTH(N'dbo.DonemTahmini',N'KurTahminiTL') IS NULL
+                  BEGIN
+                    EXEC sp_rename N'dbo.DonemTahmini.KurTahminiYuzde', N'KurTahminiTL', N'COLUMN';
+                    ALTER TABLE dbo.DonemTahmini ALTER COLUMN KurTahminiTL DECIMAL(18,4) NOT NULL;
+                  END"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)
