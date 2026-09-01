@@ -70,6 +70,10 @@ namespace TarimDonusum.Araclar
 
         int SheetSayisi();
 
+        int SonDoluSatir(int sheetNo);
+
+        int SonDoluSutun(int sheetNo);
+
         string SonucDosyaAd();
 
         void OtomatikYukseklik(int sheetNo, int satir, int sutun1, int sutun2);

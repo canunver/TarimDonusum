@@ -616,7 +616,7 @@ namespace TarimDonusum.Controllers
             }
             catch (Exception ex)
             {
-                Log(LogLevel.Error, BMYEventID.Yok, ex, "DB C-TP Teknik Proje kaydet action tamamlanamadı.");
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Teknik Proje kaydet action tamamlanamadı.");
                 sonuc = new Sonuc<int>();
                 sonuc.HataEkle(L["Basvuru.Message.SaveFailed"].ToString());
             }
@@ -793,6 +793,12 @@ namespace TarimDonusum.Controllers
 
         [HttpPost]
         public async Task<IActionResult> BinaMahaliSil([FromBody] BasvuruBinaMahal model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruBinaMahaliSilAsync(model.basvuruId,model.id,kullanici));}
+
+        [HttpGet] public async Task<IActionResult> MetrajVerisi(int basvuruId){Kullanici? k=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(k==null)return Unauthorized();return Json(await _basvuruIsKurallari.MetrajOkuAsync(basvuruId,k));}
+        [HttpPost] public async Task<IActionResult> MetrajBolumKaydet([FromBody] BasvuruMetrajBolum model){Kullanici? k=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(k==null)return Unauthorized();return Json(await _basvuruIsKurallari.MetrajBolumKaydetAsync(model,k));}
+        [HttpPost] public async Task<IActionResult> MetrajBolumSil([FromBody] BasvuruMetrajBolum model){Kullanici? k=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(k==null)return Unauthorized();return Json(await _basvuruIsKurallari.MetrajBolumSilAsync(model.basvuruId,model.id,k));}
+        [HttpPost] public async Task<IActionResult> MetrajPozKaydet([FromBody] BasvuruMetrajPoz model){Kullanici? k=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(k==null)return Unauthorized();return Json(await _basvuruIsKurallari.MetrajPozKaydetAsync(model,k));}
+        [HttpPost] public async Task<IActionResult> MetrajPozSil([FromBody] BasvuruMetrajPoz model){Kullanici? k=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(k==null)return Unauthorized();return Json(await _basvuruIsKurallari.MetrajPozSilAsync(model.basvuruId,model.id,k));}
 
         [OturumKontrol]
         [HttpPost]

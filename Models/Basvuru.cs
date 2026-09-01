@@ -910,9 +910,9 @@ namespace TarimDonusum.Models
             if (basvuruId <= 0)
                 sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
             if (string.IsNullOrWhiteSpace(dbCtpTeknikProjeJson))
-                sonuc.HataEkle("DB C-TP Teknik Proje bilgileri girilmelidir.");
+                sonuc.HataEkle("Teknik Proje bilgileri girilmelidir.");
             if (!string.IsNullOrWhiteSpace(dbCtpTeknikProjeJson) && dbCtpTeknikProjeJson.Length > 100000)
-                sonuc.HataEkle("DB C-TP Teknik Proje verisi çok uzun.");
+                sonuc.HataEkle("Teknik Proje verisi çok uzun.");
         }
     }
 

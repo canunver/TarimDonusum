@@ -39,7 +39,8 @@ namespace TarimDonusum.Models
         BasvuruZorunluBelgeler = 34,
         BasvuruOzeti = 35,
         BasvuruIzlemeGostergeleri = 36,
-        BasvuruBilancoGelir = 37
+        BasvuruBilancoGelir = 37,
+        BasvuruMetraj = 38
     }
 
     public sealed record BasvuruBolumTanim(
@@ -66,6 +67,7 @@ namespace TarimDonusum.Models
             new(enumBasvuruBolum.BasvuruMakineEkipman, 23, "Basvuru.Step.MakineEkipman", "Basvuru/_MakineEkipman"),
             new(enumBasvuruBolum.BasvuruUrunSurecMakine, 24, "Basvuru.Step.UrunSurecMakine", "Basvuru/_UrunSurecMakine"),
             new(enumBasvuruBolum.BasvuruBinaListesi, 25, "Basvuru.Step.BinaListesi", "Basvuru/_BinaListesi"),
+            new(enumBasvuruBolum.BasvuruMetraj, 25, "Metraj ve İnşaat Maliyeti", "Basvuru/_Metraj"),
             new(enumBasvuruBolum.BasvuruIstihdam, 26, "Basvuru.Step.Istihdam", "Basvuru/_Istihdam"),
             new(enumBasvuruBolum.BasvuruTedarikciEntegrasyonu, 27, "Tedarikçi Entegrasyonu", "Basvuru/_TedarikciEntegrasyonu"),
             new(enumBasvuruBolum.BasvuruTaahhutBeyan, 28, "Taahhüt / Beyan", "Basvuru/_TaahhutBeyan"),
@@ -94,7 +96,7 @@ namespace TarimDonusum.Models
             if (kayitTuru == enumBasvuruKayitTuru.Basvuru)
             {
                 return Tanimlar
-                    .Where(x => x.Bolum == enumBasvuruBolum.BasvuruSahibi || x.Bolum == enumBasvuruBolum.BasvuruMaliVeriler || x.Bolum == enumBasvuruBolum.BasvuruBilancoGelir || x.Bolum == enumBasvuruBolum.BasvuruOrtaklikYetki || x.Bolum == enumBasvuruBolum.BasvuruYatirimBilgileri || x.Bolum == enumBasvuruBolum.BasvuruDegerZinciri || x.Bolum == enumBasvuruBolum.BasvuruFinansman || x.Bolum == enumBasvuruBolum.BasvuruYatirimOnBilgileri || x.Bolum == enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar || x.Bolum == enumBasvuruBolum.BasvuruMakineEkipman || x.Bolum == enumBasvuruBolum.BasvuruUrunSurecMakine || x.Bolum == enumBasvuruBolum.BasvuruBinaListesi || x.Bolum == enumBasvuruBolum.BasvuruIstihdam || x.Bolum == enumBasvuruBolum.BasvuruTedarikciEntegrasyonu || x.Bolum == enumBasvuruBolum.BasvuruTaahhutBeyan || x.Bolum == enumBasvuruBolum.BasvuruCevreselSosyal || x.Bolum == enumBasvuruBolum.BasvuruZorunluBelgeler || x.Bolum == enumBasvuruBolum.BasvuruOzeti || x.Bolum == enumBasvuruBolum.BasvuruIzlemeGostergeleri || x.Bolum == enumBasvuruBolum.YatirimOzeti)
+                    .Where(x => x.Bolum == enumBasvuruBolum.BasvuruSahibi || x.Bolum == enumBasvuruBolum.BasvuruMaliVeriler || x.Bolum == enumBasvuruBolum.BasvuruBilancoGelir || x.Bolum == enumBasvuruBolum.BasvuruOrtaklikYetki || x.Bolum == enumBasvuruBolum.BasvuruYatirimBilgileri || x.Bolum == enumBasvuruBolum.BasvuruDegerZinciri || x.Bolum == enumBasvuruBolum.BasvuruFinansman || x.Bolum == enumBasvuruBolum.BasvuruYatirimOnBilgileri || x.Bolum == enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar || x.Bolum == enumBasvuruBolum.BasvuruMakineEkipman || x.Bolum == enumBasvuruBolum.BasvuruUrunSurecMakine || x.Bolum == enumBasvuruBolum.BasvuruBinaListesi || x.Bolum == enumBasvuruBolum.BasvuruMetraj || x.Bolum == enumBasvuruBolum.BasvuruIstihdam || x.Bolum == enumBasvuruBolum.BasvuruTedarikciEntegrasyonu || x.Bolum == enumBasvuruBolum.BasvuruTaahhutBeyan || x.Bolum == enumBasvuruBolum.BasvuruCevreselSosyal || x.Bolum == enumBasvuruBolum.BasvuruZorunluBelgeler || x.Bolum == enumBasvuruBolum.BasvuruOzeti || x.Bolum == enumBasvuruBolum.BasvuruIzlemeGostergeleri || x.Bolum == enumBasvuruBolum.YatirimOzeti)
                     .ToList();
             }
 
@@ -111,6 +113,7 @@ namespace TarimDonusum.Models
                     && x.Bolum != enumBasvuruBolum.BasvuruMakineEkipman)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruUrunSurecMakine)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruBinaListesi)
+                .Where(x => x.Bolum != enumBasvuruBolum.BasvuruMetraj)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruIstihdam)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruTedarikciEntegrasyonu)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruTaahhutBeyan)

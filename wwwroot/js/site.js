@@ -35,6 +35,14 @@ function PopupMesajGoster(mesaj, basarili) {
     PopupMesajTimerBaslat($mesaj);
 }
 
+// Ajax ve dosya yükleme sonuçlarını bütün ekranlarda aynı şekilde gösterir.
+function SonucGoster(sonuc) {
+    if (sonuc?.basarili)
+        PopupMesajGoster(sonuc.mesaj, true);
+    else
+        PopupMesajGoster(sonuc?.hataStr || sonuc?.mesaj || '', false);
+}
+
 function PopupMesajContainer() {
     var $container = $("#popupMesajContainer");
     if ($container.length)

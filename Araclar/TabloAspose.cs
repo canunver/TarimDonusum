@@ -1306,6 +1306,16 @@ namespace TarimDonusum.Araclar
             return XLS.Worksheets.Count;
         }
 
+        public int SonDoluSatir(int sheetNo)
+        {
+            return XLS.Worksheets[sheetNo].Cells.MaxDataRow;
+        }
+
+        public int SonDoluSutun(int sheetNo)
+        {
+            return XLS.Worksheets[sheetNo].Cells.MaxDataColumn;
+        }
+
         public int YeniSheetEkle(int kaynakSheetNo)
         {
             int tut = aktifSheet;

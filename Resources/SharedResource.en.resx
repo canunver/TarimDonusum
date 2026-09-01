@@ -2560,16 +2560,16 @@
     <value>The password reset email could not be sent. Please try again later.</value>
   </data>
   <data name="Basvuru.Step.DbCtp" xml:space="preserve">
-    <value>DB C-TP Technical Project</value>
+    <value>Technical Project</value>
   </data>
   <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve">
-    <value>8. DB C-TP Technical Project</value>
+    <value>8. Technical Project</value>
   </data>
   <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve">
     <value>Enter the investment's technical overview, production and capacity data, input requirements, renewable energy, machinery-equipment, and building/structure lists.</value>
   </data>
   <data name="Basvuru.Summary.Error.DbCtpRequired" xml:space="preserve">
-    <value>The DB C-TP Technical Project section must be completed.</value>
+    <value>The Technical Project section must be completed.</value>
   </data>
   <data name="Basvuru.Summary.Error.DeclarationsRequired" xml:space="preserve">
     <value>All declarations in the commitment and declaration section must be accepted.</value>
@@ -2739,4 +2739,6 @@
   <data name="Basvuru.Step.BinaListesi" xml:space="preserve"><value>Building List and Rooms</value></data>
   <data name="Basvuru.Step.Istihdam" xml:space="preserve"><value>Employment</value></data>
   <data name="MenuBasvuru.tahminAyarlari" xml:space="preserve"><value>Exchange Rate and Inflation Forecasts</value></data>
+  <data name="MenuBasvuru.pozSozlugu" xml:space="preserve"><value>Item Dictionary</value></data>
+  <data name="MenuBasvuru.pozDonemFiyatlari" xml:space="preserve"><value>Period Item Prices</value></data>
 </root>

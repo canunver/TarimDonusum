@@ -1904,3 +1904,16 @@ body {
 }
 .bilanco-gelir-table,.bilanco-analiz-table{min-width:850px}.bilanco-gelir-table th:not(:first-child),.bilanco-gelir-table td:not(:first-child),.bilanco-analiz-table th:not(:first-child),.bilanco-analiz-table td:not(:first-child){text-align:right;width:16%}.bilanco-gelir-table input{width:100%;min-width:140px;text-align:right}.bilanco-analiz-table td.bilanco-hesap{background:#f4f7f5;font-weight:600}.bilanco-gelir-table .bilanco-ara-toplam td{background:#e5e7e9;font-weight:700;border-top:2px solid #9aa2a8}.bilanco-gelir-panel .section-toolbar{align-items:flex-start}
 .tahmin-ayar-kart{padding:1.5rem}.tahmin-ayar-kart .form-group{max-width:520px}.tahmin-ayar-tablo{min-width:620px}.tahmin-ayar-tablo th,.tahmin-ayar-tablo td{vertical-align:middle}.tahmin-ayar-tablo th:not(:first-child),.tahmin-ayar-tablo td:not(:first-child){width:32%}.tahmin-ayar-tablo input{text-align:right}
+.select2-container .select2-selection--single {
+    height: 38px;
+    border-color: #ced4da;
+}
+
+.select2-container .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+    padding-left: 12px;
+}
+
+.select2-container .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+}

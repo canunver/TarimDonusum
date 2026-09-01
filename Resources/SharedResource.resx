@@ -2608,16 +2608,16 @@
     <value>Şifre sıfırlama e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin.</value>
   </data>
   <data name="Basvuru.Step.DbCtp" xml:space="preserve">
-    <value>DB C-TP Teknik Proje</value>
+    <value>Teknik Proje</value>
   </data>
   <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve">
-    <value>8. DB C-TP Teknik Proje</value>
+    <value>8. Teknik Proje</value>
   </data>
   <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve">
     <value>Yatırımın teknik ön bilgileri, üretim ve kapasite verileri, girdi ihtiyacı, yenilenebilir enerji, makine-ekipman ve bina/yapı listeleri bu bölümde girilir.</value>
   </data>
   <data name="Basvuru.Summary.Error.DbCtpRequired" xml:space="preserve">
-    <value>DB C-TP Teknik Proje bölümü doldurulmalıdır.</value>
+    <value>Teknik Proje bölümü doldurulmalıdır.</value>
   </data>
   <data name="Basvuru.Summary.Error.DeclarationsRequired" xml:space="preserve">
     <value>Taahhüt ve beyan bölümündeki tüm beyanlar onaylanmalıdır.</value>
@@ -2787,4 +2787,6 @@
   <data name="Basvuru.Step.BinaListesi" xml:space="preserve"><value>Bina Listesi ve Bölüm/Mahaller</value></data>
   <data name="Basvuru.Step.Istihdam" xml:space="preserve"><value>İstihdam</value></data>
   <data name="MenuBasvuru.tahminAyarlari" xml:space="preserve"><value>Kur ve Enflasyon Tahminleri</value></data>
+  <data name="MenuBasvuru.pozSozlugu" xml:space="preserve"><value>Poz Sözlüğü</value></data>
+  <data name="MenuBasvuru.pozDonemFiyatlari" xml:space="preserve"><value>Poz Dönem Fiyatları</value></data>
 </root>

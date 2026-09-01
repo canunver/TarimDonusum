@@ -1,0 +1,79 @@
+@{
+    ViewData["Title"] = "Poz Sözlüğü";
+}
+
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div><h1>Poz Sözlüğü</h1><p>Metrajlarda kullanılacak poz numarası, tanımı, birimi ve hesaplama yöntemini yönetin.</p></div>
+        <div>
+            <label class="btn btn-outline-success mb-0 mr-2" for="pozExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label>
+            <input id="pozExcelDosya" type="file" class="d-none" accept=".xlsx,.xls" />
+            <button type="button" class="btn btn-primary" onclick="PozModalAc(0)"><i class="fas fa-plus-circle mr-1"></i>Yeni poz</button>
+        </div>
+    </div>
+    @Html.AntiForgeryToken()
+    <div class="basvuru-card p-3 mb-3">
+        <div class="form-row align-items-end">
+            <div class="form-group col-md-6 mb-md-0"><label for="pozArama">Ara</label><input id="pozArama" class="form-control" placeholder="Poz no veya tanım" /></div>
+            <div class="form-group col-md-3 mb-md-0"><label for="pozDurumFiltre">Durum</label><select id="pozDurumFiltre" class="form-control"><option value="">Tümü</option><option value="true">Aktif</option><option value="false">Pasif</option></select></div>
+            <div class="form-group col-md-3 mb-0"><button type="button" class="btn btn-outline-primary btn-block" onclick="PozListele()"><i class="fas fa-search mr-1"></i>Listele</button></div>
+        </div>
+        <small class="text-muted d-block mt-2">Excel başlıkları: Poz No, Ad/Tanım, Birim, Hesaplama Türü ve Aktif. Metraj cetvelindeki Poz No–Tanımı–Birimi yapısı da doğrudan okunur. Mevcut poz numaraları güncellenir.</small>
+    </div>
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Poz No</th><th>Adı / Tanımı</th><th>Birim</th><th>Hesaplama Türü</th><th>Durum</th><th class="text-right">İşlem</th></tr></thead>
+            <tbody id="pozListe"><tr><td colspan="6" class="text-center text-muted py-4">Kriterleri belirleyip Listele düğmesine basınız.</td></tr></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="pozModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg"><div class="modal-content firma-modal-content">
+        <div class="modal-header firma-modal-header"><h5 class="modal-title">Poz Bilgileri</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+        <div class="modal-body firma-modal-body">
+            <input id="pozId" type="hidden" />
+            <div class="form-grid">
+                <label>Poz No<input id="pozNo" maxlength="50" /></label>
+                <label>Birim<input id="pozBirim" maxlength="20" list="pozBirimler" placeholder="m², m³, kg, ton, adet..." /></label>
+                <label>Hesaplama Türü<select id="pozHesaplamaTuru"><option value="1">Adet</option><option value="2">Uzunluk (adet × boy)</option><option value="3">Alan (adet × boy × en)</option><option value="4">Hacim (adet × boy × en × yükseklik)</option><option value="5">Ağırlık (adet × boy × birim ağırlık)</option></select></label>
+                <label>Durum<select id="pozAktif"><option value="true">Aktif</option><option value="false">Pasif</option></select></label>
+                <label class="wide-label">Poz Adı / Tanımı<textarea id="pozAd" maxlength="1000" rows="4"></textarea></label>
+            </div>
+            <datalist id="pozBirimler"><option value="adet"></option><option value="m"></option><option value="m²"></option><option value="m³"></option><option value="kg"></option><option value="ton"></option><option value="lt"></option></datalist>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="PozKaydet()">Kaydet</button></div>
+    </div></div>
+</div>
+
+@section Scripts {
+<script>
+    const pozlar = [];
+    const hesaplamaTurleri = { 1:'Adet', 2:'Uzunluk', 3:'Alan', 4:'Hacim', 5:'Ağırlık' };
+    function e(v){ return $('<div/>').text(v == null ? '' : String(v)).html(); }
+    function PozListeYaz(){
+        const q=($('#pozArama').val()||'').toLocaleLowerCase('tr-TR').trim(), durum=$('#pozDurumFiltre').val();
+        const liste=pozlar.filter(x=>(!q||`${x.pozNo} ${x.ad}`.toLocaleLowerCase('tr-TR').includes(q))&&(!durum||String(x.aktif)===durum));
+        $('#pozListe').html(liste.length ? liste.map(x=>`<tr><td><strong>${e(x.pozNo)}</strong></td><td>${e(x.ad)}</td><td>${e(x.birim)}</td><td>${e(hesaplamaTurleri[Number(x.hesaplamaTuru)]||'')}</td><td><span class="badge ${x.aktif?'badge-success':'badge-secondary'}">${x.aktif?'Aktif':'Pasif'}</span></td><td class="text-right"><button class="btn btn-sm btn-outline-primary" onclick="PozModalAc(${x.id})">Düzenle</button></td></tr>`).join('') : '<tr><td colspan="6" class="text-center text-muted py-4">Kayıt bulunamadı.</td></tr>');
+    }
+    function PozModalAc(id){
+        const x=pozlar.find(p=>Number(p.id)===Number(id))||{id:0,pozNo:'',ad:'',birim:'',hesaplamaTuru:4,aktif:true};
+        $('#pozId').val(x.id); $('#pozNo').val(x.pozNo); $('#pozAd').val(x.ad); $('#pozBirim').val(x.birim); $('#pozHesaplamaTuru').val(String(x.hesaplamaTuru)); $('#pozAktif').val(String(x.aktif!==false)); $('#pozModal').modal('show');
+    }
+    function PozKaydet(){
+        const model={id:Number($('#pozId').val()||0),pozNo:$('#pozNo').val(),ad:$('#pozAd').val(),birim:$('#pozBirim').val(),hesaplamaTuru:Number($('#pozHesaplamaTuru').val()),aktif:$('#pozAktif').val()==='true'};
+        AjaxPost('/Poz/Kaydet',model,r=>{SonucGoster(r);if(r?.basarili){$('#pozModal').modal('hide');PozListele();}});
+    }
+    function PozListele(){AjaxGet('/Poz/Listele',null,r=>{if(!r?.basarili){SonucGoster(r);return;}pozlar.splice(0,pozlar.length,...(r.nesne||[]));PozListeYaz();});}
+    function PozExcelYukle(input){
+        if(!input.files?.length)return;
+        const fd=new FormData();fd.append('dosya',input.files[0]);
+        fetch('/Poz/ExcelYukle',{method:'POST',headers:{'RequestVerificationToken':$('[name="__RequestVerificationToken"]').val()},body:fd})
+            .then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json();})
+            .then(r=>{SonucGoster(r);if(r?.basarili)PozListele();})
+            .catch(()=>PopupMesajGoster('Excel yüklenirken beklenmeyen bir hata oluştu.',false))
+            .finally(()=>input.value='');
+    }
+    $(function(){$('#pozArama').on('keydown',e=>{if(e.key==='Enter'){e.preventDefault();PozListele();}});$('#pozExcelDosya').on('change',function(){PozExcelYukle(this);});});
+</script>
+}

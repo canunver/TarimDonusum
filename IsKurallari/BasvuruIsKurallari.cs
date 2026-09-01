@@ -1761,7 +1761,7 @@ namespace TarimDonusum.IsKurallari
                                 && !string.IsNullOrWhiteSpace(value.GetString())));
 
                         if (!MetinVar("investmentName"))
-                            sonuc.HataEkle("DB C-TP Teknik Proje için yatırımın adı girilmelidir.");
+                            sonuc.HataEkle("Teknik Proje için yatırımın adı girilmelidir.");
                         if (!DoluSatirVar("plannedProducts", "product", "capacity"))
                             sonuc.HataEkle("Yatırım sonrası üretilecek en az bir ürün ve kapasitesi girilmelidir.");
                         if (!DoluSatirVar("machineryRows", "name", "purpose") && !DoluSatirVar("buildingRows", "name"))
@@ -1769,7 +1769,7 @@ namespace TarimDonusum.IsKurallari
                     }
                     catch (JsonException)
                     {
-                        sonuc.HataEkle("DB C-TP Teknik Proje verisi okunamadı.");
+                        sonuc.HataEkle("Teknik Proje verisi okunamadı.");
                     }
                 }
                 if (!sonuc.basarili)
@@ -1798,7 +1798,7 @@ namespace TarimDonusum.IsKurallari
             }
             catch (Exception ex)
             {
-                BeklenmeyenHata(sonuc, ex, "DB C-TP Teknik Proje kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", teknikProje.basvuruId, kullanici.Id);
+                BeklenmeyenHata(sonuc, ex, "Teknik Proje kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", teknikProje.basvuruId, kullanici.Id);
             }
             return sonuc;
         }
@@ -3283,6 +3283,37 @@ namespace TarimDonusum.IsKurallari
                    Metin(mevcut.irtibat.ePosta) != Metin(gelen.irtibat.ePosta) ||
                    Metin(mevcut.irtibat.adres) != Metin(gelen.irtibat.adres);
         }
+        public async Task<Sonuc<BasvuruMetrajVerisi>> MetrajOkuAsync(int basvuruId, Kullanici kullanici)
+        {
+            Sonuc<BasvuruMetrajVerisi> sonuc=new();
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Basvuru? b=await BasvuruGoruntulemeYetkiKontrolAsync(connection,basvuruId,kullanici,sonuc);if(!sonuc.basarili||b==null)return sonuc;if(b.kayitTuru!=enumBasvuruKayitTuru.Basvuru){sonuc.HataEkle("Metraj yalnızca asıl başvuruda girilebilir.");return sonuc;}sonuc.nesne=await new TABBasvuruMetraj(connection,_localizer).OkuAsync(basvuruId,b.basvuruFirma.donemId);}
+            catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Metraj okunamadı. BasvuruId: {BasvuruId}","Metraj bilgileri okunamadı.",basvuruId);}return sonuc;
+        }
+
+        public async Task<Sonuc<BasvuruMetrajBolum>> MetrajBolumKaydetAsync(BasvuruMetrajBolum model,Kullanici kullanici)
+        {
+            Sonuc<BasvuruMetrajBolum> sonuc=new();model.ad=model.ad?.Trim()??"";if(model.basvuruId<=0||model.binaId<=0||model.siraNo<=0||string.IsNullOrWhiteSpace(model.ad)||model.ad.Length>250)sonuc.HataEkle("Bina, sıra numarası ve yapım bölümü adı zorunludur.");if(!sonuc.basarili)return sonuc;
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Basvuru? b=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,sonuc);if(!sonuc.basarili||b==null)return sonuc;if(!b.Binalar.Any(x=>x.id==model.binaId&&string.Equals(x.mevcutYeni,"Yeni",StringComparison.OrdinalIgnoreCase))){sonuc.HataEkle("Metraj yalnızca yeni binalar için girilebilir.");return sonuc;}await new TABBasvuruMetraj(connection,_localizer).BolumKaydetAsync(model);sonuc.nesne=model;sonuc.mesaj="Yapım bölümü kaydedildi.";}
+            catch(SqlException ex)when(ex.Number is 2601 or 2627){sonuc.HataEkle("Bu binada aynı sıra numaralı yapım bölümü zaten var.");}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Metraj bölümü kaydedilemedi. BasvuruId: {BasvuruId}","Yapım bölümü kaydedilemedi.",model.basvuruId);}return sonuc;
+        }
+
+        public async Task<Sonuc> MetrajBolumSilAsync(int basvuruId,int id,Kullanici kullanici)
+        {
+            Sonuc sonuc=new();try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();if(await BasvuruOnBasvuruYetkiKontrolAsync(connection,basvuruId,kullanici,sonuc)==null)return sonuc;if(!await new TABBasvuruMetraj(connection,_localizer).BolumSilAsync(basvuruId,id))sonuc.HataEkle("Yapım bölümü bulunamadı.");else sonuc.mesaj="Yapım bölümü ve bağlı pozları silindi.";}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Metraj bölümü silinemedi. BasvuruId: {BasvuruId}","Yapım bölümü silinemedi.",basvuruId);}return sonuc;
+        }
+
+        public async Task<Sonuc<BasvuruMetrajPoz>> MetrajPozKaydetAsync(BasvuruMetrajPoz model,Kullanici kullanici)
+        {
+            Sonuc<BasvuruMetrajPoz> sonuc=new();model.detaylar??=[];if(model.basvuruId<=0||model.bolumId<=0||model.pozId<=0||model.siraNo<=0)sonuc.HataEkle("Yapım bölümü, sıra numarası ve poz zorunludur.");if(model.detaylar.Count==0)sonuc.HataEkle("En az bir metraj detay satırı girilmelidir.");if(model.detaylar.GroupBy(x=>x.siraNo).Any(x=>x.Key<=0||x.Count()>1))sonuc.HataEkle("Metraj detay sıra numaraları geçersiz veya tekrarlıdır.");if(model.detaylar.Any(x=>x.aciklama?.Length>500))sonuc.HataEkle("Metraj açıklaması en fazla 500 karakter olabilir.");if(model.detaylar.Any(x=>!x.adet.HasValue&&!x.boy.HasValue&&!x.en.HasValue&&!x.yukseklik.HasValue))sonuc.HataEkle("Her detay satırında en az bir ölçü girilmelidir.");if(model.detaylar.SelectMany(x=>new[]{x.adet,x.boy,x.en,x.yukseklik}).Any(x=>x.HasValue&&Math.Abs(x.Value)>100000000m))sonuc.HataEkle("Metraj ölçüsü izin verilen sınırı aşıyor.");if(!sonuc.basarili)return sonuc;
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Basvuru? b=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,sonuc);if(!sonuc.basarili||b==null)return sonuc;BasvuruMetrajVerisi veri=await new TABBasvuruMetraj(connection,_localizer).OkuAsync(model.basvuruId,b.basvuruFirma.donemId);if(!veri.binalar.SelectMany(x=>x.bolumler).Any(x=>x.id==model.bolumId)){sonuc.HataEkle("Yapım bölümü bulunamadı.");return sonuc;}PozDonemFiyat? fiyat=veri.pozlar.FirstOrDefault(x=>x.pozId==model.pozId);if(fiyat==null){sonuc.HataEkle("Poz bulunamadı veya aktif değil.");return sonuc;}if(!fiyat.birimFiyat.HasValue){sonuc.HataEkle("Seçilen poz için başvuru döneminde birim fiyat girilmemiştir.");return sonuc;}model.birimFiyat=fiyat.birimFiyat.Value;model.pozNo=fiyat.pozNo;model.pozAdi=fiyat.pozAdi;model.birim=fiyat.birim;await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();await new TABBasvuruMetraj(connection,_localizer,tr).PozKaydetAsync(model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj="Poz ve metraj detayları kaydedildi.";}
+            catch(SqlException ex)when(ex.Number is 2601 or 2627){sonuc.HataEkle("Aynı sıra numarası bu yapım bölümünde veya poz detaylarında tekrar kullanılamaz.");}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Metraj pozu kaydedilemedi. BasvuruId: {BasvuruId}","Poz metrajı kaydedilemedi.",model.basvuruId);}return sonuc;
+        }
+
+        public async Task<Sonuc> MetrajPozSilAsync(int basvuruId,int id,Kullanici kullanici)
+        {
+            Sonuc sonuc=new();try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();if(await BasvuruOnBasvuruYetkiKontrolAsync(connection,basvuruId,kullanici,sonuc)==null)return sonuc;if(!await new TABBasvuruMetraj(connection,_localizer).PozSilAsync(basvuruId,id))sonuc.HataEkle("Metraj pozu bulunamadı.");else sonuc.mesaj="Poz ve metraj detayları silindi.";}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Metraj pozu silinemedi. BasvuruId: {BasvuruId}","Poz metrajı silinemedi.",basvuruId);}return sonuc;
+        }
+
         private async Task<Basvuru?> BasvuruOnBasvuruYetkiKontrolAsync(SqlConnection connection, int basvuruId, Kullanici kullanici, Sonuc sonuc, bool kabulEdildiDurumuDahil = false)
         {
             if (!BasvuruKullanicisiMi(kullanici))

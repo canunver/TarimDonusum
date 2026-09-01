@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "Poz Dönem Fiyatları";
+}
+
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div><h1>Poz Dönem Fiyatları</h1><p>Pozların seçilen dönemde geçerli TL birim fiyatlarını yönetin.</p></div>
+        <div>
+            <label class="btn btn-outline-success mb-0 mr-2" for="fiyatExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label>
+            <input id="fiyatExcelDosya" type="file" class="d-none" accept=".xlsx,.xls" />
+            <button type="button" class="btn btn-primary" onclick="FiyatlariKaydet()"><i class="fas fa-save mr-1"></i>Tümünü kaydet</button>
+        </div>
+    </div>
+    @Html.AntiForgeryToken()
+    <div class="basvuru-card p-3 mb-3">
+        <div class="form-row align-items-end">
+            <div class="form-group col-md-3 mb-md-0"><label for="fiyatDonem">Dönem <span class="text-danger">*</span></label><select id="fiyatDonem" class="form-control"></select></div>
+            <div class="form-group col-md-5 mb-md-0"><label for="fiyatArama">Poz ara</label><input id="fiyatArama" class="form-control" placeholder="Poz no veya tanım (isteğe bağlı)" /></div>
+            <div class="form-group col-md-2 mb-md-0"><button type="button" class="btn btn-outline-primary btn-block" onclick="FiyatlariListele()"><i class="fas fa-search mr-1"></i>Listele</button></div>
+            <div class="form-group col-md-2 mb-0"><div class="small text-muted">Fiyat girilen</div><strong id="fiyatSayac">0 / 0</strong></div>
+        </div>
+        <small class="text-muted d-block mt-2">Excel başlıkları: Poz No ve Birim Fiyat. Fiyatlar seçili döneme TL olarak yüklenir; mevcut fiyatlar güncellenir.</small>
+    </div>
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th style="width:150px">Poz No</th><th>Poz Adı / Tanımı</th><th style="width:100px">Birim</th><th style="width:220px">Birim Fiyat (TL)</th></tr></thead>
+            <tbody id="fiyatListe"><tr><td colspan="4" class="text-center text-muted py-4">Dönem seçip Listele düğmesine basınız.</td></tr></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const donemler=[], fiyatlar=[];
+    function enc(v){return $('<div/>').text(v==null?'':String(v)).html();}
+    function FiyatSayacGuncelle(){const dolu=fiyatlar.filter(x=>x.birimFiyat!==null&&x.birimFiyat!==undefined&&x.birimFiyat!=='').length;$('#fiyatSayac').text(`${dolu} / ${fiyatlar.length}`);}
+    function FiyatListeYaz(){
+        const q=($('#fiyatArama').val()||'').toLocaleLowerCase('tr-TR').trim();
+        const liste=fiyatlar.map((x,i)=>({x,i})).filter(y=>!q||`${y.x.pozNo} ${y.x.pozAdi}`.toLocaleLowerCase('tr-TR').includes(q));
+        $('#fiyatListe').html(liste.length?liste.map(y=>`<tr><td><strong>${enc(y.x.pozNo)}</strong></td><td>${enc(y.x.pozAdi)}</td><td>${enc(y.x.birim)}</td><td><div class="input-group"><input class="form-control fiyat-input text-right" type="number" min="0" step="0.01" data-index="${y.i}" value="${y.x.birimFiyat??''}" placeholder="0,00"><div class="input-group-append"><span class="input-group-text">TL / ${enc(y.x.birim)}</span></div></div></td></tr>`).join(''):'<tr><td colspan="4" class="text-center text-muted py-4">Poz bulunamadı.</td></tr>');
+        $('.fiyat-input').on('input',function(){const raw=this.value;fiyatlar[Number(this.dataset.index)].birimFiyat=raw===''?null:Number(raw);FiyatSayacGuncelle();});
+        FiyatSayacGuncelle();
+    }
+    function SayfaVerisiYukle(donemId,listele){AjaxGet('/PozDonemFiyat/SayfaVerisi',{donemId:Number(donemId||0),listele:!!listele},r=>{if(!r?.basarili){SonucGoster(r);return;}const d=r.nesne||{};donemler.splice(0,donemler.length,...(d.donemler||[]));fiyatlar.splice(0,fiyatlar.length,...(d.fiyatlar||[]));const s=$('#fiyatDonem'),secili=String(d.seciliDonemId||'');if(!s.children().length){s.empty().append('<option value="">Dönem seçiniz</option>');donemler.slice().sort((a,b)=>Number(b.yil)-Number(a.yil)).forEach(x=>s.append($('<option/>',{value:x.id,text:x.ad})));s.val(secili);}if(listele)FiyatListeYaz();else{$('#fiyatListe').html('<tr><td colspan="4" class="text-center text-muted py-4">Dönem seçip Listele düğmesine basınız.</td></tr>');FiyatSayacGuncelle();}});}
+    function FiyatlariListele(){const donemId=Number($('#fiyatDonem').val()||0);if(!donemId){PopupMesajGoster('Dönem seçilmelidir.',false);return;}SayfaVerisiYukle(donemId,true);}
+    function FiyatlariKaydet(){const donemId=Number($('#fiyatDonem').val()||0);if(!donemId){PopupMesajGoster('Dönem seçilmelidir.',false);return;}if(!fiyatlar.length){PopupMesajGoster('Önce fiyatlar listelenmelidir.',false);return;}AjaxPost('/PozDonemFiyat/Kaydet',{donemId,fiyatlar:fiyatlar.map(x=>({pozId:x.pozId,birimFiyat:x.birimFiyat===null||x.birimFiyat===''?null:Number(x.birimFiyat)}))},r=>{SonucGoster(r);if(r?.basarili)SayfaVerisiYukle(donemId,true);});}
+    function FiyatExcelYukle(input){
+        if(!input.files?.length)return;
+        const donemId=Number($('#fiyatDonem').val()||0);
+        if(!donemId){PopupMesajGoster('Dönem seçilmelidir.',false);input.value='';return;}
+        const fd=new FormData();fd.append('donemId',donemId);fd.append('dosya',input.files[0]);
+        fetch('/PozDonemFiyat/ExcelYukle',{method:'POST',headers:{'RequestVerificationToken':$('[name="__RequestVerificationToken"]').val()},body:fd})
+            .then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json();})
+            .then(r=>{SonucGoster(r);if(r?.basarili)SayfaVerisiYukle(donemId,true);})
+            .catch(()=>PopupMesajGoster('Excel yüklenirken beklenmeyen bir hata oluştu.',false))
+            .finally(()=>input.value='');
+    }
+    $(function(){$('#fiyatArama').on('keydown',e=>{if(e.key==='Enter'){e.preventDefault();FiyatlariListele();}});$('#fiyatDonem').on('change',function(){fiyatlar.splice(0);$('#fiyatListe').html('<tr><td colspan="4" class="text-center text-muted py-4">Listelemek için düğmeye basınız.</td></tr>');FiyatSayacGuncelle();});$('#fiyatExcelDosya').on('change',function(){FiyatExcelYukle(this);});SayfaVerisiYukle(0,false);});
+</script>
+}

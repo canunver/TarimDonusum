@@ -864,6 +864,45 @@ namespace TarimDonusum.IsKurallari
                     EXEC sp_rename N'dbo.DonemTahmini.KurTahminiYuzde', N'KurTahminiTL', N'COLUMN';
                     ALTER TABLE dbo.DonemTahmini ALTER COLUMN KurTahminiTL DECIMAL(18,4) NOT NULL;
                   END"),
+            new(68,
+                @"IF OBJECT_ID(N'dbo.Poz',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.Poz(
+                      Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Poz PRIMARY KEY,
+                      PozNo NVARCHAR(50) NOT NULL,
+                      Ad NVARCHAR(1000) NOT NULL,
+                      Birim NVARCHAR(20) NOT NULL,
+                      HesaplamaTuru INT NOT NULL,
+                      Aktif INT NOT NULL CONSTRAINT DF_Poz_Aktif DEFAULT 1,
+                      CONSTRAINT CK_Poz_HesaplamaTuru CHECK(HesaplamaTuru IN(1,2,3,4,5))
+                    );
+                    CREATE UNIQUE INDEX UX_Poz_PozNo ON dbo.Poz(PozNo);
+                    CREATE INDEX IX_Poz_Aktif ON dbo.Poz(Aktif);
+                  END"),
+            new(69,
+                @"IF OBJECT_ID(N'dbo.PozDonemFiyat',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.PozDonemFiyat(
+                      Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_PozDonemFiyat PRIMARY KEY,
+                      DonemId INT NOT NULL,
+                      PozId INT NOT NULL,
+                      BirimFiyat DECIMAL(18,2) NOT NULL,
+                      CONSTRAINT FK_PozDonemFiyat_Donem FOREIGN KEY(DonemId) REFERENCES dbo.Donem(Id),
+                      CONSTRAINT FK_PozDonemFiyat_Poz FOREIGN KEY(PozId) REFERENCES dbo.Poz(Id),
+                      CONSTRAINT CK_PozDonemFiyat_BirimFiyat CHECK(BirimFiyat>=0)
+                    );
+                    CREATE UNIQUE INDEX UX_PozDonemFiyat_DonemPoz ON dbo.PozDonemFiyat(DonemId,PozId);
+                  END"),
+            new(70,
+                @"IF OBJECT_ID(N'dbo.BasvuruMetrajBolum',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruMetrajBolum(Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruMetrajBolum PRIMARY KEY,BinaId INT NOT NULL,SiraNo INT NOT NULL,Ad NVARCHAR(250) NOT NULL,CONSTRAINT FK_BasvuruMetrajBolum_Bina FOREIGN KEY(BinaId) REFERENCES dbo.BasvuruBina(Id) ON DELETE CASCADE);
+                    CREATE UNIQUE INDEX UX_BasvuruMetrajBolum_BinaSira ON dbo.BasvuruMetrajBolum(BinaId,SiraNo);
+                    CREATE TABLE dbo.BasvuruMetrajPoz(Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruMetrajPoz PRIMARY KEY,BolumId INT NOT NULL,PozId INT NOT NULL,SiraNo INT NOT NULL,BirimFiyat DECIMAL(18,2) NOT NULL,CONSTRAINT FK_BasvuruMetrajPoz_Bolum FOREIGN KEY(BolumId) REFERENCES dbo.BasvuruMetrajBolum(Id) ON DELETE CASCADE,CONSTRAINT FK_BasvuruMetrajPoz_Poz FOREIGN KEY(PozId) REFERENCES dbo.Poz(Id),CONSTRAINT CK_BasvuruMetrajPoz_Fiyat CHECK(BirimFiyat>=0));
+                    CREATE UNIQUE INDEX UX_BasvuruMetrajPoz_BolumSira ON dbo.BasvuruMetrajPoz(BolumId,SiraNo);
+                    CREATE TABLE dbo.BasvuruMetrajDetay(Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruMetrajDetay PRIMARY KEY,MetrajPozId INT NOT NULL,SiraNo INT NOT NULL,Aciklama NVARCHAR(500) NULL,Adet DECIMAL(18,4) NULL,Boy DECIMAL(18,4) NULL,En DECIMAL(18,4) NULL,Yukseklik DECIMAL(18,4) NULL,CONSTRAINT FK_BasvuruMetrajDetay_Poz FOREIGN KEY(MetrajPozId) REFERENCES dbo.BasvuruMetrajPoz(Id) ON DELETE CASCADE);
+                    CREATE UNIQUE INDEX UX_BasvuruMetrajDetay_PozSira ON dbo.BasvuruMetrajDetay(MetrajPozId,SiraNo);
+                  END"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

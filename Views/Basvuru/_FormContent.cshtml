@@ -292,8 +292,8 @@
                             <label id="ortakDogumTarihiLabel">Doğum tarihi<input id="ortakDogumTarihi" type="date" /></label>
                             <label id="ortakCinsiyetLabel">Cinsiyet<select id="ortakCinsiyet"><option value="">Seçiniz</option><option value="Kadın">Kadın</option><option value="Erkek">Erkek</option></select></label>
                             <label>Sıralamada sahiplik niteliği<input id="ortakSahiplikNiteligi" readonly /></label>
-                            <label>Nihai faydalanıcı<input id="ortakNihaiFaydalanici" maxlength="250" /></label>
-                        </div>                        <div class="document-upload-box mt-3" id="ortakUboKycBox">
+                            <label class="d-none">Nihai faydalanıcı<input id="ortakNihaiFaydalanici" maxlength="250" /></label>
+                        </div>                        <div class="document-upload-box mt-3 d-none" id="ortakUboKycBox">
                             <div class="document-file-row">
                                 <label class="btn btn-primary mb-0 disabled" for="ortakUboKycDosya" id="ortakUboKycSecBtn">@L["Basvuru.Ortaklik.UboKycUpload"]</label>
                                 <input id="ortakUboKycDosya" type="file" class="document-file-input" disabled />
@@ -399,6 +399,7 @@
     const bolumBasvuruYatirimdaKullanilacakEkipmanlar = @((int)enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar);
     const bolumBasvuruUrunSurecMakine = @((int)enumBasvuruBolum.BasvuruUrunSurecMakine);
     const bolumBasvuruBinaListesi = @((int)enumBasvuruBolum.BasvuruBinaListesi);
+    const bolumBasvuruMetraj = @((int)enumBasvuruBolum.BasvuruMetraj);
     const bolumBasvuruIstihdam = @((int)enumBasvuruBolum.BasvuruIstihdam);
     const bolumBasvuruTedarikciEntegrasyonu = @((int)enumBasvuruBolum.BasvuruTedarikciEntegrasyonu);
     const bolumBasvuruTaahhutBeyan = @((int)enumBasvuruBolum.BasvuruTaahhutBeyan);
@@ -781,6 +782,7 @@
         if (bolum === bolumBasvuruYatirimdaKullanilacakEkipmanlar) YatirimEkipmanBolumuIlklendir();
         if (bolum === bolumBasvuruUrunSurecMakine) UrunSurecBolumuIlklendir();
         if (bolum === bolumBasvuruBinaListesi) BinaBolumuIlklendir();
+        if (bolum === bolumBasvuruMetraj) MetrajBolumuIlklendir();
         if (bolum === bolumBasvuruIstihdam) IstihdamBolumuIlklendir();
         if (bolum === bolumBasvuruTedarikciEntegrasyonu) TedarikciEntegrasyonuIlklendir();
         if (bolum === bolumBasvuruTaahhutBeyan) BasvuruBeyanBolumuIlklendir();
@@ -1755,11 +1757,11 @@
 
         let html = `<div class="table-responsive"><table class="table table-bordered ortak-table"><thead><tr>
             <th>${htmlEncode(ortakMetinleri.rowNo)}</th><th>${htmlEncode(ortakMetinleri.partnerNameTitle)}</th><th>${htmlEncode(ortakMetinleri.identity)}</th><th>${htmlEncode(ortakMetinleri.personType)}</th>
-            <th>${htmlEncode(ortakMetinleri.shareRate)}</th><th>${htmlEncode(ortakMetinleri.privatePublicType)}</th><th>Doğum tarihi</th><th>Cinsiyet</th><th>Nihai faydalanıcı</th><th>Sıralamada sahiplik niteliği</th><th>${htmlEncode(ortakMetinleri.uboKycDocument)}</th><th></th>
+            <th>${htmlEncode(ortakMetinleri.shareRate)}</th><th>${htmlEncode(ortakMetinleri.privatePublicType)}</th><th>Doğum tarihi</th><th>Cinsiyet</th><th>Sıralamada sahiplik niteliği</th><th></th>
         </tr></thead><tbody>`;
 
         if (basvuruOrtaklari.length === 0) {
-            html += `<tr><td colspan="12" class="text-muted text-center">${htmlEncode(ortakMetinleri.emptyPartners)}</td></tr>`;
+            html += `<tr><td colspan="10" class="text-muted text-center">${htmlEncode(ortakMetinleri.emptyPartners)}</td></tr>`;
         }
         else {
             basvuruOrtaklari.forEach((ortak, index) => {
@@ -1772,9 +1774,7 @@
                     <td>${htmlEncode(OrtakSecimMetni(ortak.ozelKamuNiteligi))}</td>
                     <td>${htmlEncode(ortak.dogumTarihi ? String(ortak.dogumTarihi).substring(0,10) : '')}</td>
                     <td>${htmlEncode(ortak.cinsiyet || '')}</td>
-                    <td>${htmlEncode(ortak.nihaiFaydalaniciBilgisi || '')}</td>
                     <td>${htmlEncode(ortak.sahiplikNiteligi || 'Uygulanamaz')}</td>
-                    <td>${OrtakUboKycHucreHtml(ortak, index)}</td>
                     <td class="text-nowrap">
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="OrtakModalAc(${index})" ${ortaklikReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.edit)}</button>
                         <button type="button" class="btn btn-sm btn-outline-danger" onclick="OrtakSil(${index})" ${ortaklikReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.delete)}</button>
@@ -3045,7 +3045,7 @@
         const raw = document.getElementById('dbCtpTeknikProjeJson')?.value || '';
         if (raw) {
             try { dbCtpData = { ...dbCtpData, ...JSON.parse(raw) }; }
-            catch { PopupMesajGoster('DB C-TP Teknik Proje verisi okunamadı.', false); }
+            catch { PopupMesajGoster('Teknik Proje verisi okunamadı.', false); }
         }
         Object.keys(dbCtpTableDefinitions).forEach(name => {
             if (!Array.isArray(dbCtpData[name]) || dbCtpData[name].length === 0) dbCtpData[name] = [{}];
@@ -3277,6 +3277,55 @@
     function BinaMahalModalAc(bi,mi){const ac=()=>{const b=basvuruBinalari[bi],m=mi>=0?b.mahaller[mi]:{id:0,binaId:b.id,siraNo:(b.mahaller?.length||0)+1,mahalAdi:'',alanM2:null};document.getElementById('binaMahalBinaIndex').value=bi;document.getElementById('binaMahalIndex').value=mi;document.getElementById('binaMahalId').value=m.id||0;document.getElementById('binaMahalBaslik').textContent=(mi>=0?'Bölüm/Mahal Düzenle':'Bölüm/Mahal Ekle')+' — '+b.ad;document.getElementById('binaMahalSira').value=m.siraNo||1;document.getElementById('binaMahalAd').value=m.mahalAdi||'';document.getElementById('binaMahalAlan').value=m.alanM2??'';document.getElementById('binaMahalSilBtn').style.display=mi>=0?'':'none';$('#binaMahalModal').modal('show');};if(!basvuruBinalari[bi].id)BinaKaydetIndex(bi,ac);else ac();}
     function BinaMahalKaydet(){const bi=Number(document.getElementById('binaMahalBinaIndex').value),mi=Number(document.getElementById('binaMahalIndex').value),b=basvuruBinalari[bi],model={id:Number(document.getElementById('binaMahalId').value),basvuruId:BasvuruId(),binaId:b.id,siraNo:Number(document.getElementById('binaMahalSira').value),mahalAdi:document.getElementById('binaMahalAd').value,alanM2:Number(document.getElementById('binaMahalAlan').value)};AjaxPost('/Basvuru/BinaMahaliKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){b.mahaller=b.mahaller||[];if(mi>=0)b.mahaller[mi]=sonuc.nesne;else b.mahaller.push(sonuc.nesne);$('#binaMahalModal').modal('hide');BinaListeRender();dirty=false;}});}
     function BinaMahalSil(){const bi=Number(document.getElementById('binaMahalBinaIndex').value),mi=Number(document.getElementById('binaMahalIndex').value),b=basvuruBinalari[bi],m=b?.mahaller?.[mi];if(!m||!confirm('Bu bölüm/mahal kaydını silmek istediğinize emin misiniz?'))return;AjaxPost('/Basvuru/BinaMahaliSil',{id:m.id,basvuruId:BasvuruId()},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){b.mahaller.splice(mi,1);$('#binaMahalModal').modal('hide');BinaListeRender();dirty=false;}});}
+
+    let metrajVerisi={binalar:[],pozlar:[]},metrajBinaIndex=0,metrajBolumIndex=0,metrajDetayTaslak=[];
+    const MetrajPara=v=>(Number(v)||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' TL';
+    const MetrajSayi=v=>(Number(v)||0).toLocaleString('tr-TR',{maximumFractionDigits:4});
+    function MetrajMiktar(d){const a=[d.adet,d.boy,d.en,d.yukseklik].filter(x=>x!==null&&x!==undefined&&x!=='').map(Number);return a.length?a.reduce((t,x)=>t*x,1):0;}
+    function MetrajPozMiktar(p){return (p.detaylar||[]).reduce((t,d)=>t+MetrajMiktar(d),0);}
+    function MetrajPozMaliyet(p){return MetrajPozMiktar(p)*(Number(p.birimFiyat)||0);}
+    function MetrajBolumMaliyet(b){return (b?.pozlar||[]).reduce((t,p)=>t+MetrajPozMaliyet(p),0);}
+    function MetrajBinaMaliyet(b){return (b?.bolumler||[]).reduce((t,x)=>t+MetrajBolumMaliyet(x),0);}
+    function MetrajBolumuIlklendir(){MetrajVerisiYukle();}
+    function MetrajVerisiYukle(){AjaxGet('/Basvuru/MetrajVerisi',{basvuruId:BasvuruId()},r=>{if(!r?.basarili){SonucGoster(r);return;}metrajVerisi=r.nesne||{binalar:[],pozlar:[]};if(metrajBinaIndex>=metrajVerisi.binalar.length)metrajBinaIndex=0;const b=metrajVerisi.binalar[metrajBinaIndex];if(metrajBolumIndex>=(b?.bolumler?.length||0))metrajBolumIndex=0;MetrajRender();});}
+    function MetrajRender(){
+        const bs=metrajVerisi.binalar||[],edit=!!document.getElementById('metrajBolumModal');
+        let html='';
+        bs.forEach((b,bi)=>{
+            html+=`<tr class="table-secondary"><th colspan="3"><div class="d-flex justify-content-between align-items-center"><span><i class="fas fa-building mr-2"></i>${htmlEncode(b.siraNo)}. ${htmlEncode(b.ad)}</span>${edit?`<button type="button" class="btn btn-sm btn-success" onclick="MetrajBolumSatiriEkle(${bi})"><i class="fas fa-plus mr-1"></i>Bölüm ekle</button>`:''}</div></th><th class="text-right align-middle">${MetrajPara(MetrajBinaMaliyet(b))}</th></tr>`;
+            const bolumler=b.bolumler||[];
+            if(!bolumler.length)html+=`<tr><td></td><td colspan="2" class="text-muted pl-4">Bu bina için yapım bölümü eklenmedi.</td><td class="text-right">0,00 TL</td></tr>`;
+            bolumler.forEach((bl,bli)=>{
+                html+=`<tr class="table-light"><td></td><th colspan="2"><div class="d-flex justify-content-between align-items-center"><span><i class="fas fa-layer-group mr-2 text-muted"></i>${htmlEncode(bl.siraNo)}. ${htmlEncode(bl.ad)}</span>${edit?`<span><button type="button" class="btn btn-sm btn-outline-primary mr-1" onclick="MetrajBolumSatiriDuzenle(${bi},${bli})">Düzenle</button><button type="button" class="btn btn-sm btn-success" onclick="MetrajPozSatiriEkle(${bi},${bli})"><i class="fas fa-plus mr-1"></i>Poz ekle</button></span>`:''}</div></th><th class="text-right align-middle">${MetrajPara(MetrajBolumMaliyet(bl))}</th></tr>`;
+                const ps=bl.pozlar||[];
+                if(!ps.length)html+=`<tr><td></td><td></td><td class="text-muted pl-4">Bu bölüm için poz eklenmedi.</td><td class="text-right">0,00 TL</td></tr>`;
+                ps.forEach((p,pi)=>{
+                    html+=`<tr><td></td><td></td><td><div class="d-flex justify-content-between"><div><strong>${htmlEncode(p.siraNo)}. ${htmlEncode(p.pozNo)}</strong> — ${htmlEncode(p.pozAdi)}<div class="small text-muted mt-1">Birim: <strong>${htmlEncode(p.birim)}</strong> &nbsp; Miktar: <strong>${MetrajSayi(MetrajPozMiktar(p))}</strong> &nbsp; Birim fiyat: <strong>${MetrajPara(p.birimFiyat)}</strong></div></div>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2 align-self-start" onclick="MetrajPozSatiriDuzenle(${bi},${bli},${pi})">Düzenle</button>`:''}</div></td><td class="text-right align-middle"><strong>${MetrajPara(MetrajPozMaliyet(p))}</strong></td></tr>`;
+                });
+            });
+        });
+        if(!html)html='<tr><td colspan="4" class="text-center text-muted py-4">Bina listesinde “Yeni” bina bulunamadı.</td></tr>';
+        $('#metrajHiyerarsi').html(html);
+        const toplam=bs.reduce((t,x)=>t+MetrajBinaMaliyet(x),0);
+        $('#metrajGenelToplam,#metrajTabloGenelToplam').text(MetrajPara(toplam));
+    }
+    function MetrajBolumSatiriEkle(bi){metrajBinaIndex=bi;metrajBolumIndex=0;MetrajBolumModalAc(-1);}
+    function MetrajBolumSatiriDuzenle(bi,bli){metrajBinaIndex=bi;metrajBolumIndex=bli;MetrajBolumModalAc(bli);}
+    function MetrajPozSatiriEkle(bi,bli){metrajBinaIndex=bi;metrajBolumIndex=bli;MetrajPozModalAc(-1);}
+    function MetrajPozSatiriDuzenle(bi,bli,pi){metrajBinaIndex=bi;metrajBolumIndex=bli;MetrajPozModalAc(pi);}
+    function MetrajBinaSec(i){metrajBinaIndex=i;metrajBolumIndex=0;MetrajRender();}
+    function MetrajBolumSec(i){metrajBolumIndex=i;MetrajRender();}
+    function MetrajBolumModalAc(i){const b=metrajVerisi.binalar?.[metrajBinaIndex];if(!b){PopupMesajGoster('Önce yeni bir bina seçilmelidir.',false);return;}const x=i>=0?b.bolumler[i]:{siraNo:Math.max(0,...(b.bolumler||[]).map(y=>Number(y.siraNo)||0))+1,ad:''};$('#metrajBolumIndex').val(i);$('#metrajBolumSira').val(x.siraNo);$('#metrajBolumAd').val(x.ad);$('#metrajBolumSilBtn').toggle(i>=0);$('#metrajBolumModal').modal('show');}
+    function MetrajBolumKaydet(){const b=metrajVerisi.binalar[metrajBinaIndex],i=Number($('#metrajBolumIndex').val()),eski=i>=0?b.bolumler[i]:{};AjaxPost('/Basvuru/MetrajBolumKaydet',{id:eski.id||0,basvuruId:BasvuruId(),binaId:b.id,siraNo:Number($('#metrajBolumSira').val()),ad:$('#metrajBolumAd').val()},r=>{SonucGoster(r);if(r?.basarili){$('#metrajBolumModal').modal('hide');MetrajVerisiYukle();}});}
+    function MetrajBolumSil(){const b=metrajVerisi.binalar[metrajBinaIndex],i=Number($('#metrajBolumIndex').val()),x=b?.bolumler?.[i];if(!x||!confirm('Yapım bölümü ve bağlı bütün pozları silinsin mi?'))return;AjaxPost('/Basvuru/MetrajBolumSil',{id:x.id,basvuruId:BasvuruId()},r=>{SonucGoster(r);if(r?.basarili){$('#metrajBolumModal').modal('hide');metrajBolumIndex=0;MetrajVerisiYukle();}});}
+    function MetrajPozModalAc(i){const bl=metrajVerisi.binalar?.[metrajBinaIndex]?.bolumler?.[metrajBolumIndex];if(!bl){PopupMesajGoster('Önce yapım bölümü seçilmelidir.',false);return;}const p=i>=0?bl.pozlar[i]:{siraNo:Math.max(0,...(bl.pozlar||[]).map(x=>Number(x.siraNo)||0))+1,pozId:0,detaylar:[{siraNo:1,aciklama:'',adet:1,boy:null,en:null,yukseklik:null}]};$('#metrajPozIndex').val(i);$('#metrajPozSira').val(p.siraNo);const s=$('#metrajPozSecim');if(s.hasClass('select2-hidden-accessible'))s.select2('destroy');s.empty().append('<option value=""></option>');(metrajVerisi.pozlar||[]).forEach(x=>s.append($('<option/>',{value:x.pozId,text:`${x.pozNo} — ${x.pozAdi} (${x.birim})${x.birimFiyat==null?' — Fiyat yok':''}`,disabled:x.birimFiyat==null})));s.val(String(p.pozId||''));s.select2({width:'100%',dropdownParent:$('#metrajPozModal'),placeholder:'Poz no veya adına göre arayın',allowClear:true,language:{noResults:()=> 'Poz bulunamadı',searching:()=> 'Aranıyor...'}});metrajDetayTaslak=JSON.parse(JSON.stringify(p.detaylar||[]));$('#metrajPozSilBtn').toggle(i>=0);MetrajPozFiyatGuncelle();MetrajDetayRender();$('#metrajPozModal').modal('show');}
+    function MetrajPozFiyatGuncelle(){const x=(metrajVerisi.pozlar||[]).find(p=>p.pozId===Number($('#metrajPozSecim').val()));$('#metrajPozFiyat').text(x?.birimFiyat==null?'Birim fiyat girilmemiş':MetrajPara(x.birimFiyat)+' / '+x.birim);}
+    function MetrajDetaySatirEkle(){metrajDetayTaslak.push({siraNo:metrajDetayTaslak.length+1,aciklama:'',adet:1,boy:null,en:null,yukseklik:null});MetrajDetayRender();}
+    function MetrajDetaySil(i){metrajDetayTaslak.splice(i,1);metrajDetayTaslak.forEach((x,j)=>x.siraNo=j+1);MetrajDetayRender();}
+    function MetrajDetayDegis(i,k,v){metrajDetayTaslak[i][k]=k==='aciklama'?v:(v===''?null:Number(v));$('#metrajDetayMiktar'+i).text(MetrajSayi(MetrajMiktar(metrajDetayTaslak[i])));$('#metrajModalMiktar').text(MetrajSayi(metrajDetayTaslak.reduce((t,d)=>t+MetrajMiktar(d),0)));}
+    function MetrajDetayRender(){const val=v=>v===null||v===undefined?'':v;$('#metrajDetayListe').html(metrajDetayTaslak.map((d,i)=>`<tr><td><input class="form-control form-control-sm" maxlength="500" value="${htmlEncode(d.aciklama||'')}" oninput="MetrajDetayDegis(${i},'aciklama',this.value)"></td>${['adet','boy','en','yukseklik'].map(k=>`<td><input class="form-control form-control-sm text-right" type="number" step="0.0001" value="${val(d[k])}" oninput="MetrajDetayDegis(${i},'${k}',this.value)"></td>`).join('')}<td id="metrajDetayMiktar${i}" class="text-right align-middle">${MetrajSayi(MetrajMiktar(d))}</td><td><button class="btn btn-sm btn-outline-danger" type="button" onclick="MetrajDetaySil(${i})">×</button></td></tr>`).join(''));$('#metrajModalMiktar').text(MetrajSayi(metrajDetayTaslak.reduce((t,d)=>t+MetrajMiktar(d),0)));$('#metrajPozSecim').off('change.metraj').on('change.metraj',MetrajPozFiyatGuncelle);}
+    function MetrajPozKaydet(){const bl=metrajVerisi.binalar[metrajBinaIndex].bolumler[metrajBolumIndex],i=Number($('#metrajPozIndex').val()),p=i>=0?bl.pozlar[i]:{};AjaxPost('/Basvuru/MetrajPozKaydet',{id:p.id||0,basvuruId:BasvuruId(),bolumId:bl.id,pozId:Number($('#metrajPozSecim').val()),siraNo:Number($('#metrajPozSira').val()),detaylar:metrajDetayTaslak.map((d,j)=>({...d,id:0,siraNo:j+1}))},r=>{SonucGoster(r);if(r?.basarili){$('#metrajPozModal').modal('hide');MetrajVerisiYukle();}});}
+    function MetrajPozSil(){const bl=metrajVerisi.binalar[metrajBinaIndex].bolumler[metrajBolumIndex],i=Number($('#metrajPozIndex').val()),p=bl?.pozlar?.[i];if(!p||!confirm('Poz ve bütün metraj detayları silinsin mi?'))return;AjaxPost('/Basvuru/MetrajPozSil',{id:p.id,basvuruId:BasvuruId()},r=>{SonucGoster(r);if(r?.basarili){$('#metrajPozModal').modal('hide');MetrajVerisiYukle();}});}
 
     let basvuruIstihdam={satirlar:[]};
     function IstihdamBolumuIlklendir(){try{basvuruIstihdam=JSON.parse(document.getElementById('istihdamJson')?.textContent||'{}');}catch{basvuruIstihdam={};}basvuruIstihdam.satirlar=basvuruIstihdam.satirlar||[];const yil=Number(document.querySelector('[data-istihdam-basvuru-yili]')?.dataset.istihdamBasvuruYili)||new Date().getFullYear();basvuruIstihdam.oncekiYil=yil-2;basvuruIstihdam.sonYil=yil-1;document.getElementById('istOncekiYil').value=yil-2;document.getElementById('istOncekiKadin').value=basvuruIstihdam.oncekiYilKadin||0;document.getElementById('istOncekiErkek').value=basvuruIstihdam.oncekiYilErkek||0;document.getElementById('istSonYil').value=yil-1;document.getElementById('istSonKadin').value=basvuruIstihdam.sonYilKadin||0;document.getElementById('istSonErkek').value=basvuruIstihdam.sonYilErkek||0;document.getElementById('istihdamGerekce').value=basvuruIstihdam.gerekceVarsayimlarDogrulamaYaklasimi||'';IstihdamSatirlariRender();}
