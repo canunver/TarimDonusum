@@ -1109,10 +1109,10 @@ namespace TarimDonusum.Tablolar
             basvuru.basvuruFirma.donem.yil = NullDuzeltInt(reader, kol++);
             basvuru.basvuruFirma.donem.ad = reader.GetString(kol++);
             basvuru.basvuruFirma.donem.basvuruyaAcikMi = BoolYap(NullOkuInt(reader, kol++));
-            basvuru.basvuruFirma.donem.basvuruBaslangicTarihi = reader.GetDateTime(kol++);
-            basvuru.basvuruFirma.donem.basvuruBitisTarihi = reader.GetDateTime(kol++);
+            basvuru.basvuruFirma.donem.basvuruBaslangicTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
+            basvuru.basvuruFirma.donem.basvuruBitisTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             basvuru.basvuruFirma.donem.onBasvuruBaslangicTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
-            basvuru.basvuruFirma.donem.onBasvuruBitisTarihi = reader.GetDateTime(kol++);
+            basvuru.basvuruFirma.donem.onBasvuruBitisTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             basvuru.basvuruFirma.donem.onBasvuruCevrimKuru = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
             basvuru.basvuruFirma.donem.basvuruCevrimKuru = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
             basvuru.basvuruFirma.donem.minimumYatirimTutari = NullOkuDecimal(reader, kol++);
@@ -1127,7 +1127,7 @@ namespace TarimDonusum.Tablolar
             basvuru.basvuruFirma.firma.vergiKimlikNo = reader.GetString(kol++);
             basvuru.basvuruFirma.firma.ticaretUnvani = reader.GetString(kol++);
             basvuru.basvuruFirma.firma.ticaretSicilNo = reader.GetString(kol++);
-            basvuru.basvuruFirma.firma.kurulusTarihi = reader.GetDateTime(kol++);
+            basvuru.basvuruFirma.firma.kurulusTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             basvuru.basvuruFirma.firma.mersisNo = reader.GetString(kol++);
             basvuru.basvuruFirma.firma.naceKodu = reader.GetString(kol++);
             basvuru.basvuruFirma.firma.webSitesi = reader.GetString(kol++);

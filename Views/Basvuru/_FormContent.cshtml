@@ -168,7 +168,7 @@
                             <label>@L["Basvuru.Field.VergiKimlikNo"]<input id="modalVergiKimlikNo" inputmode="numeric" maxlength="10" /></label>
                             <label>@L["Basvuru.Field.TicaretUnvani"]<input id="modalTicaretUnvani" /></label>
                             <label>@L["Basvuru.Field.TicaretSicilNo"]<input id="modalTicaretSicilNo" /></label>
-                            <label>@L["Basvuru.Field.KurulusTarihi"]<input id="modalKurulusTarihi" type="date" /></label>
+                            <label>@L["Basvuru.Field.KurulusTarihi"]<input id="modalKurulusTarihi" type="date" required /></label>
                             <label>@L["Basvuru.Field.MersisNo"]<input id="modalMersisNo" /></label>
                             <label>@L["Basvuru.Field.NaceKodu"]<input id="modalNaceKodu" /></label>
                             <label>@L["Basvuru.Field.WebSitesi"]<input id="modalWebSitesi" /></label>
@@ -2124,6 +2124,11 @@
         };
         if (!VknGecerliMi(firma.vergiKimlikNo)) {
             PopupMesajGoster(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.VknLengthRequired"))), false);
+            return;
+        }
+        if (!firma.kurulusTarihi) {
+            PopupMesajGoster('Firma kuruluş tarihi girilmelidir.', false);
+            document.getElementById('modalKurulusTarihi')?.focus();
             return;
         }
         AjaxPost('/Basvuru/FirmaKaydet', firma, function (sonuc) {

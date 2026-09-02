@@ -45,6 +45,9 @@ namespace TarimDonusum.Models
             if (ticaretSicilNo?.Length > 100)
                 sonuc.HataEkle("Ticaret sicil no en fazla 100 karakter olmalıdır.");
 
+            if (!kurulusTarihi.HasValue)
+                sonuc.HataEkle("Firma kuruluş tarihi girilmelidir.");
+
             if (mersisNo?.Length > 50)
                 sonuc.HataEkle("MERSİS no en fazla 50 karakter olmalıdır.");
 
