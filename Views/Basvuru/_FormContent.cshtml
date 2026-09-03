@@ -204,9 +204,9 @@
                         <div class="form-grid">
                             <label>@L["Basvuru.Field.SiraNo"]<input id="adresModalSiraNo" type="number" min="1" step="1" /></label>
                             <label>@L["Basvuru.Field.Il"]<input id="adresModalIl" value="@basvuruIlAdi" readonly /></label>
-                            <label id="adresModalYapiRuhsatiAlani">
+                            <label>
                                 @L["Basvuru.Field.Ilce"]
-                                <select id="adresModalIlce" onchange="AdresSegeKademesiniGuncelle()">
+                                <select id="adresModalIlce" required onchange="AdresSegeKademesiniGuncelle()">
                                     <option value="">@L["Basvuru.Common.Select"]</option>
                                     @foreach (var ilce in Model.Ilceler)
                                     {
@@ -269,31 +269,31 @@
                 <div class="modal-body firma-modal-body">
                     <input id="ortakModalIndex" type="hidden" />
                     <div class="firma-modal-fields">
-                        <div class="form-grid">
-                            <label>@L["Basvuru.Ortaklik.PartnerNameTitle"]<input id="ortakAdUnvan" /></label>
-                            <label>@L["Basvuru.Ortaklik.Identity"]<input id="ortakTcknVkn" inputmode="numeric" maxlength="11" /></label>
-                            <label>
-                                @L["Basvuru.Ortaklik.PersonType"]
-                                <select id="ortakKisiTuru">
+                        <div class="form-row">
+                            <div class="form-group col-md-4"><label for="ortakAdUnvan">@L["Basvuru.Ortaklik.PartnerNameTitle"]</label><input id="ortakAdUnvan" class="form-control" /></div>
+                            <div class="form-group col-md-4"><label for="ortakTcknVkn">@L["Basvuru.Ortaklik.Identity"]</label><input id="ortakTcknVkn" class="form-control" inputmode="numeric" maxlength="11" /></div>
+                            <div class="form-group col-md-4">
+                                <label for="ortakKisiTuru">@L["Basvuru.Ortaklik.PersonType"]</label>
+                                <select id="ortakKisiTuru" class="form-control">
                                     <option value="Gerçek Kişi">@L["Basvuru.Ortaklik.NaturalPerson"]</option>
                                     <option value="Tüzel Kişi">@L["Basvuru.Ortaklik.LegalEntity"]</option>
                                 </select>
-                            </label>
-                            <label>@L["Basvuru.Ortaklik.ShareRate"]<input id="ortakPayOrani" type="number" min="0.01" max="100" step="0.01" /></label>
-                            <label>
-                                @L["Basvuru.Ortaklik.PrivatePublicType"]
-                                <select id="ortakOzelKamuNiteligi">
+                            </div>
+                            <div class="form-group col-md-4"><label for="ortakPayOrani">@L["Basvuru.Ortaklik.ShareRate"]</label><input id="ortakPayOrani" class="form-control" type="number" min="0.01" max="100" step="0.01" /></div>
+                            <div class="form-group col-md-4">
+                                <label for="ortakOzelKamuNiteligi">@L["Basvuru.Ortaklik.PrivatePublicType"]</label>
+                                <select id="ortakOzelKamuNiteligi" class="form-control">
                                     <option value="Özel">@L["Basvuru.Ortaklik.PrivateSector"]</option>
                                     <option value="Kamu">@L["Basvuru.Ortaklik.PublicSector"]</option>
                                 </select>
-                            </label>
+                            </div>
                         </div>
-                        <div class="adli-sicil-text-grid mt-3">
-                            <label id="ortakDogumTarihiLabel">Doğum tarihi<input id="ortakDogumTarihi" type="date" /></label>
-                            <label id="ortakCinsiyetLabel">Cinsiyet<select id="ortakCinsiyet"><option value="">Seçiniz</option><option value="Kadın">Kadın</option><option value="Erkek">Erkek</option></select></label>
-                            <label>Sıralamada sahiplik niteliği<input id="ortakSahiplikNiteligi" readonly /></label>
-                            <label class="d-none">Nihai faydalanıcı<input id="ortakNihaiFaydalanici" maxlength="250" /></label>
-                        </div>                        <div class="document-upload-box mt-3 d-none" id="ortakUboKycBox">
+                        <div class="form-row">
+                            <div class="form-group col-md-4" id="ortakDogumTarihiLabel"><label for="ortakDogumTarihi">Doğum tarihi</label><input id="ortakDogumTarihi" class="form-control" type="date" /></div>
+                            <div class="form-group col-md-4" id="ortakCinsiyetLabel"><label for="ortakCinsiyet">Cinsiyet</label><select id="ortakCinsiyet" class="form-control"><option value="">Seçiniz</option><option value="Kadın">Kadın</option><option value="Erkek">Erkek</option></select></div>
+                            <div class="form-group col-md-4" id="ortakSahiplikNiteligiLabel"><label for="ortakSahiplikNiteligi">Sıralamada sahiplik niteliği</label><input id="ortakSahiplikNiteligi" class="form-control" readonly /></div>
+                        </div>
+                        <div class="document-upload-box mt-3 d-none" id="ortakUboKycBox">
                             <div class="document-file-row">
                                 <label class="btn btn-primary mb-0 disabled" for="ortakUboKycDosya" id="ortakUboKycSecBtn">@L["Basvuru.Ortaklik.UboKycUpload"]</label>
                                 <input id="ortakUboKycDosya" type="file" class="document-file-input" disabled />
@@ -386,6 +386,8 @@
 <script>
     var active = @((int)ilkBolum.Bolum);
     let basvuruIlId = @b.basvuruFirma.ilId;
+    const uygulamaAdresiIlleri = @Html.Raw(JsonSerializer.Serialize(Model.Iller.Select(x => new { id = x.id, ad = x.ad })));
+    const uygulamaAdresiIlceleri = @Html.Raw(JsonSerializer.Serialize(Model.Ilceler.Select(x => new { id = x.Id, ilId = x.IlId, ad = x.Ad, segeKademesi = x.SegeKademesi })));
     const bolumFirma = @((int)enumBasvuruBolum.Firma);
     const bolumBasvuruSahibi = @((int)enumBasvuruBolum.BasvuruSahibi);
     const bolumBasvuruMaliVeriler = @((int)enumBasvuruBolum.BasvuruMaliVeriler);
@@ -1315,10 +1317,12 @@
 
     var cevreselSosyalSoruGruplari = [];
     var cevreselSosyalCevaplar = { mode: '', answers: {}, declaration: false };
+    var cevreselSosyalOtomatikCevaplar = {};
 
     function CevreselSosyalBolumuIlklendir() {
         CevreselSosyalTanimlariOku();
         CevreselSosyalCevaplariOku();
+        CevreselSosyalOtomatikCevaplariOku();
         const modeSelect = document.getElementById('cevreselSosyalYatirimKapsami');
         if (modeSelect) {
             modeSelect.value = cevreselSosyalCevaplar.mode || '';
@@ -1363,6 +1367,17 @@
         }
         catch {
             cevreselSosyalCevaplar = { mode: '', answers: {}, declaration: false };
+        }
+    }
+
+    function CevreselSosyalOtomatikCevaplariOku() {
+        const element = document.getElementById('cevreselSosyalOtomatikCevaplarJson');
+        try {
+            const parsed = JSON.parse(element?.textContent || '{}');
+            cevreselSosyalOtomatikCevaplar = parsed && typeof parsed === 'object' ? parsed : {};
+        }
+        catch {
+            cevreselSosyalOtomatikCevaplar = {};
         }
     }
 
@@ -1443,7 +1458,12 @@
 
     function CevreselSosyalInputHtml(question, ctx, disabled) {
         const id = CevreselSosyalAlanId(question, ctx, 'answer');
-        const value = cevreselSosyalCevaplar.answers[id] || '';
+        const otomatik = Object.prototype.hasOwnProperty.call(cevreselSosyalOtomatikCevaplar, String(question.id));
+        const value = otomatik ? (cevreselSosyalOtomatikCevaplar[String(question.id)] || '') : (cevreselSosyalCevaplar.answers[id] || '');
+        if (otomatik) {
+            cevreselSosyalCevaplar.answers[id] = value;
+            return `<textarea id="${id}" readonly rows="2">${htmlEncode(value)}</textarea>`;
+        }
         const type = question.answerType || question.type || 'text';
         const onchange = `onchange="CevreselSosyalCevapGuncelle('${id}', this.value); CevreselSosyalKosulluAlanGuncelle('${question.id}', '${ctx}')"`;
         const oninput = `oninput="CevreselSosyalCevapGuncelle('${id}', this.value)"`;
@@ -1621,7 +1641,6 @@
         modalSet('ortakOzelKamuNiteligi', ortak.ozelKamuNiteligi || 'Özel');
         modalSet('ortakDogumTarihi', ortak.dogumTarihi ? String(ortak.dogumTarihi).substring(0, 10) : '');
         modalSet('ortakCinsiyet', ortak.cinsiyet || '');
-        modalSet('ortakNihaiFaydalanici', ortak.nihaiFaydalaniciBilgisi || '');
         modalSet('ortakHesabaDahilOran', HesabaDahilOranHesapla(ortak.payOrani));
         modalSet('ortakOncekiYilNetSatis', ortak.oncekiYilNetSatis);
         modalSet('ortakSonYilNetSatis', ortak.sonYilNetSatis);
@@ -1644,7 +1663,7 @@
         }
         document.getElementById('ortakDogumTarihiLabel')?.classList.toggle('d-none', tuzelMi);
         document.getElementById('ortakCinsiyetLabel')?.classList.toggle('d-none', tuzelMi);
-        if (tuzelMi) { modalSet('ortakDogumTarihi', ''); modalSet('ortakCinsiyet', ''); }
+        document.getElementById('ortakSahiplikNiteligiLabel')?.classList.toggle('d-none', tuzelMi);
         OrtakHesabaDahilOranGuncelle();
         OrtakSahiplikNiteligiGuncelle();
     }
@@ -1682,13 +1701,13 @@
             dogumTarihi: modalValue('ortakDogumTarihi') || null,
             cinsiyet: modalValue('ortakCinsiyet'),
             sahiplikNiteligi: modalValue('ortakSahiplikNiteligi'),
-            nihaiFaydalaniciBilgisi: modalValue('ortakNihaiFaydalanici').trim(),
+            nihaiFaydalaniciBilgisi: '',
             uboKycBelgeAdi: mevcutOrtakBelgeAdi(),
             uboKycDosyaId: mevcutOrtakDosyaId(),
-            oncekiYilNetSatis: sayiOkuId('ortakOncekiYilNetSatis'),
-            sonYilNetSatis: sayiOkuId('ortakSonYilNetSatis'),
-            oncekiYilAktifToplami: sayiOkuId('ortakOncekiYilAktifToplami'),
-            sonYilAktifToplami: sayiOkuId('ortakSonYilAktifToplami')
+            oncekiYilNetSatis: paraTamsayiOkuId('ortakOncekiYilNetSatis'),
+            sonYilNetSatis: paraTamsayiOkuId('ortakSonYilNetSatis'),
+            oncekiYilAktifToplami: paraTamsayiOkuId('ortakOncekiYilAktifToplami'),
+            sonYilAktifToplami: paraTamsayiOkuId('ortakSonYilAktifToplami')
         };
         const indexText = modalValue('ortakModalIndex');
         const oncekiKimlik = indexText === '' ? '' : basvuruOrtaklari[Number(indexText)]?.tcknVkn || '';
@@ -1756,8 +1775,8 @@
         basvuruOrtaklari.forEach((item, index) => item.siraNo = index + 1);
 
         let html = `<div class="table-responsive"><table class="table table-bordered ortak-table"><thead><tr>
-            <th>${htmlEncode(ortakMetinleri.rowNo)}</th><th>${htmlEncode(ortakMetinleri.partnerNameTitle)}</th><th>${htmlEncode(ortakMetinleri.identity)}</th><th>${htmlEncode(ortakMetinleri.personType)}</th>
-            <th>${htmlEncode(ortakMetinleri.shareRate)}</th><th>${htmlEncode(ortakMetinleri.privatePublicType)}</th><th>Doğum tarihi</th><th>Cinsiyet</th><th>Sıralamada sahiplik niteliği</th><th></th>
+            <th>${htmlEncode(ortakMetinleri.rowNo)}</th><th>İşlemler</th><th>${htmlEncode(ortakMetinleri.partnerNameTitle)}</th><th>${htmlEncode(ortakMetinleri.identity)}</th><th>${htmlEncode(ortakMetinleri.personType)}</th>
+            <th>${htmlEncode(ortakMetinleri.shareRate)}</th><th>${htmlEncode(ortakMetinleri.privatePublicType)}</th><th>Doğum tarihi</th><th>Cinsiyet</th><th>Sıralamada sahiplik niteliği</th>
         </tr></thead><tbody>`;
 
         if (basvuruOrtaklari.length === 0) {
@@ -1767,6 +1786,10 @@
             basvuruOrtaklari.forEach((ortak, index) => {
                 html += `<tr>
                     <td>${index + 1}</td>
+                    <td class="text-nowrap">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="OrtakModalAc(${index})" ${ortaklikReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.edit)}</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="OrtakSil(${index})" ${ortaklikReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.delete)}</button>
+                    </td>
                     <td>${htmlEncode(ortak.adUnvan)}</td>
                     <td>${htmlEncode(ortak.tcknVkn)}</td>
                     <td>${htmlEncode(OrtakSecimMetni(ortak.kisiTuru))}</td>
@@ -1775,10 +1798,6 @@
                     <td>${htmlEncode(ortak.dogumTarihi ? String(ortak.dogumTarihi).substring(0,10) : '')}</td>
                     <td>${htmlEncode(ortak.cinsiyet || '')}</td>
                     <td>${htmlEncode(ortak.sahiplikNiteligi || 'Uygulanamaz')}</td>
-                    <td class="text-nowrap">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="OrtakModalAc(${index})" ${ortaklikReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.edit)}</button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="OrtakSil(${index})" ${ortaklikReadonly ? 'disabled' : ''}>${htmlEncode(ortakMetinleri.delete)}</button>
-                    </td>
                 </tr>`;
             });
         }
@@ -2033,6 +2052,17 @@
         return Number.isFinite(number) ? number : null;
     }
 
+    function paraTamsayiOkuId(id) {
+        const value = (document.getElementById(id)?.value || '').toString().trim();
+        if (!value) return null;
+        const normalized = typeof paraTamsayiDegeri === 'function'
+            ? paraTamsayiDegeri(value)
+            : value.replace(/\D/g, '');
+        if (!normalized) return null;
+        const number = Number(normalized);
+        return Number.isSafeInteger(number) ? number : null;
+    }
+
     function sayiYaz(value) {
         const number = Number(value || 0);
         return Number.isFinite(number) ? number.toLocaleString('tr-TR', { maximumFractionDigits: 2 }) : '';
@@ -2123,7 +2153,7 @@
             adres: modalValue('modalAdres')
         };
         if (!VknGecerliMi(firma.vergiKimlikNo)) {
-            PopupMesajGoster(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.VknLengthRequired"))), false);
+            PopupMesajGoster(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Firma.VknInvalid"))), false);
             return;
         }
         if (!firma.kurulusTarihi) {
@@ -3669,11 +3699,17 @@
         const mevcutAdres = indexText === '' ? {} : sonUygulamaAdresleri[Number(indexText)];
         const kiraVeyaTahsisSuresi = modalValue('adresModalKiraVeyaTahsisSuresi');
         const kiraTahsisBitisTarihi = modalValue('adresModalKiraTahsisBitisTarihi');
+        const ilceId = Number(modalValue('adresModalIlce') || 0);
+        if (ilceId <= 0) {
+            PopupMesajGoster('İlçe seçilmelidir.', false);
+            document.getElementById('adresModalIlce')?.focus();
+            return;
+        }
         const adres = {
             id: mevcutAdres?.id || 0,
             ...BasvuruKimlikleri(),
             siraNo: Number(modalValue('adresModalSiraNo') || 0) || 1,
-            ilceId: Number(modalValue('adresModalIlce') || 0) || 0,
+            ilceId: ilceId,
             tamAdres: modalValue('adresModalTamAdres'),
             yatirimYeriStatusu: Number(modalValue('adresModalYatirimYeriStatusu') || 0) || 0,
             kiraVeyaTahsisSuresi: kiraVeyaTahsisSuresi === '' ? null : Number(kiraVeyaTahsisSuresi),
@@ -3746,7 +3782,7 @@
         const adres = index >= 0 ? sonUygulamaAdresleri[index] : {};
         modalSet('adresModalIndex', index >= 0 ? String(index) : '');
         modalSet('adresModalSiraNo', adres.siraNo);
-        modalSet('adresModalIlce', adres.ilceId);
+        AdresModalIlVeIlceleriGuncelle(adres.ilceId);
         modalSet('adresModalTamAdres', adres.tamAdres);
         modalSet('adresModalYatirimYeriStatusu', adres.yatirimYeriStatusu);
         modalSet('adresModalKiraVeyaTahsisSuresi', adres.kiraVeyaTahsisSuresi);
@@ -3764,6 +3800,30 @@
         ['adresModalAdresBelgeDosya','adresModalKullanimHakkiDosya','adresModalKanitDosya'].forEach(id => { const e=document.getElementById(id); if(e)e.value=''; });
         YapiRuhsatiAlanlariniGuncelle();
         uygulamaAdresModal?.show();
+    }
+
+    function AdresModalIlVeIlceleriGuncelle(seciliIlceId) {
+        const ilAlani = document.querySelector('[name="Basvuru.IlId"]');
+        const ilId = Number(ilAlani?.value || basvuruIlId || 0);
+        const ilAdi = ilAlani?.selectedOptions?.[0]?.textContent?.trim()
+            || uygulamaAdresiIlleri.find(il => Number(il.id) === ilId)?.ad
+            || '';
+        modalSet('adresModalIl', ilAdi);
+
+        const ilceAlani = document.getElementById('adresModalIlce');
+        if (!ilceAlani) return;
+        ilceAlani.innerHTML = `<option value="">${htmlEncode(@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Common.Select"))))}</option>`;
+        uygulamaAdresiIlceleri
+            .filter(ilce => Number(ilce.ilId) === ilId)
+            .forEach(ilce => {
+                const option = document.createElement('option');
+                option.value = String(ilce.id);
+                option.textContent = ilce.ad || '';
+                if (Number(ilce.segeKademesi) > 0) option.dataset.sege = String(ilce.segeKademesi);
+                ilceAlani.appendChild(option);
+            });
+        modalSet('adresModalIlce', seciliIlceId);
+        AdresSegeKademesiniGuncelle();
     }
 
     function AdresDosyaGoster(adId, linkId, dosyaAdi, dosyaId) {

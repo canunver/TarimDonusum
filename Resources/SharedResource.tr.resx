@@ -1441,7 +1441,7 @@
     <value>Girilen değerler henüz aralığı sağlamıyor.</value>
   </data>
   <data name="Basvuru.Step.Ortaklik" xml:space="preserve">
-    <value>Ortaklık ve Yetki - Pay ve UBO</value>
+    <value>Ortaklık ve Yetki Bilgileri</value>
   </data>
   <data name="Basvuru.Documents.Required.1" xml:space="preserve">
     <value>Gelir tablosu</value>
@@ -2732,6 +2732,9 @@
   </data>
   <data name="Basvuru.Ortaklik.VknLengthRequired" xml:space="preserve">
     <value>Tüzel kişi için 10 haneli VKN girilmelidir.</value>
+  </data>
+  <data name="Basvuru.Firma.VknInvalid" xml:space="preserve">
+    <value>Vergi kimlik numarası 10 haneli ve geçerli olmalıdır.</value>
   </data>
   <data name="Basvuru.ApplicationFinancial.Title" xml:space="preserve">
     <value>Mali Veriler ve Ölçek Kontrolü</value>

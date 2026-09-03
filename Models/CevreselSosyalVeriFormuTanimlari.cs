@@ -68,10 +68,31 @@ public static class CevreselSosyalVeriFormuTanimlari
             ["1.2"] = b.yatirim.yatirimAdi ?? "",
             ["1.3"] = adres,
             ["1.4"] = string.Join(", ", (b.yatirim.yatirimTurleri ?? []).Select(Tur).Where(x => x.Length > 0)),
+            ["1.5"] = YatirimKisaOzetiVeGerekcesi(b),
             ["2.2"] = HarcamaTurleri(b),
-            ["3.2"] = PersonelPlani(b)
+            ["3.2"] = PersonelPlani(b),
+            ["6.1"] = KullanimHakkiBelgesiDurumu(b),
+            ["6.2"] = AraziStatusleri(b)
         };
     }
+
+    private static string YatirimKisaOzetiVeGerekcesi(Basvuru b) => string.Join(Environment.NewLine, new[]
+    {
+        b.yatirim.yatiriminAmaci?.Trim() ?? "",
+        b.yatirim.yatirimFaaliyetleri?.Trim() ?? ""
+    }.Where(x => x.Length > 0));
+
+    private static string KullanimHakkiBelgesiDurumu(Basvuru b)
+    {
+        var adresler = b.YatirimAdresleri ?? [];
+        if (adresler.Count == 0) return "";
+        return adresler.All(x => x.kullanimHakkiDosyaId.GetValueOrDefault() > 0) ? "Evet" : "Hayır";
+    }
+
+    private static string AraziStatusleri(Basvuru b) => string.Join("; ", (b.YatirimAdresleri ?? [])
+        .OrderBy(x => x.siraNo)
+        .Select(x => x.yatirimYeriStatusuAd?.Trim() ?? "")
+        .Where(x => x.Length > 0));
 
     private static string HarcamaTurleri(Basvuru b)
     {

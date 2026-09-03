@@ -17,6 +17,9 @@
     <script type="application/json" id="cevreselSosyalSoruTanimlariJson">
         @Html.Raw(JsonSerializer.Serialize(CevreselSosyalAnketTanimlari.Tum, jsonOptions))
     </script>
+    <script type="application/json" id="cevreselSosyalOtomatikCevaplarJson">
+        @Html.Raw(JsonSerializer.Serialize(CevreselSosyalVeriFormuTanimlari.OtomatikCevaplar(b), jsonOptions))
+    </script>
 
     <div class="esf-mode-box">
         <label>
