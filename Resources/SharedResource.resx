@@ -559,7 +559,19 @@
     <value>Ön Başvuru Denetleme</value>
   </data>
   <data name="Basvuru.Form.ApplicationNo" xml:space="preserve">
-    <value>Ön Başvuru No: {0}</value>
+    <value>Başvuru No: {0}</value>
+  </data>
+  <data name="Basvuru.Form.ApplicationNoNotAssigned" xml:space="preserve">
+    <value>Başvuru No Alınmadı</value>
+  </data>
+  <data name="Basvuru.Form.ApplicationNoNotAssignedWithKey" xml:space="preserve">
+    <value>Başvuru No Alınmadı (Anahtar: {0})</value>
+  </data>
+  <data name="Basvuru.Common.ApplicationNo" xml:space="preserve">
+    <value>Başvuru No</value>
+  </data>
+  <data name="Basvuru.Common.InternalKey" xml:space="preserve">
+    <value>Anahtar</value>
   </data>
   <data name="Basvuru.Form.MainApplicationNo" xml:space="preserve">
     <value>Başvuru ID: {0}</value>
@@ -592,10 +604,13 @@
     <value>Yatırım Bilgileri - Adres ve harcama türleri</value>
   </data>
   <data name="Basvuru.Step.5" xml:space="preserve">
-    <value>Finansman - USD büyüklükler</value>
+    <value>Finansman - EUR büyüklükler</value>
+  </data>
+  <data name="Basvuru.Step.FinansmanOdemePlani" xml:space="preserve">
+    <value>Finansman (EUR)/Ödeme Planı</value>
   </data>
   <data name="Basvuru.Step.6" xml:space="preserve">
-    <value>Mali Veriler - Ölçek kontrolü</value>
+    <value>Mali ve Ortaklık Verileri</value>
   </data>
   <data name="Basvuru.Section1.Title" xml:space="preserve">
     <value>1. Ön Başvuru Bilgileri</value>
@@ -724,16 +739,16 @@
     <value>Talep edilen harcama türleri</value>
   </data>
   <data name="Basvuru.Field.ToplamYatirimTutari" xml:space="preserve">
-    <value>Toplam yatırım tutarı (USD)</value>
+    <value>Toplam yatırım tutarı (EUR)</value>
   </data>
   <data name="Basvuru.Field.UygunHarcamaTutari" xml:space="preserve">
-    <value>Uygun harcama tutarı (USD)</value>
+    <value>Uygun harcama tutarı (EUR)</value>
   </data>
   <data name="Basvuru.Field.TalepEdilenDestekTutari" xml:space="preserve">
-    <value>Talep edilen destek tutarı (USD)</value>
+    <value>Talep edilen destek tutarı (EUR)</value>
   </data>
   <data name="Basvuru.Field.BasvuruSahibiKatkisi" xml:space="preserve">
-    <value>Ön başvuru sahibi katkısı (USD)</value>
+    <value>Ön başvuru sahibi katkısı (EUR)</value>
   </data>
   <data name="Basvuru.Field.DestekOrani" xml:space="preserve">
     <value>Destek oranı (%)</value>
@@ -742,10 +757,10 @@
     <value>Talep edilen finansman oranı (%)</value>
   </data>
   <data name="Basvuru.Field.OnBasvuruSahibiKatkisi" xml:space="preserve">
-    <value>Ön başvuru sahibi katkısı (USD)</value>
+    <value>Ön başvuru sahibi katkısı (EUR)</value>
   </data>
   <data name="Basvuru.Field.BasvuruSahibiKatkisiYeni" xml:space="preserve">
-    <value>Başvuru sahibi katkısı (USD)</value>
+    <value>Başvuru sahibi katkısı (EUR)</value>
   </data>
   <data name="Basvuru.Field.TalepEdilenVadeSuresiAy" xml:space="preserve">
     <value>Talep edilen vade süresi (Ay)</value>
@@ -760,10 +775,10 @@
     <value>Talep edilen finansman oranı dönem için tanımlanan oranı aşamaz.</value>
   </data>
   <data name="Basvuru.Field.TalepEdilenFinansmanTutari" xml:space="preserve">
-    <value>Talep edilen finansman tutarı (USD)</value>
+    <value>Talep edilen finansman tutarı (EUR)</value>
   </data>
   <data name="Basvuru.Field.OzKaynakTutari" xml:space="preserve">
-    <value>Öz kaynak tutarı (USD)</value>
+    <value>Öz kaynak tutarı (EUR)</value>
   </data>
   <data name="Basvuru.Field.YatirimSuresiAy" xml:space="preserve">
     <value>Yatırım süresi (ay)</value>
@@ -951,6 +966,8 @@
   <data name="Basvuru.Step.YatirimOzeti" xml:space="preserve">
     <value>Yatırım Özeti Tablosu</value>
   </data>
+  <data name="Basvuru.Step.Urunler" xml:space="preserve"><value>Ürünler</value></data>
+  <data name="Basvuru.Step.ButceGiderler" xml:space="preserve"><value>Bütçe ve Giderler</value></data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
     <value>7. Yatırım Özeti Tablosu</value>
   </data>
@@ -1531,7 +1548,7 @@
     <value>Yıllık işletme gideri</value>
   </data>
   <data name="Basvuru.YatirimOzeti.Section.Budget" xml:space="preserve">
-    <value>A. Toplam Yatırım Bütçesi ve Finansman Kaynakları</value>
+    <value>Toplam Yatırım Bütçesi ve Finansman Kaynakları</value>
   </data>
   <data name="Basvuru.YatirimOzeti.Section.BudgetNote" xml:space="preserve">
     <value>Tutarlar TL olarak girilir. Satır toplamları, yatırım toplamı, finansman kaynakları toplamı ve fark otomatik hesaplanır.</value>
@@ -1546,7 +1563,7 @@
     <value>+ Ürün/ürün grubu ekle</value>
   </data>
   <data name="Basvuru.YatirimOzeti.Section.Expense" xml:space="preserve">
-    <value>C. Tam Kapasitede Yıllık İşletme Giderleri</value>
+    <value>Tam Kapasitede Yıllık İşletme Giderleri</value>
   </data>
   <data name="Basvuru.YatirimOzeti.Section.ExpenseNote" xml:space="preserve">
     <value>Gider unsuru, miktar, birim fiyat, sabit/değişken oranları ve tutarlar sistem içinde hesaplanır.</value>
@@ -2610,6 +2627,9 @@
   <data name="Basvuru.Step.DbCtp" xml:space="preserve">
     <value>Teknik Proje</value>
   </data>
+  <data name="Basvuru.Step.DbCtpGirdiler" xml:space="preserve"><value>Teknik Proje (Girdiler)</value></data>
+  <data name="Basvuru.Step.DbCtpMakineEkipman" xml:space="preserve"><value>Teknik Proje (Makine Ekipman)</value></data>
+  <data name="Basvuru.Step.DbCtpBinaListesi" xml:space="preserve"><value>Teknik Proje (Bina Listesi)</value></data>
   <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve">
     <value>8. Teknik Proje</value>
   </data>

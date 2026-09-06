@@ -4,7 +4,8 @@
 @{
     var b = Model.Basvuru;
     bool ro = Model.SaltOkunur;
-    bool CheckedInt(IEnumerable<int> values, int value) => values.Contains(value);
+    string YatirimTurleriMetni() => string.Join(", ", b.yatirim.yatirimTurleri.Select(x => IsimBul.EnumAdi((enumYatirimTuru)x, L)).Distinct(StringComparer.CurrentCultureIgnoreCase));
+    string HarcamaTurleriMetni() => string.Join(", ", b.yatirim.harcamaTurleri.Select(x => IsimBul.EnumAdi((enumHarcamaTuru)x, L)).Distinct(StringComparer.CurrentCultureIgnoreCase));
 }
             <section class="basvuru-panel active" data-panel="4">
                 <h2>@L["Basvuru.Section4.Title"]</h2>
@@ -14,20 +15,15 @@
                         <input id="yatirimAdi" name="Basvuru.YatirimAdi" value="@b.yatirim.yatirimAdi" disabled="@ro" />
                     </div>
                 </div>
-                <h3>@L["Basvuru.Field.YatirimTuru"]</h3>
-                <div class="check-grid">
-                    @foreach (enumYatirimTuru item in Enum.GetValues<enumYatirimTuru>().Where(x => x != enumYatirimTuru.Tanimsiz))
-                    {
-                        <label><input type="checkbox" name="Basvuru.yatirim.yatirimTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.yatirimTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label>
-                    }
-                </div>
-                <h3>@L["Basvuru.Field.HarcamaTurleri"]</h3>
-                <div class="check-grid">
-                    @foreach (var item in Enum.GetValues<enumHarcamaTuru>().Where(x => (int)x > 0 && (int)x <= 4))
-                    {
-                        <label><input type="checkbox" name="Basvuru.yatirim.harcamaTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.harcamaTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label>
-                    }
-                </div>
+                <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"] <span class="required-mark">*</span><textarea name="Basvuru.yatirim.YatiriminAmaci" disabled="@ro">@b.yatirim.yatiriminAmaci</textarea></label>
+                <h3 class="subhead mt-4">Adreslerden Birleştirilen Yatırım Bilgileri</h3>
+                <label class="wide-label">@L["Basvuru.Field.YatirimTuru"]<textarea id="adresOzetYatirimTurleri" readonly>@YatirimTurleriMetni()</textarea></label>
+                <label class="wide-label">Talep edilen harcama türleri<textarea id="adresOzetHarcamaTurleri" readonly>@HarcamaTurleriMetni()</textarea></label>
+                <label class="wide-label">@L["Basvuru.Field.YatirimFaaliyetleri"]<textarea id="adresOzetFaaliyetler" readonly>@b.yatirim.yatirimFaaliyetleri</textarea></label>
+                <label class="wide-label">@L["Basvuru.Field.YatirimGirdileri"]<textarea id="adresOzetGirdiler" readonly>@b.yatirim.yatirimGirdileri</textarea></label>
+                <label class="wide-label">@L["Basvuru.Field.YatirimCiktilari"]<textarea id="adresOzetCiktilar" readonly>@b.yatirim.yatirimCiktilari</textarea></label>
+                <p class="section-description">Bu alanlar aşağıdaki adres kayıtlarından otomatik olarak birleştirilir.</p>
+                <h3 class="subhead mt-4">Yatırım Adresleri</h3>
                 <div class="adres-toolbar">
                     @if (!ro)
                     {
@@ -54,10 +50,6 @@
                         <tbody id="uygulamaAdresListesi"></tbody>
                     </table>
                 </div>
-                <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"] <span class="required-mark">*</span><textarea name="Basvuru.yatirim.YatiriminAmaci" disabled="@ro">@b.yatirim.yatiriminAmaci</textarea></label>
-                <label class="wide-label">@L["Basvuru.Field.YatirimFaaliyetleri"] <span class="required-mark">*</span><textarea name="Basvuru.yatirim.YatirimFaaliyetleri" disabled="@ro">@b.yatirim.yatirimFaaliyetleri</textarea></label>
-                <label class="wide-label">@L["Basvuru.Field.YatirimGirdileri"] <span class="required-mark">*</span><textarea name="Basvuru.yatirim.YatirimGirdileri" disabled="@ro">@b.yatirim.yatirimGirdileri</textarea></label>
-                <label class="wide-label">@L["Basvuru.Field.YatirimCiktilari"] <span class="required-mark">*</span><textarea name="Basvuru.yatirim.YatirimCiktilari" disabled="@ro">@b.yatirim.yatirimCiktilari</textarea></label>
                 <p class="section-description">@L["Basvuru.InvestmentPurpose.Help"]</p>
             </section>
 

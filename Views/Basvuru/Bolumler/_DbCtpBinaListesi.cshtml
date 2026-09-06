@@ -1,0 +1,3 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@{ ViewData["TeknikProjeBina"] = true; }
+@await Html.PartialAsync("Basvuru/_BinaListesi", Model, ViewData)

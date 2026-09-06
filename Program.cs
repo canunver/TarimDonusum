@@ -31,7 +31,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 });
 
 
-builder.Services.AddControllersWithViews().AddViewLocalization().AddDataAnnotationsLocalization(); ;
+builder.Services.AddControllersWithViews().AddViewLocalization().AddDataAnnotationsLocalization();
 builder.Services.AddDataProtection();
 builder.Services.AddSingleton<CaptchaGenerator>();
 builder.Services.AddScoped<KullaniciIsKurallari>();

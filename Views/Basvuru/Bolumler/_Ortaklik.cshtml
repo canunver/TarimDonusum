@@ -8,19 +8,6 @@
     string T(string key) => L[key].Value;
     var ortaklik = b.ortaklik ?? new BasvuruOrtaklik { basvuruId = b.Id };
     ortaklik.basvuruId = b.Id;
-    if (ortaklik.bagliOrtakDosyalari.Count == 0)
-    {
-        ortaklik.bagliOrtakDosyalari =
-        [
-            new BasvuruOrtaklikDosya { dosyaNo = 1, dosyaTuru = T("Basvuru.Documents.Required.1") },
-            new BasvuruOrtaklikDosya { dosyaNo = 2, dosyaTuru = T("Basvuru.Documents.Required.2") },
-            new BasvuruOrtaklikDosya { dosyaNo = 3, dosyaTuru = T("Basvuru.Documents.Required.3") },
-            new BasvuruOrtaklikDosya { dosyaNo = 4, dosyaTuru = T("Basvuru.Documents.Required.4") },
-            new BasvuruOrtaklikDosya { dosyaNo = 5, dosyaTuru = T("Basvuru.Documents.Required.5") },
-            new BasvuruOrtaklikDosya { dosyaNo = 6, dosyaTuru = T("Basvuru.Documents.Required.6") },
-            new BasvuruOrtaklikDosya { dosyaNo = 7, dosyaTuru = T("Basvuru.Documents.Required.7") }
-        ];
-    }
     string initialJson = JsonSerializer.Serialize(ortaklik);
     bool tuzelOrtakVar = ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase));
     int donemYil = b.basvuruFirma.donem?.yil ?? 0;
@@ -30,7 +17,6 @@
     }
     string oncekiMaliYil = donemYil > 0 ? (donemYil - 2).ToString() : T("Basvuru.Mali.PreviousYear");
     string sonMaliYil = donemYil > 0 ? (donemYil - 1).ToString() : T("Basvuru.Mali.LatestYear");
-    string dosyaYok = T("Basvuru.Documents.NoFileSelected");
 }
 <section class="basvuru-panel active" data-panel="9">
     <h2>@L["Basvuru.Ortaklik.Title"]</h2>
@@ -44,6 +30,20 @@
     }
 
     <div id="partnerAlerts" class="mt-3"></div>
+
+    <h3 class="subhead mt-4">Mali Kontrol Toplamları</h3>
+    <p class="text-muted">Başvuru sahibi ile hesaba dahil edilen tüzel ortakların ağırlıklı tutarları birlikte gösterilir.</p>
+    <div class="table-responsive">
+        <table class="table table-bordered mali-table">
+            <thead><tr><th>Kontrol kalemi</th><th>@oncekiMaliYil @L["Basvuru.Ortaklik.NetSalesShort"]</th><th>@sonMaliYil @L["Basvuru.Ortaklik.NetSalesShort"]</th><th>@oncekiMaliYil @L["Basvuru.Ortaklik.AssetsShort"]</th><th>@sonMaliYil @L["Basvuru.Ortaklik.AssetsShort"]</th></tr></thead>
+            <tbody>
+                <tr><th>Başvuru sahibi</th><td id="maliKontrolKendiOncekiNet">0</td><td id="maliKontrolKendiSonNet">0</td><td id="maliKontrolKendiOncekiAktif">0</td><td id="maliKontrolKendiSonAktif">0</td></tr>
+                <tr><th>Ağırlıklı tüzel ortak toplamı</th><td id="maliKontrolOrtakOncekiNet">0</td><td id="maliKontrolOrtakSonNet">0</td><td id="maliKontrolOrtakOncekiAktif">0</td><td id="maliKontrolOrtakSonAktif">0</td></tr>
+                <tr class="font-weight-bold table-active"><th>Konsolide kontrol toplamı</th><td id="maliKontrolToplamOncekiNet">0</td><td id="maliKontrolToplamSonNet">0</td><td id="maliKontrolToplamOncekiAktif">0</td><td id="maliKontrolToplamSonAktif">0</td></tr>
+            </tbody>
+        </table>
+    </div>
+
     <div id="tuzelKisiOrtakBilgileri" class="mt-3 @(tuzelOrtakVar ? "" : "d-none")">
         <div class="form-grid">
             <label>
@@ -52,36 +52,6 @@
             </label>
         </div>
         <div id="legalPartnerFinancials"></div>
-        <div id="bagliOrtakZorunluBelgeler">
-            <h3 class="subhead mt-4">@L["Basvuru.Ortaklik.RelatedDocumentsTitle"]</h3>
-            <div class="table-responsive">
-                <table class="table table-bordered ortak-doc-table">
-                    <thead><tr><th>@L["Basvuru.Documents.FileType"]</th><th>@L["Basvuru.Documents.FileName"]</th><th></th></tr></thead>
-                    <tbody>
-                        @foreach (var belge in ortaklik.bagliOrtakDosyalari)
-                        {
-                            string inputId = $"bagliOrtakDosya_{belge.dosyaNo}";
-                            string fileNameId = $"bagliOrtakDosyaAdi_{belge.dosyaNo}";
-                            string downloadId = $"bagliOrtakIndir_{belge.dosyaNo}";
-                            <tr>
-                                <td>@belge.dosyaTuru <span class="required-mark">*</span></td>
-                                <td id="@fileNameId">@(string.IsNullOrWhiteSpace(belge.dosyaAdi) ? dosyaYok : belge.dosyaAdi)</td>
-                                <td class="text-nowrap">
-                                    @if (!ro)
-                                    {
-                                        <label class="btn btn-sm btn-primary mb-0" for="@inputId">@L["Basvuru.Documents.Upload"]</label>
-                                        <input id="@inputId" type="file" class="document-file-input ortaklik-dosya-input" data-form-ad="Basvuru_BagliBelge" data-dosya-no="@belge.dosyaNo" data-name-target="@fileNameId" data-download-target="@downloadId" />
-                                    }
-                                    <a class="btn btn-sm btn-outline-primary @(belge.dosyaId.HasValue ? "" : "d-none")" id="@downloadId"
-                                       href="@(belge.dosyaId.HasValue ? Url.Action("DosyaIndir", "Basvuru", new { id = belge.dosyaId.Value }) : "#")"
-                                       target="_blank" rel="noopener">@L["Basvuru.Common.Download"]</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
 
 </section>

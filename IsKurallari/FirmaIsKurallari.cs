@@ -24,15 +24,16 @@ namespace TarimDonusum.IsKurallari
         {
             Sonuc<List<Firma>> sonuc = new();
             if (!KullaniciKontrolEt(kullanici, sonuc)) return sonuc;
+            Kullanici mevcutKullanici = kullanici!;
             string metin = arama.AramaMetni?.Trim() ?? "";
-            bool firmaErisimiKisitli = FirmaErisimiKisitliMi(kullanici!);
+            bool firmaErisimiKisitli = FirmaErisimiKisitliMi(mevcutKullanici);
             try
             {
                 await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
-                kullanici.Yetkiler = await new TABKullaniciYetki(connection).KullaniciYetkileriniListeleAsync(kullanici.Id);
-                firmaErisimiKisitli = FirmaErisimiKisitliMi(kullanici);
-                sonuc.nesne = await new TABFirma(connection).AraAsync(metin, firmaErisimiKisitli ? kullanici.Id : null);
+                mevcutKullanici.Yetkiler = await new TABKullaniciYetki(connection).KullaniciYetkileriniListeleAsync(mevcutKullanici.Id);
+                firmaErisimiKisitli = FirmaErisimiKisitliMi(mevcutKullanici);
+                sonuc.nesne = await new TABFirma(connection).AraAsync(metin, firmaErisimiKisitli ? mevcutKullanici.Id : null);
             }
             catch (Exception ex) { Hata(sonuc, ex, "Firmalar aranamadı."); }
             return sonuc;
@@ -61,6 +62,7 @@ namespace TarimDonusum.IsKurallari
         {
             Sonuc<int> sonuc = new();
             if (!KullaniciKontrolEt(kullanici, sonuc)) return sonuc;
+            Kullanici mevcutKullanici = kullanici!;
             NormalizeEt(firma);
             firma.Dogrula(sonuc);
             if (!sonuc.basarili) return sonuc;
@@ -68,7 +70,7 @@ namespace TarimDonusum.IsKurallari
             {
                 await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
-                if (firma.id > 0 && !await FirmaErisimiVarMiAsync(connection, firma.id, kullanici!))
+                if (firma.id > 0 && !await FirmaErisimiVarMiAsync(connection, firma.id, mevcutKullanici))
                 {
                     sonuc.HataEkle("Bu firmaya erişim yetkiniz yok."); return sonuc;
                 }
@@ -83,18 +85,18 @@ namespace TarimDonusum.IsKurallari
                 if (yeni)
                 {
                     await tab.EkleAsync(firma);
-                    if (FirmaErisimiKisitliMi(kullanici!))
+                    if (FirmaErisimiKisitliMi(mevcutKullanici))
                     {
                         await new TABFirmaKullanici(connection, null, tx).EkleYoksaAsync(new FirmaKullanici
                         {
                             FirmaId = firma.id,
-                            KullaniciId = kullanici.Id,
-                            IliskiyiKuranKullaniciId = kullanici.Id
+                            KullaniciId = mevcutKullanici.Id,
+                            IliskiyiKuranKullaniciId = mevcutKullanici.Id
                         });
                     }
                 }
                 else await tab.GuncelleAsync(firma);
-                await new TABFirmaLog(connection, null, tx).EkleAsync(firma, yeni ? "FirmaEklendi" : "FirmaGuncellendi", kullanici!.Id);
+                await new TABFirmaLog(connection, null, tx).EkleAsync(firma, yeni ? "FirmaEklendi" : "FirmaGuncellendi", mevcutKullanici.Id);
                 await tx.CommitAsync();
                 sonuc.nesne = firma.id;
                 sonuc.mesaj = "Firma kaydedildi.";

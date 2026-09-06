@@ -23,8 +23,8 @@ public sealed class RPROB_Finansman(string uygulamaRootPath) : RPROBTemel(uygula
         Yaz(tablo, 8, 4, f.digerFinansmanKaynaklari);
         Yaz(tablo, 9, 2, f.oncekiRffOnayliTutar);
         Yaz(tablo, 9, 4, f.oncekiRffSozlesmesiKapaliMi);
-        Yaz(tablo, 10, 1, $"Kümülatif {IsimBul.MetneCevirKurussuz(ustLimit)} USD tavan kontrolü");
-        Yaz(tablo, 10, 3, $"{IsimBul.MetneCevirKurussuz(altLimit)}–{IsimBul.MetneCevirKurussuz(ustLimit)} USD limit kontrolü");
+        Yaz(tablo, 10, 1, $"Kümülatif {IsimBul.MetneCevirKurussuz(ustLimit)} EUR tavan kontrolü");
+        Yaz(tablo, 10, 3, $"{IsimBul.MetneCevirKurussuz(altLimit)}–{IsimBul.MetneCevirKurussuz(ustLimit)} EUR limit kontrolü");
         tablo.HucreFormulYaz(9, 1, $"IF(OR(B9=\"\",D5=\"\"),\"\",IF(B9+D5<={FormulSayisi(ustLimit)},\"UYGUN\",\"TAVAN AŞILIYOR\"))");
         tablo.HucreFormulYaz(9, 3, $"IF(D5=\"\",\"\",IF(AND(D5>={FormulSayisi(altLimit)},D5<={FormulSayisi(ustLimit)}),\"UYGUN\",\"UYGUN DEĞİL\"))");
         Yaz(tablo, 11, 2, f.bankaTeminatMektubuSaglanabilirMi);

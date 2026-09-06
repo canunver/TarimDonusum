@@ -40,7 +40,10 @@ namespace TarimDonusum.Models
         BasvuruOzeti = 35,
         BasvuruIzlemeGostergeleri = 36,
         BasvuruBilancoGelir = 37,
-        BasvuruMetraj = 38
+        BasvuruMetraj = 38,
+        ButceGiderler = 39,
+        DbCtpMakineEkipman = 40,
+        DbCtpBinaListesi = 41
     }
 
     public sealed record BasvuruBolumTanim(
@@ -79,10 +82,13 @@ namespace TarimDonusum.Models
             new(enumBasvuruBolum.Ortaklik, 30, "Basvuru.Step.Ortaklik", "Bolumler/_Ortaklik"),
             new(enumBasvuruBolum.UygulamaAdresi, 40, "Basvuru.Step.4", "Bolumler/_UygulamaAdresi"),
             new(enumBasvuruBolum.Yatirim, 50, "Basvuru.Step.3", "Bolumler/_Yatirim"),
-            new(enumBasvuruBolum.Finans, 60, "Basvuru.Step.5", "Bolumler/_Finans"),
-            new(enumBasvuruBolum.YatirimOzeti, 70, "Basvuru.Step.YatirimOzeti", "Bolumler/_YatirimOzeti"),
-            new(enumBasvuruBolum.DbCtpTeknikProje, 80, "Basvuru.Step.DbCtp", "Bolumler/_DbCtpTeknikProje"),
-            new(enumBasvuruBolum.Belgeler, 90, "Basvuru.Step.7", "Bolumler/_Belgeler"),
+            new(enumBasvuruBolum.YatirimOzeti, 60, "Basvuru.Step.Urunler", "Bolumler/_YatirimOzeti"),
+            new(enumBasvuruBolum.ButceGiderler, 70, "Basvuru.Step.ButceGiderler", "Bolumler/_ButceGiderler"),
+            new(enumBasvuruBolum.Finans, 80, "Basvuru.Step.FinansmanOdemePlani", "Bolumler/_Finans"),
+            new(enumBasvuruBolum.DbCtpTeknikProje, 90, "Basvuru.Step.DbCtpGirdiler", "Bolumler/_DbCtpTeknikProje"),
+            new(enumBasvuruBolum.DbCtpMakineEkipman, 91, "Basvuru.Step.DbCtpMakineEkipman", "Bolumler/_DbCtpMakineEkipman"),
+            new(enumBasvuruBolum.DbCtpBinaListesi, 92, "Basvuru.Step.DbCtpBinaListesi", "Bolumler/_DbCtpBinaListesi"),
+            new(enumBasvuruBolum.Belgeler, 100, "Basvuru.Step.7", "Bolumler/_Belgeler"),
             new(enumBasvuruBolum.CevreselSosyal, 100, "Basvuru.Step.CevreselSosyal", "Bolumler/_CevreselSosyal"),
             new(enumBasvuruBolum.TaahhutBeyan, 110, "Basvuru.Step.TaahhutBeyan", "Bolumler/_TaahhutBeyan"),
             new(enumBasvuruBolum.Ozet, 120, "Basvuru.Step.Ozet", "Bolumler/_Ozet"),
@@ -121,6 +127,7 @@ namespace TarimDonusum.Models
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruZorunluBelgeler)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruOzeti)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruIzlemeGostergeleri)
+                .Where(x => x.Bolum != enumBasvuruBolum.Ortaklik)
                 .Where(x => denetciGorunumu || !x.DenetciBolumu)
                 .OrderBy(x => x.Sira)
                 .ToList();

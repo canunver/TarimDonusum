@@ -4,22 +4,27 @@
 @{
     var b = Model.Basvuru;
     bool ro = Model.SaltOkunur;
-    decimal? hesaplananFinansmanTutari = b.finans.toplamYatirimTutari.HasValue && b.finans.talepEdilenFinansmanOrani.HasValue
-        ? Math.Round(b.finans.toplamYatirimTutari.Value * b.finans.talepEdilenFinansmanOrani.Value / 100m, 2)
-        : b.finans.talepEdilenDestekTutari;
-    decimal? hesaplananOzKaynak = b.finans.toplamYatirimTutari.HasValue && hesaplananFinansmanTutari.HasValue
-        ? b.finans.toplamYatirimTutari.Value - hesaplananFinansmanTutari.Value
-        : b.finans.basvuruSahibiKatkisi;
+    decimal toplamTl = b.yatirimOzeti.toplamYatirimButcesiTl;
+    decimal kur = b.basvuruFirma.donem.onBasvuruCevrimKuru.GetValueOrDefault();
+    decimal? toplamEur = toplamTl > 0 && kur > 0 ? Math.Round(toplamTl / kur, 2) : null;
+    decimal? hesaplananFinansmanTutari = toplamEur.HasValue && b.finans.talepEdilenFinansmanOrani.HasValue
+        ? Math.Round(toplamEur.Value * b.finans.talepEdilenFinansmanOrani.Value / 100m, 2)
+        : null;
+    decimal? hesaplananOzKaynak = toplamEur.HasValue && hesaplananFinansmanTutari.HasValue
+        ? toplamEur.Value - hesaplananFinansmanTutari.Value
+        : null;
+    string toplamEurHam = toplamEur?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0";
 }
             <section class="basvuru-panel active" data-panel="5">
-                <h2>@L["Basvuru.Section5.Title"]</h2>
-                <div class="form-grid">
-                    <label>@L["Basvuru.Field.ToplamYatirimTutari"]<input class="money-integer" name="Basvuru.finans.ToplamYatirimTutari" type="text" inputmode="numeric" value="@IsimBul.MetneCevirKurussuz(b.finans.toplamYatirimTutari)" oninput="FinansTutarlariniHesapla()" onchange="FinansTutarlariniHesapla()" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.TalepEdilenFinansmanOrani"]<input name="Basvuru.finans.TalepEdilenFinansmanOrani" type="number" min="1" max="@b.basvuruFirma.donem.destekOrani?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" step="1" value="@b.finans.talepEdilenFinansmanOrani?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" oninput="FinansTutarlariniHesapla()" onchange="FinansTutarlariniHesapla()" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.TalepEdilenFinansmanTutari"]<input class="money-integer" name="Basvuru.finans.TalepEdilenDestekTutari" type="text" value="@IsimBul.MetneCevirKurussuz(hesaplananFinansmanTutari)" readonly /></label>
-                    <label>@L["Basvuru.Field.OzKaynakTutari"]<input class="money-integer" name="Basvuru.finans.BasvuruSahibiKatkisi" type="text" value="@IsimBul.MetneCevirKurussuz(hesaplananOzKaynak)" readonly /></label>
-                    <label>@L["Basvuru.Field.TalepEdilenVadeSuresiAy"]<input name="Basvuru.finans.TalepEdilenVadeSuresiAy" type="number" min="1" step="1" value="@b.finans.talepEdilenVadeSuresiAy" disabled="@ro" /></label>
-                    <label>@L["Basvuru.Field.YatirimSuresiAy"]<input name="Basvuru.finans.YatirimSuresiAy" type="number" min="1" step="1" value="@b.finans.yatirimSuresiAy" disabled="@ro" /></label>
+                <h2>@L["Basvuru.Step.FinansmanOdemePlani"]</h2>
+                <div class="finans-plan-form">
+                    <label><span>Toplam yatırım tutarı (TL):</span><div class="finans-plan-value">@IsimBul.MetneCevirKurussuz(toplamTl)</div></label>
+                    <label><span>Toplam yatırım tutarı (EUR):</span><div class="finans-plan-value">@(toplamEur?.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) ?? "")</div><input name="Basvuru.finans.ToplamYatirimTutari" type="hidden" value="@toplamEurHam" data-hesaplanan-deger="@toplamEurHam" /></label>
+                    <label><span>Talep edilen oran (%):</span><input name="Basvuru.finans.TalepEdilenFinansmanOrani" type="number" min="1" max="@b.basvuruFirma.donem.destekOrani?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" step="1" value="@b.finans.talepEdilenFinansmanOrani?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" oninput="FinansTutarlariniHesapla()" onchange="FinansTutarlariniHesapla()" disabled="@ro" /></label>
+                    <label><span>Talep edilen finansman yatırım (EUR):</span><div id="finansTalepEdilenGosterge" class="finans-plan-value">@(hesaplananFinansmanTutari?.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) ?? "")</div><input name="Basvuru.finans.TalepEdilenDestekTutari" type="hidden" value="@(hesaplananFinansmanTutari?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" /></label>
+                    <label><span>Öz kaynak tutarı (EUR):</span><div id="finansOzKaynakGosterge" class="finans-plan-value">@(hesaplananOzKaynak?.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) ?? "")</div><input name="Basvuru.finans.BasvuruSahibiKatkisi" type="hidden" value="@(hesaplananOzKaynak?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" /></label>
+                    <label><span>@L["Basvuru.Field.TalepEdilenVadeSuresiAy"]:</span><input name="Basvuru.finans.TalepEdilenVadeSuresiAy" type="number" min="1" step="1" value="@b.finans.talepEdilenVadeSuresiAy" disabled="@ro" /></label>
+                    <label><span>@L["Basvuru.Field.YatirimSuresiAy"]:</span><input name="Basvuru.finans.YatirimSuresiAy" type="number" min="1" step="1" value="@b.finans.yatirimSuresiAy" disabled="@ro" /></label>
                 </div>
                 <div class="alert alert-info mt-3 mb-0">
                     <ol class="mb-0 pl-3">

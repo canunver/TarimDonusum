@@ -559,7 +559,19 @@
     <value>Pre-application Review</value>
   </data>
   <data name="Basvuru.Form.ApplicationNo" xml:space="preserve">
-    <value>Pre-application No: {0}</value>
+    <value>Application No: {0}</value>
+  </data>
+  <data name="Basvuru.Form.ApplicationNoNotAssigned" xml:space="preserve">
+    <value>Application number not assigned</value>
+  </data>
+  <data name="Basvuru.Form.ApplicationNoNotAssignedWithKey" xml:space="preserve">
+    <value>Application number not assigned (Key: {0})</value>
+  </data>
+  <data name="Basvuru.Common.ApplicationNo" xml:space="preserve">
+    <value>Application No</value>
+  </data>
+  <data name="Basvuru.Common.InternalKey" xml:space="preserve">
+    <value>Key</value>
   </data>
   <data name="Basvuru.Form.MainApplicationNo" xml:space="preserve">
     <value>Application ID: {0}</value>
@@ -592,10 +604,13 @@
     <value>Investment Information - Address and expense types</value>
   </data>
   <data name="Basvuru.Step.5" xml:space="preserve">
-    <value>Financing - USD amounts</value>
+    <value>Financing - EUR amounts</value>
+  </data>
+  <data name="Basvuru.Step.FinansmanOdemePlani" xml:space="preserve">
+    <value>Financing (EUR)/Payment Plan</value>
   </data>
   <data name="Basvuru.Step.6" xml:space="preserve">
-    <value>Financial Data - Scale check</value>
+    <value>Financial and Partnership Data</value>
   </data>
   <data name="Basvuru.Section1.Title" xml:space="preserve">
     <value>1. Pre-application Information</value>
@@ -724,16 +739,16 @@
     <value>Requested expense types</value>
   </data>
   <data name="Basvuru.Field.ToplamYatirimTutari" xml:space="preserve">
-    <value>Total investment amount (USD)</value>
+    <value>Total investment amount (EUR)</value>
   </data>
   <data name="Basvuru.Field.UygunHarcamaTutari" xml:space="preserve">
-    <value>Eligible expense amount (USD)</value>
+    <value>Eligible expense amount (EUR)</value>
   </data>
   <data name="Basvuru.Field.TalepEdilenDestekTutari" xml:space="preserve">
-    <value>Requested support amount (USD)</value>
+    <value>Requested support amount (EUR)</value>
   </data>
   <data name="Basvuru.Field.BasvuruSahibiKatkisi" xml:space="preserve">
-    <value>Pre-applicant contribution (USD)</value>
+    <value>Pre-applicant contribution (EUR)</value>
   </data>
   <data name="Basvuru.Field.DestekOrani" xml:space="preserve">
     <value>Support rate (%)</value>
@@ -742,10 +757,10 @@
     <value>Requested financing rate (%)</value>
   </data>
   <data name="Basvuru.Field.OnBasvuruSahibiKatkisi" xml:space="preserve">
-    <value>Pre-application applicant contribution (USD)</value>
+    <value>Pre-application applicant contribution (EUR)</value>
   </data>
   <data name="Basvuru.Field.BasvuruSahibiKatkisiYeni" xml:space="preserve">
-    <value>Applicant contribution (USD)</value>
+    <value>Applicant contribution (EUR)</value>
   </data>
   <data name="Basvuru.Field.TalepEdilenVadeSuresiAy" xml:space="preserve">
     <value>Requested maturity period (Months)</value>
@@ -760,10 +775,10 @@
     <value>The requested financing rate cannot exceed the period limit.</value>
   </data>
   <data name="Basvuru.Field.TalepEdilenFinansmanTutari" xml:space="preserve">
-    <value>Requested financing amount (USD)</value>
+    <value>Requested financing amount (EUR)</value>
   </data>
   <data name="Basvuru.Field.OzKaynakTutari" xml:space="preserve">
-    <value>Equity amount (USD)</value>
+    <value>Equity amount (EUR)</value>
   </data>
   <data name="Basvuru.Field.YatirimSuresiAy" xml:space="preserve">
     <value>Investment duration (months)</value>
@@ -951,6 +966,8 @@
   <data name="Basvuru.Step.YatirimOzeti" xml:space="preserve">
     <value>Investment Summary Table</value>
   </data>
+  <data name="Basvuru.Step.Urunler" xml:space="preserve"><value>Products</value></data>
+  <data name="Basvuru.Step.ButceGiderler" xml:space="preserve"><value>Budget and Expenses</value></data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
     <value>7. Investment Summary Table</value>
   </data>
@@ -1483,7 +1500,7 @@
     <value>Annual operating expense</value>
   </data>
   <data name="Basvuru.YatirimOzeti.Section.Budget" xml:space="preserve">
-    <value>A. Total Investment Budget and Financing Sources</value>
+    <value>Total Investment Budget and Financing Sources</value>
   </data>
   <data name="Basvuru.YatirimOzeti.Section.BudgetNote" xml:space="preserve">
     <value>Amounts are entered in TL. Row totals, investment total, financing sources total and difference are calculated automatically.</value>
@@ -1498,7 +1515,7 @@
     <value>+ Add product/product group</value>
   </data>
   <data name="Basvuru.YatirimOzeti.Section.Expense" xml:space="preserve">
-    <value>C. Annual Operating Expenses at Full Capacity</value>
+    <value>Annual Operating Expenses at Full Capacity</value>
   </data>
   <data name="Basvuru.YatirimOzeti.Section.ExpenseNote" xml:space="preserve">
     <value>Expense item, quantity, unit price, fixed/variable ratios and amounts are calculated in the system.</value>
@@ -2562,6 +2579,9 @@
   <data name="Basvuru.Step.DbCtp" xml:space="preserve">
     <value>Technical Project</value>
   </data>
+  <data name="Basvuru.Step.DbCtpGirdiler" xml:space="preserve"><value>Technical Project (Inputs)</value></data>
+  <data name="Basvuru.Step.DbCtpMakineEkipman" xml:space="preserve"><value>Technical Project (Machinery and Equipment)</value></data>
+  <data name="Basvuru.Step.DbCtpBinaListesi" xml:space="preserve"><value>Technical Project (Building List)</value></data>
   <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve">
     <value>8. Technical Project</value>
   </data>

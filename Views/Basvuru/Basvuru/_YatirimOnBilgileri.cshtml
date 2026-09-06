@@ -10,11 +10,8 @@
     @if(duzenlenebilir){<span id="yobiDuzenlenebilir" hidden></span>}
     <div class="alert alert-info">Ürünler, Girdiler ve Enerji kullanımı girişi</div>
 
-    <div class="section-toolbar mt-3"><h3>1- Mevcut Ürünler</h3>@if(duzenlenebilir){<button type="button" class="btn btn-outline-primary" onclick="YatirimOnBilgiModalAc(1,-1)">Ürün ekle</button>}</div>
-    <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Sıra</th><th>Ürün / Hayvan Türü</th><th>Tam kapasitede yıllık miktar / Hayvan sayısı</th><th>Birim</th><th></th></tr></thead><tbody id="yobi-1"></tbody></table></div>
-
-    <div class="section-toolbar mt-4"><h3>2- Üretilecek Ürünler</h3>@if(duzenlenebilir){<button type="button" class="btn btn-outline-primary" onclick="YatirimOnBilgiModalAc(2,-1)">Ürün ekle</button>}</div>
-    <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Sıra</th><th>Ürün / Hayvan Türü</th><th>Tam kapasitede yıllık miktar / Hayvan sayısı</th><th>Birim</th><th></th></tr></thead><tbody id="yobi-2"></tbody></table></div>
+    <div class="section-toolbar mt-3"><h3>1- Ürünler</h3>@if(duzenlenebilir){<button type="button" class="btn btn-outline-primary" onclick="YatirimOnBilgiModalAc(1,-1)">Ürün ekle</button>}</div>
+    <div class="table-responsive"><table class="table table-striped urun-liste-table"><thead><tr><th>Sıra</th><th>İşlem</th><th>Ürün<br>durumu</th><th>Ürün / Hayvan Türü</th><th>Mevcut<br>kapasite</th><th>1. yıl<br>kapasitesi</th><th>Satış<br>miktarı</th><th>Birim satış<br>fiyatı (TL)</th><th>Satış<br>bedeli (TL)</th></tr></thead><tbody id="yobi-products"></tbody></table></div>
 
     <div class="section-toolbar mt-4"><h3>3- Girdiler</h3>@if(duzenlenebilir){<button type="button" class="btn btn-outline-primary" onclick="YatirimOnBilgiModalAc(3,-1)">Girdi ekle</button>}</div>
     <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Sıra</th><th>Girdi / Hammadde</th><th>Tam kapasitede yıllık ihtiyaç</th><th>Birim</th><th></th></tr></thead><tbody id="yobi-3"></tbody></table></div>
@@ -32,7 +29,8 @@
     <div class="modal-header"><h5 class="modal-title" id="yobiModalBaslik">Yatırım Ön Bilgisi</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
     <div class="modal-body">
         <input type="hidden" id="yobiIndex"><input type="hidden" id="yobiTur"><input type="hidden" id="yobiId">
-        <div class="form-grid"><label>Sıra no<input id="yobiSira" type="number" min="1" max="99"></label><label id="yobiAdLabel">Ad<input id="yobiAd" maxlength="250"></label><label id="yobiMiktarLabel">Miktar<input id="yobiMiktar" type="number" min="0" step="0.001"></label><label>Birim<select id="yobiBirim">@foreach(var x in OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label></div>
+        <div class="form-grid"><label>Sıra no<input id="yobiSira" type="number" min="1" max="99"></label><label id="yobiUrunTuruAlani">Ürün durumu<select id="yobiUrunTuru"><option value="1">Mevcut</option><option value="2">Yeni</option></select></label><label id="yobiAdLabel">Ad<input id="yobiAd" maxlength="250"></label><label id="yobiMiktarLabel">Miktar<input id="yobiMiktar" type="number" min="0" step="0.001"></label><label>Birim<select id="yobiBirim">@foreach(var x in OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label></div>
+        <div id="yobiUrunAlanlari" class="form-grid mt-3"><label>Mevcut kapasite<input id="yobiMevcutKapasite" type="number" min="0" step="0.001"></label><label>1. yıl kapasitesi<input id="yobiBirinciYilKapasite" type="number" min="0" step="0.001"></label><label>Satış miktarı<input id="yobiSatisMiktari" type="number" min="0" step="0.001" oninput="YobiSatisBedeliGuncelle()"></label><label>Birim satış fiyatı (TL)<input id="yobiBirimSatisFiyati" type="number" min="0" step="0.01" oninput="YobiSatisBedeliGuncelle()"></label><label>Satış bedeli (TL)<input id="yobiSatisBedeli" readonly></label></div>
         <div id="yobiEnerjiAlanlari" class="form-grid mt-3"><label>Tek panel gücü<input id="yobiTekPanelGucu" type="number" min="0" step="0.001"></label><label>Birim<select id="yobiTekPanelGucuBirim">@foreach(var x in OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label><label>Toplam güç<input id="yobiToplamGuc" type="number" min="0" step="0.001"></label><label>Birim<select id="yobiToplamGucBirim">@foreach(var x in OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label></div>
     </div>
     <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="YatirimOnBilgisiKaydet()">Kaydet</button></div>

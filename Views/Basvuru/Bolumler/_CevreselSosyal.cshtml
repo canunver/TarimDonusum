@@ -13,7 +13,17 @@
     <h2>@L["Basvuru.CevreselSosyal.Title"]</h2>
     <p>@L["Basvuru.CevreselSosyal.Description"]</p>
 
-    <input type="hidden" id="cevreselSosyalJson" value="@b.cevreselSosyal.cevreselSosyalJson" />
+    <input type="hidden" id="cevreselSosyalJson" value="" />
+    <input type="hidden" id="cevreselSosyalYatirimKapsami" value="" />
+    <script type="application/json" id="cevreselSosyalAdresleriJson">
+        @Html.Raw(JsonSerializer.Serialize(b.YatirimAdresleri.OrderBy(x => x.siraNo).Select(x => new
+        {
+            id = x.id,
+            etiket = $"{x.siraNo}. {x.ilAdi} / {x.ilceAdi} - {x.tamAdres}",
+            yatirimTurleri = x.yatirimTurleri,
+            cevreselSosyalJson = x.cevreselSosyalJson
+        }), jsonOptions))
+    </script>
     <script type="application/json" id="cevreselSosyalSoruTanimlariJson">
         @Html.Raw(JsonSerializer.Serialize(CevreselSosyalAnketTanimlari.Tum, jsonOptions))
     </script>
@@ -23,15 +33,16 @@
 
     <div class="esf-mode-box">
         <label>
-            @L["Basvuru.CevreselSosyal.ScopeQuestion"] <span class="required-mark">*</span>
-            <select id="cevreselSosyalYatirimKapsami" disabled="@ro">
+            Yatırım adresi <span class="required-mark">*</span>
+            <select id="cevreselSosyalAdresId">
                 <option value="">@L["Basvuru.Common.Select"]</option>
-                <option value="existing">@L["Basvuru.CevreselSosyal.Scope.Existing"]</option>
-                <option value="planned">@L["Basvuru.CevreselSosyal.Scope.Planned"]</option>
-                <option value="both">@L["Basvuru.CevreselSosyal.Scope.Both"]</option>
+                @foreach (var adres in b.YatirimAdresleri.OrderBy(x => x.siraNo))
+                {
+                    <option value="@adres.id">@adres.siraNo. @adres.ilAdi / @adres.ilceAdi - @adres.tamAdres</option>
+                }
             </select>
         </label>
-        <div class="esf-sub-note">@L["Basvuru.CevreselSosyal.ScopeNote"]</div>
+        <div id="cevreselSosyalAdresKapsami" class="esf-sub-note">Önce anketin doldurulacağı adresi seçiniz.</div>
     </div>
 
     <div id="cevreselSosyalAnket"></div>

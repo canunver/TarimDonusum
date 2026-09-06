@@ -16,7 +16,7 @@
         <label>Yatırım adı<input readonly value="@b.yatirim.yatirimAdi"></label>
         <label>Yatırım ili/ilçesi<input readonly value="@o.YatirimYeri"></label>
         <label>Değer zinciri<input readonly value="@o.DegerZinciri"></label>
-        <label>Talep edilen RFF (USD)<input readonly value="@IsimBul.MetneCevirKurussuz(b.finans.talepEdilenDestekTutari)"></label>
+        <label>Talep edilen RFF (EUR)<input readonly value="@IsimBul.MetneCevirKurussuz(b.finans.talepEdilenDestekTutari)"></label>
         <label>Ön sıralama puanı<input readonly value="@(o.OnSiralamaPuani?.ToString("0.##")??"Hesaplanmadı")"></label>
         <label>Belge tamamlanma oranı<input readonly value="%@((o.BelgeTamamlanmaOrani*100).ToString("0.##"))"></label>
         <label>Genel başvuru durumu<input readonly value="@o.GenelDurum"></label>

@@ -1,5 +1,6 @@
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+@using System.Text.Json
 
 @{
     var b = Model.Basvuru;
@@ -8,27 +9,15 @@
 
 <section class="basvuru-panel active" data-panel="11">
     <div class="section-toolbar">
-        <h2 class="mb-0">@L["Basvuru.Section.YatirimOzeti.Title"]</h2>
+        <h2 class="mb-0">Ürünler</h2>
         <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="YatirimOzetiYazdir" asp-route-id="@b.Id">
             <i class="fas fa-file-excel mr-1"></i>Yazdır
         </a>
     </div>
-    <p class="lead">@L["Basvuru.YatirimOzeti.Description"]</p>
+    <p class="lead">Mevcut ve yatırım sonrasında üretilecek ürün bilgilerini ekleyiniz.</p>
 
     <input type="hidden" id="yatirimOzetiJson" value="@b.yatirimOzeti.yatirimOzetiJson" />
-
-    <div class="metric-grid yatirim-ozeti-metrics">
-        <div><span>@L["Basvuru.YatirimOzeti.Card.InvestmentBudget"]</span><strong id="invBudgetTotalCard">0 TL</strong></div>
-        <div><span>@L["Basvuru.YatirimOzeti.Card.FinanceTotal"]</span><strong id="financeSourceTotalCard">0 TL</strong></div>
-        <div><span>@L["Basvuru.YatirimOzeti.Card.FinanceGap"]</span><strong id="financeGapCard">0 TL</strong></div>
-        <div><span>@L["Basvuru.YatirimOzeti.Card.AnnualOperatingExpense"]</span><strong id="opexTotalCard">0 TL</strong></div>
-    </div>
-
-    <div class="yatirim-ozeti-section">
-        <h3>@L["Basvuru.YatirimOzeti.Section.Budget"]</h3>
-        <p class="mini">@L["Basvuru.YatirimOzeti.Section.BudgetNote"]</p>
-        <div id="investmentBudgetBox"></div>
-    </div>
+    <script type="application/json" id="yatirimOzetiUrunJson">@Html.Raw(JsonSerializer.Serialize(b.YatirimOnBilgileri.Where(x => x.tur == TarimDonusum.Models.enumYatirimOnBilgiTuru.MevcutUrun || x.tur == TarimDonusum.Models.enumYatirimOnBilgiTuru.UretilecekUrun)))</script>
 
     <div class="yatirim-ozeti-section">
         <div class="section-toolbar">
@@ -36,22 +25,34 @@
                 <h3>@L["Basvuru.YatirimOzeti.Section.Production"]</h3>
                 <p class="mini">@L["Basvuru.YatirimOzeti.Section.ProductionNote"]</p>
             </div>
-            <button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunEkle()" disabled="@ro">@L["Basvuru.YatirimOzeti.AddProduct"]</button>
+            <button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunModalAc(-1)" disabled="@ro">@L["Basvuru.YatirimOzeti.AddProduct"]</button>
         </div>
         <div id="productionInfoBox"></div>
     </div>
 
-    <div class="yatirim-ozeti-section">
-        <div class="section-toolbar">
-            <div>
-                <h3>@L["Basvuru.YatirimOzeti.Section.Expense"]</h3>
-                <p class="mini">@L["Basvuru.YatirimOzeti.Section.ExpenseNote"]</p>
-            </div>
-            <div class="toolbar-actions">
-                <button type="button" class="btn btn-outline-secondary" onclick="YatirimOzetiSabitGiderleriYukle()" disabled="@ro">@L["Basvuru.YatirimOzeti.LoadDefaultExpenses"]</button>
-                <button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiGiderEkle()" disabled="@ro">@L["Basvuru.YatirimOzeti.AddExpense"]</button>
-            </div>
-        </div>
-        <div id="operatingExpensesBox"></div>
-    </div>
 </section>
+
+@if (!ro)
+{
+<div class="modal fade" id="yatirimOzetiUrunModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="yoUrunModalBaslik">Ürün ekle</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body">
+        <input type="hidden" id="yoUrunIndex"><input type="hidden" id="yoUrunId">
+        <div class="form-grid">
+            <label>Ürün durumu<select id="yoUrunTur"><option value="1">Mevcut</option><option value="2">Yeni</option></select></label>
+            <label>Ürün / Ürün Grubu<input id="yoUrunAd" maxlength="250"></label>
+            <label>Birim<select id="yoUrunBirim" onchange="YatirimOzetiModalBirimGuncelle()">@foreach(var x in TarimDonusum.Models.OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label>
+        </div>
+        <div class="table-responsive mt-4"><table class="table table-bordered urun-donem-giris-table">
+            <thead><tr><th>Gösterge</th><th>Mevcut</th><th>1. yıl</th></tr></thead>
+            <tbody>
+                <tr><th>Kapasite</th><td><div class="input-group"><input id="yoUrunMevcutKapasite" type="text" inputmode="decimal" class="form-control text-right" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td><td><div class="input-group"><input id="yoUrunBirinciYilKapasite" type="text" inputmode="decimal" class="form-control text-right" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td></tr>
+                <tr><th>Satış miktarı</th><td><div class="input-group"><input id="yoUrunMevcutSatisMiktari" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td><td><div class="input-group"><input id="yoUrunSatisMiktari" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td></tr>
+                <tr><th>Birim satış fiyatı</th><td><div class="input-group"><input id="yoUrunMevcutBirimSatisFiyati" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,true)"><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td><td><div class="input-group"><input id="yoUrunBirimSatisFiyati" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,true)"><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td></tr>
+                <tr><th>Satış bedeli</th><td><div class="input-group"><input id="yoUrunMevcutSatisBedeli" class="form-control text-right" readonly><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td><td><div class="input-group"><input id="yoUrunSatisBedeli" class="form-control text-right" readonly><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td></tr>
+            </tbody>
+        </table></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="YatirimOzetiTekUrunKaydet()">Kaydet</button></div>
+</div></div></div>
+}

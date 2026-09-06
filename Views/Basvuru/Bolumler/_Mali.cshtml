@@ -33,7 +33,7 @@
     string maliUstLimitHam = maliUstLimit.ToString(System.Globalization.CultureInfo.InvariantCulture);
 }
             <section class="basvuru-panel active" data-panel="6">
-                <h2>@L["Basvuru.Section6.Title"]</h2>
+                <h2>@L["Basvuru.Step.6"]</h2>
                 <p class="mali-info-text">@L["Basvuru.Mali.ScaleDescription"]</p>
                 <div id="maliOlcekUyari" class="mali-scale-warning">
                     <strong>@Html.Raw(string.Format(T("Basvuru.Mali.ScaleLimitWarning"), maliAltLimitMetin, maliUstLimitMetin))</strong>
@@ -97,5 +97,7 @@
                 </div>
                 <input type="hidden" name="Basvuru.mali.DenetimDosyaId" value="@b.mali.denetimDosyaId" />
             </section>
+
+<partial name="~/Views/Basvuru/Bolumler/_Ortaklik.cshtml" model="Model" />
 
 

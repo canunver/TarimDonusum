@@ -11,7 +11,7 @@ public sealed class RPROB_Istihdam(string uygulamaRootPath):RPROBTemel(uygulamaR
     protected override void Doldur(Tablo t,Basvuru b)
     {
         BasvuruIstihdam i=b.istihdam;List<BasvuruIstihdamSatir> satirlar=i.satirlar.OrderBy(x=>x.siraNo).ThenBy(x=>x.id).ToList();
-        t.HucreDegerYaz(3,2,b.basvuruFirma.firma.ticaretUnvani);t.HucreDegerYaz(3,8,KimlikBilgisi(b));
+        t.HucreDegerYaz(3,2,b.basvuruFirma.firma.ticaretUnvani??"");t.HucreDegerYaz(3,8,KimlikBilgisi(b));
         BasvuruUygulamaAdresi? adres=b.YatirimAdresleri.OrderBy(x=>x.siraNo).FirstOrDefault();t.HucreDegerYaz(4,2,adres?.ilAdi??b.basvuruFirma.il.ad);t.HucreDegerYaz(4,6,adres?.ilceAdi??"");t.HucreDegerYaz(4,10,b.finans.talepEdilenDestekTutari.GetValueOrDefault());
         int basvuruYili=b.basvuruFirma.donem.yil;
         t.HucreDegerYaz(8,0,basvuruYili-2);t.HucreDegerYaz(8,1,i.oncekiYilKadin);t.HucreDegerYaz(8,2,i.oncekiYilErkek);t.HucreFormulYaz(8,3,"IF(COUNT(B9:C9)=0,\"\",SUM(B9:C9))");t.HucreFormulYaz(8,4,"IF(D9=\"\",\"\",IF(AND(D9>20,B9>C9),\"EVET\",\"HAYIR\"))");

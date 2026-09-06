@@ -176,6 +176,7 @@ namespace TarimDonusum.IsKurallari
                         FirmaId INT NOT NULL,
                         DonemId INT NOT NULL,
                         IlId INT NOT NULL,
+                        BasvuruNo NVARCHAR(30) NULL,
                         Durum INT NOT NULL CONSTRAINT DF_BasvuruAna_Durum DEFAULT 1,
                         CONSTRAINT FK_BasvuruAna_Firma
                             FOREIGN KEY (FirmaId) REFERENCES dbo.Firma(Id),
@@ -188,6 +189,7 @@ namespace TarimDonusum.IsKurallari
                     CREATE INDEX IX_BasvuruAna_FirmaId ON dbo.BasvuruAna(FirmaId);
                     CREATE INDEX IX_BasvuruAna_DonemId ON dbo.BasvuruAna(DonemId);
                     CREATE INDEX IX_BasvuruAna_IlId ON dbo.BasvuruAna(IlId);
+                    CREATE UNIQUE INDEX UX_BasvuruAna_BasvuruNo ON dbo.BasvuruAna(BasvuruNo) WHERE BasvuruNo IS NOT NULL;
                 "),
             new(11,
                 @"CREATE TABLE dbo.Basvuru(
@@ -903,6 +905,79 @@ namespace TarimDonusum.IsKurallari
                     CREATE TABLE dbo.BasvuruMetrajDetay(Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_BasvuruMetrajDetay PRIMARY KEY,MetrajPozId INT NOT NULL,SiraNo INT NOT NULL,Aciklama NVARCHAR(500) NULL,Adet DECIMAL(18,4) NULL,Boy DECIMAL(18,4) NULL,En DECIMAL(18,4) NULL,Yukseklik DECIMAL(18,4) NULL,CONSTRAINT FK_BasvuruMetrajDetay_Poz FOREIGN KEY(MetrajPozId) REFERENCES dbo.BasvuruMetrajPoz(Id) ON DELETE CASCADE);
                     CREATE UNIQUE INDEX UX_BasvuruMetrajDetay_PozSira ON dbo.BasvuruMetrajDetay(MetrajPozId,SiraNo);
                   END"),
+            new(71,
+                @"IF COL_LENGTH(N'dbo.BasvuruAna', N'BasvuruNo') IS NULL
+                      ALTER TABLE dbo.BasvuruAna ADD BasvuruNo NVARCHAR(30) NULL;
+                  IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.BasvuruAna') AND name = N'UX_BasvuruAna_BasvuruNo')
+                      EXEC(N'CREATE UNIQUE INDEX UX_BasvuruAna_BasvuruNo ON dbo.BasvuruAna(BasvuruNo) WHERE BasvuruNo IS NOT NULL;');"),
+            // 71 numaralı komutun eski sürümü SQL Server tarafından kolon eklenmeden önce derlenip
+            // başarısız olmuş ve güncelleme altyapısı tarafından çalışmış olarak işaretlenmiştir.
+            new(72,
+                @"IF COL_LENGTH(N'dbo.BasvuruAna', N'BasvuruNo') IS NULL
+                      ALTER TABLE dbo.BasvuruAna ADD BasvuruNo NVARCHAR(30) NULL;
+                  IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.BasvuruAna') AND name = N'UX_BasvuruAna_BasvuruNo')
+                      EXEC(N'CREATE UNIQUE INDEX UX_BasvuruAna_BasvuruNo ON dbo.BasvuruAna(BasvuruNo) WHERE BasvuruNo IS NOT NULL;');"),
+            new(73,
+                @"IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'YatirimFaaliyetleri') IS NULL
+                      ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD YatirimFaaliyetleri NVARCHAR(MAX) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'YatirimGirdileri') IS NULL
+                      ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD YatirimGirdileri NVARCHAR(MAX) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri', N'YatirimCiktilari') IS NULL
+                      ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD YatirimCiktilari NVARCHAR(MAX) NULL;
+                  IF OBJECT_ID(N'dbo.BasvuruUygulamaAdresiYatirimTuru', N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruUygulamaAdresiYatirimTuru(
+                      AdresId INT NOT NULL,
+                      YatirimTuru INT NOT NULL,
+                      CONSTRAINT PK_BasvuruUygulamaAdresiYatirimTuru PRIMARY KEY(AdresId, YatirimTuru),
+                      CONSTRAINT FK_BUAYT_Adres FOREIGN KEY(AdresId) REFERENCES dbo.BasvuruUygulamaAdresleri(Id) ON DELETE CASCADE);
+                  END;
+                  IF OBJECT_ID(N'dbo.BasvuruUygulamaAdresiHarcamaTuru', N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruUygulamaAdresiHarcamaTuru(
+                      AdresId INT NOT NULL,
+                      HarcamaTuru INT NOT NULL,
+                      CONSTRAINT PK_BasvuruUygulamaAdresiHarcamaTuru PRIMARY KEY(AdresId, HarcamaTuru),
+                      CONSTRAINT FK_BUAHT_Adres FOREIGN KEY(AdresId) REFERENCES dbo.BasvuruUygulamaAdresleri(Id) ON DELETE CASCADE);
+                  END;
+                  EXEC(N'UPDATE A SET YatirimFaaliyetleri=COALESCE(A.YatirimFaaliyetleri,B.YatirimFaaliyetleri), YatirimGirdileri=COALESCE(A.YatirimGirdileri,B.YatirimGirdileri), YatirimCiktilari=COALESCE(A.YatirimCiktilari,B.YatirimCiktilari) FROM dbo.BasvuruUygulamaAdresleri A INNER JOIN dbo.Basvuru B ON B.Id=A.BasvuruId;');
+                  INSERT INTO dbo.BasvuruUygulamaAdresiYatirimTuru(AdresId,YatirimTuru)
+                    SELECT A.Id,T.YatirimTuru FROM dbo.BasvuruUygulamaAdresleri A INNER JOIN dbo.BasvuruYatirimTuru T ON T.BasvuruId=A.BasvuruId
+                    WHERE NOT EXISTS(SELECT 1 FROM dbo.BasvuruUygulamaAdresiYatirimTuru X WHERE X.AdresId=A.Id AND X.YatirimTuru=T.YatirimTuru);
+                  INSERT INTO dbo.BasvuruUygulamaAdresiHarcamaTuru(AdresId,HarcamaTuru)
+                    SELECT A.Id,T.HarcamaTuru FROM dbo.BasvuruUygulamaAdresleri A INNER JOIN dbo.BasvuruHarcamaTuru T ON T.BasvuruId=A.BasvuruId
+                    WHERE NOT EXISTS(SELECT 1 FROM dbo.BasvuruUygulamaAdresiHarcamaTuru X WHERE X.AdresId=A.Id AND X.HarcamaTuru=T.HarcamaTuru);"),
+            new(74,
+                @"IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi', N'MevcutKapasite') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD MevcutKapasite DECIMAL(18,3) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi', N'BirinciYilKapasite') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD BirinciYilKapasite DECIMAL(18,3) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi', N'SatisMiktari') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD SatisMiktari DECIMAL(18,3) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi', N'BirimSatisFiyati') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD BirimSatisFiyati DECIMAL(18,2) NULL;"),
+            new(75,
+                @"IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi', N'MevcutSatisMiktari') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD MevcutSatisMiktari DECIMAL(18,3) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi', N'MevcutBirimSatisFiyati') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD MevcutBirimSatisFiyati DECIMAL(18,2) NULL;"),
+            new(76,
+                @"IF COL_LENGTH(N'dbo.BasvuruMakine',N'UygulamaAdresiId') IS NULL
+                  BEGIN
+                    ALTER TABLE dbo.BasvuruMakine ADD UygulamaAdresiId INT NULL;
+                    ALTER TABLE dbo.BasvuruMakine ADD CONSTRAINT FK_BasvuruMakine_UygulamaAdresi FOREIGN KEY(UygulamaAdresiId) REFERENCES dbo.BasvuruUygulamaAdresleri(Id);
+                    CREATE INDEX IX_BasvuruMakine_UygulamaAdresiId ON dbo.BasvuruMakine(UygulamaAdresiId);
+                  END"),
+            new(77,
+                @"IF COL_LENGTH(N'dbo.BasvuruBina',N'UygulamaAdresiId') IS NULL
+                  BEGIN
+                    ALTER TABLE dbo.BasvuruBina ADD UygulamaAdresiId INT NULL;
+                    ALTER TABLE dbo.BasvuruBina ADD CONSTRAINT FK_BasvuruBina_UygulamaAdresi FOREIGN KEY(UygulamaAdresiId) REFERENCES dbo.BasvuruUygulamaAdresleri(Id);
+                    CREATE INDEX IX_BasvuruBina_UygulamaAdresiId ON dbo.BasvuruBina(UygulamaAdresiId);
+                  END"),
+            new(78,
+                @"IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri',N'CevreselSosyalJson') IS NULL
+                    ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD CevreselSosyalJson NVARCHAR(MAX) NULL;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

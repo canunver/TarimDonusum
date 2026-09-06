@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Localization;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using System.Text.Json.Serialization;
 
@@ -175,6 +177,96 @@ namespace TarimDonusum.Models
         public BasvuruYatirim yatirim { get; set; } = new();
         public BasvuruOrtaklik ortaklik { get; set; } = new();
         public List<BasvuruUygulamaAdresi> YatirimAdresleri { get; set; } = new();
+        public void AdresYatirimBilgileriniBirlestir()
+        {
+            yatirim.yatirimTurleri = YatirimAdresleri.SelectMany(x => x.yatirimTurleri ?? []).Where(x => x > 0).Distinct().ToList();
+            yatirim.yatirimTuru = yatirim.yatirimTurleri.Count > 0 ? (enumYatirimTuru)yatirim.yatirimTurleri[0] : enumYatirimTuru.Tanimsiz;
+            yatirim.harcamaTurleri = YatirimAdresleri.SelectMany(x => x.harcamaTurleri ?? []).Where(x => x > 0).Distinct().ToList();
+            yatirim.yatirimFaaliyetleri = Birlestir(YatirimAdresleri.Select(x => x.yatirimFaaliyetleri));
+            yatirim.yatirimGirdileri = Birlestir(YatirimAdresleri.Select(x => x.yatirimGirdileri));
+            yatirim.yatirimCiktilari = Birlestir(YatirimAdresleri.Select(x => x.yatirimCiktilari));
+        }
+
+        private static string Birlestir(IEnumerable<string?> degerler) => string.Join(", ", degerler
+            .SelectMany(x => (x ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.CurrentCultureIgnoreCase));
+
+        public void TeknikProjeUrunleriniDoldur()
+        {
+            JsonObject teknikProje;
+            try
+            {
+                teknikProje = string.IsNullOrWhiteSpace(dbCtpTeknikProje.dbCtpTeknikProjeJson)
+                    ? new JsonObject()
+                    : JsonNode.Parse(dbCtpTeknikProje.dbCtpTeknikProjeJson) as JsonObject ?? new JsonObject();
+            }
+            catch (JsonException)
+            {
+                teknikProje = new JsonObject();
+            }
+
+            static JsonArray UrunDizisi(IEnumerable<BasvuruYatirimOnBilgi> urunler, bool mevcut)
+            {
+                JsonArray sonuc = new();
+                foreach (BasvuruYatirimOnBilgi urun in urunler.OrderBy(x => x.siraNo))
+                {
+                    decimal? kapasite = mevcut ? urun.mevcutKapasite : urun.birinciYilKapasite;
+                    string kapasiteMetni = kapasite?.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) ?? "";
+                    if (!string.IsNullOrWhiteSpace(urun.birim) && !string.IsNullOrWhiteSpace(kapasiteMetni))
+                        kapasiteMetni += " " + urun.birim;
+                    sonuc.Add(new JsonObject { ["product"] = urun.ad, ["capacity"] = kapasiteMetni });
+                }
+                return sonuc;
+            }
+
+            teknikProje["existingProducts"] = UrunDizisi(
+                YatirimOnBilgileri.Where(x => x.tur == enumYatirimOnBilgiTuru.MevcutUrun), true);
+            teknikProje["plannedProducts"] = UrunDizisi(
+                YatirimOnBilgileri.Where(x => x.tur == enumYatirimOnBilgiTuru.UretilecekUrun), false);
+            JsonArray makineler = new();
+            foreach (BasvuruMakine makine in Makineler.OrderBy(x => x.siraNo))
+            {
+                bool mevcut = makine.durum.StartsWith("MEVCUT", StringComparison.OrdinalIgnoreCase);
+                makineler.Add(new JsonObject
+                {
+                    ["name"] = makine.ad,
+                    ["qty"] = makine.miktar.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture),
+                    ["purpose"] = makine.kullanimAmaci,
+                    ["assetStatus"] = mevcut ? "Mevcut" : "Yeni",
+                    ["useInInvestment"] = mevcut
+                        ? (makine.durum.Equals("MEVCUT KULLANILACAK", StringComparison.OrdinalIgnoreCase) ? "Evet" : "Hayır")
+                        : "",
+                    ["supportRequested"] = !mevcut
+                        ? (makine.durum.Equals("YENİ DESTEK İSTENİYOR", StringComparison.OrdinalIgnoreCase) ? "Evet" : "Hayır")
+                        : "",
+                    ["brand"] = makine.marka,
+                    ["model"] = makine.model,
+                    ["capacity"] = makine.kapasiteOzellikleri,
+                    ["layoutOrder"] = makine.yerlesimPlaniSiraNo,
+                    ["capacityReason"] = makine.kapasiteSecimGerekcesi
+                    , ["applicationAddressId"] = makine.uygulamaAdresiId
+                    , ["applicationAddress"] = makine.uygulamaAdresiAciklama
+                });
+            }
+            teknikProje["machineryRows"] = makineler;
+            JsonArray binalar = new();
+            foreach (BasvuruBina bina in Binalar.OrderBy(x => x.siraNo))
+            {
+                binalar.Add(new JsonObject
+                {
+                    ["name"] = bina.ad,
+                    ["assetStatus"] = bina.mevcutYeni,
+                    ["investmentType"] = bina.yatirimSekli,
+                    ["supportRequested"] = bina.destekTalebi,
+                    ["layoutNumber"] = bina.vaziyetPlaniNo,
+                    ["applicationAddressId"] = bina.uygulamaAdresiId,
+                    ["applicationAddress"] = bina.uygulamaAdresiAciklama
+                });
+            }
+            teknikProje["buildingRows"] = binalar;
+            dbCtpTeknikProje.dbCtpTeknikProjeJson = teknikProje.ToJsonString();
+        }
+
         public List<BasvuruMakine> Makineler { get; set; } = new();
         public List<BasvuruUrunSurec> UrunSurecleri { get; set; } = new();
         public List<BasvuruTedarikciEntegrasyonu> TedarikciEntegrasyonlari { get; set; } = new();
@@ -222,6 +314,7 @@ namespace TarimDonusum.Models
     public class BasvuruFirma
     {
         public int basvuruAnaId { get; set; } = 0;
+        public string? basvuruNo { get; set; }
         public int id { get; set; } = 0;
         public int revizyonNo { get; set; } = 0;
         public int siraNo { get; set; } = 0;
@@ -491,6 +584,7 @@ namespace TarimDonusum.Models
         public string? nihaiFaydalaniciBilgisi { get; set; } = "";
         public string? uboKycBelgeAdi { get; set; } = "";
         public int? uboKycDosyaId { get; set; }
+        public List<BasvuruOrtaklikDosya> zorunluBelgeler { get; set; } = new();
         public decimal? oncekiYilNetSatis { get; set; }
         public decimal? sonYilNetSatis { get; set; }
         public decimal? oncekiYilAktifToplami { get; set; }
@@ -591,6 +685,12 @@ namespace TarimDonusum.Models
         public string? tekPanelGucuBirim { get; set; }
         public decimal? toplamGuc { get; set; }
         public string? toplamGucBirim { get; set; }
+        public decimal? mevcutKapasite { get; set; }
+        public decimal? birinciYilKapasite { get; set; }
+        public decimal? satisMiktari { get; set; }
+        public decimal? birimSatisFiyati { get; set; }
+        public decimal? mevcutSatisMiktari { get; set; }
+        public decimal? mevcutBirimSatisFiyati { get; set; }
     }
 
     public class BasvuruYatirimOnBilgiKayitModel
@@ -603,6 +703,8 @@ namespace TarimDonusum.Models
     {
         public int id { get; set; }
         public int basvuruId { get; set; }
+        public int? uygulamaAdresiId { get; set; }
+        public string uygulamaAdresiAciklama { get; set; } = "";
         public int siraNo { get; set; }
         public string ad { get; set; } = "";
         public string birim { get; set; } = "";
@@ -802,6 +904,8 @@ namespace TarimDonusum.Models
     {
         public int id { get; set; }
         public int basvuruId { get; set; }
+        public int? uygulamaAdresiId { get; set; }
+        public string uygulamaAdresiAciklama { get; set; } = "";
         public int siraNo { get; set; }
         public string ad { get; set; } = "";
         public string mevcutYeni { get; set; } = "";
@@ -889,6 +993,36 @@ namespace TarimDonusum.Models
     {
         public int basvuruId { get; set; }
         public string? yatirimOzetiJson { get; set; } = "";
+        public List<BasvuruYatirimOnBilgi> urunler { get; set; } = new();
+
+        [JsonIgnore]
+        public decimal toplamYatirimButcesiTl
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(yatirimOzetiJson)) return 0;
+                try
+                {
+                    using JsonDocument belge = JsonDocument.Parse(yatirimOzetiJson);
+                    if (!belge.RootElement.TryGetProperty("investmentBudgetData", out JsonElement butce)) return 0;
+                    decimal toplam = 0;
+                    foreach (string kod in new[] { "A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "B6", "B7" })
+                    {
+                        if (!butce.TryGetProperty(kod, out JsonElement satir) || !satir.TryGetProperty("amount", out JsonElement tutar)) continue;
+                        if (tutar.ValueKind == JsonValueKind.Number && tutar.TryGetDecimal(out decimal sayisalDeger))
+                        {
+                            toplam += sayisalDeger;
+                            continue;
+                        }
+                        string metin = tutar.ValueKind == JsonValueKind.String ? tutar.GetString() ?? "" : tutar.ToString();
+                        metin = metin.Trim().Replace(".", "").Replace(',', '.');
+                        if (decimal.TryParse(metin, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out decimal deger)) toplam += deger;
+                    }
+                    return toplam;
+                }
+                catch (JsonException) { return 0; }
+            }
+        }
 
         internal void Dogrula(Sonuc<int> sonuc)
         {
@@ -1004,6 +1138,7 @@ namespace TarimDonusum.Models
     public class BasvuruCevreselSosyal
     {
         public int basvuruId { get; set; }
+        public int? uygulamaAdresiId { get; set; }
         public bool basvuruSayfasi { get; set; }
         public string? cevreselSosyalJson { get; set; } = "";
 
@@ -1042,6 +1177,12 @@ namespace TarimDonusum.Models
         public string? kullanimHakkiDosyaAdi { get; set; }
         public int? kanitDosyaId { get; set; }
         public string? kanitDosyaAdi { get; set; }
+        public List<int> yatirimTurleri { get; set; } = new();
+        public List<int> harcamaTurleri { get; set; } = new();
+        public string? yatirimFaaliyetleri { get; set; }
+        public string? yatirimGirdileri { get; set; }
+        public string? yatirimCiktilari { get; set; }
+        public string? cevreselSosyalJson { get; set; }
 
         public string kiraTahsisBitis
         {
@@ -1061,6 +1202,17 @@ namespace TarimDonusum.Models
 
             if (string.IsNullOrWhiteSpace(tamAdres))
                 sonuc.HataEkle("Tam adres girilmelidir.");
+
+            if (yatirimTurleri == null || yatirimTurleri.Count == 0)
+                sonuc.HataEkle("Yatırım türü seçilmelidir.");
+            if (harcamaTurleri == null || harcamaTurleri.Count == 0)
+                sonuc.HataEkle("En az bir harcama türü seçilmelidir.");
+            if (string.IsNullOrWhiteSpace(yatirimFaaliyetleri))
+                sonuc.HataEkle("Yatırım faaliyetleri girilmelidir.");
+            if (string.IsNullOrWhiteSpace(yatirimGirdileri))
+                sonuc.HataEkle("Yatırım girdileri girilmelidir.");
+            if (string.IsNullOrWhiteSpace(yatirimCiktilari))
+                sonuc.HataEkle("Yatırım çıktıları girilmelidir.");
 
             bool kiraTahsisBilgisiGerekli =
                 yatirimYeriStatusu == enumUygulamaAdresiYatirimYeriStatusu.Kira ||

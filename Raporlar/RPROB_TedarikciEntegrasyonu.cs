@@ -59,9 +59,9 @@ public sealed class RPROB_TedarikciEntegrasyonu(string uygulamaRootPath) : RPROB
         }
 
         int kayma = satirSayisi - 1;
-        t.HucreDegerYaz(15 + kayma, 0, b.tedarikciEntegrasyonuAciklama);
-        t.HucreDegerYaz(21 + kayma, 1, b.irtibat.kisi);
-        t.HucreDegerYaz(21 + kayma, 5, b.irtibat.unvan);
+        t.HucreDegerYaz(15 + kayma, 0, b.tedarikciEntegrasyonuAciklama ?? "");
+        t.HucreDegerYaz(21 + kayma, 1, b.irtibat.kisi ?? "");
+        t.HucreDegerYaz(21 + kayma, 5, b.irtibat.unvan ?? "");
         t.HucreDegerYaz(21 + kayma, 9, DateTime.Today.ToString("dd.MM.yyyy"));
     }
 

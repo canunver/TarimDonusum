@@ -13,6 +13,20 @@ public sealed class RPROB_YatirimOzeti(string uygulamaRootPath) : RPROBTemel(uyg
     protected override void Doldur(Tablo tablo, Basvuru basvuru)
     {
         YatirimOzetiVerisi veri = Oku(basvuru.yatirimOzeti.yatirimOzetiJson);
+        List<BasvuruYatirimOnBilgi> kayitliUrunler = basvuru.YatirimOnBilgileri
+            .Where(x => x.tur is enumYatirimOnBilgiTuru.MevcutUrun or enumYatirimOnBilgiTuru.UretilecekUrun)
+            .OrderBy(x => x.siraNo).ThenBy(x => x.id).ToList();
+        if (kayitliUrunler.Count > 0)
+        {
+            veri.Urunler.Clear();
+            veri.Urunler.AddRange(kayitliUrunler.Select(x => new UrunSatiri(x.ad, x.birim ?? "", new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["capacity"] = [x.mevcutKapasite ?? 0, x.birinciYilKapasite ?? 0],
+                ["production"] = [x.mevcutKapasite ?? 0, x.birinciYilKapasite ?? 0],
+                ["sales"] = [0, x.satisMiktari ?? 0],
+                ["price"] = [0, x.birimSatisFiyati ?? 0]
+            })));
+        }
         ButceyiYaz(tablo, veri.Butce);
 
         const int urunIlkSatir = 20; // Excel 21

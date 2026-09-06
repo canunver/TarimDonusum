@@ -1184,6 +1184,102 @@ body {
   grid-template-columns: 190px minmax(0, 1fr) 130px minmax(0, 220px);
 }
 
+.finans-plan-form {
+  width: min(100%, 720px);
+  display: grid;
+  gap: 12px;
+}
+
+.finans-plan-form label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.finans-plan-form label > span {
+  text-align: right;
+}
+
+.finans-plan-form input:not([type="hidden"]),
+.finans-plan-value {
+  width: 100%;
+  min-width: 0;
+  text-align: right;
+}
+
+.finans-plan-value {
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #eadc9b;
+  border-radius: 6px;
+  background: #fff8d8;
+  color: #344054;
+  font-weight: 600;
+}
+
+.db-ctp-energy-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.db-ctp-energy-grid > label {
+  display: block;
+}
+
+[data-mahal-etkin="false"] #binaListeAlani table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+[data-mahal-etkin="false"] #binaListeAlani th:nth-child(1) { width: 8%; text-align: center; }
+[data-mahal-etkin="false"] #binaListeAlani th:nth-child(2) { width: 18%; }
+[data-mahal-etkin="false"] #binaListeAlani th:nth-child(3) { width: 34%; }
+[data-mahal-etkin="false"] #binaListeAlani th:nth-child(4) { width: 13%; text-align: center; }
+[data-mahal-etkin="false"] #binaListeAlani th:nth-child(5) { width: 17%; }
+[data-mahal-etkin="false"] #binaListeAlani th:nth-child(6) { width: 10%; text-align: center; }
+
+[data-mahal-etkin="false"] #binaListeAlani td {
+  padding: 14px 16px;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+[data-mahal-etkin="false"] #binaListeAlani td:nth-child(1),
+[data-mahal-etkin="false"] #binaListeAlani td:nth-child(4),
+[data-mahal-etkin="false"] #binaListeAlani td:nth-child(6) {
+  text-align: center;
+}
+
+[data-mahal-etkin="false"] #binaListeAlani td:nth-child(6) .btn {
+  min-width: 110px;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  [data-mahal-etkin="false"] #binaListeAlani table {
+    min-width: 760px;
+  }
+}
+
+@media (max-width: 900px) {
+  .db-ctp-energy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .finans-plan-form label {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .finans-plan-form label > span {
+    text-align: left;
+  }
+}
+
 .icon-action {
   width: 40px;
   height: 40px;
@@ -1378,6 +1474,17 @@ body {
   margin-top: 20px;
 }
 
+.butce-gider-baslik {
+  margin: 0 0 8px;
+  padding: 10px 14px;
+  border-left: 5px solid var(--primary, #2563eb);
+  border-radius: 6px;
+  background: #eef4ff;
+  color: #172554;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
 .section-toolbar {
   display: flex;
   align-items: center;
@@ -1525,6 +1632,40 @@ body {
   background: #f8fafc;
   font-weight: 800;
 }
+
+.urun-liste-table {
+  min-width: 1050px;
+  table-layout: auto;
+}
+
+.urun-liste-table th,
+.urun-liste-table td {
+  vertical-align: middle;
+}
+
+.urun-liste-table th:nth-child(1),
+.urun-liste-table td:nth-child(1) { width: 48px; text-align: center; }
+.urun-liste-table th:nth-child(2),
+.urun-liste-table td:nth-child(2) { width: 135px; white-space: nowrap; }
+.urun-liste-table th:nth-child(3),
+.urun-liste-table td:nth-child(3) { width: 72px; }
+.urun-liste-table th:nth-child(4),
+.urun-liste-table td:nth-child(4) { min-width: 190px; }
+.urun-liste-table th:nth-child(n+5),
+.urun-liste-table td:nth-child(n+5) { width: 125px; text-align: right; }
+.urun-liste-table th:nth-child(n+5) { line-height: 1.15; }
+
+.urun-donem-giris-table {
+  table-layout: fixed;
+  min-width: 620px;
+}
+.urun-donem-giris-table th,
+.urun-donem-giris-table td { vertical-align: middle; }
+.urun-donem-giris-table thead th:not(:first-child) { text-align: center; }
+.urun-donem-giris-table th:first-child { width: 28%; }
+.urun-donem-giris-table .input-group-text { min-width: 54px; justify-content: center; }
+.urun-liste-table td.urun-donem { text-align: center; white-space: nowrap; }
+.urun-liste-table td.urun-rakam { text-align: right; font-variant-numeric: tabular-nums; }
 
 .db-ctp-table {
   min-width: 900px;

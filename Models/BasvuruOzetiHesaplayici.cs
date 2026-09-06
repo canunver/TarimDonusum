@@ -52,7 +52,7 @@ public static class BasvuruOzetiHesaplayici
         decimal talep=b.finans.talepEdilenDestekTutari.GetValueOrDefault(),kumulatif=b.finans.oncekiRffOnayliTutar.GetValueOrDefault()+talep;
         decimal alt=b.basvuruFirma.donem.minimumYatirimTutari.GetValueOrDefault(),ust=b.basvuruFirma.donem.maksimumYatirimTutari.GetValueOrDefault();
         bool rffUygun=talep>0&&(alt<=0||talep>=alt)&&(ust<=0||talep<=ust)&&(ust<=0||kumulatif<=ust);
-        string rff=b.finans.talepEdilenDestekTutari.HasValue?$"{talep:N0} USD / {kumulatif:N0} USD":"";
+        string rff=b.finans.talepEdilenDestekTutari.HasValue?$"{talep:N0} EUR / {kumulatif:N0} EUR":"";
         List<BasvuruOzetiUygunlukSatiri> u=
         [
             new("faaliyet","Faaliyet süresi en az 2 yıl",faaliyetYili.HasValue?$"{faaliyetYili:0.0} yıl":"",faaliyetYili>=2?"Uygun":"Eksik","Başvuru Sahibi","Ticaret sicil"),

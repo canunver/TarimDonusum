@@ -38,6 +38,7 @@
             <thead>
                 <tr>
                     <th>@L["Basvuru.Common.No"]</th>
+                    <th>@L["Basvuru.Common.ApplicationNo"]</th>
                     <th>@L["Basvuru.Field.TicaretUnvani"]</th>
                     <th>@L["Basvuru.Field.VergiKimlikNo"]</th>
                     <th>@L["Basvuru.Field.YatirimAdi"]</th>
@@ -75,6 +76,11 @@
                                     }
                                 }
                             </select>
+                        </td>
+                        <td>
+                            @(string.IsNullOrWhiteSpace(item.basvuruFirma.basvuruNo)
+                                ? item.BasvuruAnaId.ToString()
+                                : item.basvuruFirma.basvuruNo)
                         </td>
                         <td>@item.basvuruFirma.firma.ticaretUnvani</td>
                         <td>@item.basvuruFirma.firma.vergiKimlikNo</td>

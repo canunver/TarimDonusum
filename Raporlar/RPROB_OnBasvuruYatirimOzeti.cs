@@ -26,7 +26,12 @@ public sealed class RPROB_OnBasvuruYatirimOzeti(string uygulamaRootPath) : RPROB
         tablo.AktifSheetDegistir(formatSheet);
         double formatIlkSatirYuksekligi = tablo.SatirGercekYukseklikAl(formatSatir1);
 
-        List<UrunSatiri> urunler = UrunleriOku(basvuru.yatirimOzeti.yatirimOzetiJson);
+        List<UrunSatiri> urunler = basvuru.YatirimOnBilgileri
+            .Where(x => x.tur is enumYatirimOnBilgiTuru.MevcutUrun or enumYatirimOnBilgiTuru.UretilecekUrun)
+            .OrderBy(x => x.siraNo).ThenBy(x => x.id)
+            .Select(UrunSatirinaDonustur).ToList();
+        if (urunler.Count == 0)
+            urunler = UrunleriOku(basvuru.yatirimOzeti.yatirimOzetiJson);
         for (int urunNo = 0; urunNo < urunler.Count; urunNo++)
         {
             int urunBaslangicSatiri = hedefSatir + urunNo * urunSatirSayisi;
@@ -78,6 +83,15 @@ public sealed class RPROB_OnBasvuruYatirimOzeti(string uygulamaRootPath) : RPROB
         }
         return urunler;
     }
+
+    private static UrunSatiri UrunSatirinaDonustur(BasvuruYatirimOnBilgi urun) =>
+        new(urun.ad, urun.birim ?? "", new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["capacity"] = [urun.mevcutKapasite ?? 0, urun.birinciYilKapasite ?? 0],
+            ["production"] = [urun.mevcutKapasite ?? 0, urun.birinciYilKapasite ?? 0],
+            ["sales"] = [0, urun.satisMiktari ?? 0],
+            ["price"] = [0, urun.birimSatisFiyati ?? 0]
+        });
 
     private sealed record UrunSatiri(string Ad, string Birim, Dictionary<string, List<decimal>> Veriler);
 }
