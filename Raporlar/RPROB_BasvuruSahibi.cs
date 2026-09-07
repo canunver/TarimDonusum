@@ -28,6 +28,7 @@ public sealed class RPROB_BasvuruSahibi(string uygulamaRootPath, bool onBasvuruC
         Yaz(tablo, 15, 2, f.faaliyetKonusu);
         Yaz(tablo, 16, 2, i.adres);
         Yaz(tablo, 17, 2, KisileriBirlestir(basvuru.AdliSicilKisileri, x =>
+            GorevEsit(x.gorev, "Şirket Ortağı") ||
             GorevEsit(x.gorev, "Y\u00f6netim kurulu \u00fcye") ||
             GorevEsit(x.gorev, "Adli Sicil Kontrol\u00fcne Tabi Ek Ki\u015fi")));
 

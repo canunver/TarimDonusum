@@ -255,8 +255,10 @@
                                 </select>
                             </label>
                             <label>SEGE kademesi<input id="adresModalSegeKademesi" readonly /></label>
-                            <label>Koordinat<input id="adresModalKoordinat" placeholder="Enlem, boylam" /></label>
-                            <label>Ada / parsel<input id="adresModalAdaParsel" /></label>
+                            <label>Enlem<input id="adresModalEnlem" type="number" min="-90" max="90" step="0.000001" placeholder="Örn. 40,550123" /></label>
+                            <label>Boylam<input id="adresModalBoylam" type="number" min="-180" max="180" step="0.000001" placeholder="Örn. 34,950123" /></label>
+                            <label>Ada<input id="adresModalAda" maxlength="30" /></label>
+                            <label>Parsel<input id="adresModalParsel" maxlength="30" /></label>
                             <label>Kullanım hakkı başlangıç tarihi<input id="adresModalKullanimHakkiBaslangicTarihi" type="date" /></label>
                             <label>Uygulama ve geri ödeme dönemini kapsıyor mu?<select id="adresModalDonemleriKapsiyorMu"><option value="">Seçiniz</option><option value="true">Evet</option><option value="false">Hayır</option></select></label>
                         </div>
@@ -319,7 +321,7 @@
                         </div>
                         <div class="document-upload-box mt-3 d-none" id="ortakUboKycBox">
                             <div class="document-file-row">
-                                <label class="btn btn-primary mb-0 disabled" for="ortakUboKycDosya" id="ortakUboKycSecBtn">@L["Basvuru.Ortaklik.UboKycUpload"]</label>
+                                <label class="btn btn-primary mb-0 disabled" for="ortakUboKycDosya" id="ortakUboKycSecBtn" onclick="OrtakDosyaSecimKonumuSakla()">@L["Basvuru.Ortaklik.UboKycUpload"]</label>
                                 <input id="ortakUboKycDosya" type="file" class="document-file-input" disabled />
                                 <span id="ortakUboKycDosyaAdi" class="document-file-name">@L["Basvuru.Ortaklik.UboKycMissing"]</span>
                                 <a id="ortakUboKycIndirBtn" class="btn btn-outline-primary d-none" href="#" target="_blank" rel="noopener">@L["Basvuru.Common.Download"]</a>
@@ -415,6 +417,23 @@
     </div>
 }
 
+<div class="modal fade" id="kaydedilmemisDegisiklikModal" tabindex="-1" role="dialog" aria-labelledby="kaydedilmemisDegisiklikBaslik" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="kaydedilmemisDegisiklikBaslik">Kaydedilmemiş değişiklikler</h5>
+                <button type="button" class="close degisiklik-sayfada-kal" aria-label="Kapat"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">Bu sayfada kaydedilmemiş değişiklikler var. Nasıl devam etmek istersiniz?</div>
+            <div class="modal-footer flex-wrap">
+                <button type="button" class="btn btn-outline-secondary degisiklik-sayfada-kal">Sayfada kal</button>
+                <button type="button" class="btn btn-outline-danger" id="degisiklikKaydetmedenDevam">Kaydetmeden devam et</button>
+                <button type="button" class="btn btn-primary" id="degisiklikKaydetVeDevam">Kaydet ve devam et</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     var active = @((int)ilkBolum.Bolum);
     let basvuruIlId = @b.basvuruFirma.ilId;
@@ -497,6 +516,7 @@
         edit: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Common.Edit"))),
         delete: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Common.Delete"))),
         download: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Common.Download"))),
+        upload: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Documents.Upload"))),
         partnerNameTitle: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.PartnerNameTitle"))),
         identity: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.Identity"))),
         personType: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Ortaklik.PersonType"))),
@@ -556,7 +576,8 @@
         explainPlaceholder: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Esf.Placeholder.Explain"))),
         textPlaceholder: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Esf.Placeholder.Text"))),
         documentPlaceholder: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Esf.Placeholder.Document"))),
-        exclusionWarning: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Esf.ExclusionWarning")))
+        exclusionWarning: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Esf.ExclusionWarning"))),
+        declaration: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.CevreselSosyal.Declaration")))
     };
     const maliMesajlari = {
         scaleOk: @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Mali.ScaleCheckOk"))),
@@ -587,6 +608,9 @@
     var firmaSecModal;
     var ortakModal;
     var adliSicilModal;
+    var kaydedilmemisDegisiklikModal;
+    var bekleyenBolum = null;
+    var ortakDosyaSecimKonumu = null;
     var sonUygulamaAdresleri = [];
     var basvuruOrtaklari = [];
     var basvuruAdliSicilKisileri = [];
@@ -604,12 +628,16 @@
         firmaSecModal = modalOlustur(document.getElementById('firmaSecModal'));
         ortakModal = modalOlustur(document.getElementById('ortakModal'));
         adliSicilModal = modalOlustur(document.getElementById('adliSicilModal'));
+        kaydedilmemisDegisiklikModal = modalOlustur(document.getElementById('kaydedilmemisDegisiklikModal'));
 
         document.querySelectorAll('.firma-modal-kapat').forEach(btn => btn.addEventListener('click', () => firmaModal?.hide()));
         document.querySelectorAll('.firma-sec-modal-kapat').forEach(btn => btn.addEventListener('click', () => firmaSecModal?.hide()));
         document.querySelectorAll('.uygulama-adres-modal-kapat').forEach(btn => btn.addEventListener('click', () => uygulamaAdresModal?.hide()));
         document.querySelectorAll('.ortak-modal-kapat').forEach(btn => btn.addEventListener('click', () => ortakModal?.hide()));
         document.querySelectorAll('.adli-sicil-modal-kapat').forEach(btn => btn.addEventListener('click', () => adliSicilModal?.hide()));
+        document.querySelectorAll('.degisiklik-sayfada-kal').forEach(btn => btn.addEventListener('click', DegisiklikModalindaKal));
+        document.getElementById('degisiklikKaydetmedenDevam')?.addEventListener('click', DegisiklikKaydetmedenDevam);
+        document.getElementById('degisiklikKaydetVeDevam')?.addEventListener('click', DegisiklikKaydetVeDevam);
 
         document.querySelectorAll('.basvuru-step').forEach(step =>
             step.addEventListener('click', () => BasvuruBolumGoster(Number(step.dataset.step))));
@@ -694,8 +722,10 @@
             BasvuruStepSec(active);
             return;
         }
-        if (dirty && (BolumKayitGerektirir(active) || active === bolumKarar || active === bolumSistemSonuclari || active === bolumUzmanSonuclari) && !confirm(unsavedMessage)) {
+        if (dirty && (BolumKayitGerektirir(active) || active === bolumKarar || active === bolumSistemSonuclari || active === bolumUzmanSonuclari)) {
+            bekleyenBolum = bolum;
             BasvuruStepSec(active);
+            kaydedilmemisDegisiklikModal?.show();
             return;
         }
 
@@ -1367,14 +1397,6 @@
             cevreselSosyalAdresleri = Array.isArray(parsed) ? parsed : [];
         } catch { cevreselSosyalAdresleri = []; }
         document.getElementById('cevreselSosyalAdresId')?.addEventListener('change', CevreselSosyalAdresGuncelle);
-        const beyan = document.getElementById('cevreselSosyalDogrulukBeyani');
-        if (beyan) {
-            beyan.checked = !!cevreselSosyalCevaplar.declaration;
-            beyan.addEventListener('change', function () {
-                cevreselSosyalCevaplar.declaration = this.checked;
-                dirty = true;
-            });
-        }
         CevreselSosyalAdresGuncelle();
     }
 
@@ -1420,6 +1442,30 @@
         }
     }
 
+    function DegisiklikModalindaKal() {
+        bekleyenBolum = null;
+        kaydedilmemisDegisiklikModal?.hide();
+        BasvuruStepSec(active);
+    }
+
+    function DegisiklikKaydetmedenDevam() {
+        const hedef = bekleyenBolum;
+        bekleyenBolum = null;
+        dirty = false;
+        kaydedilmemisDegisiklikModal?.hide();
+        if (hedef != null) BasvuruBolumGoster(hedef);
+    }
+
+    function DegisiklikKaydetVeDevam() {
+        const hedef = bekleyenBolum;
+        if (hedef == null) return;
+        kaydedilmemisDegisiklikModal?.hide();
+        PaneliKaydet(() => {
+            bekleyenBolum = null;
+            BasvuruBolumGoster(hedef);
+        });
+    }
+
     function CevreselSosyalKapsamGuncelle() {
         cevreselSosyalCevaplar.mode = document.getElementById('cevreselSosyalYatirimKapsami')?.value || '';
         dirty = true;
@@ -1439,8 +1485,6 @@
         cevreselSosyalCevaplar.mode = mode;
         const modeInput = document.getElementById('cevreselSosyalYatirimKapsami');
         if (modeInput) modeInput.value = mode;
-        const beyan = document.getElementById('cevreselSosyalDogrulukBeyani');
-        if (beyan) beyan.checked = !!cevreselSosyalCevaplar.declaration;
         const bilgi = document.getElementById('cevreselSosyalAdresKapsami');
         if (bilgi) bilgi.textContent = !adres ? 'Önce anketin doldurulacağı adresi seçiniz.'
             : mode === 'both' ? 'Bu adres için yeni tesis ve modernizasyon anketleri açılacaktır.'
@@ -1478,15 +1522,21 @@
         const container = document.getElementById('cevreselSosyalAnket');
         if (!container) return;
         const disabled = basvuruReadonly ? 'disabled' : '';
+        CevreselSosyalBeyanlariRender();
         const modeSelect = document.getElementById('cevreselSosyalYatirimKapsami');
         if (modeSelect) modeSelect.value = cevreselSosyalCevaplar.mode || '';
         if (CevreselSosyalBaglamlari().length === 0) {
             container.innerHTML = `<div class="alert alert-warning">${htmlEncode(cevreselSosyalMetinleri.selectScopeFirst)}</div>`;
             return;
         }
+        const gizliSorular = cevreselSosyalSoruGruplari.flatMap(g => g.questions || [])
+            .filter(q => Object.prototype.hasOwnProperty.call(cevreselSosyalOtomatikCevaplar, String(q.id)))
+            .map(q => String(q.id));
         let html = `<div class="alert alert-success">${htmlEncode(cevreselSosyalMetinleri.openedBySelection)}</div>`;
+        if (gizliSorular.length) html += `<div class="alert alert-info">${htmlEncode(gizliSorular.join(', '))} numaralı sorular sistemdeki başvuru bilgilerinden otomatik cevaplandığı için veri girişinde gizlenmiştir. Yazdırılan ankette bu sorular ve cevapları gösterilecektir.</div>`;
         cevreselSosyalSoruGruplari.forEach(group => {
-            const groupQuestions = (group.questions || []).filter(question => CevreselSosyalSoruBaglamlari(question).length > 0);
+            const groupQuestions = (group.questions || []).filter(question => CevreselSosyalSoruBaglamlari(question).length > 0
+                && !Object.prototype.hasOwnProperty.call(cevreselSosyalOtomatikCevaplar, String(question.id)));
             if (groupQuestions.length === 0) return;
             html += `<details class="esf-section" open><summary>${htmlEncode(group.id)}. ${htmlEncode(group.title)}</summary><div class="esf-section-body">`;
             (group.descriptions || []).forEach(description => {
@@ -1504,6 +1554,22 @@
         });
         container.innerHTML = html;
         CevreselSosyalKosulluAlanlariGuncelle();
+    }
+
+    function CevreselSosyalBeyanlariRender() {
+        const alan = document.getElementById('cevreselSosyalBeyanlari');
+        if (!alan) return;
+        const baglamlar = CevreselSosyalBaglamlari();
+        if (!baglamlar.length) { alan.innerHTML = ''; alan.classList.add('d-none'); return; }
+        alan.classList.remove('d-none');
+        alan.innerHTML = `<label class="checkbox-line esf-declaration">
+            <input id="cevreselSosyalDogrulukBeyani" type="checkbox" ${cevreselSosyalCevaplar.declaration ? 'checked' : ''} ${basvuruReadonly ? 'disabled' : ''}>
+            ${htmlEncode(cevreselSosyalMetinleri.declaration)}
+        </label>`;
+        alan.querySelector('#cevreselSosyalDogrulukBeyani')?.addEventListener('change', function () {
+            cevreselSosyalCevaplar.declaration = this.checked;
+            dirty = true;
+        });
     }
 
     function CevreselSosyalSoruHtml(question, disabled) {
@@ -1594,7 +1660,14 @@
         }
         if (needDoc) {
             const docId = CevreselSosyalAlanId(question, ctx, 'doc');
-            html += `<div class="doc-mini"><input id="${docId}" placeholder="${htmlEncode(cevreselSosyalMetinleri.documentPlaceholder)}" oninput="CevreselSosyalCevapGuncelle('${docId}', this.value)" value="${htmlEncode(cevreselSosyalCevaplar.answers[docId] || '')}"><input type="file" class="document-file-input"></div>`;
+            const fileId = Number(cevreselSosyalCevaplar.answers[`${docId}_fileId`] || 0);
+            const fileName = cevreselSosyalCevaplar.answers[docId] || '';
+            const inputId = `${docId}_file`;
+            html += `<div class="doc-mini">
+                ${basvuruReadonly ? '' : `<label class="btn btn-primary mb-0 esf-doc-button" for="${inputId}">Seç</label><input id="${inputId}" type="file" class="document-file-input" onchange="CevreselSosyalDosyaYukle('${question.id}','${ctx}','${docId}',this)">`}
+                <span class="document-file-name" title="${htmlEncode(fileName || 'Dosya seçilmedi')}">${htmlEncode(fileName || 'Dosya seçilmedi')}</span>
+                ${fileId ? `<a class="btn btn-outline-primary esf-doc-button" href="/Basvuru/DosyaIndir/${fileId}" target="_blank" rel="noopener">İndir</a>` : ''}
+            </div>`;
         }
         box.innerHTML = html;
     }
@@ -1658,6 +1731,19 @@
 
         uyari.classList.toggle('scale-ok', saglandi);
         sonuc.textContent = saglandi ? maliMesajlari.scaleOk : maliMesajlari.scaleNotOk;
+    }
+
+    function CevreselSosyalDosyaYukle(questionId, ctx, docId, input) {
+        const adresId = Number(document.getElementById('cevreselSosyalAdresId')?.value || 0);
+        if (!adresId) { PopupMesajGoster('Önce yatırım adresi seçilmelidir.', false); return; }
+        const formAd = `BCS_${adresId}_${String(questionId).replace(/\./g, '_')}_${ctx}`;
+        BasvuruDosyasiYukle(formAd, 1, input, null, null, sonuc => {
+            const nesne = sonuc?.nesne || sonuc?.Nesne || {};
+            cevreselSosyalCevaplar.answers[docId] = nesne.dosyaAdi || nesne.DosyaAdi || input.files?.[0]?.name || '';
+            cevreselSosyalCevaplar.answers[`${docId}_fileId`] = nesne.dosyaId || nesne.DosyaId || null;
+            CevreselSosyalKosulluAlanGuncelle(questionId, ctx);
+            CevreselSosyalKaydet();
+        });
     }
 
     function MaliOrtaklikToplamlariniGuncelle() {
@@ -1752,6 +1838,7 @@
         modalSet('ortakSonYilNetSatis', ortak.sonYilNetSatis);
         modalSet('ortakOncekiYilAktifToplami', ortak.oncekiYilAktifToplami);
         modalSet('ortakSonYilAktifToplami', ortak.sonYilAktifToplami);
+        ParaTamsayiAyarla();
         const hata = document.getElementById('ortakModalHata');
         if (hata) hata.textContent = '';
         OrtakModalTuzelAlanGuncelle();
@@ -1917,7 +2004,6 @@
         html += '</tbody></table></div>';
         container.innerHTML = html;
         OrtaklikOzetGuncelle();
-        TuzelOrtakMaliRender();
         MaliOrtaklikToplamlariniGuncelle();
         const tuzelOrtakYok = !basvuruOrtaklari.some(ortak => ortak.kisiTuru === 'Tüzel Kişi');
         document.getElementById('tuzelKisiOrtakBilgileri')?.classList.toggle('d-none', tuzelOrtakYok);
@@ -2009,6 +2095,7 @@
             ortak.uboKycBelgeAdi = nesne.dosyaAdi || nesne.DosyaAdi || '';
             OrtakModalUboKycDurumGuncelle();
             OrtaklarRender();
+            OrtakDosyaSecimKonumuGeriYukle();
         });
     }
 
@@ -2036,7 +2123,7 @@
                 ? `<a class="btn btn-sm btn-outline-primary" href="/Basvuru/DosyaIndir/${belge.dosyaId}" target="_blank" rel="noopener">${htmlEncode(ortakMetinleri.download)}</a>`
                 : '';
             const yukle = !ortaklikReadonly
-                ? `<label class="btn btn-sm btn-primary mb-0 ${kayitliTuzelMi ? '' : 'disabled'}" for="${inputId}">@Html.Raw(JsonSerializer.Serialize(T("Basvuru.Documents.Upload")))</label><input id="${inputId}" type="file" class="document-file-input" ${kayitliTuzelMi ? '' : 'disabled'} onchange="OrtakZorunluBelgeYukle(${dosyaNo}, this)" />`
+                ? `<label class="btn btn-sm btn-primary mb-0 ${kayitliTuzelMi ? '' : 'disabled'}" for="${inputId}" onclick="OrtakDosyaSecimKonumuSakla()">${htmlEncode(ortakMetinleri.upload)}</label><input id="${inputId}" type="file" class="document-file-input" ${kayitliTuzelMi ? '' : 'disabled'} onchange="OrtakZorunluBelgeYukle(${dosyaNo}, this)" />`
                 : '';
             return `<tr><td>${htmlEncode(dosyaTuru)} <span class="required-mark">*</span></td><td>${htmlEncode(yuklu ? belge.dosyaAdi : @Html.Raw(JsonSerializer.Serialize(T("Basvuru.Documents.NoFileSelected"))))}</td><td class="text-nowrap">${yukle} ${indir}</td></tr>`;
         }).join('');
@@ -2063,6 +2150,23 @@
             belge.dosyaId = nesne.dosyaId || nesne.DosyaId || null;
             belge.dosyaAdi = nesne.dosyaAdi || nesne.DosyaAdi || '';
             OrtakModalZorunluBelgeleriRender();
+            OrtakDosyaSecimKonumuGeriYukle();
+        });
+    }
+
+    function OrtakDosyaSecimKonumuSakla() {
+        const alan = document.querySelector('#ortakModal .firma-modal-fields');
+        ortakDosyaSecimKonumu = { sayfa: window.scrollY, modal: alan?.scrollTop || 0 };
+    }
+
+    function OrtakDosyaSecimKonumuGeriYukle() {
+        if (!ortakDosyaSecimKonumu) return;
+        const konum = ortakDosyaSecimKonumu;
+        ortakDosyaSecimKonumu = null;
+        requestAnimationFrame(() => {
+            const alan = document.querySelector('#ortakModal .firma-modal-fields');
+            if (alan) alan.scrollTop = konum.modal;
+            window.scrollTo({ top: konum.sayfa, behavior: 'auto' });
         });
     }
 
@@ -2115,6 +2219,8 @@
             .reduce((sum, ortak) => sum + Number(ortak.payOrani || 0), 0);
         const ozelInput = document.getElementById('privateShareCalculated');
         if (ozelInput) ozelInput.value = sayiYaz(ozelPay);
+        const ozelDisplay = document.getElementById('privateShareCalculatedDisplay');
+        if (ozelDisplay) ozelDisplay.textContent = `%${sayiYaz(ozelPay)}`;
         const kadinPay = basvuruOrtaklari.filter(x => x.sahiplikNiteligi === 'Kadın' || x.sahiplikNiteligi === 'Her ikisi').reduce((s,x)=>s+Number(x.payOrani||0),0);
         const gencPay = basvuruOrtaklari.filter(x => x.sahiplikNiteligi === '40 yaş altı' || x.sahiplikNiteligi === 'Her ikisi').reduce((s,x)=>s+Number(x.payOrani||0),0);
         const toplamInput=document.getElementById('partnershipTotal'); if(toplamInput) toplamInput.value=sayiYaz(toplamPay);
@@ -2129,32 +2235,6 @@
         else {
             alert.innerHTML = '';
         }
-    }
-
-    function TuzelOrtakMaliRender() {
-        const container = document.getElementById('legalPartnerFinancials');
-        if (!container) return;
-        const tuzelOrtaklar = basvuruOrtaklari.filter(ortak => ortak.kisiTuru === 'Tüzel Kişi');
-        if (tuzelOrtaklar.length === 0) {
-            container.innerHTML = '';
-            return;
-        }
-
-        const toplamlar = tuzelOrtaklar.reduce((toplam, ortak) => {
-            const carpan = HesabaDahilOranHesapla(ortak.payOrani) / 100;
-            toplam.oncekiNet += Number(ortak.oncekiYilNetSatis || 0) * carpan;
-            toplam.sonNet += Number(ortak.sonYilNetSatis || 0) * carpan;
-            toplam.oncekiAktif += Number(ortak.oncekiYilAktifToplami || 0) * carpan;
-            toplam.sonAktif += Number(ortak.sonYilAktifToplami || 0) * carpan;
-            return toplam;
-        }, { oncekiNet: 0, sonNet: 0, oncekiAktif: 0, sonAktif: 0 });
-
-        let html = `<div class="table-responsive"><table class="table table-bordered legal-financial-table"><thead><tr>
-                <th>${htmlEncode(oncekiMaliYil)} ${htmlEncode(ortakMetinleri.netSalesShort)}</th><th>${htmlEncode(sonMaliYil)} ${htmlEncode(ortakMetinleri.netSalesShort)}</th><th>${htmlEncode(oncekiMaliYil)} ${htmlEncode(ortakMetinleri.assetsShort)}</th><th>${htmlEncode(sonMaliYil)} ${htmlEncode(ortakMetinleri.assetsShort)}</th>
-            </tr></thead><tbody>`;
-        html += `<tr class="font-weight-bold"><td>${sayiYaz(toplamlar.oncekiNet)}</td><td>${sayiYaz(toplamlar.sonNet)}</td><td>${sayiYaz(toplamlar.oncekiAktif)}</td><td>${sayiYaz(toplamlar.sonAktif)}</td></tr>`;
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
     }
 
     function OrtaklikKaydet(afterSuccess, bosBagliSecimiHayirSay) {
@@ -3948,8 +4028,10 @@
             yapiRuhsatiDurumu: AdresModalYapimIsiSecili()
                 ? Number(modalValue('adresModalYapiRuhsatiDurumu') || 0) || 0
                 : 5,
-            koordinat: modalValue('adresModalKoordinat'),
-            adaParsel: modalValue('adresModalAdaParsel'),
+            enlem: modalValue('adresModalEnlem') === '' ? null : Number(modalValue('adresModalEnlem').replace(',', '.')),
+            boylam: modalValue('adresModalBoylam') === '' ? null : Number(modalValue('adresModalBoylam').replace(',', '.')),
+            ada: modalValue('adresModalAda'),
+            parsel: modalValue('adresModalParsel'),
             segeKademesi: modalValue('adresModalSegeKademesi'),
             kullanimHakkiBaslangicTarihi: modalValue('adresModalKullanimHakkiBaslangicTarihi') || null,
             donemleriKapsiyorMu: modalValue('adresModalDonemleriKapsiyorMu') === '' ? null : modalValue('adresModalDonemleriKapsiyorMu') === 'true',
@@ -4024,8 +4106,10 @@
         modalSet('adresModalKiraVeyaTahsisSuresi', adres.kiraVeyaTahsisSuresi);
         modalSet('adresModalKiraTahsisBitisTarihi', adres.kiraTahsisBitisTarihi);
         modalSet('adresModalYapiRuhsatiDurumu', adres.yapiRuhsatiDurumu);
-        modalSet('adresModalKoordinat', adres.koordinat);
-        modalSet('adresModalAdaParsel', adres.adaParsel);
+        modalSet('adresModalEnlem', adres.enlem);
+        modalSet('adresModalBoylam', adres.boylam);
+        modalSet('adresModalAda', adres.ada);
+        modalSet('adresModalParsel', adres.parsel);
         modalSet('adresModalSegeKademesi', adres.segeKademesi);
         modalSet('adresModalKullanimHakkiBaslangicTarihi', adres.kullanimHakkiBaslangicTarihi);
         modalSet('adresModalDonemleriKapsiyorMu', adres.donemleriKapsiyorMu == null ? '' : String(adres.donemleriKapsiyorMu));
@@ -4103,7 +4187,7 @@
         sonUygulamaAdresleri.forEach((adres, index) => {
             const tr = document.createElement('tr');
             const alanlar = basvuruYatirimSayfasi
-                ? [adres.siraNo, adres.ilAdi, adres.ilceAdi, adres.segeKademesi, adres.tamAdres, adres.koordinat, adres.adaParsel, adres.adresBelgeDosyaAdi]
+                ? [adres.siraNo, adres.ilAdi, adres.ilceAdi, adres.segeKademesi, adres.tamAdres, [adres.enlem, adres.boylam].filter(x => x != null).join(', '), [adres.ada, adres.parsel].filter(Boolean).join(' / '), adres.adresBelgeDosyaAdi]
                 : [adres.siraNo, adres.ilAdi, adres.ilceAdi, adres.tamAdres, adres.yatirimYeriStatusuAd, adres.kiraTahsisBitis];
             if (!basvuruYatirimSayfasi && YapimIsiSecili()) alanlar.push(adres.yapiRuhsatiDurumuAd);
             alanlar.forEach((value, alanIndex) => { const td=document.createElement('td');

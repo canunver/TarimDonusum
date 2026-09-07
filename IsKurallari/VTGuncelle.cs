@@ -978,6 +978,11 @@ namespace TarimDonusum.IsKurallari
             new(78,
                 @"IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri',N'CevreselSosyalJson') IS NULL
                     ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD CevreselSosyalJson NVARCHAR(MAX) NULL;"),
+            new(79,
+                @"IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri',N'Enlem') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD Enlem DECIMAL(9,6) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri',N'Boylam') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD Boylam DECIMAL(9,6) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri',N'Ada') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD Ada NVARCHAR(30) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri',N'Parsel') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD Parsel NVARCHAR(30) NULL;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

@@ -2106,7 +2106,7 @@
     <value>Total shareholding percentage and private sector share are calculated by the system based on partner/shareholder rows. Financial data is not requested for natural person partners; financial data for legal entity partners is collected separately and included in the financial scale check according to the shareholding percentage.</value>
   </data>
   <data name="Basvuru.Ortaklik.PrivateShareCalculated" xml:space="preserve">
-    <value>Private sector share (%) - calculated by system</value>
+    <value>Private sector share (%)</value>
   </data>
   <data name="Basvuru.Ortaklik.PartnersTableTitle" xml:space="preserve">
     <value>Ownership structure detail table</value>

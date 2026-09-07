@@ -457,6 +457,8 @@ function paraInputlariniNormalizeEt() {
 function ParaTamsayiAyarla() {
     document.querySelectorAll('.money-integer').forEach(input => {
         paraFormatla(input);
+        if (input.dataset.moneyIntegerInitialized === 'true') return;
+        input.dataset.moneyIntegerInitialized = 'true';
         input.addEventListener('focus', () => {
             input.value = paraTamsayiDegeri(input.value);
         });

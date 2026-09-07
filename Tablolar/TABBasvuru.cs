@@ -602,13 +602,14 @@ namespace TarimDonusum.Tablolar
                         @IlKodu INT,
                         @DegerZinciriKodu NVARCHAR(50),
                         @OnEk NVARCHAR(20),
+                        @KilitKaynagi NVARCHAR(255),
                         @SiraNo INT,
                         @KilitSonucu INT;
 
                 SELECT @BasvuruAnaId = BA.Id,
                        @DonemId = BA.DonemId,
                        @IlKodu = I.Kod,
-                       @DegerZinciriKodu = MIN(DZ.Kod)
+                       @DegerZinciriKodu = CONVERT(NVARCHAR(50), MIN(DZ.Id))
                 FROM dbo.BasvuruAna BA
                 INNER JOIN dbo.Basvuru B ON B.BasvuruAnaId = BA.Id
                 INNER JOIN dbo.Il I ON I.Id = BA.IlId
@@ -631,9 +632,10 @@ namespace TarimDonusum.Tablolar
 
                 SET @OnEk = CONCAT(N'DB-T-01-', RIGHT(N'00' + CONVERT(NVARCHAR(2), @IlKodu), 2), N'-',
                                    RIGHT(N'00' + CONVERT(NVARCHAR(2), TRY_CONVERT(INT, @DegerZinciriKodu)), 2), N'-');
+                SET @KilitKaynagi = @OnEk + CONVERT(NVARCHAR(11), @DonemId);
 
                 EXEC @KilitSonucu = sys.sp_getapplock
-                    @Resource = @OnEk + CONVERT(NVARCHAR(11), @DonemId),
+                    @Resource = @KilitKaynagi,
                     @LockMode = 'Exclusive',
                     @LockOwner = 'Transaction',
                     @LockTimeout = 10000;
@@ -660,14 +662,17 @@ namespace TarimDonusum.Tablolar
                 FROM dbo.BasvuruAna BA
                 INNER JOIN dbo.Basvuru B ON B.BasvuruAnaId = BA.Id
                 WHERE B.Id = @BasvuruId
-                  AND BA.Durum IN (@OnBasvuruDurumu, @DuzeltmeDurumu);";
+                  AND BA.Durum IN (@OnBasvuruDurumu, @DuzeltmeDurumu);
+
+                SELECT CAST(CASE WHEN @@ROWCOUNT > 0 THEN 1 ELSE 0 END AS INT);";
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@BasvuruId", basvuruId);
             command.Parameters.AddWithValue("@OnBasvuruDurumu", (int)enumBasvuruDurum.OnBasvuruDurumu);
             command.Parameters.AddWithValue("@DuzeltmeDurumu", (int)enumBasvuruDurum.OnBasvuruDuzeltmeDurumu);
             command.Parameters.AddWithValue("@YeniDurum", (int)enumBasvuruDurum.OnBasvuruIncelemeDurumu);
-            return await command.ExecuteNonQueryAsync() > 0;
+            object? result = await command.ExecuteScalarAsync();
+            return result != null && result != DBNull.Value && Convert.ToInt32(result) == 1;
         }
 
         public async Task<bool> OnBasvuruDenetimiKaydetAsync(Basvuru basvuru, enumBasvuruDurum yeniDurum)
@@ -832,12 +837,12 @@ namespace TarimDonusum.Tablolar
 
                 DECLARE @AdresEsleme TABLE(EskiId INT NOT NULL,YeniId INT NOT NULL);
                 MERGE dbo.BasvuruUygulamaAdresleri AS hedef
-                USING (SELECT Id, SiraNo, IlceId, TamAdres, YatirimYeriStatusu, KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, SegeKademesi, KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu, IzinTakvimAciklama, AdresBelgeDosyaId, AdresBelgeDosyaAdi, KullanimHakkiDosyaId, KullanimHakkiDosyaAdi, KanitDosyaId, KanitDosyaAdi, YatirimFaaliyetleri, YatirimGirdileri, YatirimCiktilari FROM dbo.BasvuruUygulamaAdresleri WHERE BasvuruId=@KaynakBasvuruId) AS kaynak ON 1=0
+                USING (SELECT Id, SiraNo, IlceId, TamAdres, YatirimYeriStatusu, KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, Enlem, Boylam, Ada, Parsel, SegeKademesi, KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu, IzinTakvimAciklama, AdresBelgeDosyaId, AdresBelgeDosyaAdi, KullanimHakkiDosyaId, KullanimHakkiDosyaAdi, KanitDosyaId, KanitDosyaAdi, YatirimFaaliyetleri, YatirimGirdileri, YatirimCiktilari, CevreselSosyalJson FROM dbo.BasvuruUygulamaAdresleri WHERE BasvuruId=@KaynakBasvuruId) AS kaynak ON 1=0
                 WHEN NOT MATCHED THEN INSERT
                     (BasvuruId, SiraNo, IlceId, TamAdres, YatirimYeriStatusu,
-                     KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, SegeKademesi,
-                     KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu, IzinTakvimAciklama, AdresBelgeDosyaId, AdresBelgeDosyaAdi, KullanimHakkiDosyaId, KullanimHakkiDosyaAdi, KanitDosyaId, KanitDosyaAdi, YatirimFaaliyetleri, YatirimGirdileri, YatirimCiktilari)
-                    VALUES(@YeniBasvuruId,kaynak.SiraNo,kaynak.IlceId,kaynak.TamAdres,kaynak.YatirimYeriStatusu,kaynak.KiraVeyaTahsisSuresi,kaynak.KiraTahsisBitisTarihi,kaynak.YapiRuhsatiDurumu,kaynak.Koordinat,kaynak.AdaParsel,kaynak.SegeKademesi,kaynak.KullanimHakkiBaslangicTarihi,kaynak.DonemleriKapsiyorMu,kaynak.IzinTakvimAciklama,kaynak.AdresBelgeDosyaId,kaynak.AdresBelgeDosyaAdi,kaynak.KullanimHakkiDosyaId,kaynak.KullanimHakkiDosyaAdi,kaynak.KanitDosyaId,kaynak.KanitDosyaAdi,kaynak.YatirimFaaliyetleri,kaynak.YatirimGirdileri,kaynak.YatirimCiktilari)
+                     KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, Enlem, Boylam, Ada, Parsel, SegeKademesi,
+                     KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu, IzinTakvimAciklama, AdresBelgeDosyaId, AdresBelgeDosyaAdi, KullanimHakkiDosyaId, KullanimHakkiDosyaAdi, KanitDosyaId, KanitDosyaAdi, YatirimFaaliyetleri, YatirimGirdileri, YatirimCiktilari, CevreselSosyalJson)
+                    VALUES(@YeniBasvuruId,kaynak.SiraNo,kaynak.IlceId,kaynak.TamAdres,kaynak.YatirimYeriStatusu,kaynak.KiraVeyaTahsisSuresi,kaynak.KiraTahsisBitisTarihi,kaynak.YapiRuhsatiDurumu,kaynak.Koordinat,kaynak.AdaParsel,kaynak.Enlem,kaynak.Boylam,kaynak.Ada,kaynak.Parsel,kaynak.SegeKademesi,kaynak.KullanimHakkiBaslangicTarihi,kaynak.DonemleriKapsiyorMu,kaynak.IzinTakvimAciklama,kaynak.AdresBelgeDosyaId,kaynak.AdresBelgeDosyaAdi,kaynak.KullanimHakkiDosyaId,kaynak.KullanimHakkiDosyaAdi,kaynak.KanitDosyaId,kaynak.KanitDosyaAdi,kaynak.YatirimFaaliyetleri,kaynak.YatirimGirdileri,kaynak.YatirimCiktilari,kaynak.CevreselSosyalJson)
                 OUTPUT kaynak.Id,inserted.Id INTO @AdresEsleme(EskiId,YeniId);
                 INSERT dbo.BasvuruUygulamaAdresiYatirimTuru(AdresId,YatirimTuru) SELECT e.YeniId,t.YatirimTuru FROM dbo.BasvuruUygulamaAdresiYatirimTuru t INNER JOIN @AdresEsleme e ON e.EskiId=t.AdresId;
                 INSERT dbo.BasvuruUygulamaAdresiHarcamaTuru(AdresId,HarcamaTuru) SELECT e.YeniId,t.HarcamaTuru FROM dbo.BasvuruUygulamaAdresiHarcamaTuru t INNER JOIN @AdresEsleme e ON e.EskiId=t.AdresId;
@@ -1500,7 +1505,8 @@ namespace TarimDonusum.Tablolar
                     bua.AdresBelgeDosyaId, bua.AdresBelgeDosyaAdi, bua.KullanimHakkiDosyaId, bua.KullanimHakkiDosyaAdi, bua.KanitDosyaId, bua.KanitDosyaAdi,
                     bua.YatirimFaaliyetleri, bua.YatirimGirdileri, bua.YatirimCiktilari, bua.CevreselSosyalJson,
                     (SELECT STRING_AGG(CONVERT(nvarchar(max), t.YatirimTuru), ',') FROM dbo.BasvuruUygulamaAdresiYatirimTuru t WHERE t.AdresId=bua.Id) YatirimTurleri,
-                    (SELECT STRING_AGG(CONVERT(nvarchar(max), t.HarcamaTuru), ',') FROM dbo.BasvuruUygulamaAdresiHarcamaTuru t WHERE t.AdresId=bua.Id) HarcamaTurleri
+                    (SELECT STRING_AGG(CONVERT(nvarchar(max), t.HarcamaTuru), ',') FROM dbo.BasvuruUygulamaAdresiHarcamaTuru t WHERE t.AdresId=bua.Id) HarcamaTurleri,
+                    bua.Enlem, bua.Boylam, bua.Ada, bua.Parsel
                 FROM dbo.BasvuruUygulamaAdresleri bua
                 LEFT JOIN dbo.Ilce ilce ON ilce.Id = bua.IlceId
                 LEFT JOIN dbo.Il il ON il.Id = ilce.IlId ";
@@ -1554,10 +1560,10 @@ namespace TarimDonusum.Tablolar
         {
             const string sql = @"
                 INSERT INTO dbo.BasvuruUygulamaAdresleri
-                    (BasvuruId, SiraNo, IlceId, TamAdres, YatirimYeriStatusu, KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, SegeKademesi, KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu, IzinTakvimAciklama, YatirimFaaliyetleri, YatirimGirdileri, YatirimCiktilari)
+                    (BasvuruId, SiraNo, IlceId, TamAdres, YatirimYeriStatusu, KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, Enlem, Boylam, Ada, Parsel, SegeKademesi, KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu, IzinTakvimAciklama, YatirimFaaliyetleri, YatirimGirdileri, YatirimCiktilari)
                 OUTPUT INSERTED.Id
                 VALUES
-                    (@BasvuruId, @SiraNo, @IlceId, @TamAdres, @YatirimYeriStatusu, @KiraVeyaTahsisSuresi, @KiraTahsisBitisTarihi, @YapiRuhsatiDurumu, @Koordinat, @AdaParsel, @SegeKademesi, @KullanimHakkiBaslangicTarihi, @DonemleriKapsiyorMu, @IzinTakvimAciklama, @YatirimFaaliyetleri, @YatirimGirdileri, @YatirimCiktilari);";
+                    (@BasvuruId, @SiraNo, @IlceId, @TamAdres, @YatirimYeriStatusu, @KiraVeyaTahsisSuresi, @KiraTahsisBitisTarihi, @YapiRuhsatiDurumu, @Koordinat, @AdaParsel, @Enlem, @Boylam, @Ada, @Parsel, @SegeKademesi, @KullanimHakkiBaslangicTarihi, @DonemleriKapsiyorMu, @IzinTakvimAciklama, @YatirimFaaliyetleri, @YatirimGirdileri, @YatirimCiktilari);";
 
             await using SqlCommand command = KomutOlustur(sql);
             UygulamaAdresiParametreleriEkle(command, adres);
@@ -1580,7 +1586,7 @@ namespace TarimDonusum.Tablolar
                     KiraVeyaTahsisSuresi = @KiraVeyaTahsisSuresi,
                     KiraTahsisBitisTarihi = @KiraTahsisBitisTarihi,
                     YapiRuhsatiDurumu = @YapiRuhsatiDurumu,
-                    Koordinat = @Koordinat, AdaParsel = @AdaParsel, SegeKademesi = @SegeKademesi,
+                    Koordinat = @Koordinat, AdaParsel = @AdaParsel, Enlem=@Enlem, Boylam=@Boylam, Ada=@Ada, Parsel=@Parsel, SegeKademesi = @SegeKademesi,
                     KullanimHakkiBaslangicTarihi = @KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu = @DonemleriKapsiyorMu, IzinTakvimAciklama = @IzinTakvimAciklama,
                     YatirimFaaliyetleri=@YatirimFaaliyetleri, YatirimGirdileri=@YatirimGirdileri, YatirimCiktilari=@YatirimCiktilari
                 WHERE Id = @Id
@@ -1605,6 +1611,10 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@YapiRuhsatiDurumu", (int)adres.yapiRuhsatiDurumu);
             command.Parameters.AddWithValue("@Koordinat", DbNull(adres.koordinat));
             command.Parameters.AddWithValue("@AdaParsel", DbNull(adres.adaParsel));
+            command.Parameters.AddWithValue("@Enlem", adres.enlem.HasValue ? adres.enlem.Value : (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Boylam", adres.boylam.HasValue ? adres.boylam.Value : (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Ada", DbNull(adres.ada));
+            command.Parameters.AddWithValue("@Parsel", DbNull(adres.parsel));
             command.Parameters.AddWithValue("@SegeKademesi", DbNull(adres.segeKademesi));
             command.Parameters.AddWithValue("@KullanimHakkiBaslangicTarihi", adres.kullanimHakkiBaslangicTarihi.HasValue ? adres.kullanimHakkiBaslangicTarihi.Value.Date : (object)DBNull.Value);
             command.Parameters.AddWithValue("@DonemleriKapsiyorMu", adres.donemleriKapsiyorMu.HasValue ? adres.donemleriKapsiyorMu.Value : (object)DBNull.Value);
@@ -2277,7 +2287,9 @@ namespace TarimDonusum.Tablolar
                 adresBelgeDosyaId = NullOkuInt(reader, 19), adresBelgeDosyaAdi = NullOkuString(reader, 20), kullanimHakkiDosyaId = NullOkuInt(reader, 21), kullanimHakkiDosyaAdi = NullOkuString(reader, 22), kanitDosyaId = NullOkuInt(reader, 23), kanitDosyaAdi = NullOkuString(reader, 24),
                 yatirimFaaliyetleri = NullOkuString(reader, 25), yatirimGirdileri = NullOkuString(reader, 26), yatirimCiktilari = NullOkuString(reader, 27),
                 cevreselSosyalJson = NullOkuString(reader, 28),
-                yatirimTurleri = VirgulluIntListeOku(NullOkuString(reader, 29)), harcamaTurleri = VirgulluIntListeOku(NullOkuString(reader, 30))
+                yatirimTurleri = VirgulluIntListeOku(NullOkuString(reader, 29)), harcamaTurleri = VirgulluIntListeOku(NullOkuString(reader, 30)),
+                enlem = reader.IsDBNull(31) ? null : reader.GetDecimal(31), boylam = reader.IsDBNull(32) ? null : reader.GetDecimal(32),
+                ada = NullOkuString(reader, 33), parsel = NullOkuString(reader, 34)
             };
             if (l != null)
             {

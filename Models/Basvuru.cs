@@ -1167,6 +1167,10 @@ namespace TarimDonusum.Models
         public DateTime? kiraTahsisBitisTarihi { get; set; }
         public string? koordinat { get; set; }
         public string? adaParsel { get; set; }
+        public decimal? enlem { get; set; }
+        public decimal? boylam { get; set; }
+        public string? ada { get; set; }
+        public string? parsel { get; set; }
         public string? segeKademesi { get; set; }
         public DateTime? kullanimHakkiBaslangicTarihi { get; set; }
         public bool? donemleriKapsiyorMu { get; set; }

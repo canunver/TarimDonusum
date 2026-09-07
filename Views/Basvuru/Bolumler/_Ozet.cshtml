@@ -86,11 +86,18 @@
     }
     decimal altLimit = donem?.minimumYatirimTutari ?? 0;
     decimal ustLimit = donem?.maksimumYatirimTutari ?? 0;
+    decimal OrtakMaliToplami(Func<BasvuruOrtak, decimal?> alan) => b.ortaklik.ortaklar
+        .Where(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase))
+        .Sum(x => alan(x).GetValueOrDefault() * BasvuruOrtak.HesabaDahilOranHesapla(x.payOrani) / 100m);
+    decimal kontrolOncekiYilNetSatis = b.mali.oncekiYilNetSatis.GetValueOrDefault() + OrtakMaliToplami(x => x.oncekiYilNetSatis);
+    decimal kontrolSonYilNetSatis = b.mali.sonYilNetSatis.GetValueOrDefault() + OrtakMaliToplami(x => x.sonYilNetSatis);
+    decimal kontrolOncekiYilAktifToplami = b.mali.oncekiYilAktifToplami.GetValueOrDefault() + OrtakMaliToplami(x => x.oncekiYilAktifToplami);
+    decimal kontrolSonYilAktifToplami = b.mali.sonYilAktifToplami.GetValueOrDefault() + OrtakMaliToplami(x => x.sonYilAktifToplami);
     bool MaliDegerUygun(decimal? value) => value.HasValue && (altLimit <= 0 || value.Value >= altLimit) && (ustLimit <= 0 || value.Value <= ustLimit);
-    bool maliOlcekUygun = MaliDegerUygun(b.mali.oncekiYilNetSatis)
-        || MaliDegerUygun(b.mali.sonYilNetSatis)
-        || MaliDegerUygun(b.mali.oncekiYilAktifToplami)
-        || MaliDegerUygun(b.mali.sonYilAktifToplami);
+    bool maliOlcekUygun = MaliDegerUygun(kontrolOncekiYilNetSatis)
+        || MaliDegerUygun(kontrolSonYilNetSatis)
+        || MaliDegerUygun(kontrolOncekiYilAktifToplami)
+        || MaliDegerUygun(kontrolSonYilAktifToplami);
 
     decimal ortaklikPayToplami = b.ortaklik.ortaklar.Sum(x => x.payOrani.GetValueOrDefault());
     decimal ozelSektorPayi = b.ortaklik.ortaklar.Count > 0
@@ -108,11 +115,13 @@
 
     string cevreselKapsam = "-";
     string kapsamDisiBeyani = "-";
-    if (!string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson))
+    var cevreselAdresler = b.YatirimAdresleri.Where(x => x.yatirimTurleri.Any(t => t >= 1 && t <= 4)).ToList();
+    string? ilkCevreselJson = cevreselAdresler.Select(x => x.cevreselSosyalJson).FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+    if (!string.IsNullOrWhiteSpace(ilkCevreselJson))
     {
         try
         {
-            using JsonDocument doc = JsonDocument.Parse(b.cevreselSosyal.cevreselSosyalJson);
+            using JsonDocument doc = JsonDocument.Parse(ilkCevreselJson);
             JsonElement root = doc.RootElement;
             string mode = root.TryGetProperty("mode", out JsonElement modeEl) ? modeEl.GetString() ?? "" : "";
             cevreselKapsam = mode switch
@@ -174,7 +183,7 @@
         && x.zorunluBelgeler.Any(d => !d.dosyaId.HasValue)), R("Basvuru.Summary.Error.LegalPartnerDocumentsRequired"));
     Eksikse(b.AdliSicilKisileri.Count == 0, R("Basvuru.Summary.Error.CriminalPeopleRequired"));
     Eksikse(b.AdliSicilKisileri.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.CriminalFilesRequired"));
-    Eksikse(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson), R("Basvuru.Summary.Error.EsfRequired"));
+    Eksikse(cevreselAdresler.Count == 0 || cevreselAdresler.Any(x => string.IsNullOrWhiteSpace(x.cevreselSosyalJson)), R("Basvuru.Summary.Error.EsfRequired"));
     Eksikse(kapsamDisiBeyani == "Evet", R("Basvuru.Summary.Error.EsfExclusion"));
     Eksikse(!b.TaahhutDosyaId.HasValue, R("Basvuru.Summary.Error.CommitmentRequired"));
 }
@@ -245,8 +254,8 @@
             <dt>@L["Basvuru.Summary.Detail.SelectedStages"]</dt><dd>@secilenAsamalar</dd>
             <dt>@L["Basvuru.Summary.Detail.ApplicantLastNetSales"]</dt><dd>@Para(b.mali.sonYilNetSatis)</dd>
             <dt>@L["Basvuru.Summary.Detail.ApplicantLastAssets"]</dt><dd>@Para(b.mali.sonYilAktifToplami)</dd>
-            <dt>@L["Basvuru.Summary.Detail.ControlLastNetSales"]</dt><dd>@Para(b.mali.sonYilNetSatis)</dd>
-            <dt>@L["Basvuru.Summary.Detail.ControlLastAssets"]</dt><dd>@Para(b.mali.sonYilAktifToplami)</dd>
+            <dt>@L["Basvuru.Summary.Detail.ControlLastNetSales"]</dt><dd>@Para(kontrolSonYilNetSatis)</dd>
+            <dt>@L["Basvuru.Summary.Detail.ControlLastAssets"]</dt><dd>@Para(kontrolSonYilAktifToplami)</dd>
             <dt>@L["Basvuru.Summary.Detail.InvestmentBudget"]</dt><dd>@Para(yatirimButcesi)</dd>
             <dt>@L["Basvuru.Summary.Detail.FinanceTotal"]</dt><dd>@Para(finansmanToplami)</dd>
             <dt>@L["Basvuru.Summary.Detail.AnnualOperatingExpense"]</dt><dd>@Para(yillikIsletmeGideri)</dd>

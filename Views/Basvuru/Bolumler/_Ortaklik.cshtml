@@ -9,7 +9,6 @@
     var ortaklik = b.ortaklik ?? new BasvuruOrtaklik { basvuruId = b.Id };
     ortaklik.basvuruId = b.Id;
     string initialJson = JsonSerializer.Serialize(ortaklik);
-    bool tuzelOrtakVar = ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase));
     int donemYil = b.basvuruFirma.donem?.yil ?? 0;
     if (donemYil <= 0 && b.basvuruFirma.donemId > 0)
     {
@@ -34,24 +33,15 @@
     <h3 class="subhead mt-4">Mali Kontrol Toplamları</h3>
     <p class="text-muted">Başvuru sahibi ile hesaba dahil edilen tüzel ortakların ağırlıklı tutarları birlikte gösterilir.</p>
     <div class="table-responsive">
-        <table class="table table-bordered mali-table">
-            <thead><tr><th>Kontrol kalemi</th><th>@oncekiMaliYil @L["Basvuru.Ortaklik.NetSalesShort"]</th><th>@sonMaliYil @L["Basvuru.Ortaklik.NetSalesShort"]</th><th>@oncekiMaliYil @L["Basvuru.Ortaklik.AssetsShort"]</th><th>@sonMaliYil @L["Basvuru.Ortaklik.AssetsShort"]</th></tr></thead>
+        <table class="table table-bordered mali-table mali-kontrol-table">
+            <thead><tr><th>Kontrol kalemi</th><th>@oncekiMaliYil @L["Basvuru.Ortaklik.NetSalesShort"] (TL)</th><th>@sonMaliYil @L["Basvuru.Ortaklik.NetSalesShort"] (TL)</th><th>@oncekiMaliYil @L["Basvuru.Ortaklik.AssetsShort"] (TL)</th><th>@sonMaliYil @L["Basvuru.Ortaklik.AssetsShort"] (TL)</th></tr></thead>
             <tbody>
                 <tr><th>Başvuru sahibi</th><td id="maliKontrolKendiOncekiNet">0</td><td id="maliKontrolKendiSonNet">0</td><td id="maliKontrolKendiOncekiAktif">0</td><td id="maliKontrolKendiSonAktif">0</td></tr>
                 <tr><th>Ağırlıklı tüzel ortak toplamı</th><td id="maliKontrolOrtakOncekiNet">0</td><td id="maliKontrolOrtakSonNet">0</td><td id="maliKontrolOrtakOncekiAktif">0</td><td id="maliKontrolOrtakSonAktif">0</td></tr>
                 <tr class="font-weight-bold table-active"><th>Konsolide kontrol toplamı</th><td id="maliKontrolToplamOncekiNet">0</td><td id="maliKontrolToplamSonNet">0</td><td id="maliKontrolToplamOncekiAktif">0</td><td id="maliKontrolToplamSonAktif">0</td></tr>
+                <tr class="private-share-row"><th>@L["Basvuru.Ortaklik.PrivateShareCalculated"]</th><td><strong id="privateShareCalculatedDisplay">%@ortaklik.ozelSektorPayi.GetValueOrDefault().ToString("N2")</strong><input type="hidden" id="privateShareCalculated" name="Basvuru.ortaklik.OzelSektorPayi" value="@ortaklik.ozelSektorPayi" /></td><td colspan="3"></td></tr>
             </tbody>
         </table>
-    </div>
-
-    <div id="tuzelKisiOrtakBilgileri" class="mt-3 @(tuzelOrtakVar ? "" : "d-none")">
-        <div class="form-grid">
-            <label>
-                @L["Basvuru.Ortaklik.PrivateShareCalculated"]
-                <input id="privateShareCalculated" name="Basvuru.ortaklik.OzelSektorPayi" value="@ortaklik.ozelSektorPayi" readonly />
-            </label>
-        </div>
-        <div id="legalPartnerFinancials"></div>
     </div>
 
 </section>

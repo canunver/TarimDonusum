@@ -2154,7 +2154,7 @@
     <value>Ortak/pay sahibi satırları üzerinden toplam pay oranı ve özel sektör payı sistem tarafından hesaplanır. Gerçek kişi ortaklar için mali veri istenmez; tüzel kişi ortaklar için mali veriler ayrıca alınır ve ortaklık payına göre mali ölçek kontrolüne dahil edilir.</value>
   </data>
   <data name="Basvuru.Ortaklik.PrivateShareCalculated" xml:space="preserve">
-    <value>Özel sektör payı (%) - sistem hesaplar</value>
+    <value>Özel sektör payı (%)</value>
   </data>
   <data name="Basvuru.Ortaklik.PartnersTableTitle" xml:space="preserve">
     <value>Ortaklık yapısı detay tablosu</value>

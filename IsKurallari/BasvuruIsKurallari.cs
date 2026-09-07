@@ -24,6 +24,7 @@ namespace TarimDonusum.IsKurallari
         private const string BasvuruMakineTeklifFormAdPrefix = "BMT_";
         private const string BasvuruMakineUzmanDokumanFormAdPrefix = "BMUD_";
         private const string BasvuruTedarikDayanakFormAdPrefix = "BTED_";
+        private const string BasvuruCevreselSosyalBelgeFormAdPrefix = "BCS_";
         private const string BasvuruIstihdamSgkFormAd = "Basvuru_IstihdamSgk";
         private const string BasvuruZorunluBelgeMerkeziFormAd = "Basvuru_ZorunluBelgeMerkezi";
         private static readonly IReadOnlyDictionary<int, string> ZorunluBelgeTurleri = new Dictionary<int, string>
@@ -592,7 +593,9 @@ namespace TarimDonusum.IsKurallari
                 && !string.IsNullOrWhiteSpace(x.tcknVkn) && x.payOrani.HasValue);
             bool faaliyet = !string.IsNullOrWhiteSpace(f.faaliyetKonusu) && !string.IsNullOrWhiteSpace(f.naceKodu);
             bool beyanlar = b.TaahhutDosyaId.HasValue && !string.IsNullOrWhiteSpace(b.TaahhutBeyanlarJson);
-            bool cevresel = !string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson);
+            List<BasvuruUygulamaAdresi> cevreselAdresler = b.YatirimAdresleri
+                .Where(x => x.yatirimTurleri.Any(t => t >= 1 && t <= 4)).ToList();
+            bool cevresel = cevreselAdresler.Count > 0 && cevreselAdresler.All(x => !string.IsNullOrWhiteSpace(x.cevreselSosyalJson));
             bool belgeler = b.ZorunluBelgeler.Count > 0 && b.ZorunluBelgeler.All(x => x.dosyaId.HasValue);
             bool teknik = !string.IsNullOrWhiteSpace(b.dbCtpTeknikProje.dbCtpTeknikProjeJson);
             bool tamlik = temelBilgiler && sahipTuru && temsilYetki && yatirim && yatirimOzeti && yatirimYeri && degerZinciri
@@ -749,19 +752,26 @@ namespace TarimDonusum.IsKurallari
             Donem? donem = b.basvuruFirma.donem;
             decimal altLimit = donem?.minimumYatirimTutari ?? 0;
             decimal ustLimit = donem?.maksimumYatirimTutari ?? 0;
+            decimal OrtakMaliToplami(Func<BasvuruOrtak, decimal?> alan) => b.ortaklik.ortaklar
+                .Where(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase))
+                .Sum(x => alan(x).GetValueOrDefault() * BasvuruOrtak.HesabaDahilOranHesapla(x.payOrani) / 100m);
+            decimal kontrolOncekiYilNetSatis = b.mali.oncekiYilNetSatis.GetValueOrDefault() + OrtakMaliToplami(x => x.oncekiYilNetSatis);
+            decimal kontrolSonYilNetSatis = b.mali.sonYilNetSatis.GetValueOrDefault() + OrtakMaliToplami(x => x.sonYilNetSatis);
+            decimal kontrolOncekiYilAktifToplami = b.mali.oncekiYilAktifToplami.GetValueOrDefault() + OrtakMaliToplami(x => x.oncekiYilAktifToplami);
+            decimal kontrolSonYilAktifToplami = b.mali.sonYilAktifToplami.GetValueOrDefault() + OrtakMaliToplami(x => x.sonYilAktifToplami);
             bool MaliDegerUygun(decimal? deger) =>
                 deger.HasValue && (altLimit <= 0 || deger.Value >= altLimit) && (ustLimit <= 0 || deger.Value <= ustLimit);
-            bool maliOlcekUygun = MaliDegerUygun(b.mali.oncekiYilNetSatis)
-                || MaliDegerUygun(b.mali.sonYilNetSatis)
-                || MaliDegerUygun(b.mali.oncekiYilAktifToplami)
-                || MaliDegerUygun(b.mali.sonYilAktifToplami);
+            bool maliOlcekUygun = MaliDegerUygun(kontrolOncekiYilNetSatis)
+                || MaliDegerUygun(kontrolSonYilNetSatis)
+                || MaliDegerUygun(kontrolOncekiYilAktifToplami)
+                || MaliDegerUygun(kontrolSonYilAktifToplami);
 
             bool cevreselKapsamDisi = false;
-            if (!string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson))
+            foreach (string json in b.YatirimAdresleri.Select(x => x.cevreselSosyalJson).Where(x => !string.IsNullOrWhiteSpace(x))!)
             {
                 try
                 {
-                    using JsonDocument doc = JsonDocument.Parse(b.cevreselSosyal.cevreselSosyalJson);
+                    using JsonDocument doc = JsonDocument.Parse(json);
                     if (doc.RootElement.TryGetProperty("answers", out JsonElement answers)
                         && answers.TryGetProperty("csf_2_1_global_answer", out JsonElement cevap))
                     {
@@ -806,7 +816,9 @@ namespace TarimDonusum.IsKurallari
                 && x.zorunluBelgeler.Any(d => !d.dosyaId.HasValue)), "Basvuru.Summary.Error.LegalPartnerDocumentsRequired");
             Eksikse(b.AdliSicilKisileri.Count == 0, "Basvuru.Summary.Error.CriminalPeopleRequired");
             Eksikse(b.AdliSicilKisileri.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.CriminalFilesRequired");
-            Eksikse(string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson), "Basvuru.Summary.Error.EsfRequired");
+            List<BasvuruUygulamaAdresi> cevreselAdresler = b.YatirimAdresleri
+                .Where(x => x.yatirimTurleri.Any(t => t >= 1 && t <= 4)).ToList();
+            Eksikse(cevreselAdresler.Count == 0 || cevreselAdresler.Any(x => string.IsNullOrWhiteSpace(x.cevreselSosyalJson)), "Basvuru.Summary.Error.EsfRequired");
             Eksikse(cevreselKapsamDisi, "Basvuru.Summary.Error.EsfExclusion");
             Eksikse(!b.TaahhutDosyaId.HasValue, "Basvuru.Summary.Error.CommitmentRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.TaahhutBeyanlarJson), "Basvuru.Summary.Error.DeclarationsRequired");
@@ -1875,12 +1887,43 @@ namespace TarimDonusum.IsKurallari
                     sonuc.HataEkle("Çevresel ve sosyal veri formu yalnızca başvuru aşamasında kaydedilebilir.");
                     return sonuc;
                 }
+                if (!cevreselSosyal.basvuruSayfasi)
+                {
+                    BasvuruUygulamaAdresi? adres = mevcut.YatirimAdresleri
+                        .FirstOrDefault(x => x.id == cevreselSosyal.uygulamaAdresiId);
+                    if (adres == null)
+                    {
+                        sonuc.HataEkle("Çevresel-sosyal anket için yatırım adresi seçilmelidir.");
+                        return sonuc;
+                    }
+
+                    bool yeni = adres.yatirimTurleri.Contains((int)enumYatirimTuru.Yeni);
+                    bool modernizasyon = adres.yatirimTurleri.Any(x => x == (int)enumYatirimTuru.KapasiteArtirimi
+                        || x == (int)enumYatirimTuru.Modernizasyon || x == (int)enumYatirimTuru.TeknolojiYenileme);
+                    if (!yeni && !modernizasyon)
+                    {
+                        sonuc.HataEkle("Seçilen adreste çevresel-sosyal anket gerektiren yatırım türü bulunmuyor.");
+                        return sonuc;
+                    }
+
+                    JsonObject? json = JsonNode.Parse(cevreselSosyal.cevreselSosyalJson!) as JsonObject;
+                    if (json == null)
+                    {
+                        sonuc.HataEkle("Çevresel-sosyal anket cevapları okunamadı.");
+                        return sonuc;
+                    }
+                    json["mode"] = yeni && modernizasyon ? "both" : yeni ? "planned" : "existing";
+                    cevreselSosyal.cevreselSosyalJson = json.ToJsonString();
+                }
 
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
                 {
                     TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
-                    await tabBasvuru.CevreselSosyalKaydetAsync(cevreselSosyal);
+                    if (cevreselSosyal.basvuruSayfasi)
+                        await tabBasvuru.CevreselSosyalKaydetAsync(cevreselSosyal);
+                    else
+                        await tabBasvuru.CevreselSosyalAdresiKaydetAsync(cevreselSosyal);
 
                     TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     await tabBasvuruLog.EkleAsync(cevreselSosyal.basvuruId, kullanici, "KaydetCevreselSosyalAsync", cevreselSosyal);
@@ -1915,6 +1958,7 @@ namespace TarimDonusum.IsKurallari
                 if (!CevreselSosyalCevapAnahtariTanimliMi(cevap.Name, tanimliSorular))
                     HataEkle(sonuc, "Business.Esf.UnknownQuestion", cevap.Name);
             }
+
         }
 
         private static bool CevreselSosyalCevapAnahtariTanimliMi(string key, HashSet<string> tanimliSorular)
@@ -2531,6 +2575,15 @@ namespace TarimDonusum.IsKurallari
                     if (!tuzelOrtakVar)
                     {
                         HataEkle(sonuc, "Business.Application.PartnerRecordRequired");
+                        return sonuc;
+                    }
+                }
+                if (CevreselSosyalBelgeFormAdMi(formAd))
+                {
+                    string adresMetni = formAd[BasvuruCevreselSosyalBelgeFormAdPrefix.Length..].Split('_')[0];
+                    if (!int.TryParse(adresMetni, out int adresId) || mevcut.YatirimAdresleri.All(x => x.id != adresId))
+                    {
+                        sonuc.HataEkle("Çevresel-sosyal belge yüklemek için geçerli bir yatırım adresi seçilmelidir.");
                         return sonuc;
                     }
                 }
@@ -3863,6 +3916,8 @@ namespace TarimDonusum.IsKurallari
             if (string.Equals(formAd, BasvuruIstihdamSgkFormAd, StringComparison.OrdinalIgnoreCase) && dosyaNo == 1)
                 return "İstihdam SGK destek belgesi";
 
+            if (CevreselSosyalBelgeFormAdMi(formAd) && dosyaNo == 1)
+                return "Çevresel-sosyal anket destek belgesi";
             return "";
         }
 
@@ -3887,6 +3942,7 @@ namespace TarimDonusum.IsKurallari
         private static bool MakineTeklifBelgeFormAdMi(string? formAd)=>!string.IsNullOrWhiteSpace(formAd)&&formAd.StartsWith(BasvuruMakineTeklifFormAdPrefix,StringComparison.OrdinalIgnoreCase)&&formAd.Length>BasvuruMakineTeklifFormAdPrefix.Length;
         private static bool MakineUzmanDokumanFormAdMi(string? formAd)=>!string.IsNullOrWhiteSpace(formAd)&&formAd.StartsWith(BasvuruMakineUzmanDokumanFormAdPrefix,StringComparison.OrdinalIgnoreCase)&&formAd.Length>BasvuruMakineUzmanDokumanFormAdPrefix.Length;
         private static bool TedarikDayanakFormAdMi(string? formAd)=>!string.IsNullOrWhiteSpace(formAd)&&formAd.StartsWith(BasvuruTedarikDayanakFormAdPrefix,StringComparison.OrdinalIgnoreCase)&&formAd.Length>BasvuruTedarikDayanakFormAdPrefix.Length;
+        private static bool CevreselSosyalBelgeFormAdMi(string? formAd)=>!string.IsNullOrWhiteSpace(formAd)&&formAd.StartsWith(BasvuruCevreselSosyalBelgeFormAdPrefix,StringComparison.OrdinalIgnoreCase)&&formAd.Length>BasvuruCevreselSosyalBelgeFormAdPrefix.Length;
         private static async Task<bool> BasvuruTedarikKaydiVarMiAsync(SqlConnection connection,int basvuruId,int id){await using SqlCommand c=new("SELECT COUNT(1) FROM dbo.BasvuruTedarikciEntegrasyonu WHERE Id=@Id AND BasvuruId=@BasvuruId;",connection);c.Parameters.AddWithValue("@Id",id);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return Convert.ToInt32(await c.ExecuteScalarAsync())>0;}
         private static async Task<bool> BasvuruMakineTeklifiVarMiAsync(SqlConnection connection,int basvuruId,int teklifId){const string sql=@"SELECT COUNT(1) FROM dbo.BasvuruMakineTeklif t INNER JOIN dbo.BasvuruMakine m ON m.Id=t.MakineId WHERE t.Id=@TeklifId AND m.BasvuruId=@BasvuruId;";await using SqlCommand c=new(sql,connection);c.Parameters.AddWithValue("@TeklifId",teklifId);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return Convert.ToInt32(await c.ExecuteScalarAsync())>0;}
         private static async Task<bool> BasvuruMakineUzmanDokumaniVarMiAsync(SqlConnection connection,int basvuruId,int dokumanId){const string sql=@"SELECT COUNT(1) FROM dbo.BasvuruMakineUzmanDokuman d INNER JOIN dbo.BasvuruMakine m ON m.Id=d.MakineId WHERE d.Id=@DokumanId AND m.BasvuruId=@BasvuruId;";await using SqlCommand c=new(sql,connection);c.Parameters.AddWithValue("@DokumanId",dokumanId);c.Parameters.AddWithValue("@BasvuruId",basvuruId);return Convert.ToInt32(await c.ExecuteScalarAsync())>0;}
@@ -4059,6 +4115,7 @@ namespace TarimDonusum.IsKurallari
                 || MakineTeklifBelgeFormAdMi(formAd)
                 || MakineUzmanDokumanFormAdMi(formAd)
                 || TedarikDayanakFormAdMi(formAd)
+                || CevreselSosyalBelgeFormAdMi(formAd)
                 || string.Equals(formAd, BasvuruIstihdamSgkFormAd, StringComparison.OrdinalIgnoreCase);
         }
 
