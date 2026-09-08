@@ -1491,7 +1491,7 @@
     <value>Zorunlu belgeler ayrı dosyalar olarak yüklenecektir. Adli sicil kaydı kişi bazında eklenir ve kişi kaydedildikten sonra dosyası yüklenir.</value>
   </data>
   <data name="Basvuru.Documents.CriminalRecordTitle" xml:space="preserve">
-    <value>Adli Sicil Kaydı (Temsil ve ilzama yetkili kişiler, yönetim kurulu üyeleri veya adli sicil kontrolüne tabi ek kişiler)</value>
+    <value>Temsil ve ilzama yetkili kişiler, yönetim kurulu üyeleri veya adli sicil kontrolüne tabi ek kişiler</value>
   </data>
   <data name="Basvuru.Documents.AddPerson" xml:space="preserve">
     <value>+ Kişi ekle</value>

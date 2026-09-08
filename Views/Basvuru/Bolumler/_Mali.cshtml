@@ -37,7 +37,10 @@
                 <p class="mali-info-text">@L["Basvuru.Mali.ScaleDescription"]</p>
                 <div id="maliOlcekUyari" class="mali-scale-warning">
                     <strong>@Html.Raw(string.Format(T("Basvuru.Mali.ScaleLimitWarning"), maliAltLimitMetin, maliUstLimitMetin))</strong>
-                    <span id="maliOlcekSonuc" class="mali-scale-result"></span>
+                    @if (Model.DenetciGorunumu)
+                    {
+                        <span id="maliOlcekSonuc" class="mali-scale-result"></span>
+                    }
                 </div>
                 <input type="hidden" id="maliOlcekAltLimit" value="@maliAltLimitHam" />
                 <input type="hidden" id="maliOlcekUstLimit" value="@maliUstLimitHam" />

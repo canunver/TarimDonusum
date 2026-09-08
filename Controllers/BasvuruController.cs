@@ -191,6 +191,11 @@ namespace TarimDonusum.Controllers
         [OturumKontrol][HttpGet]
         public Task<IActionResult> CevreselSosyalVeriFormuYazdir(int id)=>RaporYazdirAsync(id,new RPROB_CevreselSosyalVeriFormu(_environment.ContentRootPath),"Çevresel ve sosyal veri formu yazdırılmadan önce başvuru kaydedilmelidir.");
         [OturumKontrol][HttpGet]
+        public Task<IActionResult> OnBasvuruCevreselSosyalYazdir(int id, int uygulamaAdresiId)=>
+            uygulamaAdresiId <= 0
+                ? Task.FromResult<IActionResult>(BadRequest("Yazdırılacak yatırım adresi seçilmelidir."))
+                : RaporYazdirAsync(id, new RPROB_OnBasvuruCevreselSosyal(uygulamaAdresiId), "Çevresel ve sosyal form yazdırılmadan önce başvuru kaydedilmelidir.");
+        [OturumKontrol][HttpGet]
         public Task<IActionResult> BasvuruOzetiYazdir(int id)=>RaporYazdirAsync(id,new RPROB_BasvuruOzeti(_environment.ContentRootPath),"Başvuru özeti yazdırılmadan önce başvuru kaydedilmelidir.");
         [OturumKontrol][HttpGet]
         public Task<IActionResult> IzlemeGostergeleriYazdir(int id)=>RaporYazdirAsync(id,new RPROB_IzlemeGostergeleri(_environment.ContentRootPath),"İzleme göstergeleri yazdırılmadan önce başvuru kaydedilmelidir.");
@@ -233,6 +238,10 @@ namespace TarimDonusum.Controllers
             {
                 RaporDosyasi dosya = rapor.Olustur(sonuc.nesne, id);
                 return File(dosya.Icerik, RaporDosyasi.ExcelMimeTuru, dosya.DosyaAdi);
+            }
+            catch (InvalidOperationException ex) when (rapor is RPROB_OnBasvuruCevreselSosyal)
+            {
+                return BadRequest(ex.Message);
             }
             catch (FileNotFoundException ex) when (
                 !string.IsNullOrWhiteSpace(ex.FileName)
@@ -621,6 +630,24 @@ namespace TarimDonusum.Controllers
                 sonuc.HataEkle(L["Basvuru.Message.SaveFailed"].ToString());
             }
             return Json(sonuc);
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TeknikProjeGirdileriExcelYukle(int basvuruId, IFormFile? dosya)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return RedirectToAction("Index", "Home");
+            if (dosya == null || dosya.Length == 0)
+            {
+                Sonuc<object> bosDosya = new();
+                bosDosya.HataEkle("Excel dosyası seçilmelidir.");
+                return Json(bosDosya);
+            }
+
+            await using Stream stream = dosya.OpenReadStream();
+            return Json(await _basvuruIsKurallari.TeknikProjeGirdileriExcelOkuAsync(basvuruId, stream, kullanici));
         }
 
         [OturumKontrol]

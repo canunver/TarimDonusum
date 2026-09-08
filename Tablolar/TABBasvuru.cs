@@ -2019,6 +2019,13 @@ namespace TarimDonusum.Tablolar
             c.Parameters.AddWithValue("@Id",id);c.Parameters.AddWithValue("@BasvuruId",basvuruId);
             return await c.ExecuteNonQueryAsync()>0;
         }
+        public async Task BasvuruYatirimOnBilgiTurunuSilAsync(int basvuruId, enumYatirimOnBilgiTuru tur)
+        {
+            await using SqlCommand c = KomutOlustur("DELETE FROM dbo.BasvuruYatirimOnBilgi WHERE BasvuruId=@BasvuruId AND Tur=@Tur;");
+            c.Parameters.AddWithValue("@BasvuruId", basvuruId);
+            c.Parameters.AddWithValue("@Tur", (int)tur);
+            await c.ExecuteNonQueryAsync();
+        }
         public async Task BasvuruMakineTeklifDosyasiGuncelleAsync(int basvuruId,int teklifId,int dosyaId,string dosyaAdi){const string sql=@"UPDATE t SET TeklifBelgesiDosyaId=@DosyaId,TeklifBelgesiDosyaAdi=@DosyaAdi FROM dbo.BasvuruMakineTeklif t INNER JOIN dbo.BasvuruMakine m ON m.Id=t.MakineId WHERE t.Id=@TeklifId AND m.BasvuruId=@BasvuruId;";await using SqlCommand c=KomutOlustur(sql);c.Parameters.AddWithValue("@DosyaId",dosyaId);c.Parameters.AddWithValue("@DosyaAdi",dosyaAdi);c.Parameters.AddWithValue("@TeklifId",teklifId);c.Parameters.AddWithValue("@BasvuruId",basvuruId);await c.ExecuteNonQueryAsync();}
 
         public async Task BasvuruMakinesiKaydetAsync(BasvuruMakine m)

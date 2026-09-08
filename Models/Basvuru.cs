@@ -223,6 +223,21 @@ namespace TarimDonusum.Models
                 YatirimOnBilgileri.Where(x => x.tur == enumYatirimOnBilgiTuru.MevcutUrun), true);
             teknikProje["plannedProducts"] = UrunDizisi(
                 YatirimOnBilgileri.Where(x => x.tur == enumYatirimOnBilgiTuru.UretilecekUrun), false);
+            JsonArray girdiler = new();
+            foreach (BasvuruYatirimOnBilgi girdi in YatirimOnBilgileri.Where(x => x.tur == enumYatirimOnBilgiTuru.Girdi).OrderBy(x => x.siraNo))
+            {
+                girdiler.Add(new JsonObject
+                {
+                    ["id"] = girdi.id,
+                    ["basvuruId"] = girdi.basvuruId,
+                    ["tur"] = (int)girdi.tur,
+                    ["siraNo"] = girdi.siraNo,
+                    ["ad"] = girdi.ad,
+                    ["miktar"] = girdi.miktar,
+                    ["birim"] = girdi.birim
+                });
+            }
+            teknikProje["inputs"] = girdiler;
             JsonArray makineler = new();
             foreach (BasvuruMakine makine in Makineler.OrderBy(x => x.siraNo))
             {
@@ -1213,10 +1228,6 @@ namespace TarimDonusum.Models
                 sonuc.HataEkle("En az bir harcama türü seçilmelidir.");
             if (string.IsNullOrWhiteSpace(yatirimFaaliyetleri))
                 sonuc.HataEkle("Yatırım faaliyetleri girilmelidir.");
-            if (string.IsNullOrWhiteSpace(yatirimGirdileri))
-                sonuc.HataEkle("Yatırım girdileri girilmelidir.");
-            if (string.IsNullOrWhiteSpace(yatirimCiktilari))
-                sonuc.HataEkle("Yatırım çıktıları girilmelidir.");
 
             bool kiraTahsisBilgisiGerekli =
                 yatirimYeriStatusu == enumUygulamaAdresiYatirimYeriStatusu.Kira ||

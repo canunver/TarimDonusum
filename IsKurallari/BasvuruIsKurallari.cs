@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Localization;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TarimDonusum.Araclar;
@@ -1800,6 +1801,7 @@ namespace TarimDonusum.IsKurallari
                 JsonObject kaliciTeknikProje = JsonNode.Parse(teknikProje.dbCtpTeknikProjeJson!) as JsonObject ?? new JsonObject();
                 kaliciTeknikProje.Remove("existingProducts");
                 kaliciTeknikProje.Remove("plannedProducts");
+                kaliciTeknikProje.Remove("inputs");
                 kaliciTeknikProje.Remove("machineryRows");
                 kaliciTeknikProje.Remove("buildingRows");
                 teknikProje.dbCtpTeknikProjeJson = kaliciTeknikProje.ToJsonString();
@@ -1831,6 +1833,99 @@ namespace TarimDonusum.IsKurallari
             }
             return sonuc;
         }
+
+        public async Task<Sonuc<object>> TeknikProjeGirdileriExcelOkuAsync(int basvuruId, Stream excelStream, Kullanici kullanici)
+        {
+            Sonuc<object> sonuc = new();
+            if (excelStream == null || (excelStream.CanSeek && excelStream.Length == 0))
+            {
+                sonuc.HataEkle("Excel dosyası boştur.");
+                return sonuc;
+            }
+
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
+                if (!sonuc.basarili || mevcut == null) return sonuc;
+                Tablo excel = OrtakFonksiyonlar.NewTablo();
+                excel.DosyaOkuAc(excelStream);
+                string[] beklenenBasliklar = ["Sıra no", "Girdi / Hammadde adı", "Yıllık ihtiyaç", "Birim"];
+                List<string> baslikHatalari = new();
+                for (int sutun = 0; sutun < beklenenBasliklar.Length; sutun++)
+                {
+                    string bulunan = excel.HucreDegerAl(0, sutun).Trim();
+                    if (!string.Equals(bulunan, beklenenBasliklar[sutun], StringComparison.CurrentCultureIgnoreCase))
+                        baslikHatalari.Add($"{sutun + 1}. sütun başlığı '{beklenenBasliklar[sutun]}' olmalıdır (bulunan: '{bulunan}').");
+                }
+                if (baslikHatalari.Count > 0)
+                {
+                    baslikHatalari.ForEach(sonuc.HataEkle);
+                    return sonuc;
+                }
+
+                List<BasvuruYatirimOnBilgi> girdiler = new();
+                HashSet<int> siraNumaralari = new();
+                for (int satir = 1; satir < 10000; satir++)
+                {
+                    string[] hucreler = Enumerable.Range(0, 4).Select(sutun => excel.HucreDegerAl(satir, sutun).Trim()).ToArray();
+                    if (hucreler.All(string.IsNullOrWhiteSpace)) break;
+
+                    int excelSatiri = satir + 1;
+                    if (!int.TryParse(hucreler[0], NumberStyles.Integer, CultureInfo.CurrentCulture, out int siraNo) || siraNo <= 0)
+                        sonuc.HataEkle($"{excelSatiri}. satır: Sıra no pozitif tam sayı olmalıdır.");
+                    else if (!siraNumaralari.Add(siraNo))
+                        sonuc.HataEkle($"{excelSatiri}. satır: {siraNo} sıra numarası birden fazla kez kullanılmıştır.");
+                    if (string.IsNullOrWhiteSpace(hucreler[1]))
+                        sonuc.HataEkle($"{excelSatiri}. satır: Girdi / Hammadde adı zorunludur.");
+                    if (!DecimalOku(hucreler[2], out decimal miktar) || miktar <= 0)
+                        sonuc.HataEkle($"{excelSatiri}. satır: Yıllık ihtiyaç pozitif sayı olmalıdır.");
+                    string? birim = OlcuBirimleri.Standartlastir(hucreler[3]);
+                    if (birim == null)
+                        sonuc.HataEkle($"{excelSatiri}. satır: '{hucreler[3]}' tanınmayan birim kodudur.");
+
+                    if (sonuc.basarili)
+                        girdiler.Add(new BasvuruYatirimOnBilgi { basvuruId = basvuruId, tur = enumYatirimOnBilgiTuru.Girdi, siraNo = siraNo, ad = hucreler[1], miktar = miktar, birim = birim });
+                }
+
+                if (!sonuc.basarili) return sonuc;
+                if (girdiler.Count == 0)
+                {
+                    sonuc.HataEkle("Excel dosyasında aktarılabilir girdi satırı bulunamadı.");
+                    return sonuc;
+                }
+
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                try
+                {
+                    TABBasvuru tablo = new(connection, null, transaction);
+                    await tablo.BasvuruYatirimOnBilgiTurunuSilAsync(basvuruId, enumYatirimOnBilgiTuru.Girdi);
+                    foreach (BasvuruYatirimOnBilgi girdi in girdiler)
+                        await tablo.BasvuruYatirimOnBilgisiKaydetAsync(girdi);
+                    await new TABBasvuruLog(connection, null, transaction).EkleAsync(basvuruId, kullanici, "TeknikProjeGirdileriExcelYukle", girdiler);
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+
+                sonuc.nesne = new { girdiler };
+                sonuc.mesaj = $"Excel dosyasından {girdiler.Count} girdi okundu.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Teknik Proje girdileri Excel dosyasından okunamadı. BasvuruId: {BasvuruId}", basvuruId);
+                sonuc.HataEkle("Excel dosyası okunamadı. Dosyanın geçerli bir Excel dosyası olduğunu kontrol ediniz.");
+            }
+            return sonuc;
+        }
+
+        private static bool DecimalOku(string deger, out decimal sonuc) =>
+            decimal.TryParse(deger, NumberStyles.Number, CultureInfo.GetCultureInfo("tr-TR"), out sonuc)
+            || decimal.TryParse(deger, NumberStyles.Number, CultureInfo.InvariantCulture, out sonuc);
 
         public async Task<Sonuc<int>> KaydetCevreselSosyalAsync(BasvuruCevreselSosyal cevreselSosyal, Kullanici kullanici)
         {
@@ -2245,13 +2340,13 @@ namespace TarimDonusum.IsKurallari
             if(model.mevcutKapasite is < 0||model.birinciYilKapasite is < 0||model.mevcutSatisMiktari is < 0||model.mevcutBirimSatisFiyati is < 0||model.satisMiktari is < 0||model.birimSatisFiyati is < 0)sonuc.HataEkle("Kapasite, satış miktarı ve birim satış fiyatı negatif olamaz.");
             if(model.tur==enumYatirimOnBilgiTuru.EnerjiKullanimi){if((model.miktar.HasValue&&(model.miktar<=0||!OlcuBirimleri.GecerliMi(model.birim)))||(model.tekPanelGucu.HasValue&&(model.tekPanelGucu<=0||!OlcuBirimleri.GecerliMi(model.tekPanelGucuBirim)))||(model.toplamGuc.HasValue&&(model.toplamGuc<=0||!OlcuBirimleri.GecerliMi(model.toplamGucBirim))))sonuc.HataEkle("Enerji kullanımı değerleri pozitif olmalı ve girilen her değerin birimi seçilmelidir.");}else if(model.miktar is null or <=0||!OlcuBirimleri.GecerliMi(model.birim))sonuc.HataEkle("Miktar ve geçerli birim girilmelidir.");
             if(!sonuc.basarili)return sonuc;
-            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}if(mevcut.kayitTuru==enumBasvuruKayitTuru.OnBasvuru&&model.tur is not enumYatirimOnBilgiTuru.MevcutUrun and not enumYatirimOnBilgiTuru.UretilecekUrun){sonuc.HataEkle("Ön başvuruda yalnızca ürün kaydı girilebilir.");return sonuc;}if(mevcut.YatirimOnBilgileri.Any(x=>x.id!=model.id&&x.tur==model.tur&&x.siraNo==model.siraNo)){sonuc.HataEkle("Bu bölümde aynı sıra numarası zaten kullanılıyor.");return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{await new TABBasvuru(connection,null,tr).BasvuruYatirimOnBilgisiKaydetAsync(model);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruYatirimOnBilgisiKaydet",model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj=model.tur switch{enumYatirimOnBilgiTuru.MevcutUrun=>"Mevcut ürün kaydedildi.",enumYatirimOnBilgiTuru.UretilecekUrun=>"Yeni ürün kaydedildi.",enumYatirimOnBilgiTuru.Girdi=>"Girdi kaydedildi.",enumYatirimOnBilgiTuru.EnerjiKullanimi=>"Enerji kullanımı kaydedildi.",enumYatirimOnBilgiTuru.KuruluGuc=>"Kurulu güç kaydedildi.",_=>"Kayıt kaydedildi."};}catch{await tr.RollbackAsync();throw;}}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Yatırım ön bilgisi kaydedilemedi. BasvuruId: {BasvuruId}","Yatırım ön bilgisi kaydedilemedi.",model.basvuruId);}return sonuc;
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}if(mevcut.kayitTuru==enumBasvuruKayitTuru.OnBasvuru&&model.tur is not enumYatirimOnBilgiTuru.MevcutUrun and not enumYatirimOnBilgiTuru.UretilecekUrun and not enumYatirimOnBilgiTuru.Girdi){sonuc.HataEkle("Ön başvuruda yalnızca ürün ve girdi kaydı girilebilir.");return sonuc;}if(mevcut.YatirimOnBilgileri.Any(x=>x.id!=model.id&&x.tur==model.tur&&x.siraNo==model.siraNo)){sonuc.HataEkle("Bu bölümde aynı sıra numarası zaten kullanılıyor.");return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{await new TABBasvuru(connection,null,tr).BasvuruYatirimOnBilgisiKaydetAsync(model);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruYatirimOnBilgisiKaydet",model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj=model.tur switch{enumYatirimOnBilgiTuru.MevcutUrun=>"Mevcut ürün kaydedildi.",enumYatirimOnBilgiTuru.UretilecekUrun=>"Yeni ürün kaydedildi.",enumYatirimOnBilgiTuru.Girdi=>"Girdi kaydedildi.",enumYatirimOnBilgiTuru.EnerjiKullanimi=>"Enerji kullanımı kaydedildi.",enumYatirimOnBilgiTuru.KuruluGuc=>"Kurulu güç kaydedildi.",_=>"Kayıt kaydedildi."};}catch{await tr.RollbackAsync();throw;}}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Yatırım ön bilgisi kaydedilemedi. BasvuruId: {BasvuruId}","Yatırım ön bilgisi kaydedilemedi.",model.basvuruId);}return sonuc;
         }
 
         public async Task<Sonuc> BasvuruYatirimOnBilgisiSilAsync(int basvuruId,int id,Kullanici kullanici)
         {
             Sonuc sonuc=new();if(basvuruId<=0||id<=0){sonuc.HataEkle("Silinecek yatırım ön bilgisi belirtilmelidir.");return sonuc;}
-            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}BasvuruYatirimOnBilgi? silinecek=mevcut.YatirimOnBilgileri.FirstOrDefault(x=>x.id==id);if(silinecek==null){sonuc.HataEkle("Silinecek kayıt bulunamadı.");return sonuc;}if(mevcut.kayitTuru==enumBasvuruKayitTuru.OnBasvuru&&silinecek.tur is not enumYatirimOnBilgiTuru.MevcutUrun and not enumYatirimOnBilgiTuru.UretilecekUrun){sonuc.HataEkle("Ön başvuruda yalnızca ürün kaydı silinebilir.");return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{TABBasvuru tab=new(connection,null,tr);if(!await tab.BasvuruYatirimOnBilgisiSilAsync(basvuruId,id)){sonuc.HataEkle("Silinecek kayıt bulunamadı.");await tr.RollbackAsync();return sonuc;}await new TABBasvuruLog(connection,null,tr).EkleAsync(basvuruId,kullanici,"BasvuruYatirimOnBilgisiSil",new{id});await tr.CommitAsync();sonuc.mesaj="Ürün silindi.";}catch{await tr.RollbackAsync();throw;}}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Yatırım ön bilgisi silinemedi. BasvuruId: {BasvuruId}","Yatırım ön bilgisi silinemedi.",basvuruId);}return sonuc;
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}BasvuruYatirimOnBilgi? silinecek=mevcut.YatirimOnBilgileri.FirstOrDefault(x=>x.id==id);if(silinecek==null){sonuc.HataEkle("Silinecek kayıt bulunamadı.");return sonuc;}if(mevcut.kayitTuru==enumBasvuruKayitTuru.OnBasvuru&&silinecek.tur is not enumYatirimOnBilgiTuru.MevcutUrun and not enumYatirimOnBilgiTuru.UretilecekUrun and not enumYatirimOnBilgiTuru.Girdi){sonuc.HataEkle("Ön başvuruda yalnızca ürün ve girdi kaydı silinebilir.");return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{TABBasvuru tab=new(connection,null,tr);if(!await tab.BasvuruYatirimOnBilgisiSilAsync(basvuruId,id)){sonuc.HataEkle("Silinecek kayıt bulunamadı.");await tr.RollbackAsync();return sonuc;}await new TABBasvuruLog(connection,null,tr).EkleAsync(basvuruId,kullanici,"BasvuruYatirimOnBilgisiSil",new{id});await tr.CommitAsync();sonuc.mesaj=silinecek.tur==enumYatirimOnBilgiTuru.Girdi?"Girdi silindi.":"Ürün silindi.";}catch{await tr.RollbackAsync();throw;}}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Yatırım ön bilgisi silinemedi. BasvuruId: {BasvuruId}","Yatırım ön bilgisi silinemedi.",basvuruId);}return sonuc;
         }
 
         public async Task<Sonuc<List<BasvuruYatirimOnBilgi>>> BasvuruYatirimOnBilgileriKaydetAsync(BasvuruYatirimOnBilgiKayitModel model, Kullanici kullanici)

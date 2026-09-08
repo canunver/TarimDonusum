@@ -265,8 +265,8 @@
                         <label class="wide-label">@L["Basvuru.Field.TamAdres"]<textarea id="adresModalTamAdres"></textarea></label>
                         <p class="section-description">Faaliyetleri, girdileri ve çıktıları virgülle ayırarak giriniz.</p>
                         <label class="wide-label">@L["Basvuru.Field.YatirimFaaliyetleri"] <span class="required-mark">*</span><textarea id="adresModalYatirimFaaliyetleri" placeholder="Virgülle ayırarak giriniz"></textarea></label>
-                        <label class="wide-label">@L["Basvuru.Field.YatirimGirdileri"] <span class="required-mark">*</span><textarea id="adresModalYatirimGirdileri" placeholder="Virgülle ayırarak giriniz"></textarea></label>
-                        <label class="wide-label">@L["Basvuru.Field.YatirimCiktilari"] <span class="required-mark">*</span><textarea id="adresModalYatirimCiktilari" placeholder="Virgülle ayırarak giriniz"></textarea></label>
+                        <label class="wide-label">@L["Basvuru.Field.YatirimGirdileri"]<textarea id="adresModalYatirimGirdileri" placeholder="Virgülle ayırarak giriniz"></textarea></label>
+                        <label class="wide-label">@L["Basvuru.Field.YatirimCiktilari"]<textarea id="adresModalYatirimCiktilari" placeholder="Virgülle ayırarak giriniz"></textarea></label>
                         <label class="wide-label">İzin/ruhsat takvimi ve açıklama<textarea id="adresModalIzinTakvimAciklama"></textarea></label>
                         <div class="form-grid yatirim-yeri-dosyalari">
                             <label>Adres belge referansı<input id="adresModalAdresBelgeDosya" type="file" /><span id="adresModalAdresBelgeDosyaAdi" class="document-file-name"></span><a id="adresModalAdresBelgeIndir" class="btn btn-sm btn-outline-secondary d-none" target="_blank">İndir</a></label>
@@ -633,6 +633,9 @@
         document.querySelectorAll('.firma-modal-kapat').forEach(btn => btn.addEventListener('click', () => firmaModal?.hide()));
         document.querySelectorAll('.firma-sec-modal-kapat').forEach(btn => btn.addEventListener('click', () => firmaSecModal?.hide()));
         document.querySelectorAll('.uygulama-adres-modal-kapat').forEach(btn => btn.addEventListener('click', () => uygulamaAdresModal?.hide()));
+        $('#uygulamaAdresModal').off('hidden.bs.modal.adresAlanlari').on('hidden.bs.modal.adresAlanlari', function () {
+            AdrestenUretilenYatirimAlanlariniHesapla();
+        });
         document.querySelectorAll('.ortak-modal-kapat').forEach(btn => btn.addEventListener('click', () => ortakModal?.hide()));
         document.querySelectorAll('.adli-sicil-modal-kapat').forEach(btn => btn.addEventListener('click', () => adliSicilModal?.hide()));
         document.querySelectorAll('.degisiklik-sayfada-kal').forEach(btn => btn.addEventListener('click', DegisiklikModalindaKal));
@@ -1475,6 +1478,7 @@
     function CevreselSosyalAdresGuncelle() {
         const adresId = Number(document.getElementById('cevreselSosyalAdresId')?.value || 0);
         const adres = cevreselSosyalAdresleri.find(x => Number(x.id) === adresId);
+        CevreselSosyalYazdirButonuGuncelle(adres);
         const turler = Array.isArray(adres?.yatirimTurleri) ? adres.yatirimTurleri.map(Number) : [];
         const yeni = turler.includes(1);
         const modernizasyon = turler.some(x => x === 2 || x === 3 || x === 4);
@@ -1492,6 +1496,15 @@
             : mode === 'existing' ? 'Bu adres için modernizasyon anketi açılacaktır.'
             : 'Bu adreste anket gerektiren yatırım türü seçili değildir.';
         CevreselSosyalRender();
+    }
+
+    function CevreselSosyalYazdirButonuGuncelle(adres) {
+        const yazdir = document.getElementById('cevreselSosyalYazdir');
+        if (!yazdir) return;
+        const hazir = Number(adres?.id || 0) > 0 && !!String(adres?.cevreselSosyalJson || '').trim();
+        yazdir.href = hazir ? `/Basvuru/OnBasvuruCevreselSosyalYazdir?id=${BasvuruId()}&uygulamaAdresiId=${adres.id}` : '#';
+        yazdir.classList.toggle('disabled', !hazir);
+        yazdir.setAttribute('aria-disabled', hazir ? 'false' : 'true');
     }
 
     function CevreselSosyalBaglamlari() {
@@ -1691,7 +1704,10 @@
         AjaxPost('/Basvuru/KaydetCevreselSosyal', model, sonuc => {
             if (sonuc?.basarili) {
                 const adres = cevreselSosyalAdresleri.find(x => Number(x.id) === adresId);
-                if (adres) adres.cevreselSosyalJson = model.cevreselSosyalJson;
+                if (adres) {
+                    adres.cevreselSosyalJson = model.cevreselSosyalJson;
+                    CevreselSosyalYazdirButonuGuncelle(adres);
+                }
             }
             SonucGosterVeDirtyTemizle(sonuc, afterSuccess);
         });
@@ -1884,9 +1900,14 @@
     }
 
     function OrtakModalKaydet() {
+        const basvuruId = BasvuruId();
+        if (basvuruId <= 0) {
+            PopupMesajGoster('Başvuru kaydı bulunamadı. Sayfayı yenileyip tekrar deneyiniz.', false);
+            return;
+        }
         const ortak = {
             id: modalValue('ortakModalIndex') === '' ? 0 : mevcutOrtakId(),
-            basvuruId: BasvuruId(),
+            basvuruId: basvuruId,
             siraNo: 0,
             adUnvan: modalValue('ortakAdUnvan').trim(),
             tcknVkn: modalValue('ortakTcknVkn').trim(),
@@ -1940,11 +1961,11 @@
         basvuruOrtaklari.forEach((item, index) => item.siraNo = index + 1);
         dirty = true;
         OrtaklarRender();
-        OrtaklarKaydet(function () {
+        OrtaklarKaydet(ortak, function () {
             modalSet('ortakModalIndex', String(basvuruOrtaklari.findIndex(x => TcknVknNormalize(x.tcknVkn) === TcknVknNormalize(ortak.tcknVkn))));
             OrtakModalUboKycDurumGuncelle();
             OrtakModalZorunluBelgeleriRender();
-        }, ortak.siraNo);
+        });
     }
 
     function AyniTcknVknVarMi(tcknVkn, mevcutIndexText) {
@@ -2243,7 +2264,7 @@
             ...BasvuruKimlikleri(),
             bagliOrtakIsletmeVarMi: bagliOrtakVarMi,
             ozelSektorPayi: sayiOkuId('privateShareCalculated'),
-            ortaklar: [basvuruOrtaklari.find(x => x.siraNo === degisenOrtakSiraNo)],
+            ortaklar: basvuruOrtaklari,
             bagliOrtakUnvani: '',
             bagliOrtakKimlikNo: '',
             bagliOrtakOncekiYilNetSatis: null,
@@ -2260,19 +2281,23 @@
         });
     }
 
-    function OrtaklarKaydet(afterSuccess, degisenOrtakSiraNo) {
+    function OrtaklarKaydet(ortak, afterSuccess) {
+        if (!ortak) return;
+        const kaydetButton = document.getElementById('ortakKaydetBtn');
+        if (kaydetButton?.disabled) return;
+        if (kaydetButton) kaydetButton.disabled = true;
         const model = {
-            ...BasvuruKimlikleri(),
-            ortaklar: [basvuruOrtaklari.find(x => x.siraNo === degisenOrtakSiraNo)],
-            degisenOrtakSiraNo: degisenOrtakSiraNo || null
+            basvuruId: ortak.basvuruId,
+            ortaklar: [ortak],
+            degisenOrtakSiraNo: ortak.siraNo || null
         };
         AjaxPost('/Basvuru/KaydetOrtaklar', model, function (sonuc) {
             if (sonuc?.basarili) {
-                const kaydedilen = basvuruOrtaklari.find(x => x.siraNo === degisenOrtakSiraNo);
-                if (kaydedilen && sonuc.nesne) kaydedilen.id = sonuc.nesne;
+                if (sonuc.nesne) ortak.id = sonuc.nesne;
                 dirty = false;
                 if (afterSuccess) afterSuccess(sonuc);
             }
+            if (kaydetButton) kaydetButton.disabled = false;
             SonucGoster(sonuc);
         });
     }
@@ -3334,7 +3359,7 @@
     const dbCtpTableDefinitions = {
         existingProducts: { container: 'dbCtpExistingProducts', columns: [{ key: 'product', label: 'Ürünler / Hayvan Türü' }, { key: 'capacity', label: 'Tam kapasitede yıllık üretim miktarı / hayvan sayısı' }] },
         plannedProducts: { container: 'dbCtpPlannedProducts', columns: [{ key: 'product', label: 'Ürünler / Hayvan Türü' }, { key: 'capacity', label: 'Tam kapasitede yıllık üretim miktarı / hayvan sayısı' }] },
-        inputs: { container: 'dbCtpInputs', columns: [{ key: 'input', label: 'Girdiler / Hammadde' }, { key: 'need', label: 'Tam kapasitede yıllık girdi ihtiyacı' }] },
+        inputs: { container: 'dbCtpInputs', columns: [] },
         machineryRows: { container: 'dbCtpMachineryRows', columns: [{ key: 'name', label: 'Makine-ekipmanın adı' }, { key: 'qty', label: 'Adedi' }, { key: 'purpose', label: 'Kullanım amacı / işlevi', type: 'textarea' }, { key: 'assetStatus', label: 'Durum / Destek', type: 'machineryStatus' }] },
         buildingRows: { container: 'dbCtpBuildingRows', columns: [{ key: 'name', label: 'Yapının/binanın adı' }, { key: 'assetStatus', label: 'Mevcut mi, yeni mi?', options: ['Mevcut', 'Yeni'] }, { key: 'investmentType', label: 'Planlanan yatırım şekli', options: ['Yeni yapım', 'Genişletme / Modernizasyon', 'Değişiklik yok / Kullanılacak'] }, { key: 'supportRequested', label: 'Destek talep ediliyor mu?', options: ['Evet', 'Hayır'] }] }
     };
@@ -3344,9 +3369,9 @@
             investmentName: '', applicantName: '', version: 'DB ÖB Version 1.0.00', investmentPurpose: '',
             existingProducts: [{ product: '', capacity: '' }],
             plannedProducts: [{ product: '', capacity: '' }],
-            inputs: [{ input: '', need: '' }],
+            inputs: [],
             solarRows: [{ type: 'Güneş Enerjisi', panels: '', panelPower: '', totalPower: '' }],
-            installedRows: [{ type: 'Güneş Enerjisi (AC)', power: '' }, { type: 'Biyogaz', power: '' }],
+            installedRows: [{ type: 'Güneş Enerjisi (AC)', power: '' }, { type: 'Biyogaz', power: '' }, { type: 'Biyokütle', power: '' }],
             machineryRows: [{ name: '', qty: '', purpose: '', assetStatus: '', useInInvestment: '', supportRequested: '' }],
             buildingRows: [{ name: '', assetStatus: '', investmentType: '', supportRequested: '' }]
         };
@@ -3360,13 +3385,19 @@
             catch { PopupMesajGoster('Teknik Proje verisi okunamadı.', false); }
         }
         Object.keys(dbCtpTableDefinitions).forEach(name => {
-            if (!Array.isArray(dbCtpData[name]) || dbCtpData[name].length === 0) dbCtpData[name] = [{}];
+            if (!Array.isArray(dbCtpData[name])) dbCtpData[name] = [];
+            if (name !== 'inputs' && dbCtpData[name].length === 0) dbCtpData[name] = [{}];
         });
+        try {
+            const ortakGirdiler = JSON.parse(document.getElementById('dbCtpGirdilerJson')?.textContent || '[]');
+            dbCtpData.inputs = Array.isArray(ortakGirdiler) ? ortakGirdiler : [];
+        } catch { dbCtpData.inputs = []; }
         const solar = (dbCtpData.solarRows || []).find(x => String(x?.type || '').includes('Güneş')) || dbCtpData.solarRows?.[0] || {};
         const kuruluGunes = (dbCtpData.installedRows || []).find(x => String(x?.type || '').includes('Güneş')) || {};
         const kuruluBiyogaz = (dbCtpData.installedRows || []).find(x => String(x?.type || '').includes('Biyogaz')) || {};
+        const kuruluBiyokutle = (dbCtpData.installedRows || []).find(x => String(x?.type || '').includes('Biyokütle')) || {};
         dbCtpData.solarRows = [{ ...solar, type: 'Güneş Enerjisi' }];
-        dbCtpData.installedRows = [{ ...kuruluGunes, type: 'Güneş Enerjisi' }, { ...kuruluBiyogaz, type: 'Biyogaz' }];
+        dbCtpData.installedRows = [{ ...kuruluGunes, type: 'Güneş Enerjisi' }, { ...kuruluBiyogaz, type: 'Biyogaz' }, { ...kuruluBiyokutle, type: 'Biyokütle' }];
         const alanAta = (id, value) => { const alan = document.getElementById(id); if (alan) alan.value = value || ''; };
         alanAta('dbCtpInvestmentName', document.getElementById('dbCtpAnaYatirimAdi')?.value);
         alanAta('dbCtpApplicantName', document.getElementById('dbCtpAnaBasvuruSahibi')?.value);
@@ -3377,13 +3408,16 @@
         alanAta('dbCtpSolarTotalPower', dbCtpData.solarRows[0].totalPower);
         alanAta('dbCtpInstalledSolar', dbCtpData.installedRows[0].power);
         alanAta('dbCtpInstalledBiogas', dbCtpData.installedRows[1].power);
+        alanAta('dbCtpInstalledBiomass', dbCtpData.installedRows[2].power);
+        document.getElementById('dbCtpGirdiExcelDosya')?.addEventListener('change', function () { DbCtpGirdiExcelYukle(this); });
         DbCtpRender();
     }
 
     function DbCtpEnerjiGuncelle(tur, alan, value) {
         const satir = tur === 'solar' ? dbCtpData.solarRows[0]
             : tur === 'installedSolar' ? dbCtpData.installedRows[0]
-            : dbCtpData.installedRows[1];
+            : tur === 'installedBiogas' ? dbCtpData.installedRows[1]
+            : dbCtpData.installedRows[2];
         satir[alan] = value;
         dirty = true;
     }
@@ -3396,6 +3430,7 @@
     function DbCtpTabloRender(name, definition) {
         const container = document.getElementById(definition.container);
         if (!container) return;
+        if (name === 'inputs') { DbCtpGirdiTabloRender(container); return; }
         const disabled = basvuruReadonly ? 'disabled' : '';
         let html = `<div class="table-responsive"><table class="table table-bordered db-ctp-table"><thead><tr>${definition.columns.map(c => `<th>${htmlEncode(c.label)}</th>`).join('')}<th>İşlem</th></tr></thead><tbody>`;
         dbCtpData[name].forEach((row, index) => {
@@ -3421,6 +3456,90 @@
             html += `<td><button type="button" tabindex="-1" class="btn btn-outline-danger" ${disabled} onclick="DbCtpSatirSil('${name}',${index})">Sil</button></td></tr>`;
         });
         container.innerHTML = html + '</tbody></table></div>';
+    }
+
+    function DbCtpGirdiTabloRender(container) {
+        const duzenlenebilir = !basvuruReadonly;
+        const satirlar = [...(dbCtpData.inputs || [])].sort((a, b) => Number(a.siraNo) - Number(b.siraNo));
+        if (!satirlar.length) {
+            container.innerHTML = '<div class="alert alert-info">Henüz girdi kaydı eklenmedi.</div>';
+            return;
+        }
+        container.innerHTML = `<div class="table-responsive"><table class="table table-striped db-ctp-table"><thead><tr><th>Sıra no</th><th>Girdi / Hammadde adı</th><th>Yıllık ihtiyaç</th><th>Birim</th>${duzenlenebilir ? '<th>İşlem</th>' : ''}</tr></thead><tbody>${satirlar.map(x => {
+            const index = dbCtpData.inputs.indexOf(x);
+            return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${htmlEncode(x.ad)}</td><td>${htmlEncode(x.miktar)}</td><td>${htmlEncode(x.birim)}</td>${duzenlenebilir ? `<td><div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="DbCtpGirdiModalAc(${index})">Düzenle</button><button type="button" class="btn btn-outline-danger" onclick="DbCtpGirdiSil(${index})">Sil</button></div></td>` : ''}</tr>`;
+        }).join('')}</tbody></table></div>`;
+    }
+
+    function DbCtpGirdiModalAc(index) {
+        const mevcut = index >= 0 ? dbCtpData.inputs[index] : null;
+        document.getElementById('dbCtpGirdiIndex').value = index;
+        document.getElementById('dbCtpGirdiModalBaslik').textContent = mevcut ? 'Teknik Proje Girdisini Düzenle' : 'Teknik Proje Girdisi Ekle';
+        document.getElementById('dbCtpGirdiSiraNo').value = mevcut?.siraNo || Math.max(0, ...(dbCtpData.inputs || []).map(x => Number(x.siraNo) || 0)) + 1;
+        document.getElementById('dbCtpGirdiAdi').value = mevcut?.ad || '';
+        document.getElementById('dbCtpGirdiMiktar').value = mevcut?.miktar ?? '';
+        document.getElementById('dbCtpGirdiBirim').value = mevcut?.birim || 'Kg';
+        $('#dbCtpGirdiModal').modal('show');
+    }
+
+    function DbCtpGirdiKaydet() {
+        const index = Number(document.getElementById('dbCtpGirdiIndex').value);
+        const siraNo = Number(document.getElementById('dbCtpGirdiSiraNo').value);
+        const ad = document.getElementById('dbCtpGirdiAdi').value.trim();
+        const miktar = Number(document.getElementById('dbCtpGirdiMiktar').value);
+        const birim = document.getElementById('dbCtpGirdiBirim').value;
+        if (!Number.isInteger(siraNo) || siraNo <= 0 || !ad || miktar <= 0 || !genelOlcuBirimleri.includes(birim)) {
+            PopupMesajGoster('Sıra no, Girdi / Hammadde adı, pozitif yıllık ihtiyaç ve geçerli birim girilmelidir.', false);
+            return;
+        }
+        if (dbCtpData.inputs.some((x, i) => i !== index && Number(x.siraNo) === siraNo)) {
+            PopupMesajGoster('Aynı sıra numarası birden fazla girdi için kullanılamaz.', false);
+            return;
+        }
+        const girdi = {
+            id: index >= 0 ? Number(dbCtpData.inputs[index]?.id || 0) : 0,
+            basvuruId: BasvuruId(),
+            tur: 3,
+            siraNo, ad, miktar, birim
+        };
+        AjaxPost('/Basvuru/YatirimOnBilgisiKaydet', girdi, sonuc => {
+            SonucGoster(sonuc);
+            if (!sonuc?.basarili || !sonuc?.nesne) return;
+            if (index >= 0) dbCtpData.inputs[index] = sonuc.nesne; else dbCtpData.inputs.push(sonuc.nesne);
+            dirty = false;
+            DbCtpTabloRender('inputs', dbCtpTableDefinitions.inputs);
+            $('#dbCtpGirdiModal').modal('hide');
+        });
+    }
+
+    function DbCtpGirdiSil(index) {
+        const girdi = dbCtpData.inputs[index];
+        if (!girdi || !confirm(`“${girdi.ad}” girdisini silmek istediğinize emin misiniz?`)) return;
+        AjaxPost('/Basvuru/YatirimOnBilgisiSil', { id: girdi.id, basvuruId: BasvuruId() }, sonuc => {
+            SonucGoster(sonuc);
+            if (!sonuc?.basarili) return;
+            dbCtpData.inputs.splice(index, 1);
+            dirty = false;
+            DbCtpTabloRender('inputs', dbCtpTableDefinitions.inputs);
+        });
+    }
+
+    function DbCtpGirdiExcelYukle(input) {
+        if (!input?.files?.length) return;
+        const form = new FormData();
+        form.append('basvuruId', BasvuruId());
+        form.append('dosya', input.files[0]);
+        fetch('/Basvuru/TeknikProjeGirdileriExcelYukle', {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': antiForgeryToken() },
+            body: form
+        }).then(response => response.json()).then(sonuc => {
+            if (!sonuc?.basarili || !sonuc?.nesne?.girdiler) { SonucGoster(sonuc); return; }
+            dbCtpData.inputs = sonuc.nesne.girdiler;
+            dirty = false;
+            DbCtpTabloRender('inputs', dbCtpTableDefinitions.inputs);
+            SonucGoster(sonuc);
+        }).catch(() => PopupMesajGoster('Excel dosyası yüklenemedi.', false)).finally(() => { input.value = ''; });
     }
 
     function DbCtpAlanGuncelle(name, index, key, value) {
@@ -4170,12 +4289,70 @@
         if (gizle) modalSet('adresModalYapiRuhsatiDurumu', 5);
     }
 
+    function AdrestenUretilenYatirimAlanlariniHesapla(adresler) {
+        const kaynak = Array.isArray(adresler) ? adresler : sonUygulamaAdresleri;
+        const yatirimTurleri = new Set(kaynak.flatMap(x => (x.yatirimTurleri || []).map(Number)).filter(x => x > 0));
+        const harcamaTurleri = new Set(kaynak.flatMap(x => (x.harcamaTurleri || []).map(Number)).filter(x => x > 0));
+
+        document.querySelectorAll('input[name="Basvuru.yatirim.yatirimTurleri"]').forEach(input => {
+            input.checked = yatirimTurleri.has(Number(input.value));
+        });
+        document.querySelectorAll('input[name="Basvuru.yatirim.harcamaTurleri"]').forEach(input => {
+            input.checked = harcamaTurleri.has(Number(input.value));
+        });
+
+        const secimMetni = (kapsayici, secimler) => Array.from(document.querySelectorAll(`${kapsayici} input`))
+            .filter(input => secimler.has(Number(input.value)))
+            .map(input => input.closest('label')?.textContent?.trim() || '')
+            .filter(Boolean)
+            .join(', ');
+        const ozetYatirimTurleri = document.getElementById('adresOzetYatirimTurleri');
+        const ozetHarcamaTurleri = document.getElementById('adresOzetHarcamaTurleri');
+        if (ozetYatirimTurleri) ozetYatirimTurleri.value = secimMetni('#adresModalYatirimTurleri', yatirimTurleri);
+        if (ozetHarcamaTurleri) ozetHarcamaTurleri.value = secimMetni('#adresModalHarcamaTurleri', harcamaTurleri);
+
+        const birlestir = alan => {
+            const gorulen = new Set();
+            return kaynak
+                .flatMap(adres => String(adres?.[alan] || '').split(','))
+                .map(deger => deger.trim())
+                .filter(deger => {
+                    if (!deger) return false;
+                    const anahtar = deger.toLocaleLowerCase('tr-TR');
+                    if (gorulen.has(anahtar)) return false;
+                    gorulen.add(anahtar);
+                    return true;
+                })
+                .join(', ');
+        };
+
+        const alanlar = {
+            'Basvuru.yatirim.YatirimFaaliyetleri': 'yatirimFaaliyetleri',
+            'Basvuru.yatirim.YatirimGirdileri': 'yatirimGirdileri',
+            'Basvuru.yatirim.YatirimCiktilari': 'yatirimCiktilari'
+        };
+        Object.entries(alanlar).forEach(([name, alan]) => {
+            const input = document.querySelector(`[name="${name}"]`);
+            if (input) input.value = birlestir(alan);
+        });
+        const ozetAlanlar = {
+            adresOzetFaaliyetler: 'yatirimFaaliyetleri',
+            adresOzetGirdiler: 'yatirimGirdileri',
+            adresOzetCiktilar: 'yatirimCiktilari'
+        };
+        Object.entries(ozetAlanlar).forEach(([id, alan]) => {
+            const input = document.getElementById(id);
+            if (input) input.value = birlestir(alan);
+        });
+    }
+
     function RenderUygulamaAdresleri(uygulamaAdresleri) {
         const tbody = document.getElementById('uygulamaAdresListesi');
         if (!tbody) return;
         const hakTbody = document.getElementById('yatirimYeriKullanimHaklariListesi');
         const basvuruYatirimSayfasi = active === bolumBasvuruYatirimBilgileri;
         sonUygulamaAdresleri = uygulamaAdresleri || [];
+        AdrestenUretilenYatirimAlanlariniHesapla(sonUygulamaAdresleri);
         tbody.innerHTML = '';
         if (hakTbody) hakTbody.innerHTML = '';
         if (sonUygulamaAdresleri.length === 0) {
