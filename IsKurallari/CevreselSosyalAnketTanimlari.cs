@@ -24,15 +24,22 @@ namespace TarimDonusum.IsKurallari
                     new(
                         Type: "details",
                         Title: "Kapsam Dışı Faaliyetler Listesi - Bilgilendirme",
-                        Text: "Aşağıdaki faaliyetler proje kapsamında desteklenmeyecek faaliyetlerdir.",
+                        Text: "Aşağıdaki faaliyetler proje kapsamında desteklenmeyecek faaliyetlerdir. Başvuru sahibi, 2.1 sorusunda yatırımın bu listede yer alıp almadığını beyan eder.",
                         Items:
                         [
                             "Mayınlar, ateşli silahlar, mühimmat ve patlayıcılar dahil olmak üzere her türlü silahın üretimi, ticareti veya kullanımına ilişkin faaliyetler.",
                             "Alkol, tütün ürünleri ve kontrol altındaki maddeler dahil olmak üzere tehlikeli malların üretimine yönelik faaliyetler.",
                             "Ulusal mevzuatta biyolojik çeşitliliğin korunması açısından korunan alan veya öncelikli koruma alanı olarak tanımlanan bölgelerde gerçekleştirilecek inşaat faaliyetleri.",
                             "Kritik doğal habitatlarda önemli ölçüde kayıp veya bozulmaya neden olabilecek ya da doğal habitatlar üzerinde önemli olumsuz etkiler oluşturabilecek faaliyetler.",
+                            "Orman kaynaklarının büyük ölçekli ticari amaçlarla yoğun biçimde hasadı ve satışı/ticareti.",
+                            "Orman alanlarının tarım arazisine dönüştürülmesi veya birincil ormanlarda kesim faaliyetleri.",
+                            "Ulusal mevzuat kapsamında yasaklanmış/kısıtlanmış pestisit, insektisit, herbisit ve diğer tehlikeli kimyasallar ile WHO Sınıf IA ve IB pestisitlerin kullanımı.",
+                            "Uluslararası su yollarını kullanan faaliyetler.",
+                            "Kültürel mirasın kritik unsurlarında geri döndürülemez değişikliklere veya önemli ölçüde yer değiştirmeye neden olan faaliyetler.",
                             "Zorla çalıştırma, çocuk istismarı, çocuk işçiliği, insan ticareti veya 14-18 yaş arasındaki çocukların sağlık, güvenlik, eğitim veya gelişimlerini olumsuz etkileyebilecek işlerde çalıştırıldığı faaliyetler.",
+                            "Uluslararası Finans Kuruluşları ile imzalanan finansman anlaşmalarındaki ilave hariç tutma hükümleri kapsamındaki faaliyetler.",
                             "Türkiye Cumhuriyeti mevzuatı veya Türkiye'nin taraf olduğu uluslararası hukuki düzenlemeler kapsamında yasaklanmış faaliyetler.",
+                            "Türkiye'nin düşük sera gazı emisyonlu ve iklim değişikliğine dayanıklı kalkınma hedefleriyle veya Paris Anlaşması amaçlarıyla uyumlu olmayan faaliyetler.",
                             "Zorla tahliyeye neden olan faaliyetler.",
                             "Siyasi veya dini amaç taşıyan yatırımlar; siyasi partilere, sendikalara veya dini kurumlara yönelik idari hizmetler, altyapılar ve tesisler."
                         ])
@@ -50,26 +57,26 @@ namespace TarimDonusum.IsKurallari
                 ]),
             new(Id: "3", Title: "İşgücü ve Çalışma Koşulları", Questions:
                 [
-                    new(Id: "3.1", Title: "", Text: "Mevcut işletmenizde veya planlanan yatırımınızda işgücü, çalışma koşulları, iş sağlığı ve güvenliği ya da çalışan haklarına ilişkin dava, ceza, şikayet veya ciddi olay yaşandı mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], Note: "Toplumsal cinsiyete dayalı şiddet, cinsel sömürü, istismar veya cinsel taciz dahil. Mevcut işletme için son 5 yılda dava, ceza vb. vaka varsa açıklayınız.", ExplainOn: ["Evet"]),
-                    new(Id: "3.2", Title: "", Text: "Mevcut işletmenizde ve planlanan yatırımınızda çalışacak kişi sayısını çalışan kategorilerine göre belirtiniz.", AnswerType: "staff", Contexts: ["existing", "planned"], Info: "Göçmen çalışanlar Dünya Bankası Ç&S ESS2 kapsamında ayrı bir çalışan kategorisi olmayıp, doğrudan çalışanlar, yüklenici çalışanları veya birincil tedarikçi çalışanları arasında yer alabilir. Proje kapsamındaki göçmen çalışanlar diğer çalışanlarla eşit çalışma koşulları ve haklardan yararlanmalı, ayrımcılığa maruz bırakılmamalıdır."),
-                    new(Id: "3.3", Title: "", Text: "Kadın çalışan oranı nedir / ne olacaktır?", AnswerType: "percent", Contexts: ["existing", "planned"], AlwaysExplain: true),
-                    new(Id: "3.4", Title: "", Text: "İş sağlığı ve güvenliği risk değerlendirmesi, acil durum planı ve çalışan eğitimleri mevcut mu / hazırlanacak mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"], DocOn: ["Evet"])
+                    new(Id: "3.1", Title: "", Text: "İşletmenizde ve yatırım kapsamında zorla çalıştırma, çocuk işçiliği veya sömürücü işgücü uygulamaları riski bulunuyor mu?", AnswerType: "yesno", Contexts: ["existing", "planned"], Note: "Toplumsal cinsiyete dayalı şiddet, cinsel sömürü, istismar veya cinsel taciz dahil. Mevcut işletme için son 5 yılda dava, ceza vb. vaka varsa açıklayınız.", ExplainOn: ["Evet"]),
+                    new(Id: "3.2", Title: "", Text: "İşletmenizde ve yatırım kapsamında çalışacak personel sayısını aşağıdaki gruplar itibarıyla belirtiniz.", AnswerType: "staff", Contexts: ["existing", "planned"], Info: "Göçmen çalışanlar Dünya Bankası Ç&S ESS2 kapsamında ayrı bir çalışan kategorisi olmayıp, doğrudan çalışanlar, yüklenici çalışanları veya birincil tedarikçi çalışanları arasında yer alabilir. Proje kapsamındaki göçmen çalışanlar diğer çalışanlarla eşit çalışma koşulları ve haklardan yararlanmalı, ayrımcılığa maruz bırakılmamalıdır.", AlwaysExplain: true),
+                    new(Id: "3.3", Title: "", Text: "İşletmenizde ve yatırımınızda çalışanların yaklaşık yüzde kaçı yerel işgücünden sağlanacaktır?", AnswerType: "percent", Contexts: ["existing", "planned"], AlwaysExplain: true),
+                    new(Id: "3.4", Title: "", Text: "İşletmenizde ve yatırımınızda çalışanların şikâyet ve geri bildirimlerini iletebilecekleri bir şikâyet mekanizması bulunuyor mu?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"])
                 ]),
             new(Id: "4", Title: "Kaynak Verimliliği ve Kirliliğin Önlenmesi", Questions:
                 [
                     new(Id: "4.1", Title: "", Text: "İşletmeniz ve yatırım faaliyetleri toprak, bitki örtüsü, yüzey suları veya yeraltı sularını olumsuz etkileyebilecek katı veya sıvı atık oluşumuna neden olacak mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"]),
                     new(Id: "4.2", Title: "", Text: "Yatırım faaliyetleri kapsamında tehlikeli atık oluşacak mı?", AnswerType: "yesno", Contexts: ["planned"], Note: "Evet ise bertaraf yöntemini açıklayınız. Var ise ilgili plan veya lisanslı firma bilgilerini yükleyiniz.", ExplainOn: ["Evet"], DocOn: ["Evet"]),
                     new(Id: "4.3", Title: "", Text: "İşletmenizin ve yatırım faaliyetlerinin su kalitesi üzerinde olumsuz etkisi olma ihtimali bulunuyor mu?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"]),
-                    new(Id: "4.4", Title: "", Text: "Atıksu yönetimi altyapınızın durumu nedir?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Mevcut ve yeterli", "Mevcut ancak yetersiz", "Mevcut değil"], AlwaysExplain: true),
-                    new(Id: "4.5", Title: "", Text: "Su kullanım izinleri veya abonelik belgeleri var mı?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Var", "Yok"], ExplainOn: ["Var", "Yok"], DocOn: ["Var"]),
-                    new(Id: "4.6", Title: "", Text: "Enerji verimliliği, yenilenebilir enerji veya kaynak verimliliği tedbirleri uygulanıyor mu / uygulanacak mı?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Var", "Yok"], ExplainOn: ["Var", "Yok"], DocOn: ["Var"]),
-                    new(Id: "4.7", Title: "", Text: "İşletme veya yatırım faaliyetleri sera gazı emisyonu ya da önemli hava emisyonu oluşturacak mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], Note: "Metan, siyah karbon, karbondioksit, diazot monoksit, perflorokarbonlar vb. iklim kirleticileri dahil.", Info: "Yıllık tahmini sera gazı emisyonu 25.000 ton CO₂ eşdeğerini aşan büyük ölçekli tarımsal sanayi yatırımlarında bağımsız bir sera gazı emisyon tahmin raporu başvuru kapsamında sunulmalıdır.", ExplainOn: ["Evet"], DocOn: ["Evet"]),
-                    new(Id: "4.8", Title: "", Text: "Pestisit, veteriner ilacı, dezenfektan veya tehlikeli kimyasal kullanılacak mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], Info: "Dünya Sağlık Örgütü (WHO) Sınıf IA ve IB pestisitleri ile Türkiye'de kullanımı yasaklı aktif maddelerin proje kapsamında kullanımı kesinlikle yasaktır.", ExplainOn: ["Evet"])
+                    new(Id: "4.4", Title: "", Text: "İşletmenizin kullandığı / yatırım faaliyetinizde kullanılacak atık su altyapısı mevcut ve yeterli mi?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Mevcut ve yeterli", "Mevcut ancak yetersiz", "Mevcut değil"], AlwaysExplain: true),
+                    new(Id: "4.5", Title: "", Text: "İşletmenizin ve yatırım faaliyetinizin atık su deşarj izni bulunuyor mu?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Var", "Yok"], ExplainOn: ["Var", "Yok"], DocOn: ["Var"]),
+                    new(Id: "4.6", Title: "", Text: "İşletmenizin ve yatırım faaliyetinizin toz, duman, gaz, koku veya benzeri hava emisyon kaynakları için alınmış bir çevre izni bulunuyor mu?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Var", "Yok"], ExplainOn: ["Var", "Yok"], DocOn: ["Var"]),
+                    new(Id: "4.7", Title: "", Text: "İşletmeniz ve yatırım faaliyetleriniz sera gazı emisyonuna neden olacak mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], Note: "Metan, siyah karbon, karbondioksit, diazot monoksit, perflorokarbonlar vb. iklim kirleticileri dahil.", Info: "Yıllık tahmini sera gazı emisyonu 25.000 ton CO₂ eşdeğerini aşan büyük ölçekli tarımsal sanayi yatırımlarında bağımsız bir sera gazı emisyon tahmin raporu başvuru kapsamında sunulmalıdır.", ExplainOn: ["Evet"], DocOn: ["Evet"]),
+                    new(Id: "4.8", Title: "", Text: "İşletmenizde ve yatırım kapsamında pestisit veya diğer tarımsal kimyasallar kullanılıyor mu / kullanılacak mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], Info: "Dünya Sağlık Örgütü (WHO) Sınıf IA ve IB pestisitleri ile Türkiye'de kullanımı yasaklı aktif maddelerin proje kapsamında kullanımı kesinlikle yasaktır.", ExplainOn: ["Evet"])
                 ]),
             new(Id: "5", Title: "Toplum Sağlığı ve Güvenliği", Questions:
                 [
-                    new(Id: "5.1", Title: "", Text: "Yatırım alanı en yakın yerleşim yerine ne kadar uzaklıktadır?", AnswerType: "textarea", Contexts: ["existing", "planned"], Note: "Köy, mahalle vb. yerleşime uzaklık ve konumu açıklayınız."),
-                    new(Id: "5.2", Title: "", Text: "Komşu yerleşimler, hassas alıcılar veya kamu kullanım alanları üzerinde olası etki var mı?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Var", "Yok"], ExplainOn: ["Var", "Yok"], DocOn: ["Var"]),
+                    new(Id: "5.1", Title: "", Text: "Mevcut tesisinizin veya planlanan yatırım alanınızın en yakın yerleşim yerine uzaklığı nedir?", AnswerType: "textarea", Contexts: ["existing", "planned"], Note: "Köy, mahalle vb. yerleşime uzaklık ve konumu açıklayınız."),
+                    new(Id: "5.2", Title: "", Text: "İşletmeniz ve yatırımınız için İtfaiye Uygunluk Raporu veya İtfaiye Görüşü bulunuyor mu?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Var", "Yok"], DocOn: ["Var"]),
                     new(Id: "5.3", Title: "", Text: "Yapım işleri sırasında toplum sağlığı ve güvenliği açısından risk oluşacak mı?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"]),
                     new(Id: "5.4", Title: "", Text: "Yatırım kapsamında geçici işçi kampı veya konaklama alanı kurulacak mı?", AnswerType: "yesno", Contexts: ["planned"], Note: "Evet ise yaklaşık çalışan sayısını belirtiniz.", ExplainOn: ["Evet"]),
                     new(Id: "5.5", Title: "", Text: "Yatırım faaliyetleri trafik yoğunluğunu veya trafik güvenliği riskini artıracak mı?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"]),
@@ -79,8 +86,8 @@ namespace TarimDonusum.IsKurallari
                 ]),
             new(Id: "6", Title: "Arazi Edinimi, Arazi Kullanım Kısıtlamaları ve Gönülsüz Yeniden Yerleşim", Questions:
                 [
-                    new(Id: "6.1", Title: "", Text: "Yatırım yapılacak arazi veya tesis için mülkiyet, kira, tahsis veya kullanım hakkı belgesi var mı?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Var", "Yok"], Note: "Tapu, kira sözleşmesi, tahsis yazısı vb. belgeleri yükleyiniz.", Info: "En az bir arazi kullanım/kullanma hakkı belgesi yüklenmeden başvuru tamamlanamaz.", ExplainOn: ["Var", "Yok"], DocOn: ["Var"]),
-                    new(Id: "6.2", Title: "", Text: "Yatırım alanının arazi statüsü nedir?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Kamu Arazisi", "Özel Mülkiyet", "Ortak/Kolektif Kullanım", "Diğer"], ExplainOn: ["Diğer"]),
+                    new(Id: "6.1", Title: "", Text: "İşletme ve yatırım alanını kullanma hakkınızı gösteren belgeler mevcut mu?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Var", "Yok"], Note: "Tapu, kira sözleşmesi, tahsis yazısı vb. belgeleri yükleyiniz.", Info: "En az bir arazi kullanım/kullanma hakkı belgesi yüklenmeden başvuru tamamlanamaz.", ExplainOn: ["Var", "Yok"], DocOn: ["Var"]),
+                    new(Id: "6.2", Title: "", Text: "İşletme ve yatırım alanının mevcut mülkiyet durumu nedir?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Kamu Arazisi", "Özel Mülkiyet", "Ortak/Kolektif Kullanım", "Diğer"], ExplainOn: ["Diğer"]),
                     new(Id: "6.3", Title: "", Text: "Yatırım nedeniyle arazi edinimi, kamulaştırma veya arazi kullanımında kısıtlama olacak mı?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"], DocOn: ["Evet"]),
                     new(Id: "6.4", Title: "", Text: "Yatırım nedeniyle herhangi bir kişi veya işletmenin fiziksel olarak taşınması gerekecek mi?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"], DocOn: ["Evet"]),
                     new(Id: "6.5", Title: "", Text: "Yatırım nedeniyle geçim kaynakları veya gelir getirici faaliyetler etkilenebilir mi?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"]),
@@ -89,8 +96,8 @@ namespace TarimDonusum.IsKurallari
                 ]),
             new(Id: "7", Title: "Biyoçeşitliliğin Korunması ve Canlı Doğal Kaynakların Sürdürülebilir Yönetimi", Questions:
                 [
-                    new(Id: "7.1", Title: "", Text: "Yatırım alanı korunan alan, hassas habitat, sulak alan, orman veya doğal yaşam alanı içinde ya da yakınında mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"], DocOn: ["Evet"]),
-                    new(Id: "7.2", Title: "", Text: "Yatırım faaliyetleri doğal habitatlarda kayıp, bozulma veya parçalanmaya neden olacak mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"]),
+                    new(Id: "7.1", Title: "", Text: "Mevcut tesisiniz veya planlanan yatırım alanınız için daha önce biyoçeşitlilik, flora-fauna veya ekoloji çalışması yapılmış mıdır?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"], DocOn: ["Evet"]),
+                    new(Id: "7.2", Title: "", Text: "İşletme ve yatırım alanının çevresinde proje faaliyetlerinden olumsuz etkilenebilecek doğal habitatlar, ormanlık alanlar, sucul habitatlar, doğal bitki örtüsü veya kritik ekosistemler bulunuyor mu?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"]),
                     new(Id: "7.3", Title: "", Text: "Yatırım alanında nesli tehlike altında olan türler veya hassas türler bulunuyor mu?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"], DocOn: ["Evet"]),
                     new(Id: "7.4", Title: "", Text: "Yatırım kapsamında ağaç kesimi, bitki örtüsü temizliği veya peyzaj değişikliği yapılacak mı?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"]),
                     new(Id: "7.5", Title: "", Text: "Yatırım faaliyetleri sucul ekosistemleri veya balıkçılık kaynaklarını etkileyebilir mi?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"]),
@@ -100,10 +107,10 @@ namespace TarimDonusum.IsKurallari
                 ]),
             new(Id: "8", Title: "Kültürel Miras", Questions:
                 [
-                    new(Id: "8.1", Title: "", Text: "Yatırım alanı kültürel miras, arkeolojik sit, tarihi yapı veya koruma alanı içinde ya da yakınında mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"]),
+                    new(Id: "8.1", Title: "", Text: "İşletme ve yatırım alanında veya yakın çevresinde tarihi, arkeolojik veya kültürel açıdan önemli alan veya varlık bulunuyor mu?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"]),
                     new(Id: "8.2", Title: "", Text: "Yapım işleri sırasında tesadüfi buluntu ihtimali var mı?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"]),
-                    new(Id: "8.3", Title: "", Text: "Kültürel mirasla ilgili izin, kurum görüşü veya koruma kurulu kararı mevcut mu?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"], DocOn: ["Evet"]),
-                    new(Id: "8.4", Title: "", Text: "Yatırım yerel topluluklar için manevi, geleneksel veya kültürel öneme sahip alanları etkileyebilir mi?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"])
+                    new(Id: "8.3", Title: "", Text: "İşletme ve yatırım alanınızda veya yakın çevresinde bulunan tarihi, arkeolojik veya kültürel açıdan önemli alan ya da varlıklara ilişkin alınmış resmî görüş, izin veya karar bulunuyor mu?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"], DocOn: ["Evet"]),
+                    new(Id: "8.4", Title: "", Text: "İşletme ve yatırım alanında veya yakın çevresinde olumsuz etkilenebilecek kutsal alan, mezarlık, anıt, anıt ağaç veya manevi değere sahip herhangi bir unsur bulunuyor mu?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"])
                 ]),
             new(Id: "9", Title: "Paydaş Katılımı ve Bilgilendirme", Questions:
                 [
@@ -114,7 +121,7 @@ namespace TarimDonusum.IsKurallari
                     new(Id: "9.5", Title: "", Text: "Yatırım hakkında kadınlar, gençler, yaşlılar, engelliler veya hassas gruplarla özel bilgilendirme yapıldı mı?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"]),
                     new(Id: "9.6", Title: "", Text: "Paydaş katılımı veya bilgilendirme toplantılarına ilişkin belge, tutanak veya fotoğraf mevcut mu?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"], DocOn: ["Evet"]),
                     new(Id: "9.7", Title: "", Text: "Yatırımın uygulanması sırasında paydaşlarla iletişimden sorumlu kişi belirlendi mi?", AnswerType: "yesno", Contexts: ["planned"], ExplainOn: ["Evet"]),
-                    new(Id: "9.8", Title: "", Text: "Mevcut işletme veya planlanan yatırım hakkında çevresel/sosyal şikayet kaydı var mı?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"], DocOn: ["Evet"])
+                    new(Id: "9.8", Title: "", Text: "Toplumun yatırım faaliyetleriniz ile ilgili şikâyet veya geri bildirimlerini misilleme korkusu olmaksızın iletebileceği erişilebilir bir Şikâyet Mekanizmanız, iletişim kişiniz veya başvuru yönteminiz bulunuyor mu?", AnswerType: "yesno", Contexts: ["existing", "planned"], ExplainOn: ["Evet"])
                 ])
         ];
     }

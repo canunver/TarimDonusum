@@ -774,6 +774,9 @@
   <data name="Basvuru.Finance.RateLimitExceeded" xml:space="preserve">
     <value>Talep edilen finansman oranı dönem için tanımlanan oranı aşamaz.</value>
   </data>
+  <data name="Basvuru.Finance.MaximumSupportExceeded" xml:space="preserve">
+    <value>Talep edilen destek tutarı dönem için tanımlanan maksimum destek tutarını aşamaz. Finansman oranını düşürünüz.</value>
+  </data>
   <data name="Basvuru.Field.TalepEdilenFinansmanTutari" xml:space="preserve">
     <value>Talep edilen finansman tutarı (EUR)</value>
   </data>
@@ -1677,7 +1680,7 @@
     <value>İrtibat telefonu girilmelidir.</value>
   </data>
   <data name="Basvuru.Summary.Error.ActiveTwoYearsRequired" xml:space="preserve">
-    <value>Son 2 yıldır faal mi seçilmelidir.</value>
+    <value>Başvuru sahibi son 2 yıldır faal olmalıdır. Organize Sanayi / İhtisas Alanı yatırım yeri olan başvurular bu şarttan muaftır.</value>
   </data>
   <data name="Basvuru.Summary.Error.ApplicantTypeRequired" xml:space="preserve">
     <value>Başvuru sahibi türü seçilmelidir.</value>
@@ -1830,7 +1833,7 @@
     <value>Soyad</value>
   </data>
   <data name="Basvuru.Esf.SelectInvestmentScopeFirst" xml:space="preserve">
-    <value>Lütfen yatırımın mevcut tesis modernizasyonu, yeni tesis veya her ikisi olduğunu seçiniz.</value>
+    <value>Lütfen çevresel ve sosyal formun doldurulacağı yatırım adresini seçiniz.</value>
   </data>
   <data name="Basvuru.Esf.OpenedBySelection" xml:space="preserve">
     <value>Form seçiminize göre açılmıştır. Dokümanda gri bırakılan ve seçiminizle ilgili olmayan alanlar gösterilmez.</value>
@@ -2544,7 +2547,10 @@
     <value>Reddedildi</value>
   </data>
   <data name="enumBasvuruDurum_9" xml:space="preserve">
-    <value>İptal</value>
+    <value>Ön Başvuru Red</value>
+  </data>
+  <data name="enumBasvuruDurum_10" xml:space="preserve">
+    <value>Ön Başvuru İtiraz Edildi</value>
   </data>
   <data name="Basvuru.Review.Title" xml:space="preserve">
     <value>Ön Başvuru İnceleme Sonuç Listesi</value>

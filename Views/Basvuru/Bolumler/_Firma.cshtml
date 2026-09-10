@@ -96,6 +96,7 @@
                     <option value="false" selected="@(b.basvuruFirma.sonIkiYildirFaalMi == false)">@hayirMetni</option>
                     <option value="true" selected="@(b.basvuruFirma.sonIkiYildirFaalMi == true)">@evetMetni</option>
                 </select>
+                @if (b.IkiYillikFaaliyetSartindanMuaf) { <small class="text-success">Organize Sanayi / İhtisas Alanı yatırım yeri nedeniyle bu şart aranmaz.</small> }
             </label>
             <label>
                 @L["Basvuru.Field.BasvuruSahibiTuru"]

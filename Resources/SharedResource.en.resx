@@ -774,6 +774,9 @@
   <data name="Basvuru.Finance.RateLimitExceeded" xml:space="preserve">
     <value>The requested financing rate cannot exceed the period limit.</value>
   </data>
+  <data name="Basvuru.Finance.MaximumSupportExceeded" xml:space="preserve">
+    <value>The requested support amount cannot exceed the maximum support amount defined for the period. Reduce the financing rate.</value>
+  </data>
   <data name="Basvuru.Field.TalepEdilenFinansmanTutari" xml:space="preserve">
     <value>Requested financing amount (EUR)</value>
   </data>
@@ -1629,7 +1632,7 @@
     <value>Contact phone must be entered.</value>
   </data>
   <data name="Basvuru.Summary.Error.ActiveTwoYearsRequired" xml:space="preserve">
-    <value>Whether the applicant has been active for the last 2 years must be selected.</value>
+    <value>The applicant must have been active for the last 2 years. Applications with an Organized Industrial / Specialized Area investment location are exempt.</value>
   </data>
   <data name="Basvuru.Summary.Error.ApplicantTypeRequired" xml:space="preserve">
     <value>Applicant type must be selected.</value>
@@ -1782,7 +1785,7 @@
     <value>Surname</value>
   </data>
   <data name="Basvuru.Esf.SelectInvestmentScopeFirst" xml:space="preserve">
-    <value>Please select whether the investment is modernization of an existing facility, a new facility, or both.</value>
+    <value>Please select the investment address for which the environmental and social form will be completed.</value>
   </data>
   <data name="Basvuru.Esf.OpenedBySelection" xml:space="preserve">
     <value>The form has been opened according to your selection. Fields left grey in the document and not related to your selection are not shown.</value>
@@ -2496,7 +2499,10 @@
     <value>Rejected</value>
   </data>
   <data name="enumBasvuruDurum_9" xml:space="preserve">
-    <value>Cancelled</value>
+    <value>Pre-application Rejected</value>
+  </data>
+  <data name="enumBasvuruDurum_10" xml:space="preserve">
+    <value>Pre-application Appealed</value>
   </data>
   <data name="Basvuru.Review.Title" xml:space="preserve">
     <value>Pre-application Review Checklist</value>

@@ -43,7 +43,8 @@ namespace TarimDonusum.Models
         BasvuruMetraj = 38,
         ButceGiderler = 39,
         DbCtpMakineEkipman = 40,
-        DbCtpBinaListesi = 41
+        DbCtpBinaListesi = 41,
+        OnBasvuruItiraz = 42
     }
 
     public sealed record BasvuruBolumTanim(
@@ -92,6 +93,7 @@ namespace TarimDonusum.Models
             new(enumBasvuruBolum.CevreselSosyal, 100, "Basvuru.Step.CevreselSosyal", "Bolumler/_CevreselSosyal"),
             new(enumBasvuruBolum.TaahhutBeyan, 110, "Basvuru.Step.TaahhutBeyan", "Bolumler/_TaahhutBeyan"),
             new(enumBasvuruBolum.Ozet, 120, "Basvuru.Step.Ozet", "Bolumler/_Ozet"),
+            new(enumBasvuruBolum.OnBasvuruItiraz, 125, "İtiraz / İtiraz Geçmişi", "Bolumler/_OnBasvuruItiraz"),
             new(enumBasvuruBolum.SistemSonuclari, 130, "Basvuru.Step.SystemResults", "Bolumler/_SistemSonuclari", true),
             new(enumBasvuruBolum.UzmanSonuclari, 140, "Basvuru.Step.ExpertResults", "Bolumler/_UzmanSonuclari", true),
             new(enumBasvuruBolum.Karar, 150, "Basvuru.Step.Decision", "Bolumler/_Denetim", true)

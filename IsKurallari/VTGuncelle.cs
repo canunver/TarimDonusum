@@ -983,6 +983,24 @@ namespace TarimDonusum.IsKurallari
                   IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri',N'Boylam') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD Boylam DECIMAL(9,6) NULL;
                   IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri',N'Ada') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD Ada NVARCHAR(30) NULL;
                   IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri',N'Parsel') IS NULL ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD Parsel NVARCHAR(30) NULL;"),
+            new(80,
+                @"IF OBJECT_ID(N'dbo.OnBasvuruItiraz', N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.OnBasvuruItiraz(
+                      Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_OnBasvuruItiraz PRIMARY KEY,
+                      BasvuruAnaId INT NOT NULL,
+                      BasvuruId INT NOT NULL,
+                      IslemTuru INT NOT NULL,
+                      Metin NVARCHAR(4000) NOT NULL,
+                      IslemTarihi DATETIME2 NOT NULL CONSTRAINT DF_OnBasvuruItiraz_IslemTarihi DEFAULT GETDATE(),
+                      KullaniciId INT NOT NULL,
+                      CONSTRAINT FK_OnBasvuruItiraz_BasvuruAna FOREIGN KEY(BasvuruAnaId) REFERENCES dbo.BasvuruAna(Id),
+                      CONSTRAINT FK_OnBasvuruItiraz_Basvuru FOREIGN KEY(BasvuruId) REFERENCES dbo.Basvuru(Id),
+                      CONSTRAINT FK_OnBasvuruItiraz_Kullanici FOREIGN KEY(KullaniciId) REFERENCES dbo.Kullanici(Id),
+                      CONSTRAINT CK_OnBasvuruItiraz_IslemTuru CHECK(IslemTuru IN (1,2,3))
+                    );
+                    CREATE INDEX IX_OnBasvuruItiraz_BasvuruAnaId ON dbo.OnBasvuruItiraz(BasvuruAnaId, Id);
+                  END"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

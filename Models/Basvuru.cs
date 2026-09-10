@@ -68,7 +68,8 @@ namespace TarimDonusum.Models
         KabulEdildiDurumu = 6, // Başvuru Kabul
         BasvuruSecilmediDurumu = 7,
         ReddedildiDurumu = 8, // Başvuru Red
-        IptalDurumu = 9, // Ön Başvuru Red / İptal
+        IptalDurumu = 9, // Ön Başvuru Red
+        OnBasvuruItirazEdildiDurumu = 10,
     }
 
     public enum enumBasvuruKayitTuru : int
@@ -177,6 +178,8 @@ namespace TarimDonusum.Models
         public BasvuruYatirim yatirim { get; set; } = new();
         public BasvuruOrtaklik ortaklik { get; set; } = new();
         public List<BasvuruUygulamaAdresi> YatirimAdresleri { get; set; } = new();
+        public bool IkiYillikFaaliyetSartindanMuaf => YatirimAdresleri.Any(x =>
+            x.yatirimYeriStatusu == enumUygulamaAdresiYatirimYeriStatusu.OrganizeSanayi_IhtisasAlaniTahsisi);
         public void AdresYatirimBilgileriniBirlestir()
         {
             yatirim.yatirimTurleri = YatirimAdresleri.SelectMany(x => x.yatirimTurleri ?? []).Where(x => x > 0).Distinct().ToList();
@@ -326,6 +329,40 @@ namespace TarimDonusum.Models
         public string json { get; set; } = "";
     }
 
+    public class OnBasvuruBildirimBilgisi
+    {
+        public string BasvuruNo { get; set; } = "";
+        public string FirmaUnvani { get; set; } = "";
+        public List<string> EpostaAdresleri { get; set; } = new();
+    }
+
+    public enum enumOnBasvuruItirazIslemTuru { ItirazEdildi = 1, ItirazReddedildi = 2, RevizyonaGonderildi = 3 }
+
+    public class OnBasvuruItiraz
+    {
+        public int Id { get; set; }
+        public int BasvuruId { get; set; }
+        public enumOnBasvuruItirazIslemTuru IslemTuru { get; set; }
+        public string Metin { get; set; } = "";
+        public DateTime IslemTarihi { get; set; }
+        public int KullaniciId { get; set; }
+        public string KullaniciAdi { get; set; } = "";
+    }
+
+    public class OnBasvuruItirazViewModel
+    {
+        public Basvuru Basvuru { get; set; } = new();
+        public List<OnBasvuruItiraz> Tarihce { get; set; } = new();
+        public bool UzmanGorunumu { get; set; }
+    }
+
+    public class OnBasvuruItirazKayitModel
+    {
+        public int BasvuruId { get; set; }
+        public string Metin { get; set; } = "";
+        public bool RevizyonaGonder { get; set; }
+    }
+
     public class BasvuruFirma
     {
         public int basvuruAnaId { get; set; } = 0;
@@ -363,9 +400,6 @@ namespace TarimDonusum.Models
 
             if (firma.id <= 0)
                 sonuc.HataEkle("Firma seçilmelidir.");
-
-            if (!sonIkiYildirFaalMi.HasValue)
-                sonuc.HataEkle("Son 2 yıldır faal mi seçilmelidir.");
 
             if (!basvuruSahibiTuru.HasValue || basvuruSahibiTuru.Value == enumBasvuruSahibiTuru.Tanimsiz)
                 sonuc.HataEkle("Başvuru sahibi türü seçilmelidir.");

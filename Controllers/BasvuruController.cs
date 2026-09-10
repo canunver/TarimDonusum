@@ -572,6 +572,26 @@ namespace TarimDonusum.Controllers
             return Json(sonuc);
         }
 
+        [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> RevizyonKarsilastir(int id)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return Unauthorized();
+            if (BasvuruKullanicisiMi(kullanici)) return Forbid();
+            Sonuc<Basvuru> mevcutSonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
+            Basvuru? mevcut = mevcutSonuc.nesne;
+            if (!mevcutSonuc.basarili || mevcut == null || mevcut.kayitTuru != enumBasvuruKayitTuru.OnBasvuru)
+                return Json(new { basarili = false, mesaj = "Ön başvuru bulunamadı." });
+            Sonuc<List<Basvuru>> versiyonlar = await _basvuruIsKurallari.KullaniciBasvuruVersiyonlariniListeleAsync(kullanici);
+            Basvuru? oncekiOzet = versiyonlar.nesne?.Where(x => x.BasvuruAnaId == mevcut.BasvuruAnaId && x.basvuruFirma.revizyonNo < mevcut.basvuruFirma.revizyonNo).OrderByDescending(x => x.basvuruFirma.revizyonNo).ThenByDescending(x => x.Id).FirstOrDefault();
+            if (oncekiOzet == null) return Json(new { basarili = false, mesaj = "Karşılaştırılabilecek önceki revizyon bulunamadı." });
+            Sonuc<Basvuru> oncekiSonuc = await _basvuruIsKurallari.OkuAsync(oncekiOzet.Id, kullanici);
+            if (!oncekiSonuc.basarili || oncekiSonuc.nesne == null) return Json(new { basarili = false, mesaj = "Önceki revizyon okunamadı." });
+            List<BasvuruAlanDegisikligi> degisiklikler = BasvuruRevizyonKarsilastirici.Karsilastir(oncekiSonuc.nesne, mevcut);
+            return Json(new { basarili = true, oncekiRevizyon = oncekiSonuc.nesne.basvuruFirma.revizyonNo + 1, mevcutRevizyon = mevcut.basvuruFirma.revizyonNo + 1, bolumler = BasvuruRevizyonKarsilastirici.Bolumler, degisiklikler });
+        }
+
         [OturumKontrol][HttpPost][ValidateAntiForgeryToken]
         public async Task<IActionResult> KaydetBilancoGelir([FromBody] BasvuruBilancoGelir model)
         {
@@ -776,6 +796,74 @@ namespace TarimDonusum.Controllers
         public async Task<IActionResult> MakineKaydet([FromBody] BasvuruMakine model)
         {
             Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruMakinesiKaydetAsync(model,kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> YatirimEkipmanlariExcelYukle(int basvuruId, IFormFile? dosya)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return Unauthorized();
+            if (dosya == null || dosya.Length == 0)
+                return Json(new Sonuc<object> { hatalar = { "Excel dosyası seçilmelidir." } });
+            await using Stream stream = dosya.OpenReadStream();
+            return Json(await _basvuruIsKurallari.YatirimEkipmanlariExcelOkuAsync(basvuruId, stream, kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpGet]
+        public IActionResult YatirimEkipmanlariExcelSablonuIndir()
+        {
+            string geciciDosya = Path.Combine(Path.GetTempPath(), $"yatirim-ekipman-sablonu-{Guid.NewGuid():N}.xlsx");
+            Tablo? tablo = null;
+            try
+            {
+                tablo = OrtakFonksiyonlar.NewTablo();
+                tablo.BosDosyaAc(geciciDosya);
+                for (int sutun = 0; sutun < BasvuruIsKurallari.YatirimEkipmaniExcelSablonBasliklari.Count; sutun++)
+                    tablo.HucreDegerYaz(0, sutun, BasvuruIsKurallari.YatirimEkipmaniExcelSablonBasliklari[sutun]);
+                tablo.SutunGenislikAyarla(0, 9, 24);
+                tablo.SatirGercekYukseklikAyarla(0, 0, 90);
+                tablo.HucreMetniSigdir(0, 0, 0, 9, true);
+                tablo.CerceveCiz(0, 0, 0, 9, LineStyle.THIN, TabloRenk.BLACK);
+                tablo.DosyaSaklaTamYol();
+                tablo.DosyaKapat();
+                tablo = null;
+                return File(System.IO.File.ReadAllBytes(geciciDosya), RaporDosyasi.ExcelMimeTuru, "Yatirimda-Kullanilacak-Ekipman-Sablonu.xlsx");
+            }
+            finally
+            {
+                tablo?.DosyaKapat();
+                if (System.IO.File.Exists(geciciDosya)) System.IO.File.Delete(geciciDosya);
+            }
+        }
+
+        [OturumKontrol]
+        [HttpGet]
+        public IActionResult TeknikProjeGirdileriExcelSablonuIndir()
+        {
+            string geciciDosya = Path.Combine(Path.GetTempPath(), $"teknik-proje-girdi-sablonu-{Guid.NewGuid():N}.xlsx");
+            Tablo? tablo = null;
+            try
+            {
+                tablo = OrtakFonksiyonlar.NewTablo();
+                tablo.BosDosyaAc(geciciDosya);
+                for (int sutun = 0; sutun < BasvuruIsKurallari.TeknikProjeGirdisiExcelBasliklari.Count; sutun++)
+                    tablo.HucreDegerYaz(0, sutun, BasvuruIsKurallari.TeknikProjeGirdisiExcelBasliklari[sutun]);
+                tablo.SutunGenislikAyarla(0, 3, 24);
+                tablo.HucreMetniSigdir(0, 0, 0, 3, true);
+                tablo.CerceveCiz(0, 0, 0, 3, LineStyle.THIN, TabloRenk.BLACK);
+                tablo.DosyaSaklaTamYol();
+                tablo.DosyaKapat();
+                tablo = null;
+                return File(System.IO.File.ReadAllBytes(geciciDosya), RaporDosyasi.ExcelMimeTuru, "Teknik-Proje-Girdileri-Sablonu.xlsx");
+            }
+            finally
+            {
+                tablo?.DosyaKapat();
+                if (System.IO.File.Exists(geciciDosya)) System.IO.File.Delete(geciciDosya);
+            }
         }
         [OturumKontrol][HttpPost][ValidateAntiForgeryToken]
         public async Task<IActionResult> UrunSureciKaydet([FromBody] BasvuruUrunSurec model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruUrunSureciKaydetAsync(model,kullanici));}
@@ -1160,6 +1248,13 @@ namespace TarimDonusum.Controllers
                 SaltOkunur = !basvuruKullanicisi || !duzenlenebilirDurum,
                 DenetciGorunumu = kullanici != null && !basvuruKullanicisi,
             };
+
+            if (basvuru.Id > 0 && basvuru.kayitTuru == enumBasvuruKayitTuru.OnBasvuru && kullanici != null)
+            {
+                Sonuc<List<OnBasvuruItiraz>> itirazTarihcesi =
+                    await _basvuruIsKurallari.OnBasvuruItirazTarihcesiOkuAsync(basvuru.Id, kullanici);
+                model.ItirazTarihcesi = itirazTarihcesi.nesne ?? [];
+            }
 
             await ReferansListeleriYukleAsync(model);
             return model;

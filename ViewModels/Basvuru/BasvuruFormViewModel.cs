@@ -11,6 +11,7 @@ namespace TarimDonusum.ViewModels.Basvuru
         public List<Donem> Donemler { get; set; } = new();
         public List<Il> Iller { get; set; } = new();
         public List<Ilce> Ilceler { get; set; } = new();
+        public List<OnBasvuruItiraz> ItirazTarihcesi { get; set; } = new();
         public bool IlkBolumKayitli => Basvuru.Id > 0;
     }
 }

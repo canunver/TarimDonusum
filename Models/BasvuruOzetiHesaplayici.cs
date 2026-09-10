@@ -50,12 +50,12 @@ public static class BasvuruOzetiHesaplayici
         decimal ozelPay=b.ortaklik.ozelSektorPayi??b.basvuruFirma.ozelSektorPayi??0;
         bool maliTam=b.mali.oncekiYilNetSatis>0&&b.mali.sonYilNetSatis>0&&b.mali.oncekiYilAktifToplami>0&&b.mali.sonYilAktifToplami>0;
         decimal talep=b.finans.talepEdilenDestekTutari.GetValueOrDefault(),kumulatif=b.finans.oncekiRffOnayliTutar.GetValueOrDefault()+talep;
-        decimal alt=b.basvuruFirma.donem.minimumYatirimTutari.GetValueOrDefault(),ust=b.basvuruFirma.donem.maksimumYatirimTutari.GetValueOrDefault();
+        decimal alt=b.basvuruFirma.donem.minimumYatirimTutari.GetValueOrDefault(),ust=b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault();
         bool rffUygun=talep>0&&(alt<=0||talep>=alt)&&(ust<=0||talep<=ust)&&(ust<=0||kumulatif<=ust);
         string rff=b.finans.talepEdilenDestekTutari.HasValue?$"{talep:N0} EUR / {kumulatif:N0} EUR":"";
         List<BasvuruOzetiUygunlukSatiri> u=
         [
-            new("faaliyet","Faaliyet süresi en az 2 yıl",faaliyetYili.HasValue?$"{faaliyetYili:0.0} yıl":"",faaliyetYili>=2?"Uygun":"Eksik","Başvuru Sahibi","Ticaret sicil"),
+            new("faaliyet","Faaliyet süresi en az 2 yıl",b.IkiYillikFaaliyetSartindanMuaf?"Organize Sanayi / İhtisas Alanı muafiyeti":faaliyetYili.HasValue?$"{faaliyetYili:0.0} yıl":"",b.IkiYillikFaaliyetSartindanMuaf||faaliyetYili>=2?"Uygun":"Eksik","Başvuru Sahibi","Ticaret sicil / yatırım yeri statüsü"),
             new("ozelPay","Özel sektör payı en az %75",$"%{ozelPay:0.##}",ozelPay>=75?"Uygun":"Eksik","Ortaklık Yetki","Ortaklık belgesi"),
             new("maliOlcek","Mali ölçek bandı",maliTam?"Hesaplanabilir":"Eksik veri",maliTam?"Uygun":"Eksik","Mali Veriler","Mali tablolar"),
             new("ilDz","İl–değer zinciri eşleşmesi",b.yatirim.ilDegerZinciriEslesmesi??"",b.yatirim.ilDegerZinciriEslesmesi=="Evet"?"Uygun":"Eksik","Değer Zinciri","Sistem/liste"),

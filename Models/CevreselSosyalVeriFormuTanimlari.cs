@@ -70,7 +70,6 @@ public static class CevreselSosyalVeriFormuTanimlari
             ["1.4"] = string.Join(", ", (b.yatirim.yatirimTurleri ?? []).Select(Tur).Where(x => x.Length > 0)),
             ["1.5"] = YatirimKisaOzetiVeGerekcesi(b),
             ["2.2"] = HarcamaTurleri(b),
-            ["3.2"] = PersonelPlani(b),
             ["6.1"] = KullanimHakkiBelgesiDurumu(b),
             ["6.2"] = AraziStatusleri(b)
         };

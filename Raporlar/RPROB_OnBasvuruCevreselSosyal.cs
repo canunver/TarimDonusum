@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Globalization;
 using System.Text.Json;
 using Aspose.Cells;
 using TarimDonusum.IsKurallari;
@@ -83,6 +84,7 @@ public sealed class RPROB_OnBasvuruCevreselSosyal(int uygulamaAdresiId) : IRPROB
 
         int satir = 3;
         List<int> bolumSatirlari = [];
+        List<int> calisanBaslikSatirlari = [];
         foreach (CevreselSosyalSoruGrubu grup in CevreselSosyalAnketTanimlari.Tum)
         {
             List<CevreselSosyalSoru> sorular = grup.Questions.Where(x => SoruKapsamdaMi(x, kapsam)).ToList();
@@ -99,8 +101,7 @@ public sealed class RPROB_OnBasvuruCevreselSosyal(int uygulamaAdresiId) : IRPROB
                 string baglam = string.Equals(soru.Scope, "global", StringComparison.OrdinalIgnoreCase) ? "global" : kapsam;
                 string anahtar = AlanId(soru.Id, baglam, "answer");
                 string cevap = otomatikCevaplar.TryGetValue(soru.Id, out string? otomatik) ? otomatik : Deger(cevaplar, anahtar);
-                if (string.Equals(soru.AnswerType, "staff", StringComparison.OrdinalIgnoreCase))
-                    cevap = CalisanCevabi(soru.Id, baglam, cevaplar);
+                bool calisanSorusu = string.Equals(soru.AnswerType, "staff", StringComparison.OrdinalIgnoreCase);
                 string ekBilgi = Deger(cevaplar, AlanId(soru.Id, baglam, "explain"));
                 string dosyaAdi = Deger(cevaplar, AlanId(soru.Id, baglam, "doc"));
                 if (soru.Id == "6.1" && string.IsNullOrWhiteSpace(dosyaAdi))
@@ -108,10 +109,14 @@ public sealed class RPROB_OnBasvuruCevreselSosyal(int uygulamaAdresiId) : IRPROB
                 bool dosyaYuklenecek = soru.DocOn?.Contains(cevap, StringComparer.OrdinalIgnoreCase) == true;
 
                 hucreler[satir, 1].PutValue($"{soru.Id} {soru.Text}");
-                hucreler[satir, 2].PutValue(cevap);
+                if (!calisanSorusu)
+                    hucreler[satir, 2].PutValue(cevap);
                 hucreler[satir, 3].PutValue(ekBilgi);
                 hucreler[satir, 4].PutValue(!dosyaYuklenecek ? "-" : string.IsNullOrWhiteSpace(dosyaAdi) ? "Yüklenmedi" : dosyaAdi);
                 satir++;
+
+                if (calisanSorusu)
+                    CalisanTablosuYaz(hucreler, ref satir, soru.Id, baglam, cevaplar, calisanBaslikSatirlari);
             }
         }
 
@@ -134,6 +139,8 @@ public sealed class RPROB_OnBasvuruCevreselSosyal(int uygulamaAdresiId) : IRPROB
             hucreler.CreateRange(3, 0, satir - 3, 5).ApplyStyle(govde, new StyleFlag { All = true });
         foreach (int bolumSatiri in bolumSatirlari)
             hucreler.CreateRange(bolumSatiri, 0, 1, 5).ApplyStyle(bolumBasligi, new StyleFlag { All = true });
+        foreach (int calisanBaslikSatiri in calisanBaslikSatirlari)
+            hucreler.CreateRange(calisanBaslikSatiri, 1, 1, 4).ApplyStyle(baslik, new StyleFlag { All = true });
         sayfa.AutoFitRows();
 
         sayfa.FreezePanes(3, 0, 3, 0);
@@ -169,19 +176,46 @@ public sealed class RPROB_OnBasvuruCevreselSosyal(int uygulamaAdresiId) : IRPROB
     private static string AlanId(string soruId, string kapsam, string alan) => $"csf_{soruId.Replace('.', '_')}_{kapsam}_{alan}";
     private static string Deger(IReadOnlyDictionary<string, string> cevaplar, string anahtar) => cevaplar.TryGetValue(anahtar, out string? deger) ? deger : "";
 
-    private static string CalisanCevabi(string soruId, string kapsam, IReadOnlyDictionary<string, string> cevaplar)
+    private static void CalisanTablosuYaz(
+        Cells hucreler,
+        ref int satir,
+        string soruId,
+        string kapsam,
+        IReadOnlyDictionary<string, string> cevaplar,
+        ICollection<int> baslikSatirlari)
     {
-        (string Kod, string Ad)[] gruplar = [("dogrudan", "Doğrudan"), ("yuklenici", "Yüklenici"), ("tedarikci", "Birincil tedarikçi"), ("gocmen", "Göçmen")];
-        List<string> satirlar = [];
+        (string Kod, string Ad)[] gruplar =
+        [
+            ("dogrudan", "Doğrudan Çalışanlar"),
+            ("yuklenici", "Yüklenici Çalışanları"),
+            ("tedarikci", "Birincil Tedarikçi Çalışanları"),
+            ("gocmen", "Göçmen Çalışanlar")
+        ];
+
+        baslikSatirlari.Add(satir);
+        string[] basliklar = ["Çalışan Grubu", "Kadın", "Erkek", "Toplam"];
+        for (int sutun = 0; sutun < basliklar.Length; sutun++)
+            hucreler[satir, sutun + 1].PutValue(basliklar[sutun]);
+        satir++;
+
         foreach ((string kod, string ad) in gruplar)
         {
-            string kadin = Deger(cevaplar, AlanId(soruId, kapsam, $"{kod}_kadin"));
-            string erkek = Deger(cevaplar, AlanId(soruId, kapsam, $"{kod}_erkek"));
-            string toplam = Deger(cevaplar, AlanId(soruId, kapsam, $"{kod}_toplam"));
-            if (!string.IsNullOrWhiteSpace(kadin) || !string.IsNullOrWhiteSpace(erkek) || !string.IsNullOrWhiteSpace(toplam))
-                satirlar.Add($"{ad}: Kadın {kadin}, Erkek {erkek}, Toplam {toplam}");
+            decimal? kadin = CalisanSayisi(Deger(cevaplar, AlanId(soruId, kapsam, $"{kod}_kadin")));
+            decimal? erkek = CalisanSayisi(Deger(cevaplar, AlanId(soruId, kapsam, $"{kod}_erkek")));
+            hucreler[satir, 1].PutValue(ad);
+            if (kadin.HasValue) hucreler[satir, 2].PutValue(kadin.Value);
+            if (erkek.HasValue) hucreler[satir, 3].PutValue(erkek.Value);
+            if (kadin.HasValue || erkek.HasValue) hucreler[satir, 4].PutValue(kadin.GetValueOrDefault() + erkek.GetValueOrDefault());
+            satir++;
         }
-        return string.Join(Environment.NewLine, satirlar);
+    }
+
+    private static decimal? CalisanSayisi(string deger)
+    {
+        if (string.IsNullOrWhiteSpace(deger)) return null;
+        return decimal.TryParse(deger, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal sayi)
+            ? sayi
+            : null;
     }
 
     private static string KapsamBelirle(BasvuruUygulamaAdresi adres)

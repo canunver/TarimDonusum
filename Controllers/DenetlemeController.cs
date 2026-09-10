@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using System.Net;
 using TarimDonusum.FrameWork;
 using TarimDonusum.FrameWork.Logging;
 using TarimDonusum.IsKurallari;
 using TarimDonusum.Models;
+using TarimDonusum.Servisler;
 using TarimDonusum.ViewModels.Basvuru;
 
 namespace TarimDonusum.Controllers
@@ -11,14 +13,17 @@ namespace TarimDonusum.Controllers
     public class DenetlemeController : BMYController
     {
         private readonly BasvuruIsKurallari _basvuruIsKurallari;
+        private readonly IMailServisi _mailServisi;
 
         public DenetlemeController(
             ILoggerFactory loggerFactory,
             IStringLocalizer<SharedResource> localizer,
-            BasvuruIsKurallari basvuruIsKurallari)
+            BasvuruIsKurallari basvuruIsKurallari,
+            IMailServisi mailServisi)
             : base(loggerFactory, localizer)
         {
             _basvuruIsKurallari = basvuruIsKurallari;
+            _mailServisi = mailServisi;
         }
 
         [OturumKontrol]
@@ -129,7 +134,50 @@ namespace TarimDonusum.Controllers
                 return Forbid();
 
             Sonuc sonuc = await _basvuruIsKurallari.OnBasvuruDenetimiKaydetAsync(denetim, kullanici, sonuclandir);
+            if (sonuclandir && sonuc.basarili && denetim.DenetimSonucu.HasValue)
+                await OnBasvuruKararBildirimiGonderAsync(denetim, sonuc);
             return Json(sonuc);
+        }
+
+        private async Task OnBasvuruKararBildirimiGonderAsync(Basvuru denetim, Sonuc islemSonucu)
+        {
+            Sonuc<OnBasvuruBildirimBilgisi> bilgiSonucu =
+                await _basvuruIsKurallari.OnBasvuruBildirimBilgisiOkuAsync(denetim.Id);
+            if (!bilgiSonucu.basarili || bilgiSonucu.nesne.EpostaAdresleri.Count == 0)
+            {
+                islemSonucu.mesaj += " Ancak bildirim gönderilecek geçerli e-posta adresi bulunamadı.";
+                Log(LogLevel.Warning, BMYEventID.Yok, null,
+                    "Ön başvuru karar bildirimi için alıcı bulunamadı. BasvuruId: {BasvuruId}", denetim.Id);
+                return;
+            }
+
+            OnBasvuruBildirimBilgisi bilgi = bilgiSonucu.nesne;
+            string basvuru = string.IsNullOrWhiteSpace(bilgi.BasvuruNo) ? $"#{denetim.Id}" : bilgi.BasvuruNo;
+            string gerekce = WebUtility.HtmlEncode(denetim.DenetimGerekcesi?.Trim() ?? "").Replace("\r\n", "<br>").Replace("\n", "<br>");
+            (string konu, string govde) = denetim.DenetimSonucu.Value switch
+            {
+                enumOnBasvuruDenetimSonucu.KabulEdildi =>
+                    ($"Ön Başvurunuz Kabul Edildi - {basvuru}",
+                     $"<p>Sayın {WebUtility.HtmlEncode(bilgi.FirmaUnvani)},</p><p><strong>{WebUtility.HtmlEncode(basvuru)}</strong> numaralı ön başvurunuzun uzman incelemesi tamamlanmış ve ön başvurunuz <strong>kabul edilmiştir</strong>.</p><p>Tam başvuru kaydınız oluşturulmuştur. Başvuru sistemine giriş yaparak sürece devam edebilirsiniz.</p><p>Bilgilerinize sunarız.</p>"),
+                enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi =>
+                    ($"Ön Başvurunuz Düzeltme İçin İade Edildi - {basvuru}",
+                     $"<p>Sayın {WebUtility.HtmlEncode(bilgi.FirmaUnvani)},</p><p><strong>{WebUtility.HtmlEncode(basvuru)}</strong> numaralı ön başvurunuzun uzman incelemesi tamamlanmış ve başvurunuz düzeltme yapılmak üzere tarafınıza iade edilmiştir.</p><p><strong>Düzeltme gerekçesi:</strong><br>{gerekce}</p><p>Başvuru sistemine giriş yaparak belirtilen hususları düzelttikten sonra ön başvurunuzu yeniden incelemeye sunabilirsiniz.</p><p>Bilgilerinize sunarız.</p>"),
+                enumOnBasvuruDenetimSonucu.Reddedildi =>
+                    ($"Ön Başvurunuz Reddedildi - {basvuru}",
+                     $"<p>Sayın {WebUtility.HtmlEncode(bilgi.FirmaUnvani)},</p><p><strong>{WebUtility.HtmlEncode(basvuru)}</strong> numaralı ön başvurunuzun uzman incelemesi tamamlanmış ve ön başvurunuz <strong>reddedilmiştir</strong>.</p><p><strong>Ret gerekçesi:</strong><br>{gerekce}</p><p>Bu karara itiraz edebilirsiniz. İtirazınızı başvuru sistemindeki ön başvuru itiraz sayfası üzerinden iletebilirsiniz.</p><p>Bilgilerinize sunarız.</p>"),
+                _ => ("", "")
+            };
+            if (string.IsNullOrWhiteSpace(konu)) return;
+
+            string alicilar = string.Join(";", bilgi.EpostaAdresleri);
+            string mailHatasi = await _mailServisi.MailAtAsync("", alicilar, konu, govde, true, false);
+            if (!string.IsNullOrWhiteSpace(mailHatasi))
+            {
+                islemSonucu.mesaj += " Karar kaydedildi ancak e-posta bildirimi gönderilemedi.";
+                Log(LogLevel.Error, BMYEventID.Yok, null,
+                    "Ön başvuru karar bildirimi gönderilemedi. BasvuruId: {BasvuruId}, Alıcılar: {Alicilar}, Hata: {Hata}",
+                    denetim.Id, alicilar, mailHatasi);
+            }
         }
 
         [OturumKontrol]

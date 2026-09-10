@@ -83,6 +83,14 @@
     </div>
 
     <div class="denetim-result-card">
+        @if (Model.DenetciGorunumu && b.kayitTuru == enumBasvuruKayitTuru.OnBasvuru && b.basvuruFirma.revizyonNo > 0)
+        {
+            <div class="mb-3">
+                <button type="button" class="btn btn-outline-primary" id="revizyonKarsilastirBtn">
+                    <i class="fas fa-exchange-alt mr-1"></i>Önceki Revizyonla Kıyasla
+                </button>
+            </div>
+        }
         <label class="denetim-result-field">
             <span>@L["Basvuru.Review.Result"]: <span class="required-mark">*</span></span>
             <select id="denetimSonucu" disabled="@(!tamamlanabilir)">

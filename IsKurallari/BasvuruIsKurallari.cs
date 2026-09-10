@@ -11,6 +11,26 @@ namespace TarimDonusum.IsKurallari
 {
     public class BasvuruIsKurallari
     {
+        public static IReadOnlyList<string> YatirimEkipmaniExcelBasliklari { get; } =
+        [
+            "Adres No", "Makine-ekipmanın adı", "Markası", "Modeli", "Adedi",
+            "Yerleşim planı ve listesindeki sıra numarası", "Durum",
+            "İşleme kapasitesi veya kapasite belirleyici özellikleri", "Kullanım amacı",
+            "Makine-ekipman kapasitesi seçim gerekçesi ve kapasiteyi belirleyen hususlar"
+        ];
+
+        public static IReadOnlyList<string> YatirimEkipmaniExcelSablonBasliklari { get; } =
+        [
+            "Adres No", "Makine-ekipmanın adı", "Markası", "Modeli", "Adedi",
+            "Yerleşim planı ve listesindeki sıra numarası",
+            "Durum\n1 - YENİ DESTEK İSTENİYOR\n2 - YENİ DESTEK İSTEMİYOR\n3 - MEVCUT KULLANILACAK\n4 - MEVCUT KULLANILMAYACAK",
+            "İşleme kapasitesi veya kapasite belirleyici özellikleri", "Kullanım amacı",
+            "Makine-ekipman kapasitesi seçim gerekçesi ve kapasiteyi belirleyen hususlar"
+        ];
+
+        public static IReadOnlyList<string> TeknikProjeGirdisiExcelBasliklari { get; } =
+            ["Sıra no", "Girdi / Hammadde adı", "Yıllık ihtiyaç", "Birim"];
+
         private const string BasvuruZorunluBelgelerFormAd = "ZorunluBelgeler";
         private const string BasvuruZorunluBelgeFormAd = "Basvuru_ZorunluBelge";
         private const string BasvuruBagliBelgeFormAd = "Basvuru_BagliBelge";
@@ -791,7 +811,7 @@ namespace TarimDonusum.IsKurallari
             Eksikse(b.basvuruFirma.firmaId <= 0, "Basvuru.Summary.Error.CompanyRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.irtibat.kisi), "Basvuru.Summary.Error.ContactPersonRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.irtibat.telefon), "Basvuru.Summary.Error.ContactPhoneRequired");
-            Eksikse(!b.basvuruFirma.sonIkiYildirFaalMi.HasValue, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
+            Eksikse(!b.IkiYillikFaaliyetSartindanMuaf && b.basvuruFirma.sonIkiYildirFaalMi != true, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
             Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru == enumBasvuruSahibiTuru.Tanimsiz, "Basvuru.Summary.Error.ApplicantTypeRequired");
             Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru == enumHukukiTurSirketTuru.Tanimsiz, "Basvuru.Summary.Error.LegalTypeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), "Basvuru.Summary.Error.InvestmentNameRequired");
@@ -807,6 +827,8 @@ namespace TarimDonusum.IsKurallari
             Eksikse(!maliOlcekUygun, "Basvuru.Summary.Error.FinancialScaleRequired");
             Eksikse(b.basvuruFirma.donem.destekOrani.GetValueOrDefault() > 0
                 && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > b.basvuruFirma.donem.destekOrani.GetValueOrDefault(), "Basvuru.Finance.RateLimitExceeded");
+            Eksikse(b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault() > 0
+                && b.finans.talepEdilenDestekTutari.GetValueOrDefault() > b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault(), "Basvuru.Finance.MaximumSupportExceeded");
             Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, "Basvuru.Finance.InvestmentDurationRequired");
             Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, "Basvuru.Summary.Error.AuditChoiceRequired");
             Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, "Basvuru.Summary.Error.AuditFileRequired");
@@ -945,7 +967,7 @@ namespace TarimDonusum.IsKurallari
             Eksikse(b.basvuruFirma.firmaId <= 0, "Basvuru.Summary.Error.CompanyRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.irtibat.kisi), "Basvuru.Summary.Error.ContactPersonRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.irtibat.telefon), "Basvuru.Summary.Error.ContactPhoneRequired");
-            Eksikse(!b.basvuruFirma.sonIkiYildirFaalMi.HasValue, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
+            Eksikse(!b.IkiYillikFaaliyetSartindanMuaf && b.basvuruFirma.sonIkiYildirFaalMi != true, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
             Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru == enumBasvuruSahibiTuru.Tanimsiz, "Basvuru.Summary.Error.ApplicantTypeRequired");
             Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru == enumHukukiTurSirketTuru.Tanimsiz, "Basvuru.Summary.Error.LegalTypeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), "Basvuru.Summary.Error.InvestmentNameRequired");
@@ -961,6 +983,8 @@ namespace TarimDonusum.IsKurallari
             Eksikse(!maliOlcekUygun, "Basvuru.Summary.Error.FinancialScaleRequired");
             Eksikse(b.basvuruFirma.donem.destekOrani.GetValueOrDefault() > 0
                 && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > b.basvuruFirma.donem.destekOrani.GetValueOrDefault(), "Basvuru.Finance.RateLimitExceeded");
+            Eksikse(b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault() > 0
+                && b.finans.talepEdilenDestekTutari.GetValueOrDefault() > b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault(), "Basvuru.Finance.MaximumSupportExceeded");
             Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, "Basvuru.Finance.InvestmentDurationRequired");
             Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, "Basvuru.Summary.Error.AuditChoiceRequired");
             Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, "Basvuru.Summary.Error.AuditFileRequired");
@@ -1616,6 +1640,181 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<OnBasvuruBildirimBilgisi>> OnBasvuruBildirimBilgisiOkuAsync(int basvuruId)
+        {
+            Sonuc<OnBasvuruBildirimBilgisi> sonuc = new();
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                const string sql = @"
+                    SELECT BA.BasvuruNo, F.TicaretUnvani, F.Eposta
+                    FROM dbo.Basvuru B
+                    INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
+                    INNER JOIN dbo.Firma F ON F.Id = BA.FirmaId
+                    WHERE B.Id = @BasvuruId;
+
+                    SELECT K.Eposta
+                    FROM dbo.Basvuru B
+                    INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
+                    INNER JOIN dbo.FirmaKullanici FK ON FK.FirmaId = BA.FirmaId AND FK.Aktif = 1
+                    INNER JOIN dbo.Kullanici K ON K.Id = FK.KullaniciId AND K.Aktif = 1
+                    WHERE B.Id = @BasvuruId;";
+                await using SqlCommand command = new(sql, connection);
+                command.Parameters.AddWithValue("@BasvuruId", basvuruId);
+                await using SqlDataReader reader = await command.ExecuteReaderAsync();
+                if (!await reader.ReadAsync())
+                {
+                    sonuc.HataEkle("Ön başvuru bildirim bilgileri bulunamadı.");
+                    return sonuc;
+                }
+
+                OnBasvuruBildirimBilgisi bilgi = new()
+                {
+                    BasvuruNo = reader.IsDBNull(0) ? "" : reader.GetString(0),
+                    FirmaUnvani = reader.IsDBNull(1) ? "" : reader.GetString(1)
+                };
+                if (!reader.IsDBNull(2))
+                    bilgi.EpostaAdresleri.Add(reader.GetString(2));
+
+                if (await reader.NextResultAsync())
+                    while (await reader.ReadAsync())
+                        if (!reader.IsDBNull(0))
+                            bilgi.EpostaAdresleri.Add(reader.GetString(0));
+
+                bilgi.EpostaAdresleri = bilgi.EpostaAdresleri
+                    .Select(x => x.Trim())
+                    .Where(OrtakFonksiyonlar.EPostaGecerliMi)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                sonuc.nesne = bilgi;
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex,
+                    "Ön başvuru bildirim bilgileri okunamadı. BasvuruId: {BasvuruId}",
+                    "Ön başvuru bildirim bilgileri okunamadı.", basvuruId);
+            }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<List<OnBasvuruItiraz>>> OnBasvuruItirazTarihcesiOkuAsync(int basvuruId, Kullanici kullanici)
+        {
+            Sonuc<List<OnBasvuruItiraz>> sonuc = new() { nesne = [] };
+            Sonuc<Basvuru> yetki = await OkuAsync(basvuruId, kullanici);
+            if (!yetki.basarili) { SonucHatalariniAktar(yetki, sonuc); return sonuc; }
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                const string sql = @"SELECT I.Id,I.BasvuruId,I.IslemTuru,I.Metin,I.IslemTarihi,I.KullaniciId,LTRIM(RTRIM(K.Ad+N' '+K.Soyad))
+                    FROM dbo.OnBasvuruItiraz I INNER JOIN dbo.Kullanici K ON K.Id=I.KullaniciId
+                    WHERE I.BasvuruAnaId=(SELECT BasvuruAnaId FROM dbo.Basvuru WHERE Id=@Id) ORDER BY I.Id;";
+                await using SqlCommand command = new(sql, connection); command.Parameters.AddWithValue("@Id", basvuruId);
+                await using SqlDataReader reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync()) sonuc.nesne.Add(new OnBasvuruItiraz {
+                    Id=reader.GetInt32(0), BasvuruId=reader.GetInt32(1), IslemTuru=(enumOnBasvuruItirazIslemTuru)reader.GetInt32(2),
+                    Metin=reader.GetString(3), IslemTarihi=reader.GetDateTime(4), KullaniciId=reader.GetInt32(5), KullaniciAdi=reader.GetString(6) });
+            }
+            catch(Exception ex) { BeklenmeyenHata(sonuc,ex,"İtiraz tarihçesi okunamadı. BasvuruId: {BasvuruId}","İtiraz tarihçesi okunamadı.",basvuruId); }
+            return sonuc;
+        }
+
+        public async Task<List<string>> ItirazUzmanEpostalariOkuAsync(int basvuruId)
+        {
+            await using SqlConnection connection=new(_connectionString); await connection.OpenAsync();
+            const string reddedenSql=@"
+                SELECT K.Eposta FROM dbo.Kullanici K WHERE K.Aktif=1 AND K.Id=COALESCE(
+                    (SELECT TOP 1 I.KullaniciId FROM dbo.OnBasvuruItiraz I WHERE I.BasvuruId=@Id AND I.IslemTuru=2 ORDER BY I.Id DESC),
+                    (SELECT TOP 1 L.KullaniciId FROM dbo.BasvuruLog L WHERE L.BasvuruId=@Id AND L.Islem=N'OnBasvuruDenetimiTamamlandi' ORDER BY L.Id DESC)
+                );";
+            await using SqlCommand reddedenKomut=new(reddedenSql,connection); reddedenKomut.Parameters.AddWithValue("@Id",basvuruId);
+            string reddedenEposta=(await reddedenKomut.ExecuteScalarAsync())?.ToString()?.Trim()??"";
+            if(OrtakFonksiyonlar.EPostaGecerliMi(reddedenEposta)) return [reddedenEposta];
+
+            const string yedekSql=@"SELECT DISTINCT K.Eposta FROM dbo.Kullanici K INNER JOIN dbo.KullaniciYetki Y ON Y.KullaniciId=K.Id WHERE K.Aktif=1 AND Y.Rol IN (1,3);";
+            await using SqlCommand command=new(yedekSql,connection); await using SqlDataReader reader=await command.ExecuteReaderAsync();
+            List<string> liste=[]; while(await reader.ReadAsync()) if(!reader.IsDBNull(0)&&OrtakFonksiyonlar.EPostaGecerliMi(reader.GetString(0))) liste.Add(reader.GetString(0).Trim());
+            return liste.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        }
+
+        public async Task<List<string>> ItirazBasvuranEpostalariOkuAsync(int basvuruId)
+        {
+            await using SqlConnection connection=new(_connectionString); await connection.OpenAsync();
+            const string sql=@"
+                DECLARE @AnaId INT=(SELECT BasvuruAnaId FROM dbo.Basvuru WHERE Id=@Id);
+                SELECT Eposta FROM (
+                    SELECT K.Eposta FROM dbo.Kullanici K
+                    WHERE K.Aktif=1 AND K.Id=(SELECT TOP 1 I.KullaniciId FROM dbo.OnBasvuruItiraz I WHERE I.BasvuruAnaId=@AnaId AND I.IslemTuru=1 ORDER BY I.Id DESC)
+                    UNION
+                    SELECT F.Eposta FROM dbo.BasvuruAna BA INNER JOIN dbo.Firma F ON F.Id=BA.FirmaId WHERE BA.Id=@AnaId
+                    UNION
+                    SELECT K.Eposta FROM dbo.FirmaKullanici FK INNER JOIN dbo.Kullanici K ON K.Id=FK.KullaniciId AND K.Aktif=1
+                    WHERE FK.FirmaId=(SELECT FirmaId FROM dbo.BasvuruAna WHERE Id=@AnaId) AND FK.Aktif=1
+                ) A WHERE NULLIF(LTRIM(RTRIM(Eposta)),N'') IS NOT NULL;";
+            await using SqlCommand command=new(sql,connection); command.Parameters.AddWithValue("@Id",basvuruId);
+            await using SqlDataReader reader=await command.ExecuteReaderAsync(); List<string> liste=[];
+            while(await reader.ReadAsync()) if(!reader.IsDBNull(0)&&OrtakFonksiyonlar.EPostaGecerliMi(reader.GetString(0))) liste.Add(reader.GetString(0).Trim());
+            return liste.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        }
+
+        public async Task<Sonuc> OnBasvuruItirazEtAsync(OnBasvuruItirazKayitModel model, Kullanici kullanici)
+        {
+            Sonuc sonuc = new();
+            if (!BasvuruKullanicisiMi(kullanici)) sonuc.HataEkle("Yalnızca başvuru sahibi itiraz edebilir.");
+            if (model.BasvuruId<=0 || string.IsNullOrWhiteSpace(model.Metin)) sonuc.HataEkle("İtiraz metni girilmelidir.");
+            if (model.Metin?.Length>4000) sonuc.HataEkle("İtiraz metni en fazla 4000 karakter olabilir.");
+            if (!sonuc.basarili) return sonuc;
+            try {
+                await using SqlConnection connection=new(_connectionString); await connection.OpenAsync();
+                await using SqlTransaction transaction=(SqlTransaction)await connection.BeginTransactionAsync();
+                const string sql=@"DECLARE @AnaId INT;
+                    SELECT @AnaId=B.BasvuruAnaId FROM dbo.Basvuru B INNER JOIN dbo.BasvuruAna BA ON BA.Id=B.BasvuruAnaId
+                    WHERE B.Id=@Id AND BA.Durum=@Red AND EXISTS(SELECT 1 FROM dbo.FirmaKullanici FK WHERE FK.FirmaId=BA.FirmaId AND FK.KullaniciId=@KullaniciId AND FK.Aktif=1);
+                    IF @AnaId IS NULL SELECT 0 ELSE BEGIN
+                      UPDATE dbo.BasvuruAna SET Durum=@Itiraz WHERE Id=@AnaId AND Durum=@Red;
+                      IF @@ROWCOUNT=1 BEGIN INSERT dbo.OnBasvuruItiraz(BasvuruAnaId,BasvuruId,IslemTuru,Metin,KullaniciId) VALUES(@AnaId,@Id,1,@Metin,@KullaniciId); SELECT 1 END ELSE SELECT 0
+                    END";
+                await using SqlCommand command=new(sql,connection,transaction); command.Parameters.AddWithValue("@Id",model.BasvuruId); command.Parameters.AddWithValue("@KullaniciId",kullanici.Id); command.Parameters.AddWithValue("@Metin",model.Metin.Trim()); command.Parameters.AddWithValue("@Red",(int)enumBasvuruDurum.IptalDurumu); command.Parameters.AddWithValue("@Itiraz",(int)enumBasvuruDurum.OnBasvuruItirazEdildiDurumu);
+                if (OrtakFonksiyonlar.Int32Yap(await command.ExecuteScalarAsync())!=1) { sonuc.HataEkle("Ön başvuru itiraza uygun durumda değil."); await transaction.RollbackAsync(); return sonuc; }
+                await new TABBasvuruLog(connection,_localizer,transaction).EkleAsync(model.BasvuruId,kullanici,"OnBasvuruItirazEdildi",new { model.Metin, YeniDurum=enumBasvuruDurum.OnBasvuruItirazEdildiDurumu });
+                await transaction.CommitAsync(); sonuc.mesaj="İtirazınız uzmana iletildi.";
+            } catch(Exception ex) { BeklenmeyenHata(sonuc,ex,"Ön başvuru itirazı kaydedilemedi. BasvuruId: {BasvuruId}","İtiraz kaydedilemedi.",model.BasvuruId); }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> OnBasvuruItirazKarariKaydetAsync(OnBasvuruItirazKayitModel model, Kullanici kullanici)
+        {
+            Sonuc<int> sonuc=new();
+            if (BasvuruKullanicisiMi(kullanici)) sonuc.HataEkle("Başvuru kullanıcıları itiraz kararı veremez.");
+            if (model.BasvuruId<=0 || string.IsNullOrWhiteSpace(model.Metin)) sonuc.HataEkle("Karar gerekçesi girilmelidir.");
+            if (model.Metin?.Length>4000) sonuc.HataEkle("Karar gerekçesi en fazla 4000 karakter olabilir.");
+            if (!sonuc.basarili) return sonuc;
+            try {
+                await using SqlConnection connection=new(_connectionString); await connection.OpenAsync();
+                await using SqlTransaction transaction=(SqlTransaction)await connection.BeginTransactionAsync();
+                TABBasvuru tab=new(connection,_localizer,transaction);
+                Basvuru? mevcut=await tab.OkuAsync(model.BasvuruId);
+                if(mevcut==null || mevcut.durum!=enumBasvuruDurum.OnBasvuruItirazEdildiDurumu) { sonuc.HataEkle("Ön başvuru bekleyen itiraz durumunda değil."); await transaction.RollbackAsync(); return sonuc; }
+                int hedefId=model.BasvuruId;
+                enumBasvuruDurum yeniDurum;
+                enumOnBasvuruItirazIslemTuru tur;
+                if(model.RevizyonaGonder) {
+                    hedefId=await tab.YeniRevizyonOlusturAsync(model.BasvuruId);
+                    Sonuc<Dictionary<int,int>> kopya=await _dosyaYonetimIsKurallari.BasvuruDosyalariniKopyalaAsync(model.BasvuruId,hedefId);
+                    if(!kopya.basarili){SonucHatalariniAktar(kopya,sonuc);await transaction.RollbackAsync();return sonuc;}
+                    await tab.DosyaReferanslariniGuncelleAsync(hedefId,kopya.nesne);
+                    yeniDurum=enumBasvuruDurum.OnBasvuruDurumu; tur=enumOnBasvuruItirazIslemTuru.RevizyonaGonderildi;
+                } else { yeniDurum=enumBasvuruDurum.IptalDurumu; tur=enumOnBasvuruItirazIslemTuru.ItirazReddedildi; }
+                if(!await tab.BasvuruAnaDurumGuncelleAsync(hedefId,enumBasvuruDurum.OnBasvuruItirazEdildiDurumu,yeniDurum)){sonuc.HataEkle("İtiraz durumu değiştirilemedi.");await transaction.RollbackAsync();return sonuc;}
+                const string ekle=@"INSERT dbo.OnBasvuruItiraz(BasvuruAnaId,BasvuruId,IslemTuru,Metin,KullaniciId) VALUES(@AnaId,@Id,@Tur,@Metin,@KullaniciId);";
+                await using SqlCommand command=new(ekle,connection,transaction); command.Parameters.AddWithValue("@AnaId",mevcut.BasvuruAnaId);command.Parameters.AddWithValue("@Id",model.BasvuruId);command.Parameters.AddWithValue("@Tur",(int)tur);command.Parameters.AddWithValue("@Metin",model.Metin.Trim());command.Parameters.AddWithValue("@KullaniciId",kullanici.Id);await command.ExecuteNonQueryAsync();
+                await new TABBasvuruLog(connection,_localizer,transaction).EkleAsync(model.BasvuruId,kullanici,model.RevizyonaGonder?"OnBasvuruItiraziRevizyonaGonderildi":"OnBasvuruItiraziReddedildi",new { model.Metin,YeniDurum=yeniDurum,YeniBasvuruId=hedefId });
+                await transaction.CommitAsync(); sonuc.nesne=hedefId; sonuc.mesaj=model.RevizyonaGonder?"İtiraz kabul edildi ve ön başvuru revizyona gönderildi.":"İtiraz gerekçeli olarak reddedildi.";
+            } catch(Exception ex){BeklenmeyenHata(sonuc,ex,"İtiraz kararı kaydedilemedi. BasvuruId: {BasvuruId}","İtiraz kararı kaydedilemedi.",model.BasvuruId);}
+            return sonuc;
+        }
+
         public async Task<Sonuc<int>> KaydetBilancoGelirAsync(BasvuruBilancoGelir model, Kullanici kullanici)
         {
             Sonuc<int> sonuc = new();
@@ -1851,12 +2050,13 @@ namespace TarimDonusum.IsKurallari
                 if (!sonuc.basarili || mevcut == null) return sonuc;
                 Tablo excel = OrtakFonksiyonlar.NewTablo();
                 excel.DosyaOkuAc(excelStream);
-                string[] beklenenBasliklar = ["Sıra no", "Girdi / Hammadde adı", "Yıllık ihtiyaç", "Birim"];
+                IReadOnlyList<string> beklenenBasliklar = TeknikProjeGirdisiExcelBasliklari;
                 List<string> baslikHatalari = new();
-                for (int sutun = 0; sutun < beklenenBasliklar.Length; sutun++)
+                for (int sutun = 0; sutun < beklenenBasliklar.Count; sutun++)
                 {
                     string bulunan = excel.HucreDegerAl(0, sutun).Trim();
-                    if (!string.Equals(bulunan, beklenenBasliklar[sutun], StringComparison.CurrentCultureIgnoreCase))
+                    bool sablonDurumBasligi = sutun == 6 && bulunan.StartsWith("Durum", StringComparison.CurrentCultureIgnoreCase);
+                    if (!sablonDurumBasligi && !string.Equals(bulunan, beklenenBasliklar[sutun], StringComparison.CurrentCultureIgnoreCase))
                         baslikHatalari.Add($"{sutun + 1}. sütun başlığı '{beklenenBasliklar[sutun]}' olmalıdır (bulunan: '{bulunan}').");
                 }
                 if (baslikHatalari.Count > 0)
@@ -1926,6 +2126,123 @@ namespace TarimDonusum.IsKurallari
         private static bool DecimalOku(string deger, out decimal sonuc) =>
             decimal.TryParse(deger, NumberStyles.Number, CultureInfo.GetCultureInfo("tr-TR"), out sonuc)
             || decimal.TryParse(deger, NumberStyles.Number, CultureInfo.InvariantCulture, out sonuc);
+
+        public async Task<Sonuc<object>> YatirimEkipmanlariExcelOkuAsync(int basvuruId, Stream excelStream, Kullanici kullanici)
+        {
+            Sonuc<object> sonuc = new();
+            if (excelStream == null || (excelStream.CanSeek && excelStream.Length == 0))
+            {
+                sonuc.HataEkle("Excel dosyası boştur.");
+                return sonuc;
+            }
+
+            Tablo? excel = null;
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
+                if (!sonuc.basarili || mevcut == null) return sonuc;
+
+                excel = OrtakFonksiyonlar.NewTablo();
+                excel.DosyaOkuAc(excelStream);
+                IReadOnlyList<string> beklenenBasliklar = YatirimEkipmaniExcelBasliklari;
+                for (int sutun = 0; sutun < beklenenBasliklar.Count; sutun++)
+                {
+                    string bulunan = excel.HucreDegerAl(0, sutun).Trim();
+                    if (!string.Equals(bulunan, beklenenBasliklar[sutun], StringComparison.CurrentCultureIgnoreCase))
+                        sonuc.HataEkle($"{sutun + 1}. sütun başlığı '{beklenenBasliklar[sutun]}' olmalıdır (bulunan: '{bulunan}').");
+                }
+                if (!sonuc.basarili) return sonuc;
+
+                Dictionary<int, BasvuruUygulamaAdresi> adresler = mevcut.YatirimAdresleri
+                    .GroupBy(x => x.siraNo).ToDictionary(x => x.Key, x => x.First());
+                string[] ekipmanDurumlari = ["YENİ DESTEK İSTENİYOR", "YENİ DESTEK İSTEMİYOR", "MEVCUT KULLANILACAK", "MEVCUT KULLANILMAYACAK"];
+                int sonrakiSiraNo = mevcut.Makineler.Count == 0 ? 1 : mevcut.Makineler.Max(x => x.siraNo) + 1;
+                List<BasvuruMakine> makineler = [];
+
+                for (int satir = 1; satir < 10000; satir++)
+                {
+                    string[] hucreler = Enumerable.Range(0, beklenenBasliklar.Count)
+                        .Select(sutun => excel.HucreDegerAl(satir, sutun).Trim()).ToArray();
+                    if (string.IsNullOrWhiteSpace(hucreler[0])) break;
+
+                    int hataSayisi = sonuc.hatalar.Count;
+                    int excelSatiri = satir + 1;
+                    BasvuruUygulamaAdresi? adres = null;
+                    if (!int.TryParse(hucreler[0], NumberStyles.Integer, CultureInfo.CurrentCulture, out int adresNo) || adresNo <= 0)
+                        sonuc.HataEkle($"{excelSatiri}. satır: Adres No pozitif tam sayı olmalıdır.");
+                    else if (!adresler.TryGetValue(adresNo, out adres))
+                        sonuc.HataEkle($"{excelSatiri}. satır: {adresNo} numaralı yatırım adresi bulunamadı.");
+                    if (string.IsNullOrWhiteSpace(hucreler[1]))
+                        sonuc.HataEkle($"{excelSatiri}. satır: Makine-ekipmanın adı zorunludur.");
+                    if (!DecimalOku(hucreler[4], out decimal adet) || adet <= 0)
+                        sonuc.HataEkle($"{excelSatiri}. satır: Adedi sıfırdan büyük sayı olmalıdır.");
+                    int? planSiraNo = null;
+                    if (!string.IsNullOrWhiteSpace(hucreler[5]))
+                    {
+                        if (!int.TryParse(hucreler[5], NumberStyles.Integer, CultureInfo.CurrentCulture, out int planNo) || planNo is < 1 or > 9999)
+                            sonuc.HataEkle($"{excelSatiri}. satır: Yerleşim planı sıra numarası 1-9999 arasında tam sayı olmalıdır.");
+                        else planSiraNo = planNo;
+                    }
+                    int durumKodu = 0;
+                    if (!int.TryParse(hucreler[6], NumberStyles.Integer, CultureInfo.CurrentCulture, out durumKodu) || durumKodu is < 1 or > 4)
+                        sonuc.HataEkle($"{excelSatiri}. satır: Durum 1 ile 4 arasında bir tam sayı olmalıdır.");
+                    if (hucreler[1].Length > 250 || hucreler[2].Length > 150 || hucreler[3].Length > 150
+                        || hucreler[7].Length > 2000 || hucreler[8].Length > 2000 || hucreler[9].Length > 4000)
+                        sonuc.HataEkle($"{excelSatiri}. satır: Alanlardan biri izin verilen azami uzunluğu aşıyor.");
+
+                    if (sonuc.hatalar.Count == hataSayisi)
+                    {
+                        makineler.Add(new BasvuruMakine
+                        {
+                            basvuruId = basvuruId,
+                            uygulamaAdresiId = adres!.id,
+                            uygulamaAdresiAciklama = $"{adres.siraNo}. {adres.ilAdi} / {adres.ilceAdi} - {adres.tamAdres}",
+                            siraNo = sonrakiSiraNo++,
+                            ad = hucreler[1], marka = hucreler[2], model = hucreler[3], birim = "Adet", miktar = adet,
+                            yerlesimPlaniSiraNo = planSiraNo, durum = ekipmanDurumlari[durumKodu - 1],
+                            kapasiteOzellikleri = hucreler[7], kullanimAmaci = hucreler[8], kapasiteSecimGerekcesi = hucreler[9]
+                        });
+                    }
+                }
+
+                if (!sonuc.basarili) return sonuc;
+                if (makineler.Count == 0)
+                {
+                    sonuc.HataEkle("Excel dosyasında aktarılabilir ekipman satırı bulunamadı.");
+                    return sonuc;
+                }
+
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                try
+                {
+                    TABBasvuru tablo = new(connection, null, transaction);
+                    foreach (BasvuruMakine makine in makineler)
+                        await tablo.BasvuruMakinesiKaydetAsync(makine);
+                    await new TABBasvuruLog(connection, null, transaction).EkleAsync(basvuruId, kullanici, "YatirimEkipmanlariExcelYukle", makineler);
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+
+                sonuc.nesne = new { makineler };
+                sonuc.mesaj = $"Excel dosyasından {makineler.Count} ekipman yüklendi.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Yatırım ekipmanları Excel dosyasından yüklenemedi. BasvuruId: {BasvuruId}", basvuruId);
+                sonuc.HataEkle("Excel dosyası okunamadı veya ekipmanlar yüklenemedi.");
+            }
+            finally
+            {
+                excel?.DosyaKapat();
+            }
+            return sonuc;
+        }
 
         public async Task<Sonuc<int>> KaydetCevreselSosyalAsync(BasvuruCevreselSosyal cevreselSosyal, Kullanici kullanici)
         {

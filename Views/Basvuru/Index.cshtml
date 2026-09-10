@@ -58,6 +58,7 @@
                     var versiyonlar = grup.OrderByDescending(x => x.basvuruFirma.revizyonNo).ThenByDescending(x => x.Id).ToList();
                     var item = versiyonlar.FirstOrDefault(x => x.basvuruFirma.siraNo == 0) ?? versiyonlar[0];
                     var duzenleLinkId = $"basvuruDuzenle_{item.BasvuruAnaId}";
+                    bool itirazEkrani = item.kayitTuru == enumBasvuruKayitTuru.OnBasvuru && (item.durum == enumBasvuruDurum.IptalDurumu || item.durum == enumBasvuruDurum.OnBasvuruItirazEdildiDurumu);
                     <tr>
                         <td>
                             <select class="form-select form-select-sm basvuru-version-select"
@@ -87,7 +88,11 @@
                         <td>@(string.IsNullOrWhiteSpace(item.yatirim.yatirimAdi) ? "-" : item.yatirim.yatirimAdi)</td>
                         <td><span class="badge bg-secondary">@DurumMetni(item)</span></td>
                         <td class="text-end">
-                            <a id="@duzenleLinkId" class="btn btn-sm btn-outline-primary" asp-controller="Basvuru" asp-action="Duzenle" asp-route-id="@item.Id">@L["Basvuru.Common.Edit"]</a>
+                            <a id="@duzenleLinkId" class="btn btn-sm btn-outline-primary" asp-controller="Basvuru" asp-action="Duzenle" asp-route-id="@item.Id">@(itirazEkrani ? "Görüntüle" : L["Basvuru.Common.Edit"].Value)</a>
+                            @if (itirazEkrani)
+                            {
+                                <a class="btn btn-sm btn-outline-warning" asp-controller="Itiraz" asp-action="Index" asp-route-id="@item.Id">İtiraz</a>
+                            }
                         </td>
                     </tr>
                 }
@@ -124,7 +129,8 @@
                 enumBasvuruDurum.OnBasvuruDuzeltmeDurumu => "Ön Başvuru Düzeltme",
                 enumBasvuruDurum.OnBasvuruIncelemeDurumu => "Ön Başvuru İnceleme",
                 enumBasvuruDurum.BasvuruDurumu => "Ön Başvuru Kabul Edildi",
-                enumBasvuruDurum.IptalDurumu => "Ön Başvuru Red / İptal",
+                enumBasvuruDurum.IptalDurumu => "Ön Başvuru Red",
+                enumBasvuruDurum.OnBasvuruItirazEdildiDurumu => "Ön Başvuru İtiraz Edildi",
                 _ => "Ön Başvuru"
             };
         }

@@ -782,7 +782,8 @@ namespace TarimDonusum.Tablolar
                     INSERT INTO dbo.Basvuru (' + @Kolonlar + N', RevizyonNo, SiraNo, KayitTuru,
                                              OnBasvuruSonrasiDegisiklikVarMi, OnBasvuruSonrasiDegisiklikSebebi,
                                              DenetimAnketi, SistemDenetimAnketi, DenetimGerekcesi, DenetimSonucu)
-                    SELECT ' + @Kolonlar + N', @RevizyonNo, 0, @KayitTuru, NULL, NULL, NULL, NULL, NULL, NULL
+                    SELECT ' + @Kolonlar + N', @RevizyonNo, 0, @KayitTuru, NULL, NULL,
+                           DenetimAnketi, SistemDenetimAnketi, NULL, NULL
                     FROM dbo.Basvuru
                     WHERE Id = @KaynakId;
                     SET @YeniId = CONVERT(INT, SCOPE_IDENTITY());';
@@ -812,6 +813,18 @@ namespace TarimDonusum.Tablolar
                 WHEN NOT MATCHED THEN INSERT(BasvuruId,Tur,SiraNo,Ad,Miktar,Birim,TekPanelGucu,TekPanelGucuBirim,ToplamGuc,ToplamGucBirim,MevcutKapasite,BirinciYilKapasite,SatisMiktari,BirimSatisFiyati,MevcutSatisMiktari,MevcutBirimSatisFiyati) VALUES(@YeniBasvuruId,kaynak.Tur,kaynak.SiraNo,kaynak.Ad,kaynak.Miktar,kaynak.Birim,kaynak.TekPanelGucu,kaynak.TekPanelGucuBirim,kaynak.ToplamGuc,kaynak.ToplamGucBirim,kaynak.MevcutKapasite,kaynak.BirinciYilKapasite,kaynak.SatisMiktari,kaynak.BirimSatisFiyati,kaynak.MevcutSatisMiktari,kaynak.MevcutBirimSatisFiyati)
                 OUTPUT kaynak.Id,inserted.Id INTO @UrunEsleme(EskiId,YeniId);
 
+                DECLARE @AdresEsleme TABLE(EskiId INT NOT NULL,YeniId INT NOT NULL);
+                MERGE dbo.BasvuruUygulamaAdresleri AS hedef
+                USING (SELECT Id, SiraNo, IlceId, TamAdres, YatirimYeriStatusu, KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, Enlem, Boylam, Ada, Parsel, SegeKademesi, KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu, IzinTakvimAciklama, AdresBelgeDosyaId, AdresBelgeDosyaAdi, KullanimHakkiDosyaId, KullanimHakkiDosyaAdi, KanitDosyaId, KanitDosyaAdi, YatirimFaaliyetleri, YatirimGirdileri, YatirimCiktilari, CevreselSosyalJson FROM dbo.BasvuruUygulamaAdresleri WHERE BasvuruId=@KaynakBasvuruId) AS kaynak ON 1=0
+                WHEN NOT MATCHED THEN INSERT
+                    (BasvuruId, SiraNo, IlceId, TamAdres, YatirimYeriStatusu,
+                     KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, Enlem, Boylam, Ada, Parsel, SegeKademesi,
+                     KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu, IzinTakvimAciklama, AdresBelgeDosyaId, AdresBelgeDosyaAdi, KullanimHakkiDosyaId, KullanimHakkiDosyaAdi, KanitDosyaId, KanitDosyaAdi, YatirimFaaliyetleri, YatirimGirdileri, YatirimCiktilari, CevreselSosyalJson)
+                    VALUES(@YeniBasvuruId,kaynak.SiraNo,kaynak.IlceId,kaynak.TamAdres,kaynak.YatirimYeriStatusu,kaynak.KiraVeyaTahsisSuresi,kaynak.KiraTahsisBitisTarihi,kaynak.YapiRuhsatiDurumu,kaynak.Koordinat,kaynak.AdaParsel,kaynak.Enlem,kaynak.Boylam,kaynak.Ada,kaynak.Parsel,kaynak.SegeKademesi,kaynak.KullanimHakkiBaslangicTarihi,kaynak.DonemleriKapsiyorMu,kaynak.IzinTakvimAciklama,kaynak.AdresBelgeDosyaId,kaynak.AdresBelgeDosyaAdi,kaynak.KullanimHakkiDosyaId,kaynak.KullanimHakkiDosyaAdi,kaynak.KanitDosyaId,kaynak.KanitDosyaAdi,kaynak.YatirimFaaliyetleri,kaynak.YatirimGirdileri,kaynak.YatirimCiktilari,kaynak.CevreselSosyalJson)
+                OUTPUT kaynak.Id,inserted.Id INTO @AdresEsleme(EskiId,YeniId);
+                INSERT dbo.BasvuruUygulamaAdresiYatirimTuru(AdresId,YatirimTuru) SELECT e.YeniId,t.YatirimTuru FROM dbo.BasvuruUygulamaAdresiYatirimTuru t INNER JOIN @AdresEsleme e ON e.EskiId=t.AdresId;
+                INSERT dbo.BasvuruUygulamaAdresiHarcamaTuru(AdresId,HarcamaTuru) SELECT e.YeniId,t.HarcamaTuru FROM dbo.BasvuruUygulamaAdresiHarcamaTuru t INNER JOIN @AdresEsleme e ON e.EskiId=t.AdresId;
+
                 DECLARE @MakineEsleme TABLE(EskiId INT NOT NULL, YeniId INT NOT NULL);
                 MERGE dbo.BasvuruMakine AS hedef
                 USING (SELECT M.Id,E.YeniId UygulamaAdresiId,M.SiraNo,M.Ad,M.Birim,M.Miktar,M.Aciklama,M.Marka,M.Model,M.KapasiteOzellikleri,M.YerlesimPlaniSiraNo,M.KullanimAmaci,M.Durum,M.KapasiteSecimGerekcesi FROM dbo.BasvuruMakine M LEFT JOIN @AdresEsleme E ON E.EskiId=M.UygulamaAdresiId WHERE M.BasvuruId=@KaynakBasvuruId) AS kaynak
@@ -834,18 +847,6 @@ namespace TarimDonusum.Tablolar
                 WHEN NOT MATCHED THEN INSERT(BasvuruId,UygulamaAdresiId,SiraNo,Ad,MevcutYeni,YatirimSekli,DestekTalebi,VaziyetPlaniNo) VALUES(@YeniBasvuruId,kaynak.UygulamaAdresiId,kaynak.SiraNo,kaynak.Ad,kaynak.MevcutYeni,kaynak.YatirimSekli,kaynak.DestekTalebi,kaynak.VaziyetPlaniNo)
                 OUTPUT kaynak.Id,inserted.Id INTO @BinaEsleme(EskiId,YeniId);
                 INSERT dbo.BasvuruBinaMahal(BinaId,SiraNo,MahalAdi,AlanM2) SELECT e.YeniId,m.SiraNo,m.MahalAdi,m.AlanM2 FROM dbo.BasvuruBinaMahal m INNER JOIN @BinaEsleme e ON e.EskiId=m.BinaId;
-
-                DECLARE @AdresEsleme TABLE(EskiId INT NOT NULL,YeniId INT NOT NULL);
-                MERGE dbo.BasvuruUygulamaAdresleri AS hedef
-                USING (SELECT Id, SiraNo, IlceId, TamAdres, YatirimYeriStatusu, KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, Enlem, Boylam, Ada, Parsel, SegeKademesi, KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu, IzinTakvimAciklama, AdresBelgeDosyaId, AdresBelgeDosyaAdi, KullanimHakkiDosyaId, KullanimHakkiDosyaAdi, KanitDosyaId, KanitDosyaAdi, YatirimFaaliyetleri, YatirimGirdileri, YatirimCiktilari, CevreselSosyalJson FROM dbo.BasvuruUygulamaAdresleri WHERE BasvuruId=@KaynakBasvuruId) AS kaynak ON 1=0
-                WHEN NOT MATCHED THEN INSERT
-                    (BasvuruId, SiraNo, IlceId, TamAdres, YatirimYeriStatusu,
-                     KiraVeyaTahsisSuresi, KiraTahsisBitisTarihi, YapiRuhsatiDurumu, Koordinat, AdaParsel, Enlem, Boylam, Ada, Parsel, SegeKademesi,
-                     KullanimHakkiBaslangicTarihi, DonemleriKapsiyorMu, IzinTakvimAciklama, AdresBelgeDosyaId, AdresBelgeDosyaAdi, KullanimHakkiDosyaId, KullanimHakkiDosyaAdi, KanitDosyaId, KanitDosyaAdi, YatirimFaaliyetleri, YatirimGirdileri, YatirimCiktilari, CevreselSosyalJson)
-                    VALUES(@YeniBasvuruId,kaynak.SiraNo,kaynak.IlceId,kaynak.TamAdres,kaynak.YatirimYeriStatusu,kaynak.KiraVeyaTahsisSuresi,kaynak.KiraTahsisBitisTarihi,kaynak.YapiRuhsatiDurumu,kaynak.Koordinat,kaynak.AdaParsel,kaynak.Enlem,kaynak.Boylam,kaynak.Ada,kaynak.Parsel,kaynak.SegeKademesi,kaynak.KullanimHakkiBaslangicTarihi,kaynak.DonemleriKapsiyorMu,kaynak.IzinTakvimAciklama,kaynak.AdresBelgeDosyaId,kaynak.AdresBelgeDosyaAdi,kaynak.KullanimHakkiDosyaId,kaynak.KullanimHakkiDosyaAdi,kaynak.KanitDosyaId,kaynak.KanitDosyaAdi,kaynak.YatirimFaaliyetleri,kaynak.YatirimGirdileri,kaynak.YatirimCiktilari,kaynak.CevreselSosyalJson)
-                OUTPUT kaynak.Id,inserted.Id INTO @AdresEsleme(EskiId,YeniId);
-                INSERT dbo.BasvuruUygulamaAdresiYatirimTuru(AdresId,YatirimTuru) SELECT e.YeniId,t.YatirimTuru FROM dbo.BasvuruUygulamaAdresiYatirimTuru t INNER JOIN @AdresEsleme e ON e.EskiId=t.AdresId;
-                INSERT dbo.BasvuruUygulamaAdresiHarcamaTuru(AdresId,HarcamaTuru) SELECT e.YeniId,t.HarcamaTuru FROM dbo.BasvuruUygulamaAdresiHarcamaTuru t INNER JOIN @AdresEsleme e ON e.EskiId=t.AdresId;
 
                 INSERT INTO dbo.BasvuruOrtaklar
                     (BasvuruId, SiraNo, AdUnvan, TcknVkn, KisiTuru, PayOrani, HesabaDahilOran,

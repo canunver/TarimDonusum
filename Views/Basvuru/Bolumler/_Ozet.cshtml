@@ -156,7 +156,7 @@
     Eksikse(b.basvuruFirma.firmaId <= 0, R("Basvuru.Summary.Error.CompanyRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.irtibat.kisi), R("Basvuru.Summary.Error.ContactPersonRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.irtibat.telefon), R("Basvuru.Summary.Error.ContactPhoneRequired"));
-    Eksikse(!b.basvuruFirma.sonIkiYildirFaalMi.HasValue, R("Basvuru.Summary.Error.ActiveTwoYearsRequired"));
+    Eksikse(!b.IkiYillikFaaliyetSartindanMuaf && b.basvuruFirma.sonIkiYildirFaalMi != true, R("Basvuru.Summary.Error.ActiveTwoYearsRequired"));
     Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru.Value == enumBasvuruSahibiTuru.Tanimsiz, R("Basvuru.Summary.Error.ApplicantTypeRequired"));
     Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru.Value == enumHukukiTurSirketTuru.Tanimsiz, R("Basvuru.Summary.Error.LegalTypeRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), R("Basvuru.Summary.Error.InvestmentNameRequired"));
@@ -172,6 +172,8 @@
     Eksikse(!maliOlcekUygun, R("Basvuru.Summary.Error.FinancialScaleRequired"));
     Eksikse(b.basvuruFirma.donem.destekOrani.GetValueOrDefault() > 0
         && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > b.basvuruFirma.donem.destekOrani.GetValueOrDefault(), R("Basvuru.Finance.RateLimitError").Replace("{0}", b.basvuruFirma.donem.destekOrani.GetValueOrDefault().ToString("0.##")));
+    Eksikse(b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault() > 0
+        && b.finans.talepEdilenDestekTutari.GetValueOrDefault() > b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault(), R("Basvuru.Finance.MaximumSupportExceeded"));
     Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, R("Basvuru.Finance.InvestmentDurationRequired"));
     Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, R("Basvuru.Summary.Error.AuditChoiceRequired"));
     Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, R("Basvuru.Summary.Error.AuditFileRequired"));
