@@ -5,10 +5,13 @@
 <section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.SistemSonuclari)" data-list-type="sistem" data-editable="@duzenlenebilir.ToString().ToLowerInvariant()">
     <div class="section-toolbar">
         <h2>@L["Basvuru.Step.SystemResults"]</h2>
-        @if (duzenlenebilir)
-        {
-            <button type="button" id="sistemSonuclariYenidenUretBtn" class="btn btn-outline-primary">Yeniden Üret</button>
-        }
+        <div class="d-flex align-items-center" style="gap:8px">
+            <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="OnBasvuruTamlikYazdir" asp-route-id="@b.Id"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+            @if (duzenlenebilir)
+            {
+                <button type="button" id="sistemSonuclariYenidenUretBtn" class="btn btn-outline-primary">Yeniden Üret</button>
+            }
+        </div>
     </div>
     <div class="alert alert-info">@L["Basvuru.Review.SystemResultsNote"]</div>
     <input type="hidden" class="denetim-listesi-json" value="@b.SistemDenetimAnketi" />

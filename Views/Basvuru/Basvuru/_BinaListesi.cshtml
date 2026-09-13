@@ -3,7 +3,7 @@
 @using System.Text.Json
 @{bool edit=!Model.DenetciGorunumu&&!Model.SaltOkunur; bool teknikProje=ViewData["TeknikProjeBina"] as bool? == true;}
 <section class="basvuru-panel active" data-panel="@((int)(teknikProje ? enumBasvuruBolum.DbCtpBinaListesi : enumBasvuruBolum.BasvuruBinaListesi))" data-mahal-etkin="@(!teknikProje ? "true" : "false")">
- <div class="section-toolbar"><h2 class="mb-0">@(teknikProje ? "Teknik Proje (Bina Listesi)" : "Bina Listesi ve Bölüm/Mahaller")</h2><div>@if(edit){<button type="button" class="btn btn-success mr-2" onclick="BinaModalAc(-1)"><i class="fas fa-plus mr-1"></i>Yeni bina ekle</button>}@if(!teknikProje){<a class="btn btn-outline-primary" href="@Url.Action("BinaBolumListesiYazdir","Basvuru",new{id=Model.Basvuru.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>}</div></div>
+ <div class="section-toolbar"><h2 class="mb-0">@(teknikProje ? "Teknik Proje (Bina Listesi)" : "Bina Listesi ve Bölüm/Mahaller")</h2><div>@if(edit){<button type="button" class="btn btn-success mr-2" onclick="BinaModalAc(-1)"><i class="fas fa-plus mr-1"></i>Yeni bina ekle</button>}<a class="btn btn-outline-primary" href="@Url.Action(teknikProje ? "BinaListesiYazdir" : "BinaBolumListesiYazdir", "Basvuru", new { id = Model.Basvuru.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div></div>
  <div class="alert alert-info">@(teknikProje ? "Bina/yapı girişi" : "Bina ve bölüm/mahal girişi")</div>
  <script type="application/json" id="binaListeJson">@Html.Raw(JsonSerializer.Serialize(Model.Basvuru.Binalar))</script>
  <script type="application/json" id="binaKaynakJson">@Html.Raw(string.IsNullOrWhiteSpace(Model.Basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson)?"{}":Model.Basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson)</script>

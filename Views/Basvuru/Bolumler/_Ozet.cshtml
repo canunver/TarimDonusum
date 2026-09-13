@@ -164,9 +164,9 @@
     Eksikse(b.YatirimAdresleri.Count == 0, R("Basvuru.Summary.Error.InvestmentAddressRequired"));
     Eksikse(b.YatirimAdresleri.Any(x => x.harcamaTurleri.Count == 0), R("Basvuru.Summary.Error.ExpenseTypeRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), R("Basvuru.Summary.Error.InvestmentPurposeRequired"));
-    Eksikse(b.YatirimAdresleri.Any(x => string.IsNullOrWhiteSpace(x.yatirimFaaliyetleri)), R("Basvuru.Summary.Error.InvestmentActivitiesRequired"));
-    Eksikse(b.YatirimAdresleri.Any(x => string.IsNullOrWhiteSpace(x.yatirimGirdileri)), R("Basvuru.Summary.Error.InvestmentInputsRequired"));
-    Eksikse(b.YatirimAdresleri.Any(x => string.IsNullOrWhiteSpace(x.yatirimCiktilari)), R("Basvuru.Summary.Error.InvestmentOutputsRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri), R("Basvuru.Summary.Error.InvestmentActivitiesRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimGirdileri), R("Basvuru.Summary.Error.InvestmentInputsRequired"));
+    Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari), R("Basvuru.Summary.Error.InvestmentOutputsRequired"));
     Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, R("Basvuru.Summary.Error.ValueChainRequired"));
     Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, R("Basvuru.Summary.Error.ValueChainStageRequired"));
     Eksikse(!maliOlcekUygun, R("Basvuru.Summary.Error.FinancialScaleRequired"));

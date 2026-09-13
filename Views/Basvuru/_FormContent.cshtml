@@ -101,25 +101,6 @@
             <button type="button" class="btn btn-outline-secondary nav-prev">@L["Basvuru.Common.Previous"]</button>
             <button type="button" class="btn btn-primary" id="basvuruKaydetBtn" onclick="PaneliKaydet()">@L["Basvuru.Common.Save"]</button>
             <button type="button" class="btn btn-outline-primary nav-next">@L["Basvuru.Common.Next"]</button>
-            <div class="btn-group">
-                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled="@(b.Id <= 0)">
-                    <i class="fas fa-print mr-1"></i>Yazdır
-                </button>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="ProjeButcesiYazdir" asp-route-id="@b.Id">Proje Bütçesi</a>
-                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="IsletmeGideriYazdir" asp-route-id="@b.Id">İşletme Giderleri</a>
-                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBilgilerYazdir" asp-route-id="@b.Id">Ön Bilgiler</a>
-                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="MakineEkipmanYazdir" asp-route-id="@b.Id">Makine-Ekipman</a>
-                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="BinaListesiYazdir" asp-route-id="@b.Id">Bina/Yapı Listesi</a>
-                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="OrtaklikYetkiYazdir" asp-route-id="@b.Id">Ortaklık ve Yetki</a>
-                    <a class="dropdown-item" asp-controller="Basvuru" asp-action="YatirimBilgileriYazdir" asp-route-id="@b.Id">Yatırım Bilgileri</a>
-                    @if (Model.DenetciGorunumu)
-                    {
-                        <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBasvuruTamlikYazdir" asp-route-id="@b.Id">Tamlık Kontrolü</a>
-                        <a class="dropdown-item" asp-controller="Basvuru" asp-action="OnBasvuruUygunlukYazdir" asp-route-id="@b.Id">Ön Başvuru Uygunluk</a>
-                    }
-                </div>
-            </div>
             <button type="button" class="btn btn-outline-info icon-action" id="stepHelpBtn" title="@T("Basvuru.Common.Help")">?</button>
         </div>
     </div>
@@ -235,15 +216,17 @@
                                 </select>
                             </label>
                         </div>
-                        <h6 class="mt-3">@L["Basvuru.Field.YatirimTuru"]</h6>
-                        <div class="check-grid" id="adresModalYatirimTurleri">
+                        <h6 class="mt-3 adres-secim-basligi">Değer zinciri aşamaları</h6>
+                        <div class="check-grid adres-secim-listesi" id="adresModalDegerZinciriAsamalari"></div>
+                        <h6 class="mt-3 adres-secim-basligi">@L["Basvuru.Field.YatirimTuru"]</h6>
+                        <div class="check-grid adres-secim-listesi" id="adresModalYatirimTurleri">
                             @foreach (enumYatirimTuru item in Enum.GetValues<enumYatirimTuru>().Where(x => x != enumYatirimTuru.Tanimsiz))
                             {
                                 <label><input type="checkbox" value="@((int)item)" /> @IsimBul.EnumAdi(item, L)</label>
                             }
                         </div>
-                        <h6 class="mt-3">Talep edilen harcama türleri</h6>
-                        <div class="check-grid" id="adresModalHarcamaTurleri">
+                        <h6 class="mt-3 adres-secim-basligi">Talep edilen harcama türleri</h6>
+                        <div class="check-grid adres-secim-listesi" id="adresModalHarcamaTurleri">
                             @foreach (enumHarcamaTuru item in Enum.GetValues<enumHarcamaTuru>().Where(x => (int)x > 0 && (int)x <= 4))
                             {
                                 <label><input type="checkbox" value="@((int)item)" onchange="YapiRuhsatiAlanlariniGuncelle()" /> @IsimBul.EnumAdi(item, L)</label>
@@ -271,10 +254,21 @@
                                 </select>
                             </label>
                             <label>SEGE kademesi<input id="adresModalSegeKademesi" readonly /></label>
-                            <label>Enlem<input id="adresModalEnlem" type="number" min="-90" max="90" step="0.000001" placeholder="Örn. 40,550123" /></label>
-                            <label>Boylam<input id="adresModalBoylam" type="number" min="-180" max="180" step="0.000001" placeholder="Örn. 34,950123" /></label>
-                            <label>Ada<input id="adresModalAda" maxlength="30" /></label>
-                            <label>Parsel<input id="adresModalParsel" maxlength="30" /></label>
+                            <div class="uygulama-konum-satiri">
+                                <label>Enlem<input id="adresModalEnlem" type="number" min="-90" max="90" step="0.000001" placeholder="Örn. 40,550123" /></label>
+                                <label>Boylam<input id="adresModalBoylam" type="number" min="-180" max="180" step="0.000001" placeholder="Örn. 34,950123" /></label>
+                                <label>Ada<input id="adresModalAda" maxlength="30" /></label>
+                                <label>Parsel<input id="adresModalParsel" maxlength="30" /></label>
+                            </div>
+                            <label>
+                                Kümelenme / organize alan türü
+                                <select id="adresModalKumelenmeOrganizeAlanTuru">
+                                    @foreach (var item in Enum.GetValues<TarimDonusum.Models.enumKumelenmeOrganizeAlanTuru>())
+                                    {
+                                        <option value="@((int)item)">@TarimDonusum.Models.IsimBul.EnumAdi(item, L)</option>
+                                    }
+                                </select>
+                            </label>
                             <label>Kullanım hakkı başlangıç tarihi<input id="adresModalKullanimHakkiBaslangicTarihi" type="date" /></label>
                             <label>Uygulama ve geri ödeme dönemini kapsıyor mu?<select id="adresModalDonemleriKapsiyorMu"><option value="">Seçiniz</option><option value="true">Evet</option><option value="false">Hayır</option></select></label>
                         </div>
@@ -451,6 +445,7 @@
 <script>
     var active = @((int)ilkBolum.Bolum);
     let basvuruIlId = @b.basvuruFirma.ilId;
+    let basvuruDegerZinciriId = @(b.yatirim.degerZinciriId.GetValueOrDefault());
     const uygulamaAdresiIlleri = @Html.Raw(JsonSerializer.Serialize(Model.Iller.Select(x => new { id = x.id, ad = x.ad })));
     const uygulamaAdresiIlceleri = @Html.Raw(JsonSerializer.Serialize(Model.Ilceler.Select(x => new { id = x.Id, ilId = x.IlId, ad = x.Ad, segeKademesi = x.SegeKademesi })));
     const bolumFirma = @((int)enumBasvuruBolum.Firma);
@@ -685,6 +680,14 @@
             if (event.key === 'Enter') { event.preventDefault(); FirmaSecAra(); }
         });
         document.getElementById('adresKaydetBtn')?.addEventListener('click', UygulamaAdresiModalKaydet);
+        $('#basvuruIl').off('change.degerZinciri').on('change.degerZinciri', function () {
+            basvuruDegerZinciriId = 0;
+            BasvuruDegerZincirleriniYukle();
+        });
+        $('#basvuruDegerZinciri').off('change.degerZinciri').on('change.degerZinciri', function () {
+            basvuruDegerZinciriId = Number(this.value || 0);
+        });
+        BasvuruDegerZincirleriniYukle();
         document.querySelectorAll('[name="Basvuru.finans.ToplamYatirimTutari"], [name="Basvuru.finans.TalepEdilenFinansmanOrani"]').forEach(input => {
             input.addEventListener('input', FinansTutarlariniHesapla);
             input.addEventListener('change', FinansTutarlariniHesapla);
@@ -878,7 +881,10 @@
         }
         if (bolum === bolumBasvuruMaliVeriler) BasvuruMaliBolumuIlklendir();
         if (bolum === bolumBasvuruOrtaklikYetki) BasvuruOrtaklikYetkiBolumuIlklendir();
-        if (bolum === bolumBasvuruYatirimOnBilgileri) YatirimOnBilgileriIlklendir();
+        if (bolum === bolumBasvuruYatirimOnBilgileri) {
+            YatirimOnBilgileriIlklendir();
+            YatirimOzetiBolumuIlklendir();
+        }
         if (bolum === bolumBasvuruMakineEkipman) MakineBolumuIlklendir();
         if (bolum === bolumBasvuruYatirimdaKullanilacakEkipmanlar || bolum === bolumDbCtpMakineEkipman) YatirimEkipmanBolumuIlklendir();
         if (bolum === bolumBasvuruUrunSurecMakine) UrunSurecBolumuIlklendir();
@@ -1219,10 +1225,6 @@
     }
 
     function YatirimBolumuIlklendir() {
-        $('[name="Basvuru.IlId"]').off('change.basvuruBolum').on('change.basvuruBolum', degerZinciriYukle);
-        $('#degerZinciriSelect').off('change.basvuruBolum').on('change.basvuruBolum', function () {
-            degerZinciriAsamalariYukle($(this).val());
-        });
         degerZinciriYukle();
     }
 
@@ -1358,7 +1360,7 @@
         if (!container) return;
 
         let html = `<div class="table-responsive"><table class="table table-bordered ortak-table"><thead><tr>
-            <th>No</th><th>TCKN</th><th>Ad soyad</th><th>Görev/unvan</th><th>Yetki kapsamı</th><th>İmza/Yetki belgesi</th><th>Adli sicil belgesi</th><th>Açıklama</th><th>İşlemler</th>
+            <th>İşlemler</th><th>No</th><th>TCKN</th><th>Ad soyad</th><th>Görev/unvan</th><th>Yetki kapsamı</th><th>İmza/Yetki belgesi</th><th>Adli sicil belgesi</th><th>Açıklama</th>
         </tr></thead><tbody>`;
 
         if (basvuruAdliSicilKisileri.length === 0) {
@@ -1371,6 +1373,10 @@
                 const adliSicilHref = dosyaYuklu ? `/Basvuru/DosyaIndir/${kisi.dosyaId}` : '#';
                 const imzaYetkiHref = imzaYetkiYuklu ? `/Basvuru/DosyaIndir/${kisi.imzaYetkiDosyaId}` : '#';
                 html += `<tr>
+                    <td class="text-nowrap">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" title="${basvuruReadonly ? 'Detayı görüntüle' : htmlEncode(ortakMetinleri.edit)}" onclick="AdliSicilModalAc(${index})"><i class="fas fa-${basvuruReadonly ? 'eye' : 'edit'}"></i></button>
+                        ${basvuruReadonly ? '' : `<button type="button" class="btn btn-sm btn-outline-danger" onclick="AdliSicilSil(${index})">${htmlEncode(ortakMetinleri.delete)}</button>`}
+                    </td>
                     <td>${index + 1}</td>
                     <td>${htmlEncode(kisi.tckn)}</td>
                     <td>${htmlEncode((kisi.ad || '') + ' ' + (kisi.soyad || ''))}</td>
@@ -1379,10 +1385,6 @@
                     <td><span class="adli-sicil-file-name">${htmlEncode(imzaYetkiYuklu ? kisi.imzaYetkiDosyaAdi : 'Dosya seçilmedi')}</span>${imzaYetkiYuklu ? `<br><a class="btn btn-sm btn-outline-primary mt-1" href="${imzaYetkiHref}" target="_blank" rel="noopener">İmza/Yetki Belgesi İndir</a>` : ''}</td>
                     <td><span class="adli-sicil-file-name">${htmlEncode(dosyaYuklu ? kisi.dosyaAdi : adliSicilMetinleri.fileMissing)}</span>${dosyaYuklu ? `<br><a class="btn btn-sm btn-outline-primary mt-1" href="${adliSicilHref}" target="_blank" rel="noopener">Adli Sicil Belgesi İndir</a>` : ''}</td>
                     <td>${htmlEncode(kisi.aciklama || '')}</td>
-                    <td class="text-nowrap">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" title="${basvuruReadonly ? 'Detayı görüntüle' : htmlEncode(ortakMetinleri.edit)}" onclick="AdliSicilModalAc(${index})"><i class="fas fa-${basvuruReadonly ? 'eye' : 'edit'}"></i></button>
-                        ${basvuruReadonly ? '' : `<button type="button" class="btn btn-sm btn-outline-danger" onclick="AdliSicilSil(${index})">${htmlEncode(ortakMetinleri.delete)}</button>`}
-                    </td>
                 </tr>`;
             });
         }
@@ -2583,6 +2585,7 @@
             firmaId: degerInt('Basvuru.FirmaId'),
             donemId: degerInt('Basvuru.DonemId'),
             ilId: degerInt('Basvuru.IlId'),
+            degerZinciriId: degerInt('Basvuru.DegerZinciriId'),
             basvuruKonusu: '',
             sonIkiYildirFaalMi: degerStr('Basvuru.SonIkiYildirFaalMi') === '' ? null : degerBool('Basvuru.SonIkiYildirFaalMi'),
             basvuruSahibiTuru: degerInt('Basvuru.BasvuruSahibiTuru'),
@@ -2641,31 +2644,31 @@
     }
 
     function YatirimBilgileriKaydet(afterSuccess) {
+        const adresler = Array.isArray(sonUygulamaAdresleri) ? sonUygulamaAdresleri : [];
         const yatirim = {
             ...BasvuruKimlikleri(),
             yatirimAdi: degerStr('Basvuru.YatirimAdi'),
-            yatirimTurleri: $('input[name="Basvuru.yatirim.yatirimTurleri"]:checked').map(function () { return parseInt(this.value); }).get(),
-            harcamaTurleri: $('input[name="Basvuru.yatirim.harcamaTurleri"]:checked').map(function () { return parseInt(this.value); }).get(),
+            yatirimTurleri: [...new Set(adresler.flatMap(x => (x.yatirimTurleri || []).map(Number)).filter(x => x > 0))],
+            harcamaTurleri: [...new Set(adresler.flatMap(x => (x.harcamaTurleri || []).map(Number)).filter(x => x > 0))],
             yatiriminAmaci: degerStr('Basvuru.yatirim.YatiriminAmaci'),
+            planlananBaslangicTarihi: degerStr('Basvuru.yatirim.PlanlananBaslangicTarihi') || null,
+            planlananTamamlanmaTarihi: degerStr('Basvuru.yatirim.PlanlananTamamlanmaTarihi') || null,
             yatirimFaaliyetleri: degerStr('Basvuru.yatirim.YatirimFaaliyetleri'),
             yatirimGirdileri: degerStr('Basvuru.yatirim.YatirimGirdileri'),
-            yatirimCiktilari: degerStr('Basvuru.yatirim.YatirimCiktilari'),
-            basvuruKonusuTesis: degerStr('Basvuru.yatirim.BasvuruKonusuTesis'),
-            organizeAlanTuru: degerStr('Basvuru.yatirim.OrganizeAlanTuru'),
-            planlananBaslangicTarihi: degerStr('Basvuru.yatirim.PlanlananBaslangicTarihi') || null,
-            planlananTamamlanmaTarihi: degerStr('Basvuru.yatirim.PlanlananTamamlanmaTarihi') || null
+            yatirimCiktilari: degerStr('Basvuru.yatirim.YatirimCiktilari')
         };
         AjaxPost('/Basvuru/KaydetYatirimBilgileri', yatirim, sonuc => SonucGosterVeDirtyTemizle(sonuc, afterSuccess));
     }
 
     function DegerZinciriKaydet(afterSuccess) {
+        const adresler = Array.isArray(sonUygulamaAdresleri) ? sonUygulamaAdresleri : [];
+        const asamalar = adresler
+            .flatMap(x => x.degerZinciriAsamalari || [])
+            .filter((x, index, tumu) => Number(x.id) > 0 && tumu.findIndex(y => Number(y.id) === Number(x.id)) === index);
         const yatirim = {
             ...BasvuruKimlikleri(),
-            degerZinciriAsamalari: $('input[name="Basvuru.DegerZinciriAsamalari"]:checked').map(function () {
-                const id = parseInt(this.value);
-                const faaliyet = $(`textarea.deger-zinciri-faaliyet[data-asama-id="${id}"]`).val() || '';
-                return { id: id, yapilacakFaaliyetler: faaliyet };
-            }).get(),
+            uygulamaAdresiId: null,
+            degerZinciriAsamalari: asamalar,
             ilDegerZinciriEslesmesi: degerStr('Basvuru.yatirim.IlDegerZinciriEslesmesi'),
             tarimGidaBaglantiTuru: degerStr('Basvuru.yatirim.TarimGidaBaglantiTuru'),
             tarimGidaBaglantiAciklamasi: degerStr('Basvuru.yatirim.TarimGidaBaglantiAciklamasi'),
@@ -3076,6 +3079,18 @@
         return Number(value || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    function BasvuruDegerZincirleriniYukle() {
+        const ilId = Number($('#basvuruIl').val() || basvuruIlId || 0);
+        const $alan = $('#basvuruDegerZinciri');
+        if (!$alan.length) return;
+        $alan.html('<option value="">Seçiniz...</option>');
+        if (!ilId) return;
+        AjaxGet('/Basvuru/DegerZincirleriListele', { ...BasvuruKimlikleri(), ilId: ilId, uygulamaAdresiId: 0 }, function (response) {
+            (response?.nesne || []).forEach(item => $alan.append(`<option value="${item.id}">${htmlEncode(item.ad || '')}</option>`));
+            if (basvuruDegerZinciriId) $alan.val(String(basvuruDegerZinciriId));
+        });
+    }
+
     function YatirimOzetiMiktar(value) {
         if (value === null || value === undefined || value === '') return '';
         return Number(value || 0).toLocaleString('tr-TR', { maximumFractionDigits: 3 });
@@ -3116,7 +3131,7 @@
     }
 
     function YatirimOzetiVarsayilanUrun() {
-        return { id: 0, tur: 1, siraNo: yatirimOzetiUrunRows.length + 1, ad: '', birim: 'Kg', mevcutKapasite: '', birinciYilKapasite: '', satisMiktari: '', birimSatisFiyati: '' };
+        return { id: 0, uygulamaAdresiId: null, uygulamaAdresiAciklama: '', tur: 1, siraNo: yatirimOzetiUrunRows.length + 1, ad: '', birim: 'Kg', mevcutKapasite: '', birinciYilKapasite: '', satisMiktari: '', birimSatisFiyati: '' };
     }
 
     function YatirimOzetiBolumuIlklendir() {
@@ -3143,6 +3158,7 @@
         } catch { }
         if (!Array.isArray(yatirimOzetiUrunRows)) yatirimOzetiUrunRows = [];
         if (!Array.isArray(yatirimOzetiGiderRows) || yatirimOzetiGiderRows.length === 0) yatirimOzetiGiderRows = YatirimOzetiVarsayilanGiderler();
+        document.getElementById('urunlerExcelDosya')?.addEventListener('change', function () { YatirimOzetiUrunExcelYukle(this); });
         YatirimOzetiRender();
     }
 
@@ -3235,21 +3251,24 @@
         const data = row?.data || {};
         return { id: 0, tur: 2, siraNo: index + 1, ad: row?.name || '', birim: row?.unit || 'Kg',
             mevcutKapasite: data.capacity?.[0] || data.production?.[0] || '', birinciYilKapasite: data.capacity?.[1] || data.production?.[1] || '',
+            mevcutUretimMiktari: data.production?.[0] || '', birinciYilUretimMiktari: data.production?.[1] || '',
             satisMiktari: data.sales?.[1] || data.sales?.[0] || '', birimSatisFiyati: data.price?.[1] || data.price?.[0] || '' };
     }
 
     function YatirimOzetiUrunRender() {
         const container = document.getElementById('productionInfoBox');
         if (!container) return;
-        if (!yatirimOzetiUrunRows.length) { container.innerHTML = '<div class="alert alert-info">Henüz ürün eklenmedi.</div>'; return; }
-        let html = `<div class="table-responsive"><table class="table table-bordered yatirim-ozeti-production-table urun-liste-table"><thead><tr>
-            <th>Sıra</th><th>İşlem</th><th>Ürün<br>durumu</th><th>Ürün / Ürün Grubu</th><th>Dönem</th><th>Kapasite</th><th>Satış<br>miktarı</th><th>Birim satış<br>fiyatı (TL)</th><th>Satış<br>bedeli (TL)</th>
+        const adresId = YobiSeciliAdresId();
+        const gorunenUrunler = yatirimOzetiUrunRows.map((row,index)=>({row,index})).filter(x=>!adresId||Number(x.row.uygulamaAdresiId)===adresId);
+        if (!gorunenUrunler.length) { container.innerHTML = '<div class="alert alert-info">Seçilen yatırım adresinde ürün bulunamadı.</div>'; return; }
+        let html = `<div class="table-responsive"><table class="table table-bordered yatirim-ozeti-production-table urun-liste-table"><colgroup><col class="urun-col-sira"><col class="urun-col-islem"><col class="urun-col-adres"><col class="urun-col-durum"><col class="urun-col-urun"><col class="urun-col-donem"><col class="urun-col-miktar"><col class="urun-col-miktar"><col class="urun-col-miktar"><col class="urun-col-fiyat"><col class="urun-col-bedel"></colgroup><thead><tr>
+            <th>Sıra</th><th>İşlem</th><th>Adres</th><th>Ürün<br>durumu</th><th>Ürün / Ürün Grubu</th><th>Dönem</th><th>Kapasite</th><th>Üretim<br>miktarı</th><th>Satış<br>miktarı</th><th>Birim satış<br>fiyatı (TL)</th><th>Satış<br>bedeli (TL)</th>
         </tr></thead><tbody>`;
-        yatirimOzetiUrunRows.forEach((row, index) => {
+        gorunenUrunler.forEach(({row,index}) => {
             row = YatirimOzetiUrunNormalize(row);
             yatirimOzetiUrunRows[index] = row;
             const mevcutBedel=YatirimOzetiSayi(row.mevcutSatisMiktari)*YatirimOzetiSayi(row.mevcutBirimSatisFiyati), birinciYilBedel=YatirimOzetiSayi(row.satisMiktari)*YatirimOzetiSayi(row.birimSatisFiyati);
-            html += `<tr><td rowspan="2">${index + 1}</td><td rowspan="2">${basvuruReadonly?'':`<div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunModalAc(${index})">Düzenle</button><button type="button" class="btn btn-outline-danger" onclick="YatirimOzetiUrunSil(${index})">Sil</button></div>`}</td><td rowspan="2">${row.tur===1?'Mevcut':'Yeni'}</td><td rowspan="2">${htmlEncode(row.ad)}${row.birim?` (${htmlEncode(row.birim)})`:''}</td><td class="urun-donem">Mevcut</td><td class="urun-rakam">${YatirimOzetiMiktar(row.mevcutKapasite)}</td><td class="urun-rakam">${YatirimOzetiMiktar(row.mevcutSatisMiktari)}</td><td class="urun-rakam">${YatirimOzetiParaKuruslu(row.mevcutBirimSatisFiyati||0)}</td><td class="urun-rakam"><strong>${YatirimOzetiParaKuruslu(mevcutBedel)}</strong></td></tr><tr><td class="urun-donem">1. yıl</td><td class="urun-rakam">${YatirimOzetiMiktar(row.birinciYilKapasite)}</td><td class="urun-rakam">${YatirimOzetiMiktar(row.satisMiktari)}</td><td class="urun-rakam">${YatirimOzetiParaKuruslu(row.birimSatisFiyati||0)}</td><td class="urun-rakam"><strong>${YatirimOzetiParaKuruslu(birinciYilBedel)}</strong></td></tr>`;
+            html += `<tr><td rowspan="2">${index + 1}</td><td rowspan="2">${basvuruReadonly?'':`<div class="urun-islem-buttons"><button type="button" class="btn btn-sm btn-outline-primary" onclick="YatirimOzetiUrunModalAc(${index})">Düzenle</button><button type="button" class="btn btn-sm btn-outline-danger" onclick="YatirimOzetiUrunSil(${index})">Sil</button></div>`}</td><td rowspan="2">${htmlEncode(row.uygulamaAdresiAciklama||'')}</td><td rowspan="2">${row.tur===1?'Mevcut':'Yeni'}</td><td rowspan="2">${htmlEncode(row.ad)}${row.birim?` (${htmlEncode(row.birim)})`:''}</td><td class="urun-donem">Mevcut</td><td class="urun-rakam">${YatirimOzetiMiktar(row.mevcutKapasite)}</td><td class="urun-rakam">${YatirimOzetiMiktar(row.mevcutUretimMiktari)}</td><td class="urun-rakam">${YatirimOzetiMiktar(row.mevcutSatisMiktari)}</td><td class="urun-rakam">${YatirimOzetiParaKuruslu(row.mevcutBirimSatisFiyati||0)}</td><td class="urun-rakam"><strong>${YatirimOzetiParaKuruslu(mevcutBedel)}</strong></td></tr><tr><td class="urun-donem">1. yıl</td><td class="urun-rakam">${YatirimOzetiMiktar(row.birinciYilKapasite)}</td><td class="urun-rakam">${YatirimOzetiMiktar(row.birinciYilUretimMiktari)}</td><td class="urun-rakam">${YatirimOzetiMiktar(row.satisMiktari)}</td><td class="urun-rakam">${YatirimOzetiParaKuruslu(row.birimSatisFiyati||0)}</td><td class="urun-rakam"><strong>${YatirimOzetiParaKuruslu(birinciYilBedel)}</strong></td></tr>`;
         });
         container.innerHTML = html + '</tbody></table></div>';
     }
@@ -3281,12 +3300,24 @@
         const urun = index >= 0 ? YatirimOzetiUrunNormalize(yatirimOzetiUrunRows[index]) : YatirimOzetiVarsayilanUrun();
         document.getElementById('yoUrunIndex').value=index; document.getElementById('yoUrunId').value=urun.id||0;
         document.getElementById('yoUrunModalBaslik').textContent=index>=0?'Ürün düzenle':'Ürün ekle';
+        document.getElementById('yoUrunUygulamaAdresiId').value=urun.uygulamaAdresiId||'';
         document.getElementById('yoUrunTur').value=urun.tur; document.getElementById('yoUrunAd').value=urun.ad;
         document.getElementById('yoUrunBirim').value=urun.birim; document.getElementById('yoUrunMevcutKapasite').value=YatirimOzetiMiktar(urun.mevcutKapasite);
+        document.getElementById('yoUrunMevcutUretimMiktari').value=YatirimOzetiMiktar(urun.mevcutUretimMiktari);
         document.getElementById('yoUrunMevcutSatisMiktari').value=YatirimOzetiMiktar(urun.mevcutSatisMiktari); document.getElementById('yoUrunMevcutBirimSatisFiyati').value=urun.mevcutBirimSatisFiyati==null?'':YatirimOzetiParaKuruslu(urun.mevcutBirimSatisFiyati);
         document.getElementById('yoUrunBirinciYilKapasite').value=YatirimOzetiMiktar(urun.birinciYilKapasite); document.getElementById('yoUrunSatisMiktari').value=YatirimOzetiMiktar(urun.satisMiktari);
-        document.getElementById('yoUrunBirimSatisFiyati').value=urun.birimSatisFiyati==null?'':YatirimOzetiParaKuruslu(urun.birimSatisFiyati); YatirimOzetiModalBirimGuncelle(); YatirimOzetiModalSatisBedeliGuncelle();
+        document.getElementById('yoUrunBirinciYilUretimMiktari').value=YatirimOzetiMiktar(urun.birinciYilUretimMiktari);
+        document.getElementById('yoUrunBirimSatisFiyati').value=urun.birimSatisFiyati==null?'':YatirimOzetiParaKuruslu(urun.birimSatisFiyati); YatirimOzetiModalBirimGuncelle(); YatirimOzetiUrunDurumuGuncelle(); YatirimOzetiModalSatisBedeliGuncelle();
         $('#yatirimOzetiUrunModal').modal('show');
+    }
+
+    function YatirimOzetiUrunDurumuGuncelle() {
+        const yeni = Number(document.getElementById('yoUrunTur')?.value) === 2;
+        ['yoUrunMevcutKapasite','yoUrunMevcutUretimMiktari','yoUrunMevcutSatisMiktari','yoUrunMevcutBirimSatisFiyati'].forEach(id => {
+            const alan = document.getElementById(id); if (!alan) return; alan.disabled = yeni; if (yeni) alan.value = '';
+        });
+        document.querySelectorAll('#yatirimOzetiUrunModal .yo-mevcut-alani').forEach(x => x.classList.toggle('bg-light', yeni));
+        if (yeni) document.getElementById('yoUrunMevcutSatisBedeli').value = '';
     }
 
     function YatirimOzetiModalSatisBedeliGuncelle() {
@@ -3309,8 +3340,16 @@
     function YatirimOzetiTekUrunKaydet() {
         const index=Number(document.getElementById('yoUrunIndex').value), tur=Number(document.getElementById('yoUrunTur').value);
         const mevcutKapasite=YatirimOzetiSayi(document.getElementById('yoUrunMevcutKapasite').value)||null, birinciYilKapasite=YatirimOzetiSayi(document.getElementById('yoUrunBirinciYilKapasite').value)||null;
-        const model={id:Number(document.getElementById('yoUrunId').value),basvuruId:BasvuruId(),tur,siraNo:index>=0?(yatirimOzetiUrunRows[index].siraNo||index+1):yatirimOzetiUrunRows.filter(x=>Number(x.tur)===tur).length+1,ad:document.getElementById('yoUrunAd').value,birim:document.getElementById('yoUrunBirim').value,mevcutKapasite,birinciYilKapasite,miktar:tur===1?mevcutKapasite:birinciYilKapasite,mevcutSatisMiktari:YatirimOzetiSayi(document.getElementById('yoUrunMevcutSatisMiktari').value)||null,mevcutBirimSatisFiyati:YatirimOzetiSayi(document.getElementById('yoUrunMevcutBirimSatisFiyati').value)||null,satisMiktari:YatirimOzetiSayi(document.getElementById('yoUrunSatisMiktari').value)||null,birimSatisFiyati:YatirimOzetiSayi(document.getElementById('yoUrunBirimSatisFiyati').value)||null};
+        const model={id:Number(document.getElementById('yoUrunId').value),basvuruId:BasvuruId(),uygulamaAdresiId:Number(document.getElementById('yoUrunUygulamaAdresiId').value)||null,tur,siraNo:index>=0?(yatirimOzetiUrunRows[index].siraNo||index+1):yatirimOzetiUrunRows.filter(x=>Number(x.tur)===tur).length+1,ad:document.getElementById('yoUrunAd').value,birim:document.getElementById('yoUrunBirim').value,mevcutKapasite,mevcutUretimMiktari:YatirimOzetiSayi(document.getElementById('yoUrunMevcutUretimMiktari').value)||null,birinciYilKapasite,birinciYilUretimMiktari:YatirimOzetiSayi(document.getElementById('yoUrunBirinciYilUretimMiktari').value)||null,miktar:tur===1?mevcutKapasite:birinciYilKapasite,mevcutSatisMiktari:YatirimOzetiSayi(document.getElementById('yoUrunMevcutSatisMiktari').value)||null,mevcutBirimSatisFiyati:YatirimOzetiSayi(document.getElementById('yoUrunMevcutBirimSatisFiyati').value)||null,satisMiktari:YatirimOzetiSayi(document.getElementById('yoUrunSatisMiktari').value)||null,birimSatisFiyati:YatirimOzetiSayi(document.getElementById('yoUrunBirimSatisFiyati').value)||null};
         AjaxPost('/Basvuru/YatirimOnBilgisiKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){if(index>=0)yatirimOzetiUrunRows[index]=sonuc.nesne;else yatirimOzetiUrunRows.push(sonuc.nesne);YatirimOzetiUrunRender();$('#yatirimOzetiUrunModal').modal('hide');}});
+    }
+
+    function YatirimOzetiUrunExcelYukle(input) {
+        if (!input?.files?.length) return;
+        const form = new FormData(); form.append('basvuruId', BasvuruId()); form.append('dosya', input.files[0]);
+        fetch('/Basvuru/UrunlerExcelYukle', { method:'POST', headers:{'RequestVerificationToken':antiForgeryToken()}, body:form })
+            .then(r=>r.json()).then(sonuc=>{ if(sonuc?.basarili&&Array.isArray(sonuc?.nesne?.urunler)){yatirimOzetiUrunRows.push(...sonuc.nesne.urunler);YatirimOzetiUrunRender();} SonucGoster(sonuc); })
+            .catch(()=>PopupMesajGoster('Excel dosyası yüklenemedi.',false)).finally(()=>{input.value='';});
     }
 
     function YatirimOzetiVarsayilanGiderler() {
@@ -3600,9 +3639,9 @@
             container.innerHTML = '<div class="alert alert-info">Henüz girdi kaydı eklenmedi.</div>';
             return;
         }
-        container.innerHTML = `<div class="table-responsive"><table class="table table-striped db-ctp-table"><thead><tr><th>Sıra no</th><th>Girdi / Hammadde adı</th><th>Yıllık ihtiyaç</th><th>Birim</th>${duzenlenebilir ? '<th>İşlem</th>' : ''}</tr></thead><tbody>${satirlar.map(x => {
+        container.innerHTML = `<div class="table-responsive"><table class="table table-striped db-ctp-table"><thead><tr><th>Sıra no</th><th>Adres</th><th>Girdi / Hammadde adı</th><th>Yıllık ihtiyaç</th><th>Birim</th>${duzenlenebilir ? '<th>İşlem</th>' : ''}</tr></thead><tbody>${satirlar.map(x => {
             const index = dbCtpData.inputs.indexOf(x);
-            return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${htmlEncode(x.ad)}</td><td>${htmlEncode(x.miktar)}</td><td>${htmlEncode(x.birim)}</td>${duzenlenebilir ? `<td><div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="DbCtpGirdiModalAc(${index})">Düzenle</button><button type="button" class="btn btn-outline-danger" onclick="DbCtpGirdiSil(${index})">Sil</button></div></td>` : ''}</tr>`;
+            return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${htmlEncode(x.uygulamaAdresiAciklama || '-')}</td><td>${htmlEncode(x.ad)}</td><td>${htmlEncode(x.miktar)}</td><td>${htmlEncode(x.birim)}</td>${duzenlenebilir ? `<td><div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="DbCtpGirdiModalAc(${index})">Düzenle</button><button type="button" class="btn btn-outline-danger" onclick="DbCtpGirdiSil(${index})">Sil</button></div></td>` : ''}</tr>`;
         }).join('')}</tbody></table></div>`;
     }
 
@@ -3610,6 +3649,7 @@
         const mevcut = index >= 0 ? dbCtpData.inputs[index] : null;
         document.getElementById('dbCtpGirdiIndex').value = index;
         document.getElementById('dbCtpGirdiModalBaslik').textContent = mevcut ? 'Teknik Proje Girdisini Düzenle' : 'Teknik Proje Girdisi Ekle';
+        document.getElementById('dbCtpGirdiUygulamaAdresiId').value = mevcut?.uygulamaAdresiId || '';
         document.getElementById('dbCtpGirdiSiraNo').value = mevcut?.siraNo || Math.max(0, ...(dbCtpData.inputs || []).map(x => Number(x.siraNo) || 0)) + 1;
         document.getElementById('dbCtpGirdiAdi').value = mevcut?.ad || '';
         document.getElementById('dbCtpGirdiMiktar').value = mevcut?.miktar ?? '';
@@ -3619,12 +3659,13 @@
 
     function DbCtpGirdiKaydet() {
         const index = Number(document.getElementById('dbCtpGirdiIndex').value);
+        const uygulamaAdresiId = Number(document.getElementById('dbCtpGirdiUygulamaAdresiId').value);
         const siraNo = Number(document.getElementById('dbCtpGirdiSiraNo').value);
         const ad = document.getElementById('dbCtpGirdiAdi').value.trim();
         const miktar = Number(document.getElementById('dbCtpGirdiMiktar').value);
         const birim = document.getElementById('dbCtpGirdiBirim').value;
-        if (!Number.isInteger(siraNo) || siraNo <= 0 || !ad || miktar <= 0 || !genelOlcuBirimleri.includes(birim)) {
-            PopupMesajGoster('Sıra no, Girdi / Hammadde adı, pozitif yıllık ihtiyaç ve geçerli birim girilmelidir.', false);
+        if (uygulamaAdresiId <= 0 || !Number.isInteger(siraNo) || siraNo <= 0 || !ad || miktar <= 0 || !genelOlcuBirimleri.includes(birim)) {
+            PopupMesajGoster('Adres, sıra no, Girdi / Hammadde adı, pozitif yıllık ihtiyaç ve geçerli birim girilmelidir.', false);
             return;
         }
         if (dbCtpData.inputs.some((x, i) => i !== index && Number(x.siraNo) === siraNo)) {
@@ -3635,7 +3676,7 @@
             id: index >= 0 ? Number(dbCtpData.inputs[index]?.id || 0) : 0,
             basvuruId: BasvuruId(),
             tur: 3,
-            siraNo, ad, miktar, birim
+            uygulamaAdresiId, siraNo, ad, miktar, birim
         };
         AjaxPost('/Basvuru/YatirimOnBilgisiKaydet', girdi, sonuc => {
             SonucGoster(sonuc);
@@ -3799,19 +3840,29 @@
     }
 
     var yatirimOnBilgileri = [], yatirimOnBilgileriHazir = false;
-    function YatirimOnBilgileriIlklendir(){if(yatirimOnBilgileriHazir)return;yatirimOnBilgileriHazir=true;try{yatirimOnBilgileri=JSON.parse(document.getElementById('yatirimOnBilgiJson')?.textContent||'[]');}catch{yatirimOnBilgileri=[];}YatirimOnBilgileriRender();}
+    function YatirimOnBilgileriIlklendir(){yatirimOnBilgileriHazir=true;try{yatirimOnBilgileri=JSON.parse(document.getElementById('yatirimOnBilgiJson')?.textContent||'[]');}catch{yatirimOnBilgileri=[];}document.getElementById('yobiGirdiExcelDosya')?.addEventListener('change',function(){YatirimOnBilgisiGirdiExcelYukle(this);});YobiAdresFiltresiDegisti();YobiEnerjiAlanlariniDoldur();}
+    function YobiSeciliAdresId(){return Number(document.getElementById('yobiAdresFiltresi')?.value)||0;}
+    function YobiAdresFiltresiDegisti(){YatirimOnBilgileriRender();YatirimOzetiUrunRender();const button=document.getElementById('yobiYazdirBtn');if(button){const adresId=YobiSeciliAdresId(),baseUrl=button.dataset.baseUrl||'';button.href=baseUrl+(adresId?`${baseUrl.includes('?')?'&':'?'}uygulamaAdresiId=${adresId}`:'');}}
     function YobiBirimSecenekleri(secili){return genelOlcuBirimleri.map(x=>`<option value="${htmlEncode(x)}" ${x===secili?'selected':''}>${htmlEncode(x)}</option>`).join('');}
-    function YatirimOnBilgileriRender(){const u=document.getElementById('yobi-products');if(u)u.innerHTML=yatirimOnBilgileri.map((x,index)=>({x,index})).filter(y=>[1,2].includes(Number(y.x.tur))).map(y=>YatirimOnBilgiSatirHtml(y.x,Number(y.x.tur),y.index)).join('');for(let tur=3;tur<=5;tur++){const b=document.getElementById(`yobi-${tur}`);if(!b)continue;const liste=yatirimOnBilgileri.map((x,index)=>({x,index})).filter(y=>Number(y.x.tur)===tur);b.innerHTML=liste.map(y=>YatirimOnBilgiSatirHtml(y.x,tur,y.index)).join('');}}
+    function YatirimOnBilgileriRender(){const adresId=YobiSeciliAdresId();const u=document.getElementById('yobi-products');if(u)u.innerHTML=yatirimOnBilgileri.map((x,index)=>({x,index})).filter(y=>[1,2].includes(Number(y.x.tur))&&(!adresId||Number(y.x.uygulamaAdresiId)===adresId)).map(y=>YatirimOnBilgiSatirHtml(y.x,Number(y.x.tur),y.index)).join('');for(let tur=3;tur<=5;tur++){const b=document.getElementById(`yobi-${tur}`);if(!b)continue;const liste=yatirimOnBilgileri.map((x,index)=>({x,index})).filter(y=>Number(y.x.tur)===tur&&(!adresId||Number(y.x.uygulamaAdresiId)===adresId));b.innerHTML=liste.map(y=>YatirimOnBilgiSatirHtml(y.x,tur,y.index)).join('');}}
+    function YobiEnerjiKaydiniBul(tur,ad){return yatirimOnBilgileri.find(x=>Number(x.tur)===tur&&(!ad||String(x.ad||'').toLocaleLowerCase('tr-TR').includes(ad.toLocaleLowerCase('tr-TR'))));}
+    function YobiEnerjiAlanlariniDoldur(){const ata=(id,value)=>{const alan=document.getElementById(id);if(alan)alan.value=value??'';};const solar=YobiEnerjiKaydiniBul(4);const gunes=YobiEnerjiKaydiniBul(5,'Güneş');const biyogaz=YobiEnerjiKaydiniBul(5,'Biyogaz');const biyokutle=YobiEnerjiKaydiniBul(5,'Biyokütle');ata('yobiSolarPanels',solar?.miktar);ata('yobiSolarPanelPower',solar?.tekPanelGucu);ata('yobiSolarTotalPower',solar?.toplamGuc);ata('yobiInstalledSolar',gunes?.miktar);ata('yobiInstalledBiogas',biyogaz?.miktar);ata('yobiInstalledBiomass',biyokutle?.miktar);}
+    function YobiEnerjiSayisi(id){const value=document.getElementById(id)?.value?.trim();return value?YatirimOzetiSayi(value):null;}
+    function YobiEnerjiKaydet(alan,tamamlandi){const kuruluTanimlari={installedSolar:{ad:'Güneş Enerjisi',siraNo:1,input:'yobiInstalledSolar',ara:'Güneş'},installedBiogas:{ad:'Biyogaz',siraNo:2,input:'yobiInstalledBiogas',ara:'Biyogaz'},installedBiomass:{ad:'Biyokütle',siraNo:3,input:'yobiInstalledBiomass',ara:'Biyokütle'}};const solar=alan==='solar';const tanim=solar?null:kuruluTanimlari[alan];const mevcut=solar?YobiEnerjiKaydiniBul(4):YobiEnerjiKaydiniBul(5,tanim.ara);const miktar=solar?YobiEnerjiSayisi('yobiSolarPanels'):YobiEnerjiSayisi(tanim.input);const tekPanelGucu=solar?YobiEnerjiSayisi('yobiSolarPanelPower'):null;const toplamGuc=solar?YobiEnerjiSayisi('yobiSolarTotalPower'):null;if(miktar==null&&tekPanelGucu==null&&toplamGuc==null){if(!mevcut){tamamlandi?.({basarili:true});return;}AjaxPost('/Basvuru/YatirimOnBilgisiSil',{id:mevcut.id,basvuruId:BasvuruId()},sonuc=>{if(sonuc?.basarili)yatirimOnBilgileri=yatirimOnBilgileri.filter(x=>x!==mevcut);tamamlandi?.(sonuc);});return;}const model={id:Number(mevcut?.id||0),basvuruId:BasvuruId(),tur:solar?4:5,siraNo:solar?1:tanim.siraNo,ad:solar?'Güneş Enerjisi':tanim.ad,miktar,birim:solar?'Adet':'kWe',tekPanelGucu,tekPanelGucuBirim:solar?'W':null,toplamGuc,toplamGucBirim:solar?'kWp':null};AjaxPost('/Basvuru/YatirimOnBilgisiKaydet',model,sonuc=>{if(sonuc?.basarili&&sonuc.nesne){if(mevcut){const index=yatirimOnBilgileri.indexOf(mevcut);yatirimOnBilgileri[index]=sonuc.nesne;}else yatirimOnBilgileri.push(sonuc.nesne);}tamamlandi?.(sonuc);});}
+    function YobiEnerjiBilgileriniKaydet(){const button=document.getElementById('yobiEnerjiKaydetBtn');if(button)button.disabled=true;const alanlar=['solar','installedSolar','installedBiogas','installedBiomass'],sonuclar=[];alanlar.forEach(alan=>YobiEnerjiKaydet(alan,sonuc=>{sonuclar.push(sonuc);if(sonuclar.length!==alanlar.length)return;if(button)button.disabled=false;const hata=sonuclar.find(x=>!x?.basarili);if(hata){SonucGoster(hata);return;}dirty=false;PopupMesajGoster('Enerji bilgileri kaydedildi.',true);}));}
     function YobiSatisBedeliGuncelle(){const alan=document.getElementById('yobiSatisBedeli');if(alan)alan.value=YatirimOzetiParaKuruslu(YatirimOzetiSayi(document.getElementById('yobiSatisMiktari')?.value)*YatirimOzetiSayi(document.getElementById('yobiBirimSatisFiyati')?.value));}
-    function YatirimOnBilgiSatirHtml(x,tur,index){const islemler=document.getElementById('yobiDuzenlenebilir')?`<div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="YatirimOnBilgiModalAc(${tur},${index})">Düzenle</button><button type="button" class="btn btn-outline-danger" onclick="YatirimOnBilgisiSil(${index})">Sil</button></div>`:'';if(tur===1||tur===2){const bedel=YatirimOzetiSayi(x.satisMiktari)*YatirimOzetiSayi(x.birimSatisFiyati);return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${islemler}</td><td>${tur===1?'Mevcut':'Yeni'}</td><td>${htmlEncode(x.ad)}${x.birim?` (${htmlEncode(x.birim)})`:''}</td><td>${YatirimOzetiMiktar(x.mevcutKapasite)}</td><td>${YatirimOzetiMiktar(x.birinciYilKapasite)}</td><td>${YatirimOzetiMiktar(x.satisMiktari)}</td><td>${YatirimOzetiParaKuruslu(x.birimSatisFiyati||0)}</td><td>${YatirimOzetiParaKuruslu(bedel)}</td></tr>`;}if(tur===4)return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${htmlEncode(x.ad)}</td><td>${htmlEncode(x.miktar??'')}</td><td>${htmlEncode(x.birim||'')}</td><td>${htmlEncode(x.tekPanelGucu??'')}</td><td>${htmlEncode(x.tekPanelGucuBirim||'')}</td><td>${htmlEncode(x.toplamGuc??'')}</td><td>${htmlEncode(x.toplamGucBirim||'')}</td><td>${islemler}</td></tr>`;return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${htmlEncode(x.ad)}</td><td>${htmlEncode(x.miktar??'')}</td><td>${htmlEncode(x.birim||'')}</td><td>${islemler}</td></tr>`;}
-    function YatirimOnBilgiModalAc(tur,index){const mevcut=index>=0?yatirimOnBilgileri[index]:null,urun=tur===1||tur===2,adet=yatirimOnBilgileri.filter(x=>urun?[1,2].includes(Number(x.tur)):Number(x.tur)===tur).length,basliklar=['','Ürün','Ürün','Girdi','Enerji Kullanımı','Kurulu Güç'];document.getElementById('yobiIndex').value=index;document.getElementById('yobiTur').value=tur;document.getElementById('yobiUrunTuru').value=mevcut?.tur||tur;document.getElementById('yobiId').value=mevcut?.id||0;document.getElementById('yobiModalBaslik').textContent=(mevcut?'Güncelle - ':'Yeni - ')+basliklar[tur];document.getElementById('yobiSira').value=mevcut?.siraNo||adet+1;document.getElementById('yobiAd').value=mevcut?.ad||'';document.getElementById('yobiMiktar').value=mevcut?.miktar??'';document.getElementById('yobiBirim').value=mevcut?.birim||(tur===4?'Adet':tur===5?'kWe':'Kg');document.getElementById('yobiMevcutKapasite').value=mevcut?.mevcutKapasite??'';document.getElementById('yobiBirinciYilKapasite').value=mevcut?.birinciYilKapasite??'';document.getElementById('yobiSatisMiktari').value=mevcut?.satisMiktari??'';document.getElementById('yobiBirimSatisFiyati').value=mevcut?.birimSatisFiyati??'';document.getElementById('yobiSatisBedeli').value=YatirimOzetiParaKuruslu(YatirimOzetiSayi(mevcut?.satisMiktari)*YatirimOzetiSayi(mevcut?.birimSatisFiyati));document.getElementById('yobiUrunTuruAlani').style.display=urun?'block':'none';document.getElementById('yobiUrunAlanlari').style.display=urun?'grid':'none';document.getElementById('yobiMiktarLabel').style.display=urun?'none':'block';document.getElementById('yobiTekPanelGucu').value=mevcut?.tekPanelGucu??'';document.getElementById('yobiTekPanelGucuBirim').value=mevcut?.tekPanelGucuBirim||'W';document.getElementById('yobiToplamGuc').value=mevcut?.toplamGuc??'';document.getElementById('yobiToplamGucBirim').value=mevcut?.toplamGucBirim||'kWp';document.getElementById('yobiEnerjiAlanlari').style.display=tur===4?'grid':'none';document.getElementById('yobiAdLabel').firstChild.textContent=tur===3?'Girdi / Hammadde':tur>=4?'Yenilenebilir Enerji Çeşidi':'Ürün / Hayvan Türü';document.getElementById('yobiMiktarLabel').firstChild.textContent=tur===4?'Panel sayısı':tur===5?'Kurulu güç':'Miktar / Hayvan sayısı';$('#yatirimOnBilgiModal').modal('show');}
-    function YatirimOnBilgisiKaydet(){let tur=Number(document.getElementById('yobiTur').value),index=Number(document.getElementById('yobiIndex').value);const urun=tur===1||tur===2;if(urun)tur=Number(document.getElementById('yobiUrunTuru').value);const mevcutKapasite=urun?(Number(document.getElementById('yobiMevcutKapasite').value)||null):null,birinciYilKapasite=urun?(Number(document.getElementById('yobiBirinciYilKapasite').value)||null):null;const model={id:Number(document.getElementById('yobiId').value),basvuruId:BasvuruId(),tur,siraNo:Number(document.getElementById('yobiSira').value),ad:document.getElementById('yobiAd').value,miktar:urun?(tur===1?mevcutKapasite:birinciYilKapasite):(Number(document.getElementById('yobiMiktar').value)||null),birim:document.getElementById('yobiBirim').value,mevcutKapasite,birinciYilKapasite,satisMiktari:urun?(Number(document.getElementById('yobiSatisMiktari').value)||null):null,birimSatisFiyati:urun?(Number(document.getElementById('yobiBirimSatisFiyati').value)||null):null,tekPanelGucu:tur===4?(Number(document.getElementById('yobiTekPanelGucu').value)||null):null,tekPanelGucuBirim:tur===4?document.getElementById('yobiTekPanelGucuBirim').value:null,toplamGuc:tur===4?(Number(document.getElementById('yobiToplamGuc').value)||null):null,toplamGucBirim:tur===4?document.getElementById('yobiToplamGucBirim').value:null};AjaxPost('/Basvuru/YatirimOnBilgisiKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){if(index>=0)yatirimOnBilgileri[index]=sonuc.nesne;else yatirimOnBilgileri.push(sonuc.nesne);YatirimOnBilgileriRender();$('#yatirimOnBilgiModal').modal('hide');dirty=false;}});}
+    function YatirimOnBilgiSatirHtml(x,tur,index){const islemler=document.getElementById('yobiDuzenlenebilir')?`<div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="YatirimOnBilgiModalAc(${tur},${index})">Düzenle</button><button type="button" class="btn btn-outline-danger" onclick="YatirimOnBilgisiSil(${index})">Sil</button></div>`:'';if(tur===1||tur===2){const bedel=YatirimOzetiSayi(x.satisMiktari)*YatirimOzetiSayi(x.birimSatisFiyati);return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${islemler}</td><td>${tur===1?'Mevcut':'Yeni'}</td><td>${htmlEncode(x.ad)}${x.birim?` (${htmlEncode(x.birim)})`:''}</td><td>${YatirimOzetiMiktar(x.mevcutKapasite)}</td><td>${YatirimOzetiMiktar(x.birinciYilKapasite)}</td><td>${YatirimOzetiMiktar(x.satisMiktari)}</td><td>${YatirimOzetiParaKuruslu(x.birimSatisFiyati||0)}</td><td>${YatirimOzetiParaKuruslu(bedel)}</td></tr>`;}if(tur===3)return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${htmlEncode(x.uygulamaAdresiAciklama||'-')}</td><td>${htmlEncode(x.ad)}</td><td>${htmlEncode(x.miktar??'')}</td><td>${htmlEncode(x.birim||'')}</td><td>${islemler}</td></tr>`;if(tur===4)return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${htmlEncode(x.ad)}</td><td>${htmlEncode(x.miktar??'')}</td><td>${htmlEncode(x.birim||'')}</td><td>${htmlEncode(x.tekPanelGucu??'')}</td><td>${htmlEncode(x.tekPanelGucuBirim||'')}</td><td>${htmlEncode(x.toplamGuc??'')}</td><td>${htmlEncode(x.toplamGucBirim||'')}</td><td>${islemler}</td></tr>`;return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${htmlEncode(x.ad)}</td><td>${htmlEncode(x.miktar??'')}</td><td>${htmlEncode(x.birim||'')}</td><td>${islemler}</td></tr>`;}
+    function YatirimOnBilgiModalAc(tur,index){const mevcut=index>=0?yatirimOnBilgileri[index]:null,urun=tur===1||tur===2,adet=yatirimOnBilgileri.filter(x=>urun?[1,2].includes(Number(x.tur)):Number(x.tur)===tur).length,basliklar=['','Ürün','Ürün','Girdi','Enerji Kullanımı','Kurulu Güç'];document.getElementById('yobiIndex').value=index;document.getElementById('yobiTur').value=tur;document.getElementById('yobiUrunTuru').value=mevcut?.tur||tur;document.getElementById('yobiId').value=mevcut?.id||0;document.getElementById('yobiUygulamaAdresiId').value=mevcut?.uygulamaAdresiId||'';document.getElementById('yobiAdresAlani').style.display=tur===3?'block':'none';document.getElementById('yobiModalBaslik').textContent=(mevcut?'Güncelle - ':'Yeni - ')+basliklar[tur];document.getElementById('yobiSira').value=mevcut?.siraNo||adet+1;document.getElementById('yobiAd').value=mevcut?.ad||'';document.getElementById('yobiMiktar').value=mevcut?.miktar??'';document.getElementById('yobiBirim').value=mevcut?.birim||(tur===4?'Adet':tur===5?'kWe':'Kg');document.getElementById('yobiMevcutKapasite').value=mevcut?.mevcutKapasite??'';document.getElementById('yobiBirinciYilKapasite').value=mevcut?.birinciYilKapasite??'';document.getElementById('yobiSatisMiktari').value=mevcut?.satisMiktari??'';document.getElementById('yobiBirimSatisFiyati').value=mevcut?.birimSatisFiyati??'';document.getElementById('yobiSatisBedeli').value=YatirimOzetiParaKuruslu(YatirimOzetiSayi(mevcut?.satisMiktari)*YatirimOzetiSayi(mevcut?.birimSatisFiyati));document.getElementById('yobiUrunTuruAlani').style.display=urun?'block':'none';document.getElementById('yobiUrunAlanlari').style.display=urun?'grid':'none';document.getElementById('yobiMiktarLabel').style.display=urun?'none':'block';document.getElementById('yobiTekPanelGucu').value=mevcut?.tekPanelGucu??'';document.getElementById('yobiTekPanelGucuBirim').value=mevcut?.tekPanelGucuBirim||'W';document.getElementById('yobiToplamGuc').value=mevcut?.toplamGuc??'';document.getElementById('yobiToplamGucBirim').value=mevcut?.toplamGucBirim||'kWp';document.getElementById('yobiEnerjiAlanlari').style.display=tur===4?'grid':'none';document.getElementById('yobiAdLabel').firstChild.textContent=tur===3?'Girdi / Hammadde':tur>=4?'Yenilenebilir Enerji Çeşidi':'Ürün / Hayvan Türü';document.getElementById('yobiMiktarLabel').firstChild.textContent=tur===3?'Yıllık ihtiyaç':tur===4?'Panel sayısı':tur===5?'Kurulu güç':'Miktar / Hayvan sayısı';$('#yatirimOnBilgiModal').modal('show');}
+    function YatirimOnBilgisiKaydet(){let tur=Number(document.getElementById('yobiTur').value),index=Number(document.getElementById('yobiIndex').value);const urun=tur===1||tur===2;if(urun)tur=Number(document.getElementById('yobiUrunTuru').value);const mevcutKapasite=urun?(Number(document.getElementById('yobiMevcutKapasite').value)||null):null,birinciYilKapasite=urun?(Number(document.getElementById('yobiBirinciYilKapasite').value)||null):null;const model={id:Number(document.getElementById('yobiId').value),basvuruId:BasvuruId(),tur,uygulamaAdresiId:tur===3?(Number(document.getElementById('yobiUygulamaAdresiId').value)||null):null,siraNo:Number(document.getElementById('yobiSira').value),ad:document.getElementById('yobiAd').value,miktar:urun?(tur===1?mevcutKapasite:birinciYilKapasite):(Number(document.getElementById('yobiMiktar').value)||null),birim:document.getElementById('yobiBirim').value,mevcutKapasite,birinciYilKapasite,satisMiktari:urun?(Number(document.getElementById('yobiSatisMiktari').value)||null):null,birimSatisFiyati:urun?(Number(document.getElementById('yobiBirimSatisFiyati').value)||null):null,tekPanelGucu:tur===4?(Number(document.getElementById('yobiTekPanelGucu').value)||null):null,tekPanelGucuBirim:tur===4?document.getElementById('yobiTekPanelGucuBirim').value:null,toplamGuc:tur===4?(Number(document.getElementById('yobiToplamGuc').value)||null):null,toplamGucBirim:tur===4?document.getElementById('yobiToplamGucBirim').value:null};AjaxPost('/Basvuru/YatirimOnBilgisiKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){if(index>=0)yatirimOnBilgileri[index]=sonuc.nesne;else yatirimOnBilgileri.push(sonuc.nesne);YatirimOnBilgileriRender();$('#yatirimOnBilgiModal').modal('hide');dirty=false;}});}
     function YatirimOnBilgisiSil(index){const kayit=yatirimOnBilgileri[index];if(!kayit||!confirm(`“${kayit.ad}” kaydını silmek istediğinize emin misiniz?`))return;AjaxPost('/Basvuru/YatirimOnBilgisiSil',{id:kayit.id,basvuruId:BasvuruId()},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){yatirimOnBilgileri.splice(index,1);YatirimOnBilgileriRender();dirty=false;}});}
+    function YatirimOnBilgisiGirdiExcelYukle(input){if(!input?.files?.length)return;const form=new FormData();form.append('basvuruId',BasvuruId());form.append('dosya',input.files[0]);fetch('/Basvuru/TeknikProjeGirdileriExcelYukle',{method:'POST',headers:{'RequestVerificationToken':antiForgeryToken()},body:form}).then(response=>response.json()).then(sonuc=>{if(!sonuc?.basarili||!Array.isArray(sonuc?.nesne?.girdiler)){SonucGoster(sonuc);return;}yatirimOnBilgileri=yatirimOnBilgileri.filter(x=>Number(x.tur)!==3);yatirimOnBilgileri.push(...sonuc.nesne.girdiler);YatirimOnBilgileriRender();dirty=false;SonucGoster(sonuc);}).catch(()=>PopupMesajGoster('Excel dosyası yüklenemedi.',false)).finally(()=>{input.value='';});}
 
     var basvuruMakineleri = [];
     var yatirimEkipmanlari = [];
-    function YatirimEkipmanBolumuIlklendir(){try{yatirimEkipmanlari=JSON.parse(document.getElementById('yatirimEkipmanJson')?.textContent||'[]');}catch{yatirimEkipmanlari=[];}YatirimEkipmanListeRender();document.getElementById('yatirimEkipmanYeniBtn')?.addEventListener('click',()=>YatirimEkipmanModalAc(-1));document.getElementById('yatirimEkipmanExcelDosya')?.addEventListener('change',function(){YatirimEkipmanExcelYukle(this);});}
-    function YatirimEkipmanListeRender(){const alan=document.getElementById('yatirimEkipmanListeAlani');if(!alan)return;if(!yatirimEkipmanlari.length){alan.innerHTML='<div class="alert alert-info">Henüz makine/ekipman eklenmedi.</div>';return;}const edit=!!document.getElementById('yatirimEkipmanYeniBtn');alan.innerHTML=`<div class="table-responsive"><table class="table table-striped" style="min-width:1650px"><thead><tr><th>Kullanılacağı adres</th><th>Adı</th><th>Markası</th><th>Modeli</th><th>Adedi</th><th>Kapasite / özellikler</th><th>Plan sıra no</th><th>Kullanım amacı</th><th>Durum</th><th>Kapasite seçim gerekçesi</th><th></th></tr></thead><tbody>${yatirimEkipmanlari.map((m,i)=>`<tr><td>${htmlEncode(m.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(m.ad||'')}</td><td>${htmlEncode(m.marka||'')}</td><td>${htmlEncode(m.model||'')}</td><td>${htmlEncode(m.miktar??'')}</td><td>${htmlEncode(m.kapasiteOzellikleri||'')}</td><td>${htmlEncode(m.yerlesimPlaniSiraNo??'')}</td><td>${htmlEncode(m.kullanimAmaci||'')}</td><td>${htmlEncode(m.durum||'')}</td><td>${htmlEncode(m.kapasiteSecimGerekcesi||'')}</td><td>${edit?`<button type="button" class="btn btn-sm btn-outline-primary" onclick="YatirimEkipmanModalAc(${i})">Düzenle</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;}
+    function YatirimEkipmanBolumuIlklendir(){try{yatirimEkipmanlari=JSON.parse(document.getElementById('yatirimEkipmanJson')?.textContent||'[]');}catch{yatirimEkipmanlari=[];}YatirimEkipmanAdresFiltresiDegisti();document.getElementById('yatirimEkipmanYeniBtn')?.addEventListener('click',()=>YatirimEkipmanModalAc(-1));document.getElementById('yatirimEkipmanExcelDosya')?.addEventListener('change',function(){YatirimEkipmanExcelYukle(this);});}
+    function YatirimEkipmanSeciliAdresId(){return Number(document.getElementById('yatirimEkipmanAdresFiltresi')?.value)||0;}
+    function YatirimEkipmanAdresFiltresiDegisti(){YatirimEkipmanListeRender();const button=document.getElementById('yatirimEkipmanYazdirBtn');if(button){const adresId=YatirimEkipmanSeciliAdresId(),baseUrl=button.dataset.baseUrl||'';button.href=baseUrl+(adresId?`${baseUrl.includes('?')?'&':'?'}uygulamaAdresiId=${adresId}`:'');}}
+    function YatirimEkipmanListeRender(){const alan=document.getElementById('yatirimEkipmanListeAlani');if(!alan)return;const adresId=YatirimEkipmanSeciliAdresId(),gorunen=yatirimEkipmanlari.map((m,i)=>({m,i})).filter(x=>!adresId||Number(x.m.uygulamaAdresiId)===adresId);if(!gorunen.length){alan.innerHTML='<div class="alert alert-info">Seçilen yatırım adresinde makine/ekipman bulunamadı.</div>';return;}const edit=!!document.getElementById('yatirimEkipmanYeniBtn');alan.innerHTML=`<div class="table-responsive"><table class="table table-striped" style="min-width:1650px"><thead><tr><th>Kullanılacağı adres</th><th>Adı</th><th>Markası</th><th>Modeli</th><th>Adedi</th><th>Kapasite / özellikler</th><th>Plan sıra no</th><th>Kullanım amacı</th><th>Durum</th><th>Kapasite seçim gerekçesi</th><th></th></tr></thead><tbody>${gorunen.map(({m,i})=>`<tr><td>${htmlEncode(m.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(m.ad||'')}</td><td>${htmlEncode(m.marka||'')}</td><td>${htmlEncode(m.model||'')}</td><td>${htmlEncode(m.miktar??'')}</td><td>${htmlEncode(m.kapasiteOzellikleri||'')}</td><td>${htmlEncode(m.yerlesimPlaniSiraNo??'')}</td><td>${htmlEncode(m.kullanimAmaci||'')}</td><td>${htmlEncode(m.durum||'')}</td><td>${htmlEncode(m.kapasiteSecimGerekcesi||'')}</td><td>${edit?`<button type="button" class="btn btn-sm btn-outline-primary" onclick="YatirimEkipmanModalAc(${i})">Düzenle</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;}
     function YatirimEkipmanModalAc(index){const m=index>=0?yatirimEkipmanlari[index]:{id:0,basvuruId:BasvuruId(),siraNo:yatirimEkipmanlari.length+1,ad:'',birim:'Adet',miktar:1,aciklama:'',teknikOzellikler:[],teklifler:[]};document.getElementById('yatirimEkipmanIndex').value=index;document.getElementById('yatirimEkipmanIndex').dataset.model=JSON.stringify(m);modalSet('yeAdres',m.uygulamaAdresiId);modalSet('yeAd',m.ad);modalSet('yeMarka',m.marka);modalSet('yeModel',m.model);modalSet('yeAdet',m.miktar);modalSet('yePlanSira',m.yerlesimPlaniSiraNo);modalSet('yeDurum',m.durum);modalSet('yeKapasite',m.kapasiteOzellikleri);modalSet('yeKullanimAmaci',m.kullanimAmaci);modalSet('yeKapasiteGerekcesi',m.kapasiteSecimGerekcesi);YatirimEkipmanDurumAlanlariGuncelle();$('#yatirimEkipmanModal').modal('show');}
     function YatirimEkipmanDurumAlanlariGuncelle(){['yeMarka','yeModel'].forEach(id=>{const alan=document.getElementById(id);if(!alan)return;alan.disabled=false;alan.placeholder='';});}
     function YatirimEkipmanKaydet(){const index=Number(document.getElementById('yatirimEkipmanIndex').value),eski=JSON.parse(document.getElementById('yatirimEkipmanIndex').dataset.model||'{}'),adres=document.getElementById('yeAdres');const model={...eski,basvuruId:BasvuruId(),uygulamaAdresiId:Number(adres?.value)||null,uygulamaAdresiAciklama:adres?.selectedOptions?.[0]?.textContent||'',siraNo:eski.siraNo||yatirimEkipmanlari.length+1,ad:modalValue('yeAd'),birim:'Adet',miktar:Number(modalValue('yeAdet')),marka:modalValue('yeMarka'),model:modalValue('yeModel'),kapasiteOzellikleri:modalValue('yeKapasite'),yerlesimPlaniSiraNo:Number(modalValue('yePlanSira'))||null,kullanimAmaci:modalValue('yeKullanimAmaci'),durum:modalValue('yeDurum'),kapasiteSecimGerekcesi:modalValue('yeKapasiteGerekcesi')};AjaxPost('/Basvuru/MakineKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){if(index>=0)yatirimEkipmanlari[index]=sonuc.nesne;else yatirimEkipmanlari.push(sonuc.nesne);$('#yatirimEkipmanModal').modal('hide');YatirimEkipmanListeRender();dirty=false;}});}
@@ -3888,8 +3939,10 @@
     let metrajVerisi={binalar:[],pozlar:[]},metrajBinaIndex=0,metrajBolumIndex=0,metrajDetayTaslak=[];
     const MetrajPara=v=>(Number(v)||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' TL';
     const MetrajSayi=v=>(Number(v)||0).toLocaleString('tr-TR',{maximumFractionDigits:4});
-    function MetrajMiktar(d){const a=[d.adet,d.boy,d.en,d.yukseklik].filter(x=>x!==null&&x!==undefined&&x!=='').map(Number);return a.length?a.reduce((t,x)=>t*x,1):0;}
-    function MetrajPozMiktar(p){return (p.detaylar||[]).reduce((t,d)=>t+MetrajMiktar(d),0);}
+    function MetrajAgirlikPozu(p){return Number(p?.hesaplamaTuru)===5;}
+    function MetrajSeciliPoz(){return (metrajVerisi.pozlar||[]).find(x=>x.pozId===Number($('#metrajPozSecim').val()));}
+    function MetrajMiktar(d,p){const a=[d.adet,d.boy,d.en,d.yukseklik].filter(x=>x!==null&&x!==undefined&&x!=='').map(Number);let miktar=a.length?(Number(d.benzerSayisi)||0)*a.reduce((t,x)=>t*x,1):0;if(MetrajAgirlikPozu(p)){miktar*=Number(d.birimAgirlik)||0;if(String(p?.birim||'').trim().toLocaleLowerCase('tr-TR')==='ton')miktar/=1000;}return miktar;}
+    function MetrajPozMiktar(p){return (p.detaylar||[]).reduce((t,d)=>t+MetrajMiktar(d,p),0);}
     function MetrajPozMaliyet(p){return MetrajPozMiktar(p)*(Number(p.birimFiyat)||0);}
     function MetrajBolumMaliyet(b){return (b?.pozlar||[]).reduce((t,p)=>t+MetrajPozMaliyet(p),0);}
     function MetrajBinaMaliyet(b){return (b?.bolumler||[]).reduce((t,x)=>t+MetrajBolumMaliyet(x),0);}
@@ -3922,15 +3975,15 @@
     function MetrajPozSatiriDuzenle(bi,bli,pi){metrajBinaIndex=bi;metrajBolumIndex=bli;MetrajPozModalAc(pi);}
     function MetrajBinaSec(i){metrajBinaIndex=i;metrajBolumIndex=0;MetrajRender();}
     function MetrajBolumSec(i){metrajBolumIndex=i;MetrajRender();}
-    function MetrajBolumModalAc(i){const b=metrajVerisi.binalar?.[metrajBinaIndex];if(!b){PopupMesajGoster('Önce yeni bir bina seçilmelidir.',false);return;}const x=i>=0?b.bolumler[i]:{siraNo:Math.max(0,...(b.bolumler||[]).map(y=>Number(y.siraNo)||0))+1,ad:''};$('#metrajBolumIndex').val(i);$('#metrajBolumSira').val(x.siraNo);$('#metrajBolumAd').val(x.ad);$('#metrajBolumSilBtn').toggle(i>=0);$('#metrajBolumModal').modal('show');}
-    function MetrajBolumKaydet(){const b=metrajVerisi.binalar[metrajBinaIndex],i=Number($('#metrajBolumIndex').val()),eski=i>=0?b.bolumler[i]:{};AjaxPost('/Basvuru/MetrajBolumKaydet',{id:eski.id||0,basvuruId:BasvuruId(),binaId:b.id,siraNo:Number($('#metrajBolumSira').val()),ad:$('#metrajBolumAd').val()},r=>{SonucGoster(r);if(r?.basarili){$('#metrajBolumModal').modal('hide');MetrajVerisiYukle();}});}
+    function MetrajBolumModalAc(i){const b=metrajVerisi.binalar?.[metrajBinaIndex];if(!b){PopupMesajGoster('Önce yeni bir bina seçilmelidir.',false);return;}const x=i>=0?b.bolumler[i]:{siraNo:0,kategori:0};const kullanilan=new Set((b.bolumler||[]).filter((_,index)=>index!==i).map(y=>Number(y.kategori)));const secim=$('#metrajBolumKategori');secim.find('option').each(function(){this.disabled=Number(this.value)>0&&kullanilan.has(Number(this.value));});$('#metrajBolumIndex').val(i);$('#metrajBolumSira').val(x.kategori||x.siraNo||'');secim.val(String(x.kategori||''));$('#metrajBolumSilBtn').toggle(i>=0);$('#metrajBolumModal').modal('show');}
+    function MetrajBolumKaydet(){const b=metrajVerisi.binalar[metrajBinaIndex],i=Number($('#metrajBolumIndex').val()),eski=i>=0?b.bolumler[i]:{},kategori=Number($('#metrajBolumKategori').val());if(kategori<1||kategori>6){PopupMesajGoster('Yapım kategorisi seçilmelidir.',false);return;}if((b.bolumler||[]).some((x,index)=>index!==i&&Number(x.kategori)===kategori)){PopupMesajGoster('Bu kategori seçilen binaya daha önce eklenmiştir.',false);return;}$('#metrajBolumSira').val(kategori);AjaxPost('/Basvuru/MetrajBolumKaydet',{id:eski.id||0,basvuruId:BasvuruId(),binaId:b.id,siraNo:kategori,kategori},r=>{SonucGoster(r);if(r?.basarili){$('#metrajBolumModal').modal('hide');MetrajVerisiYukle();}});}
     function MetrajBolumSil(){const b=metrajVerisi.binalar[metrajBinaIndex],i=Number($('#metrajBolumIndex').val()),x=b?.bolumler?.[i];if(!x||!confirm('Yapım bölümü ve bağlı bütün pozları silinsin mi?'))return;AjaxPost('/Basvuru/MetrajBolumSil',{id:x.id,basvuruId:BasvuruId()},r=>{SonucGoster(r);if(r?.basarili){$('#metrajBolumModal').modal('hide');metrajBolumIndex=0;MetrajVerisiYukle();}});}
-    function MetrajPozModalAc(i){const bl=metrajVerisi.binalar?.[metrajBinaIndex]?.bolumler?.[metrajBolumIndex];if(!bl){PopupMesajGoster('Önce yapım bölümü seçilmelidir.',false);return;}const p=i>=0?bl.pozlar[i]:{siraNo:Math.max(0,...(bl.pozlar||[]).map(x=>Number(x.siraNo)||0))+1,pozId:0,detaylar:[{siraNo:1,aciklama:'',adet:1,boy:null,en:null,yukseklik:null}]};$('#metrajPozIndex').val(i);$('#metrajPozSira').val(p.siraNo);const s=$('#metrajPozSecim');if(s.hasClass('select2-hidden-accessible'))s.select2('destroy');s.empty().append('<option value=""></option>');(metrajVerisi.pozlar||[]).forEach(x=>s.append($('<option/>',{value:x.pozId,text:`${x.pozNo} — ${x.pozAdi} (${x.birim})${x.birimFiyat==null?' — Fiyat yok':''}`,disabled:x.birimFiyat==null})));s.val(String(p.pozId||''));s.select2({width:'100%',dropdownParent:$('#metrajPozModal'),placeholder:'Poz no veya adına göre arayın',allowClear:true,language:{noResults:()=> 'Poz bulunamadı',searching:()=> 'Aranıyor...'}});metrajDetayTaslak=JSON.parse(JSON.stringify(p.detaylar||[]));$('#metrajPozSilBtn').toggle(i>=0);MetrajPozFiyatGuncelle();MetrajDetayRender();$('#metrajPozModal').modal('show');}
-    function MetrajPozFiyatGuncelle(){const x=(metrajVerisi.pozlar||[]).find(p=>p.pozId===Number($('#metrajPozSecim').val()));$('#metrajPozFiyat').text(x?.birimFiyat==null?'Birim fiyat girilmemiş':MetrajPara(x.birimFiyat)+' / '+x.birim);}
-    function MetrajDetaySatirEkle(){metrajDetayTaslak.push({siraNo:metrajDetayTaslak.length+1,aciklama:'',adet:1,boy:null,en:null,yukseklik:null});MetrajDetayRender();}
+    function MetrajPozModalAc(i){const bl=metrajVerisi.binalar?.[metrajBinaIndex]?.bolumler?.[metrajBolumIndex];if(!bl){PopupMesajGoster('Önce yapım bölümü seçilmelidir.',false);return;}const p=i>=0?bl.pozlar[i]:{siraNo:Math.max(0,...(bl.pozlar||[]).map(x=>Number(x.siraNo)||0))+1,pozId:0,detaylar:[{siraNo:1,aciklama:'',urunCinsi:'',birimAgirlik:null,benzerSayisi:1,adet:1,boy:null,en:null,yukseklik:null}]};$('#metrajPozIndex').val(i);$('#metrajPozSira').val(p.siraNo);const s=$('#metrajPozSecim');if(s.hasClass('select2-hidden-accessible'))s.select2('destroy');s.empty().append('<option value=""></option>');(metrajVerisi.pozlar||[]).forEach(x=>s.append($('<option/>',{value:x.pozId,text:`${x.pozNo} — ${x.pozAdi} (${x.birim})${x.birimFiyat==null?' — Fiyat yok':''}`,disabled:x.birimFiyat==null})));s.val(String(p.pozId||''));s.select2({width:'100%',dropdownParent:$('#metrajPozModal'),placeholder:'Poz no veya adına göre arayın',allowClear:true,language:{noResults:()=> 'Poz bulunamadı',searching:()=> 'Aranıyor...'}});metrajDetayTaslak=JSON.parse(JSON.stringify(p.detaylar||[])).map(x=>({...x,urunCinsi:x.urunCinsi||'',birimAgirlik:x.birimAgirlik??null,benzerSayisi:x.benzerSayisi||1}));$('#metrajPozSilBtn').toggle(i>=0);MetrajPozFiyatGuncelle();$('#metrajPozModal').modal('show');}
+    function MetrajPozFiyatGuncelle(){const x=MetrajSeciliPoz();$('#metrajPozFiyat').text(x?.birimFiyat==null?'Birim fiyat girilmemiş':MetrajPara(x.birimFiyat)+' / '+x.birim);MetrajDetayRender();}
+    function MetrajDetaySatirEkle(){metrajDetayTaslak.push({siraNo:metrajDetayTaslak.length+1,aciklama:'',urunCinsi:'',birimAgirlik:null,benzerSayisi:1,adet:1,boy:null,en:null,yukseklik:null});MetrajDetayRender();}
     function MetrajDetaySil(i){metrajDetayTaslak.splice(i,1);metrajDetayTaslak.forEach((x,j)=>x.siraNo=j+1);MetrajDetayRender();}
-    function MetrajDetayDegis(i,k,v){metrajDetayTaslak[i][k]=k==='aciklama'?v:(v===''?null:Number(v));$('#metrajDetayMiktar'+i).text(MetrajSayi(MetrajMiktar(metrajDetayTaslak[i])));$('#metrajModalMiktar').text(MetrajSayi(metrajDetayTaslak.reduce((t,d)=>t+MetrajMiktar(d),0)));}
-    function MetrajDetayRender(){const val=v=>v===null||v===undefined?'':v;$('#metrajDetayListe').html(metrajDetayTaslak.map((d,i)=>`<tr><td><input class="form-control form-control-sm" maxlength="500" value="${htmlEncode(d.aciklama||'')}" oninput="MetrajDetayDegis(${i},'aciklama',this.value)"></td>${['adet','boy','en','yukseklik'].map(k=>`<td><input class="form-control form-control-sm text-right" type="number" step="0.0001" value="${val(d[k])}" oninput="MetrajDetayDegis(${i},'${k}',this.value)"></td>`).join('')}<td id="metrajDetayMiktar${i}" class="text-right align-middle">${MetrajSayi(MetrajMiktar(d))}</td><td><button class="btn btn-sm btn-outline-danger" type="button" onclick="MetrajDetaySil(${i})">×</button></td></tr>`).join(''));$('#metrajModalMiktar').text(MetrajSayi(metrajDetayTaslak.reduce((t,d)=>t+MetrajMiktar(d),0)));$('#metrajPozSecim').off('change.metraj').on('change.metraj',MetrajPozFiyatGuncelle);}
+    function MetrajDetayDegis(i,k,v){metrajDetayTaslak[i][k]=k==='aciklama'||k==='urunCinsi'?v:(v===''?null:Number(v));const p=MetrajSeciliPoz();$('#metrajDetayMiktar'+i).text(MetrajSayi(MetrajMiktar(metrajDetayTaslak[i],p)));$('#metrajModalMiktar').text(MetrajSayi(metrajDetayTaslak.reduce((t,d)=>t+MetrajMiktar(d,p),0)));}
+    function MetrajDetayRender(){const val=v=>v===null||v===undefined?'':v,p=MetrajSeciliPoz(),agirlik=MetrajAgirlikPozu(p);$('.metraj-agirlik-alani').toggle(agirlik);$('#metrajToplamEtiket').attr('colspan',agirlik?8:6);$('#metrajDetayListe').html(metrajDetayTaslak.map((d,i)=>`<tr><td><input class="form-control form-control-sm" maxlength="500" value="${htmlEncode(d.aciklama||'')}" oninput="MetrajDetayDegis(${i},'aciklama',this.value)"></td>${agirlik?`<td><input class="form-control form-control-sm" maxlength="250" value="${htmlEncode(d.urunCinsi||'')}" oninput="MetrajDetayDegis(${i},'urunCinsi',this.value)"></td><td><input class="form-control form-control-sm text-right" type="number" min="0.0001" step="0.0001" value="${val(d.birimAgirlik)}" oninput="MetrajDetayDegis(${i},'birimAgirlik',this.value)"></td>`:''}${['benzerSayisi','adet','boy','en','yukseklik'].map(k=>`<td><input class="form-control form-control-sm text-right" type="number" min="${k==='benzerSayisi'?'0.0001':'0'}" step="0.0001" value="${val(d[k])}" oninput="MetrajDetayDegis(${i},'${k}',this.value)"></td>`).join('')}<td id="metrajDetayMiktar${i}" class="text-right align-middle">${MetrajSayi(MetrajMiktar(d,p))}</td><td><button class="btn btn-sm btn-outline-danger" type="button" onclick="MetrajDetaySil(${i})">×</button></td></tr>`).join(''));$('#metrajModalMiktar').text(MetrajSayi(metrajDetayTaslak.reduce((t,d)=>t+MetrajMiktar(d,p),0)));$('#metrajPozSecim').off('change.metraj').on('change.metraj',MetrajPozFiyatGuncelle);}
     function MetrajPozKaydet(){const bl=metrajVerisi.binalar[metrajBinaIndex].bolumler[metrajBolumIndex],i=Number($('#metrajPozIndex').val()),p=i>=0?bl.pozlar[i]:{};AjaxPost('/Basvuru/MetrajPozKaydet',{id:p.id||0,basvuruId:BasvuruId(),bolumId:bl.id,pozId:Number($('#metrajPozSecim').val()),siraNo:Number($('#metrajPozSira').val()),detaylar:metrajDetayTaslak.map((d,j)=>({...d,id:0,siraNo:j+1}))},r=>{SonucGoster(r);if(r?.basarili){$('#metrajPozModal').modal('hide');MetrajVerisiYukle();}});}
     function MetrajPozSil(){const bl=metrajVerisi.binalar[metrajBinaIndex].bolumler[metrajBolumIndex],i=Number($('#metrajPozIndex').val()),p=bl?.pozlar?.[i];if(!p||!confirm('Poz ve bütün metraj detayları silinsin mi?'))return;AjaxPost('/Basvuru/MetrajPozSil',{id:p.id,basvuruId:BasvuruId()},r=>{SonucGoster(r);if(r?.basarili){$('#metrajPozModal').modal('hide');MetrajVerisiYukle();}});}
 
@@ -4207,10 +4260,11 @@
 
     function degerZinciriAsamalariYukle(zincirId) {
         const kimlik = BasvuruKimlikleri();
+        const uygulamaAdresiId = Number($('#degerZinciriAdresSelect').val()) || 0;
         const $tbody = $('#degerZinciriAsamaListesi');
         $tbody.empty();
-        if (!zincirId) return;
-        AjaxGet('/Basvuru/DegerZinciriAsamalariListele', { ...kimlik, zincirId: zincirId }, function (response) {
+        if (!zincirId || !uygulamaAdresiId) return;
+        AjaxGet('/Basvuru/DegerZinciriAsamalariListele', { ...kimlik, zincirId: zincirId, uygulamaAdresiId: uygulamaAdresiId }, function (response) {
             if (response && response.nesne) {
                 const isReadOnly = $('#degerZinciriSelect').is(':disabled') ? 'disabled' : '';
                 $.each(response.nesne, function (_, item) {
@@ -4246,14 +4300,14 @@
     }
 
     function degerZinciriYukle() {
-        const ilAlani = $('#basvuruIl');
-        const ilId = ilAlani.length ? ilAlani.val() : basvuruIlId;
+        const uygulamaAdresiId = 0;
+        const ilId = basvuruIlId;
         const kimlik = BasvuruKimlikleri();
         const $select = $('#degerZinciriSelect');
         $select.html('<option value="">Seçiniz...</option>');
         $('#degerZinciriAsamaListesi').empty();
         if (!ilId) return;
-        AjaxGet('/Basvuru/DegerZincirleriListele', { ...kimlik, ilId: ilId }, function (response) {
+        AjaxGet('/Basvuru/DegerZincirleriListele', { ...kimlik, ilId: ilId, uygulamaAdresiId: uygulamaAdresiId }, function (response) {
             if (response && response.nesne) {
                 let aktifZincirId = null;
                 $.each(response.nesne, function (_, item) {
@@ -4261,7 +4315,8 @@
                     $select.append(`<option value="${item.id}" ${selectedAttr}>${item.ad}</option>`);
                     if (item.secili) aktifZincirId = item.id;
                 });
-                if (aktifZincirId) degerZinciriAsamalariYukle(aktifZincirId);
+                if (!aktifZincirId && basvuruDegerZinciriId) aktifZincirId = basvuruDegerZinciriId;
+                if (aktifZincirId) { $select.val(String(aktifZincirId)); degerZinciriAsamalariYukle(aktifZincirId); }
             }
         });
     }
@@ -4293,10 +4348,12 @@
             boylam: modalValue('adresModalBoylam') === '' ? null : Number(modalValue('adresModalBoylam').replace(',', '.')),
             ada: modalValue('adresModalAda'),
             parsel: modalValue('adresModalParsel'),
+            kumelenmeOrganizeAlanTuru: Number(modalValue('adresModalKumelenmeOrganizeAlanTuru') || 0),
             segeKademesi: modalValue('adresModalSegeKademesi'),
             kullanimHakkiBaslangicTarihi: modalValue('adresModalKullanimHakkiBaslangicTarihi') || null,
             donemleriKapsiyorMu: modalValue('adresModalDonemleriKapsiyorMu') === '' ? null : modalValue('adresModalDonemleriKapsiyorMu') === 'true',
             izinTakvimAciklama: modalValue('adresModalIzinTakvimAciklama')
+            ,degerZinciriAsamalari: $('#adresModalDegerZinciriAsamalari input:checked').map(function () { return { id: Number(this.value) }; }).get()
             ,yatirimTurleri: $('#adresModalYatirimTurleri input:checked').map(function () { return Number(this.value); }).get()
             ,harcamaTurleri: $('#adresModalHarcamaTurleri input:checked').map(function () { return Number(this.value); }).get()
             ,yatirimFaaliyetleri: modalValue('adresModalYatirimFaaliyetleri')
@@ -4371,10 +4428,12 @@
         modalSet('adresModalBoylam', adres.boylam);
         modalSet('adresModalAda', adres.ada);
         modalSet('adresModalParsel', adres.parsel);
+        modalSet('adresModalKumelenmeOrganizeAlanTuru', adres.kumelenmeOrganizeAlanTuru || 0);
         modalSet('adresModalSegeKademesi', adres.segeKademesi);
         modalSet('adresModalKullanimHakkiBaslangicTarihi', adres.kullanimHakkiBaslangicTarihi);
         modalSet('adresModalDonemleriKapsiyorMu', adres.donemleriKapsiyorMu == null ? '' : String(adres.donemleriKapsiyorMu));
         modalSet('adresModalIzinTakvimAciklama', adres.izinTakvimAciklama);
+        AdresModalDegerZincirleriniYukle(adres);
         $('#adresModalYatirimTurleri input').each(function () { this.checked = (adres.yatirimTurleri || []).map(Number).includes(Number(this.value)); });
         $('#adresModalHarcamaTurleri input').each(function () { this.checked = (adres.harcamaTurleri || []).map(Number).includes(Number(this.value)); });
         modalSet('adresModalYatirimFaaliyetleri', adres.yatirimFaaliyetleri);
@@ -4387,6 +4446,28 @@
         YapiRuhsatiAlanlariniGuncelle();
         DetayModaliniSaltOkunurYap('uygulamaAdresModal');
         uygulamaAdresModal?.show();
+    }
+
+    function AdresModalDegerZincirleriniYukle(adres) {
+        const $asamalar = $('#adresModalDegerZinciriAsamalari');
+        const adresId = Number(adres?.id || 0);
+        $asamalar.empty();
+        const zincirId = Number($('#basvuruDegerZinciri').val() || basvuruDegerZinciriId || 0);
+        if (zincirId) AdresModalDegerZinciriAsamalariniYukle(zincirId, adresId, adres?.degerZinciriAsamalari || []);
+    }
+
+    function AdresModalDegerZinciriAsamalariniYukle(zincirId, adresId, seciliAsamalar) {
+        const $alan = $('#adresModalDegerZinciriAsamalari');
+        $alan.empty();
+        if (!zincirId) return;
+        const seciliIdler = new Set((seciliAsamalar || []).map(x => Number(x.id)));
+        AjaxGet('/Basvuru/DegerZinciriAsamalariListele', { ...BasvuruKimlikleri(), zincirId: zincirId, uygulamaAdresiId: adresId }, function (response) {
+            (response?.nesne || []).forEach(item => {
+                const secili = item.secili || seciliIdler.has(Number(item.id));
+                $alan.append(`<label><input type="checkbox" value="${item.id}" ${secili ? 'checked' : ''} /> ${htmlEncode(item.ad || '')}</label>`);
+            });
+            DetayModaliniSaltOkunurYap('uygulamaAdresModal');
+        });
     }
 
     function AdresModalIlVeIlceleriGuncelle(seciliIlceId) {
@@ -4495,6 +4576,7 @@
         const hakTbody = document.getElementById('yatirimYeriKullanimHaklariListesi');
         const basvuruYatirimSayfasi = active === bolumBasvuruYatirimBilgileri;
         sonUygulamaAdresleri = uygulamaAdresleri || [];
+        if (sonUygulamaAdresleri.length > 0) $('#basvuruDegerZinciri').prop('disabled', true);
         AdrestenUretilenYatirimAlanlariniHesapla(sonUygulamaAdresleri);
         tbody.innerHTML = '';
         if (hakTbody) hakTbody.innerHTML = '';

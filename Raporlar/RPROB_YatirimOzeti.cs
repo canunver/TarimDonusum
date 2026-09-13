@@ -22,9 +22,9 @@ public sealed class RPROB_YatirimOzeti(string uygulamaRootPath) : RPROBTemel(uyg
             veri.Urunler.AddRange(kayitliUrunler.Select(x => new UrunSatiri(x.ad, x.birim ?? "", new(StringComparer.OrdinalIgnoreCase)
             {
                 ["capacity"] = [x.mevcutKapasite ?? 0, x.birinciYilKapasite ?? 0],
-                ["production"] = [x.mevcutKapasite ?? 0, x.birinciYilKapasite ?? 0],
-                ["sales"] = [0, x.satisMiktari ?? 0],
-                ["price"] = [0, x.birimSatisFiyati ?? 0]
+                ["production"] = [x.mevcutUretimMiktari ?? 0, x.birinciYilUretimMiktari ?? 0],
+                ["sales"] = [x.mevcutSatisMiktari ?? 0, x.satisMiktari ?? 0],
+                ["price"] = [x.mevcutBirimSatisFiyati ?? 0, x.birimSatisFiyati ?? 0]
             })));
         }
         ButceyiYaz(tablo, veri.Butce);

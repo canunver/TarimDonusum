@@ -137,12 +137,12 @@ namespace TarimDonusum.Controllers
             RaporYazdirAsync(id, new RPROB_Finansman(_environment.ContentRootPath), "Finansman bilgileri yazdırılmadan önce kaydedilmelidir.");
         [OturumKontrol]
         [HttpGet]
-        public Task<IActionResult> YatirimOnBilgileriYazdir(int id) =>
-            RaporYazdirAsync(id, new RPROB_YatirimOnBilgileri(_environment.ContentRootPath), "Yatırım ön bilgileri yazdırılmadan önce kaydedilmelidir.");
+        public Task<IActionResult> YatirimOnBilgileriYazdir(int id, int? uygulamaAdresiId) =>
+            RaporYazdirAsync(id, new RPROB_YatirimOnBilgileri(_environment.ContentRootPath, uygulamaAdresiId), "Yatırım ön bilgileri yazdırılmadan önce kaydedilmelidir.");
         [OturumKontrol]
         [HttpGet]
-        public Task<IActionResult> YatirimMakineEkipmanListesiYazdir(int id) =>
-            RaporYazdirAsync(id, new RPROB_YatirimMakineEkipmanListesi(_environment.ContentRootPath), "Makine-ekipman listesi yazdırılmadan önce başvuru kaydedilmelidir.");
+        public Task<IActionResult> YatirimMakineEkipmanListesiYazdir(int id, int? uygulamaAdresiId) =>
+            RaporYazdirAsync(id, new RPROB_YatirimMakineEkipmanListesi(_environment.ContentRootPath, uygulamaAdresiId), "Makine-ekipman listesi yazdırılmadan önce başvuru kaydedilmelidir.");
         [OturumKontrol]
         [HttpGet]
         public Task<IActionResult> OnBasvuruSahibiYazdir(int id) =>
@@ -673,6 +673,44 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UrunlerExcelYukle(int basvuruId, IFormFile? dosya)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return Unauthorized();
+            if (dosya == null || dosya.Length == 0) return Json(new Sonuc<object> { hatalar = { "Excel dosyası seçilmelidir." } });
+            await using Stream stream = dosya.OpenReadStream();
+            return Json(await _basvuruIsKurallari.UrunlerExcelOkuAsync(basvuruId, stream, kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpGet]
+        public IActionResult UrunlerExcelSablonuIndir()
+        {
+            string geciciDosya = Path.Combine(Path.GetTempPath(), $"urunler-sablonu-{Guid.NewGuid():N}.xlsx");
+            Tablo? tablo = null;
+            try
+            {
+                tablo = OrtakFonksiyonlar.NewTablo();
+                tablo.BosDosyaAc(geciciDosya);
+                for (int sutun = 0; sutun < BasvuruIsKurallari.UrunExcelSablonBasliklari.Count; sutun++)
+                    tablo.HucreDegerYaz(0, sutun, BasvuruIsKurallari.UrunExcelSablonBasliklari[sutun]);
+
+                tablo.SutunGenislikAyarla(0, 11, 24);
+                tablo.SatirGercekYukseklikAyarla(0, 0, 90);
+                tablo.HucreMetniKaydir(0, 1, true);
+                tablo.HucreMetniKaydir(0, 3, true);
+                tablo.CerceveCiz(0, 0, 0, 11, LineStyle.THIN, TabloRenk.BLACK);
+                tablo.DosyaSaklaTamYol();
+                tablo.DosyaKapat();
+                tablo = null;
+                return File(System.IO.File.ReadAllBytes(geciciDosya), RaporDosyasi.ExcelMimeTuru, "Urunler-Sablonu.xlsx");
+            }
+            finally { tablo?.DosyaKapat(); if (System.IO.File.Exists(geciciDosya)) System.IO.File.Delete(geciciDosya); }
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> KaydetCevreselSosyal([FromBody] BasvuruCevreselSosyal model)
         {
             Sonuc<int> sonuc;
@@ -825,7 +863,8 @@ namespace TarimDonusum.Controllers
                     tablo.HucreDegerYaz(0, sutun, BasvuruIsKurallari.YatirimEkipmaniExcelSablonBasliklari[sutun]);
                 tablo.SutunGenislikAyarla(0, 9, 24);
                 tablo.SatirGercekYukseklikAyarla(0, 0, 90);
-                tablo.HucreMetniSigdir(0, 0, 0, 9, true);
+                for (int sutun = 0; sutun < BasvuruIsKurallari.YatirimEkipmaniExcelSablonBasliklari.Count; sutun++)
+                    tablo.HucreMetniKaydir(0, sutun, true);
                 tablo.CerceveCiz(0, 0, 0, 9, LineStyle.THIN, TabloRenk.BLACK);
                 tablo.DosyaSaklaTamYol();
                 tablo.DosyaKapat();
@@ -849,11 +888,13 @@ namespace TarimDonusum.Controllers
             {
                 tablo = OrtakFonksiyonlar.NewTablo();
                 tablo.BosDosyaAc(geciciDosya);
-                for (int sutun = 0; sutun < BasvuruIsKurallari.TeknikProjeGirdisiExcelBasliklari.Count; sutun++)
-                    tablo.HucreDegerYaz(0, sutun, BasvuruIsKurallari.TeknikProjeGirdisiExcelBasliklari[sutun]);
-                tablo.SutunGenislikAyarla(0, 3, 24);
-                tablo.HucreMetniSigdir(0, 0, 0, 3, true);
-                tablo.CerceveCiz(0, 0, 0, 3, LineStyle.THIN, TabloRenk.BLACK);
+                for (int sutun = 0; sutun < BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari.Count; sutun++)
+                    tablo.HucreDegerYaz(0, sutun, BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari[sutun]);
+                tablo.SutunGenislikAyarla(0, 4, 24);
+                tablo.SatirGercekYukseklikAyarla(0, 0, 90);
+                for (int sutun = 0; sutun < BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari.Count; sutun++)
+                    tablo.HucreMetniKaydir(0, sutun, true);
+                tablo.CerceveCiz(0, 0, 0, 4, LineStyle.THIN, TabloRenk.BLACK);
                 tablo.DosyaSaklaTamYol();
                 tablo.DosyaKapat();
                 tablo = null;
@@ -1280,20 +1321,20 @@ namespace TarimDonusum.Controllers
 
         [OturumKontrol]
         [HttpGet]
-        public async Task<IActionResult> DegerZinciriAsamalariListele(int zincirId, int basvuruId)
+        public async Task<IActionResult> DegerZinciriAsamalariListele(int zincirId, int basvuruId, int uygulamaAdresiId)
         {
             Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
-            Sonuc<List<DegerZinciriAsama>> degerZinciriAsamalari = await _basvuruIsKurallari.DegerZinciriAsamalariListeleAsync(kullanici, zincirId, basvuruId);
+            Sonuc<List<DegerZinciriAsama>> degerZinciriAsamalari = await _basvuruIsKurallari.DegerZinciriAsamalariListeleAsync(kullanici, zincirId, basvuruId, uygulamaAdresiId);
 
             return Json(degerZinciriAsamalari);
         }
 
         [OturumKontrol]
         [HttpGet]
-        public async Task<IActionResult> DegerZincirleriListele(int ilId, int basvuruId)
+        public async Task<IActionResult> DegerZincirleriListele(int ilId, int basvuruId, int uygulamaAdresiId)
         {
             Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
-            var degerZincirleri = await _basvuruIsKurallari.DegerZincirleriListeleAsync(kullanici, ilId, basvuruId);
+            var degerZincirleri = await _basvuruIsKurallari.DegerZincirleriListeleAsync(kullanici, ilId, basvuruId, uygulamaAdresiId);
             return Json(degerZincirleri);
         }
 

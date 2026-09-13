@@ -154,18 +154,22 @@ namespace TarimDonusum.Tablolar
             };
         }
 
-        internal async Task<Sonuc<List<DegerZinciriAsama>>> AsamalariOku(int degerZinciriId, int basvuruId)
+        internal async Task<Sonuc<List<DegerZinciriAsama>>> AsamalariOku(int degerZinciriId, int basvuruId, int uygulamaAdresiId)
         {
             Sonuc<List<DegerZinciriAsama>> liste = new Sonuc<List<DegerZinciriAsama>>();
             string sql = @"SELECT dza.Id, dza.DegerZinciriId, dza.SiraNo, dza.Ad, dza.Aciklama, dza.Aktif, bdza.Id, bdza.YapilacakFaaliyetler
                            FROM dbo.DegerZinciriAsama dza
-                           LEFT JOIN dbo.BasvuruDegerZinciriAsama bdza ON dza.Id = bdza.DegerZinciriAsamaId
-                                AND bdza.BasvuruId = @BasvuruId 
+                           OUTER APPLY(SELECT TOP(1) b.Id,b.YapilacakFaaliyetler
+                                       FROM dbo.BasvuruDegerZinciriAsama b
+                                       WHERE b.DegerZinciriAsamaId=dza.Id AND b.BasvuruId=@BasvuruId
+                                         AND (@UygulamaAdresiId=0 OR b.UygulamaAdresiId=@UygulamaAdresiId)
+                                       ORDER BY b.UygulamaAdresiId,b.Id) bdza
                            WHERE dza.DegerZinciriId = @DegerZinciriId
                            ORDER BY dza.SiraNo ASC";
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@DegerZinciriId", degerZinciriId);
             command.Parameters.AddWithValue("@BasvuruId", basvuruId);
+            command.Parameters.AddWithValue("@UygulamaAdresiId", uygulamaAdresiId);
 
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -173,6 +177,25 @@ namespace TarimDonusum.Tablolar
                 DegerZinciriAsama dz = DegerZinciriAsamaOku(reader);
                 liste.nesne.Add(dz);
             }
+            return liste;
+        }
+
+        internal async Task<Sonuc<List<DegerZinciriAsama>>> AsamalariOku(int degerZinciriId, int basvuruId)
+        {
+            Sonuc<List<DegerZinciriAsama>> liste = new();
+            const string sql = @"SELECT dza.Id, dza.DegerZinciriId, dza.SiraNo, dza.Ad, dza.Aciklama, dza.Aktif, bdza.Id, bdza.YapilacakFaaliyetler
+                                 FROM dbo.DegerZinciriAsama dza
+                                 OUTER APPLY (SELECT TOP (1) b.Id, b.YapilacakFaaliyetler
+                                              FROM dbo.BasvuruDegerZinciriAsama b
+                                              WHERE b.DegerZinciriAsamaId=dza.Id AND b.BasvuruId=@BasvuruId
+                                              ORDER BY b.UygulamaAdresiId, b.Id) bdza
+                                 WHERE dza.DegerZinciriId=@DegerZinciriId
+                                 ORDER BY dza.SiraNo";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@DegerZinciriId", degerZinciriId);
+            command.Parameters.AddWithValue("@BasvuruId", basvuruId);
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) liste.nesne.Add(DegerZinciriAsamaOku(reader));
             return liste;
         }
 

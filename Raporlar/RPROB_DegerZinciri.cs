@@ -49,10 +49,19 @@ public sealed class RPROB_DegerZinciri(string uygulamaRootPath) : RPROBTemel(uyg
         {
             DegerZinciriAsama asama = asamalar[i];
             int satir = 11 + i;
-            Yaz(tablo, satir, 1, asama.secili ? "Evet" : "Hayır");
+            List<BasvuruUygulamaAdresi> asamayaAitAdresler = basvuru.YatirimAdresleri
+                .Where(adres => (adres.degerZinciriAsamalari ?? []).Any(x => x.id == asama.id))
+                .ToList();
+            bool secili = asama.secili || asamayaAitAdresler.Count > 0;
+            string yapilacakFaaliyetler = string.Join(", ", asamayaAitAdresler
+                .Select(x => x.yatirimFaaliyetleri?.Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.CurrentCultureIgnoreCase));
+
+            Yaz(tablo, satir, 1, secili ? "Evet" : "Hayır");
             Yaz(tablo, satir, 2, asama.ad);
             Yaz(tablo, satir, 3, asama.aciklama);
-            Yaz(tablo, satir, 4, asama.secili ? asama.yapilacakFaaliyetler : "");
+            Yaz(tablo, satir, 4, secili ? yapilacakFaaliyetler : "");
         }
 
         int rekabetBaslikSatiri = 12 + yazilacakSatirSayisi;

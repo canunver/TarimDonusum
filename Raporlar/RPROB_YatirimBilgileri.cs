@@ -1,5 +1,6 @@
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
+using System.Globalization;
 
 namespace TarimDonusum.Raporlar;
 
@@ -14,8 +15,13 @@ public sealed class RPROB_YatirimBilgileri(string uygulamaRootPath) : RPROBTemel
         BasvuruYatirim y = basvuru.yatirim;
         List<BasvuruUygulamaAdresi> adresler = (basvuru.YatirimAdresleri ?? []).OrderBy(x => x.siraNo).ToList();
         Yaz(tablo, 5, 2, y.yatirimAdi); Yaz(tablo, 5, 6, string.Join(", ", y.yatirimTurleri.Select(YatirimTuruAdi)));
-        Yaz(tablo, 6, 2, adresler.Count); Yaz(tablo, 6, 6, y.basvuruKonusuTesis);
-        Yaz(tablo, 7, 2, string.Join(", ", y.harcamaTurleri.Select(HarcamaTuruAdi))); Yaz(tablo, 7, 6, y.organizeAlanTuru);
+        Yaz(tablo, 6, 2, adresler.Count); Yaz(tablo, 6, 6, BasvuruKonusuTesisAdi(y.yatirimTurleri));
+        string organizeAlanTurleri = string.Join(", ", adresler
+            .Select(x => x.kumelenmeOrganizeAlanTuru)
+            .Where(x => x != enumKumelenmeOrganizeAlanTuru.Tanimsiz)
+            .Distinct()
+            .Select(x => IsimBul.KumelenmeOrganizeAlanTuruAdi(x, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)));
+        Yaz(tablo, 7, 2, string.Join(", ", y.harcamaTurleri.Select(HarcamaTuruAdi))); Yaz(tablo, 7, 6, organizeAlanTurleri);
         Yaz(tablo, 8, 2, y.planlananBaslangicTarihi); Yaz(tablo, 8, 6, y.planlananTamamlanmaTarihi);
         Yaz(tablo, 10, 2, string.Join(Environment.NewLine, new[] { y.yatiriminAmaci, y.yatirimFaaliyetleri, y.yatirimGirdileri, y.yatirimCiktilari }.Where(x => !string.IsNullOrWhiteSpace(x))));
 
@@ -38,6 +44,20 @@ public sealed class RPROB_YatirimBilgileri(string uygulamaRootPath) : RPROBTemel
             Yaz(tablo,r,4,a.donemleriKapsiyorMu.HasValue?(a.donemleriKapsiyorMu.Value?"Evet":"Hayır"):""); Yaz(tablo,r,5,a.kullanimHakkiDosyaAdi);
             Yaz(tablo,r,6,YapiRuhsatiAdi(a.yapiRuhsatiDurumu)); Yaz(tablo,r,7,a.izinTakvimAciklama); Yaz(tablo,r,8,a.kanitDosyaAdi);
         }
+    }
+
+    private static string BasvuruKonusuTesisAdi(IEnumerable<int> yatirimTurleri)
+    {
+        HashSet<enumYatirimTuru> turler = yatirimTurleri.Select(x => (enumYatirimTuru)x).ToHashSet();
+        bool yeniTesis = turler.Contains(enumYatirimTuru.Yeni);
+        bool mevcutTesis = turler.Any(x => x is enumYatirimTuru.KapasiteArtirimi
+            or enumYatirimTuru.Modernizasyon
+            or enumYatirimTuru.TeknolojiYenileme);
+
+        if (yeniTesis && mevcutTesis) return "Her ikisi";
+        if (yeniTesis) return "Yeni tesis";
+        if (mevcutTesis) return "Mevcut tesisin modernizasyonu";
+        return "";
     }
 
     private static string YatirimTuruAdi(int v)=>((enumYatirimTuru)v) switch { enumYatirimTuru.Yeni=>"Yeni",enumYatirimTuru.KapasiteArtirimi=>"Kapasite Artırımı",enumYatirimTuru.Modernizasyon=>"Modernizasyon",enumYatirimTuru.TeknolojiYenileme=>"Teknoloji Yenileme",_=>""};

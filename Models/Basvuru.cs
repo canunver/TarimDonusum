@@ -34,6 +34,30 @@ namespace TarimDonusum.Models
         {
             return localizer[typeof(T).Name + "_" + Convert.ToInt32(enumDegeri)];
         }
+
+        public static string KumelenmeOrganizeAlanTuruAdi(enumKumelenmeOrganizeAlanTuru deger, string? dil = null)
+        {
+            bool ingilizce = string.Equals(dil, "en", StringComparison.OrdinalIgnoreCase);
+            return deger switch
+            {
+                enumKumelenmeOrganizeAlanTuru.OrganizeTarimBolgesi => ingilizce ? "Organized Agricultural Zone" : "Organize Tarım Bölgesi",
+                enumKumelenmeOrganizeAlanTuru.IhtisasGidaBolgesi => ingilizce ? "Specialized Food Zone" : "İhtisas Gıda Bölgesi",
+                enumKumelenmeOrganizeAlanTuru.OrganizeSanayiBolgesi => ingilizce ? "Organized Industrial Zone" : "Organize Sanayi Bölgesi",
+                enumKumelenmeOrganizeAlanTuru.DigerOrganizeAlan => ingilizce ? "Other organized area" : "Diğer organize alan",
+                enumKumelenmeOrganizeAlanTuru.OrganizeAlanDisinda => ingilizce ? "Outside an organized area" : "Organize alan dışında",
+                _ => ""
+            };
+        }
+    }
+
+    public enum enumKumelenmeOrganizeAlanTuru : int
+    {
+        Tanimsiz = 0,
+        OrganizeTarimBolgesi = 1,
+        IhtisasGidaBolgesi = 2,
+        OrganizeSanayiBolgesi = 3,
+        DigerOrganizeAlan = 4,
+        OrganizeAlanDisinda = 5
     }
 
     public enum enumUygulamaAdresiYatirimYeriStatusu : int
@@ -379,6 +403,7 @@ namespace TarimDonusum.Models
         public int firmaId { get { return firma.id; } set { firma.id = value; } }
         public Il il { get; set; } = new Il();
         public int ilId { get { return il.id; } set { il.id = value; } }
+        public int? degerZinciriId { get; set; }
         public string? basvuruKonusu { get; set; } = "";
         public bool? sonIkiYildirFaalMi { get; set; }
         public enumBasvuruSahibiTuru? basvuruSahibiTuru { get; set; }
@@ -397,6 +422,9 @@ namespace TarimDonusum.Models
 
             if (il.id <= 0)
                 sonuc.HataEkle("Başvuru ili seçilmelidir.");
+
+            if (!degerZinciriId.HasValue || degerZinciriId.Value <= 0)
+                sonuc.HataEkle("Değer zinciri seçilmelidir.");
 
             if (firma.id <= 0)
                 sonuc.HataEkle("Firma seçilmelidir.");
@@ -423,6 +451,7 @@ namespace TarimDonusum.Models
         public string? yatirimGirdileri { get; set; }
         public string? yatirimCiktilari { get; set; }
         public int? degerZinciriId { get; set; }
+        public int? uygulamaAdresiId { get; set; }
         public List<DegerZinciriAsama> degerZinciriAsamalari { get; set; } = new();
         public List<int> harcamaTurleri { get; set; } = new();
         public string? basvuruKonusuTesis { get; set; }
@@ -451,9 +480,6 @@ namespace TarimDonusum.Models
 
             if (yatirimTurleri == null || yatirimTurleri.Count == 0)
                 sonuc.HataEkle("Yatırım türü seçilmelidir.");
-
-            if (degerZinciriAsamalari == null || degerZinciriAsamalari.Count == 0)
-                sonuc.HataEkle("En az bir değer zinciri aşaması seçilmelidir.");
 
             if (harcamaTurleri == null || harcamaTurleri.Count == 0)
                 sonuc.HataEkle("En az bir talep edilen harcama türü seçilmelidir.");
@@ -496,12 +522,6 @@ namespace TarimDonusum.Models
         {
             if (basvuruId <= 0)
                 sonuc.HataEkle("Başvuru verilmelidir!");
-
-            if (degerZinciriAsamalari == null || degerZinciriAsamalari.Count == 0)
-                sonuc.HataEkle("En az bir değer zinciri aşaması seçilmelidir.");
-
-            if (degerZinciriAsamalari != null && degerZinciriAsamalari.Any(x => (x.yapilacakFaaliyetler?.Length ?? 0) > 500))
-                sonuc.HataEkle("Yapılacak faaliyetler en fazla 500 karakter olmalıdır.");
 
             string[] teyitSecenekleri = ["Evet", "Hayır", "Kurum teyidi bekleniyor"];
             string[] baglantiSecenekleri = ["Yukarı yönlü tedarik bağlantısı", "Tarımsal girdi kullanan ürün", "Gıda odaklı çıktı", "Birden fazla bağlantı"];
@@ -725,6 +745,7 @@ namespace TarimDonusum.Models
     {
         public int id { get; set; }
         public int basvuruId { get; set; }
+        public int? uygulamaAdresiId { get; set; }
         public enumYatirimOnBilgiTuru tur { get; set; }
         public int siraNo { get; set; }
         public string ad { get; set; } = "";
@@ -735,11 +756,14 @@ namespace TarimDonusum.Models
         public decimal? toplamGuc { get; set; }
         public string? toplamGucBirim { get; set; }
         public decimal? mevcutKapasite { get; set; }
+        public decimal? mevcutUretimMiktari { get; set; }
         public decimal? birinciYilKapasite { get; set; }
+        public decimal? birinciYilUretimMiktari { get; set; }
         public decimal? satisMiktari { get; set; }
         public decimal? birimSatisFiyati { get; set; }
         public decimal? mevcutSatisMiktari { get; set; }
         public decimal? mevcutBirimSatisFiyati { get; set; }
+        public string? uygulamaAdresiAciklama { get; set; }
     }
 
     public class BasvuruYatirimOnBilgiKayitModel
@@ -1220,6 +1244,7 @@ namespace TarimDonusum.Models
         public decimal? boylam { get; set; }
         public string? ada { get; set; }
         public string? parsel { get; set; }
+        public enumKumelenmeOrganizeAlanTuru kumelenmeOrganizeAlanTuru { get; set; } = enumKumelenmeOrganizeAlanTuru.Tanimsiz;
         public string? segeKademesi { get; set; }
         public DateTime? kullanimHakkiBaslangicTarihi { get; set; }
         public bool? donemleriKapsiyorMu { get; set; }
@@ -1236,6 +1261,8 @@ namespace TarimDonusum.Models
         public string? yatirimGirdileri { get; set; }
         public string? yatirimCiktilari { get; set; }
         public string? cevreselSosyalJson { get; set; }
+        public int? degerZinciriId { get; set; }
+        public List<DegerZinciriAsama> degerZinciriAsamalari { get; set; } = new();
 
         public string kiraTahsisBitis
         {
@@ -1262,6 +1289,10 @@ namespace TarimDonusum.Models
                 sonuc.HataEkle("En az bir harcama türü seçilmelidir.");
             if (string.IsNullOrWhiteSpace(yatirimFaaliyetleri))
                 sonuc.HataEkle("Yatırım faaliyetleri girilmelidir.");
+            if (degerZinciriAsamalari == null || degerZinciriAsamalari.Count == 0)
+                sonuc.HataEkle("En az bir değer zinciri aşaması seçilmelidir.");
+            if (degerZinciriAsamalari != null && degerZinciriAsamalari.Any(x => (x.yapilacakFaaliyetler?.Length ?? 0) > 500))
+                sonuc.HataEkle("Yapılacak faaliyetler en fazla 500 karakter olmalıdır.");
 
             bool kiraTahsisBilgisiGerekli =
                 yatirimYeriStatusu == enumUygulamaAdresiYatirimYeriStatusu.Kira ||

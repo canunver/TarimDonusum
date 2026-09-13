@@ -9,6 +9,7 @@ namespace TarimDonusum.Models
         public string pozNo { get; set; } = "";
         public string pozAdi { get; set; } = "";
         public string birim { get; set; } = "";
+        public int hesaplamaTuru { get; set; }
     }
 
     public class PozDonemFiyatKayit

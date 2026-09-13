@@ -43,6 +43,12 @@
                     }
                 </select>
             </label>
+            <label>
+                Değer zinciri
+                <select id="basvuruDegerZinciri" name="Basvuru.DegerZinciriId" disabled="@(anaBilgileriKilitli || b.YatirimAdresleri.Count > 0)">
+                    <option value="">@L["Basvuru.Common.Select"]</option>
+                </select>
+            </label>
         </div>
     </div>
 

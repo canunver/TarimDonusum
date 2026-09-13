@@ -600,6 +600,9 @@
   <data name="Basvuru.Step.3" xml:space="preserve">
     <value>Value Chain - Province-based selection and stages</value>
   </data>
+  <data name="Basvuru.ApplicationValueChain.Title" xml:space="preserve">
+    <value>Additional Value Chain Information</value>
+  </data>
   <data name="Basvuru.Step.4" xml:space="preserve">
     <value>Investment Information - Address and expense types</value>
   </data>
@@ -969,7 +972,7 @@
   <data name="Basvuru.Step.YatirimOzeti" xml:space="preserve">
     <value>Investment Summary Table</value>
   </data>
-  <data name="Basvuru.Step.Urunler" xml:space="preserve"><value>Products</value></data>
+  <data name="Basvuru.Step.Urunler" xml:space="preserve"><value>Products and Sales Information</value></data>
   <data name="Basvuru.Step.ButceGiderler" xml:space="preserve"><value>Budget and Expenses</value></data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
     <value>7. Investment Summary Table</value>
@@ -1223,6 +1226,12 @@
   <data name="enumYatirimTuru_4" xml:space="preserve">
     <value>Technology Renewal</value>
   </data>
+  <data name="enumKumelenmeOrganizeAlanTuru_0" xml:space="preserve"><value>Please Select</value></data>
+  <data name="enumKumelenmeOrganizeAlanTuru_1" xml:space="preserve"><value>Organized Agricultural Zone</value></data>
+  <data name="enumKumelenmeOrganizeAlanTuru_2" xml:space="preserve"><value>Specialized Food Zone</value></data>
+  <data name="enumKumelenmeOrganizeAlanTuru_3" xml:space="preserve"><value>Organized Industrial Zone</value></data>
+  <data name="enumKumelenmeOrganizeAlanTuru_4" xml:space="preserve"><value>Other organized area</value></data>
+  <data name="enumKumelenmeOrganizeAlanTuru_5" xml:space="preserve"><value>Outside an organized area</value></data>
   <data name="enumUygulamaAdresiYatirimYeriStatusu_0" xml:space="preserve">
     <value>Please Select</value>
   </data>
@@ -1719,7 +1728,7 @@
     <value>No</value>
   </data>
   <data name="Basvuru.Applicant.PeriodProvinceTitle" xml:space="preserve">
-    <value>Application Period and Province</value>
+    <value>Application Period, Province and Value Chain</value>
   </data>
   <data name="Basvuru.Applicant.Description" xml:space="preserve">
     <value>Identity, contact, activity and legal type information.</value>
@@ -2103,7 +2112,7 @@
     <value>Application address could not be deleted.</value>
   </data>
   <data name="Basvuru.Ortaklik.Title" xml:space="preserve">
-    <value>3. Ownership and Authority Information</value>
+    <value>Ownership and Authority Information</value>
   </data>
   <data name="Basvuru.Ortaklik.Lead" xml:space="preserve">
     <value>Total shareholding percentage and private sector share are calculated by the system based on partner/shareholder rows. Financial data is not requested for natural person partners; financial data for legal entity partners is collected separately and included in the financial scale check according to the shareholding percentage.</value>

@@ -8,7 +8,10 @@
     string HarcamaTurleriMetni() => string.Join(", ", b.yatirim.harcamaTurleri.Select(x => IsimBul.EnumAdi((enumHarcamaTuru)x, L)).Distinct(StringComparer.CurrentCultureIgnoreCase));
 }
             <section class="basvuru-panel active" data-panel="4">
-                <h2>@L["Basvuru.Section4.Title"]</h2>
+                <div class="section-toolbar">
+                    <h2 class="mb-0">@L["Basvuru.Section4.Title"]</h2>
+                    <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="YatirimBilgileriYazdir" asp-route-id="@b.Id"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+                </div>
                 <div class="preapp-form">
                     <div class="preapp-line">
                         <label for="yatirimAdi">@L["Basvuru.Field.YatirimAdi"]</label>

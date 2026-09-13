@@ -3,7 +3,10 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 @{ var b = Model.Basvuru; bool duzenlenebilir = b.durum == enumBasvuruDurum.OnBasvuruIncelemeDurumu; }
 <section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.UzmanSonuclari)" data-list-type="uzman" data-editable="@duzenlenebilir.ToString().ToLowerInvariant()">
-    <h2>@L["Basvuru.Step.ExpertResults"]</h2>
+    <div class="section-toolbar">
+        <h2 class="mb-0">@L["Basvuru.Step.ExpertResults"]</h2>
+        <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="OnBasvuruUygunlukYazdir" asp-route-id="@b.Id"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+    </div>
     <div class="alert alert-info">@L["Basvuru.Review.ExpertResultsNote"]</div>
     <input type="hidden" class="denetim-listesi-json" value="@b.DenetimAnketi" />
     <div class="table-responsive"><table class="table table-bordered denetim-listesi-table" style="table-layout:fixed; min-width:1400px;">

@@ -4,34 +4,29 @@
 @{
     var b = Model.Basvuru;
     bool ro = Model.SaltOkunur;
-    bool CheckedInt(IEnumerable<int> values, int value) => values.Contains(value);
+    string YatirimTurleriMetni() => string.Join(", ", b.yatirim.yatirimTurleri.Select(x => IsimBul.EnumAdi((enumYatirimTuru)x, L)).Distinct(StringComparer.CurrentCultureIgnoreCase));
+    string HarcamaTurleriMetni() => string.Join(", ", b.yatirim.harcamaTurleri.Select(x => IsimBul.EnumAdi((enumHarcamaTuru)x, L)).Distinct(StringComparer.CurrentCultureIgnoreCase));
 }
 <section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruYatirimBilgileri)">
     <div class="section-toolbar">
         <h2 class="mb-0">Yatırım Bilgileri ve Yatırım Uygulama Yeri</h2>
         <a class="btn btn-outline-primary" href="@Url.Action("YatirimBilgileriYazdir", "Basvuru", new { id = b.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
     </div>
-    <div class="form-grid">
-        <label>Yatırımın adı<input name="Basvuru.YatirimAdi" value="@b.yatirim.yatirimAdi" disabled="@ro" /></label>
-        <label>Başvuru konusu tesis<input name="Basvuru.yatirim.BasvuruKonusuTesis" value="@b.yatirim.basvuruKonusuTesis" disabled="@ro" /></label>
-        <label>Kümelenme / organize alan türü<input name="Basvuru.yatirim.OrganizeAlanTuru" value="@b.yatirim.organizeAlanTuru" disabled="@ro" /></label>
-        <label>Planlanan başlangıç tarihi<input type="date" name="Basvuru.yatirim.PlanlananBaslangicTarihi" value="@b.yatirim.planlananBaslangicTarihi?.ToString("yyyy-MM-dd")" disabled="@ro" /></label>
-        <label>Planlanan tamamlanma tarihi<input type="date" name="Basvuru.yatirim.PlanlananTamamlanmaTarihi" value="@b.yatirim.planlananTamamlanmaTarihi?.ToString("yyyy-MM-dd")" disabled="@ro" /></label>
-    </div>
-    <h3>Yatırım türü</h3>
-    <div class="check-grid">
-        @foreach (enumYatirimTuru item in Enum.GetValues<enumYatirimTuru>().Where(x => x != enumYatirimTuru.Tanimsiz))
-        { <label><input type="checkbox" name="Basvuru.yatirim.yatirimTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.yatirimTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label> }
-    </div>
-    <h3>Talep edilen harcama türleri</h3>
-    <div class="check-grid">
-        @foreach (enumHarcamaTuru item in Enum.GetValues<enumHarcamaTuru>().Where(x => x != enumHarcamaTuru.Tanimsiz))
-        { <label><input type="checkbox" name="Basvuru.yatirim.harcamaTurleri" value="@((int)item)" checked="@CheckedInt(b.yatirim.harcamaTurleri, (int)item)" disabled="@ro" /> @IsimBul.EnumAdi(item, L)</label> }
-    </div>
+    <div class="preapp-form"><div class="preapp-line"><label for="basvuruYatirimAdi">Yatırımın adı</label><input id="basvuruYatirimAdi" name="Basvuru.YatirimAdi" value="@b.yatirim.yatirimAdi" disabled="@ro" /></div></div>
     <label class="wide-label">Yatırımın amacı<textarea name="Basvuru.yatirim.YatiriminAmaci" disabled="@ro">@b.yatirim.yatiriminAmaci</textarea></label>
-    <label class="wide-label">Yatırım faaliyetleri<textarea name="Basvuru.yatirim.YatirimFaaliyetleri" disabled="@ro">@b.yatirim.yatirimFaaliyetleri</textarea></label>
-    <label class="wide-label">Yatırım girdileri<textarea name="Basvuru.yatirim.YatirimGirdileri" disabled="@ro">@b.yatirim.yatirimGirdileri</textarea></label>
-    <label class="wide-label">Yatırım çıktıları<textarea name="Basvuru.yatirim.YatirimCiktilari" disabled="@ro">@b.yatirim.yatirimCiktilari</textarea></label>
+    <div class="preapp-form">
+        <div class="preapp-line">
+            <label>Planlanan başlangıç tarihi<input type="date" name="Basvuru.yatirim.PlanlananBaslangicTarihi" value="@(b.yatirim.planlananBaslangicTarihi?.ToString("yyyy-MM-dd"))" disabled="@ro" /></label>
+            <label>Planlanan tamamlanma tarihi<input type="date" name="Basvuru.yatirim.PlanlananTamamlanmaTarihi" value="@(b.yatirim.planlananTamamlanmaTarihi?.ToString("yyyy-MM-dd"))" disabled="@ro" /></label>
+        </div>
+    </div>
+    <h3 class="subhead mt-4">Adreslerden Birleştirilen Yatırım Bilgileri</h3>
+    <label class="wide-label">Yatırım türü<textarea id="adresOzetYatirimTurleri" readonly>@YatirimTurleriMetni()</textarea></label>
+    <label class="wide-label">Talep edilen harcama türleri<textarea id="adresOzetHarcamaTurleri" readonly>@HarcamaTurleriMetni()</textarea></label>
+    <label class="wide-label">Yatırım faaliyetleri<textarea id="adresOzetFaaliyetler" name="Basvuru.yatirim.YatirimFaaliyetleri" readonly>@b.yatirim.yatirimFaaliyetleri</textarea></label>
+    <label class="wide-label">Yatırım girdileri<textarea id="adresOzetGirdiler" name="Basvuru.yatirim.YatirimGirdileri" readonly>@b.yatirim.yatirimGirdileri</textarea></label>
+    <label class="wide-label">Yatırım çıktıları<textarea id="adresOzetCiktilar" name="Basvuru.yatirim.YatirimCiktilari" readonly>@b.yatirim.yatirimCiktilari</textarea></label>
+    <p class="section-description">Bu alanlar aşağıdaki adres kayıtlarından otomatik olarak birleştirilir.</p>
 
     <div class="section-toolbar mt-4"><h3 class="mb-0">Yatırım Uygulama Yerleri</h3>@if (!ro) { <button type="button" class="btn btn-outline-primary" id="adresYeniBtn"><i class="fas fa-plus mr-1"></i>Yatırım Yeri Ekle</button> }</div>
     <div class="table-responsive"><table class="table uygulama-adres-table"><thead><tr><th>No</th><th>İl</th><th>İlçe</th><th>SEGE</th><th>Açık adres</th><th>Koordinat</th><th>Ada/parsel</th><th>Belge ref.</th><th>İşlem</th></tr></thead><tbody id="uygulamaAdresListesi"></tbody></table></div>

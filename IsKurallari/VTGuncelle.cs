@@ -1001,6 +1001,130 @@ namespace TarimDonusum.IsKurallari
                     );
                     CREATE INDEX IX_OnBasvuruItiraz_BasvuruAnaId ON dbo.OnBasvuruItiraz(BasvuruAnaId, Id);
                   END"),
+            new(81,
+                @"IF COL_LENGTH(N'dbo.BasvuruDegerZinciriAsama',N'UygulamaAdresiId') IS NULL
+                  BEGIN
+                    ALTER TABLE dbo.BasvuruDegerZinciriAsama ADD UygulamaAdresiId INT NULL;
+
+                    INSERT INTO dbo.BasvuruDegerZinciriAsama
+                        (BasvuruId, UygulamaAdresiId, DegerZinciriAsamaId, YapilacakFaaliyetler)
+                    SELECT DISTINCT d.BasvuruId, a.Id, d.DegerZinciriAsamaId, d.YapilacakFaaliyetler
+                    FROM dbo.BasvuruDegerZinciriAsama d
+                    INNER JOIN dbo.BasvuruUygulamaAdresleri a ON a.BasvuruId=d.BasvuruId
+                    WHERE d.UygulamaAdresiId IS NULL;
+
+                    DELETE d
+                    FROM dbo.BasvuruDegerZinciriAsama d
+                    WHERE d.UygulamaAdresiId IS NULL
+                      AND EXISTS(SELECT 1 FROM dbo.BasvuruUygulamaAdresleri a WHERE a.BasvuruId=d.BasvuruId);
+
+                    ALTER TABLE dbo.BasvuruDegerZinciriAsama WITH CHECK
+                      ADD CONSTRAINT FK_BasvuruDegerZinciriAsama_UygulamaAdresi
+                      FOREIGN KEY(UygulamaAdresiId) REFERENCES dbo.BasvuruUygulamaAdresleri(Id);
+                    CREATE INDEX IX_BasvuruDegerZinciriAsama_UygulamaAdresiId
+                      ON dbo.BasvuruDegerZinciriAsama(UygulamaAdresiId, DegerZinciriAsamaId);
+                  END"),
+            new(82,
+                @"IF COL_LENGTH(N'dbo.BasvuruDegerZinciriAsama',N'UygulamaAdresiId') IS NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruDegerZinciriAsama ADD UygulamaAdresiId INT NULL');
+
+                  EXEC(N'INSERT INTO dbo.BasvuruDegerZinciriAsama
+                           (BasvuruId, UygulamaAdresiId, DegerZinciriAsamaId, YapilacakFaaliyetler)
+                         SELECT DISTINCT d.BasvuruId, a.Id, d.DegerZinciriAsamaId, d.YapilacakFaaliyetler
+                         FROM dbo.BasvuruDegerZinciriAsama d
+                         INNER JOIN dbo.BasvuruUygulamaAdresleri a ON a.BasvuruId=d.BasvuruId
+                         WHERE d.UygulamaAdresiId IS NULL;
+
+                         DELETE d
+                         FROM dbo.BasvuruDegerZinciriAsama d
+                         WHERE d.UygulamaAdresiId IS NULL
+                           AND EXISTS(SELECT 1 FROM dbo.BasvuruUygulamaAdresleri a WHERE a.BasvuruId=d.BasvuruId);');
+
+                  IF OBJECT_ID(N'dbo.FK_BasvuruDegerZinciriAsama_UygulamaAdresi',N'F') IS NULL
+                    ALTER TABLE dbo.BasvuruDegerZinciriAsama WITH CHECK
+                      ADD CONSTRAINT FK_BasvuruDegerZinciriAsama_UygulamaAdresi
+                      FOREIGN KEY(UygulamaAdresiId) REFERENCES dbo.BasvuruUygulamaAdresleri(Id);
+
+                  IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.BasvuruDegerZinciriAsama') AND name=N'IX_BasvuruDegerZinciriAsama_UygulamaAdresiId')
+                    CREATE INDEX IX_BasvuruDegerZinciriAsama_UygulamaAdresiId
+                      ON dbo.BasvuruDegerZinciriAsama(UygulamaAdresiId, DegerZinciriAsamaId);"),
+            new(83,
+                @"IF COL_LENGTH(N'dbo.Basvuru',N'DegerZinciriId') IS NULL
+                    EXEC(N'ALTER TABLE dbo.Basvuru ADD DegerZinciriId INT NULL');
+                  EXEC(N'UPDATE b SET DegerZinciriId=x.DegerZinciriId
+                         FROM dbo.Basvuru b
+                         CROSS APPLY(SELECT MIN(dza.DegerZinciriId) DegerZinciriId
+                                     FROM dbo.BasvuruDegerZinciriAsama a
+                                     INNER JOIN dbo.DegerZinciriAsama dza ON dza.Id=a.DegerZinciriAsamaId
+                                     WHERE a.BasvuruId=b.Id) x
+                         WHERE b.DegerZinciriId IS NULL AND x.DegerZinciriId IS NOT NULL');
+                  IF OBJECT_ID(N'dbo.FK_Basvuru_DegerZinciri',N'F') IS NULL
+                    EXEC(N'ALTER TABLE dbo.Basvuru ADD CONSTRAINT FK_Basvuru_DegerZinciri FOREIGN KEY(DegerZinciriId) REFERENCES dbo.DegerZinciri(Id)');"),
+            new(84,
+                @"IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresleri',N'KumelenmeOrganizeAlanTuru') IS NULL
+                    ALTER TABLE dbo.BasvuruUygulamaAdresleri ADD KumelenmeOrganizeAlanTuru INT NOT NULL CONSTRAINT DF_BasvuruUygulamaAdresleri_KumelenmeOrganizeAlanTuru DEFAULT(0);"),
+            new(85,
+                @"IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi',N'UygulamaAdresiId') IS NULL
+                  BEGIN
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD UygulamaAdresiId INT NULL;
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD CONSTRAINT FK_BasvuruYatirimOnBilgi_UygulamaAdresi FOREIGN KEY(UygulamaAdresiId) REFERENCES dbo.BasvuruUygulamaAdresleri(Id);
+                    CREATE INDEX IX_BasvuruYatirimOnBilgi_UygulamaAdresiId ON dbo.BasvuruYatirimOnBilgi(UygulamaAdresiId);
+                  END"),
+            new(86,
+                @"IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi',N'MevcutUretimMiktari') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD MevcutUretimMiktari DECIMAL(18,3) NULL;
+                  IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi',N'BirinciYilUretimMiktari') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD BirinciYilUretimMiktari DECIMAL(18,3) NULL;"),
+            new(87,
+                @"IF COL_LENGTH(N'dbo.BasvuruMetrajBolum',N'Kategori') IS NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruMetrajBolum ADD Kategori INT NULL');
+                  EXEC(N'UPDATE dbo.BasvuruMetrajBolum SET Kategori=CASE
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''TEMEL'',N''KATEGORİ: TEMEL'') THEN 1
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''TAŞIYICI SİSTEM'',N''KATEGORİ: TAŞIYICI SİSTEM'') THEN 2
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''DUVAR'',N''DUVAR İMALATLARI'',N''KATEGORİ: DUVAR İMALATLARI'') THEN 3
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''ÇATI'',N''ÇATI KAPLAMASI'',N''KATEGORİ: ÇATI KAPLAMASI'') THEN 4
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''DİĞER İMALATLAR'',N''KATEGORİ: DİĞER İMALATLAR'') THEN 5
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''ÇEVRE DÜZENLEME'',N''ÇEVRE DÜZENLEME İMALATLARI'',N''KATEGORİ: ÇEVRE DÜZENLEME İMALATLARI'') THEN 6
+                    ELSE Kategori END WHERE Kategori IS NULL');
+                  EXEC(N';WITH Tekrar AS
+                    (SELECT Id,ROW_NUMBER() OVER(PARTITION BY BinaId,Kategori ORDER BY Id) AS Sira
+                     FROM dbo.BasvuruMetrajBolum WHERE Kategori IS NOT NULL)
+                    UPDATE mb SET Kategori=NULL FROM dbo.BasvuruMetrajBolum mb
+                    INNER JOIN Tekrar t ON t.Id=mb.Id WHERE t.Sira>1');
+                  IF OBJECT_ID(N'dbo.CK_BasvuruMetrajBolum_Kategori',N'C') IS NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruMetrajBolum ADD CONSTRAINT CK_BasvuruMetrajBolum_Kategori CHECK(Kategori IS NULL OR Kategori BETWEEN 1 AND 6)');
+                  IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.BasvuruMetrajBolum') AND name=N'UX_BasvuruMetrajBolum_BinaKategori')
+                    EXEC(N'CREATE UNIQUE INDEX UX_BasvuruMetrajBolum_BinaKategori ON dbo.BasvuruMetrajBolum(BinaId,Kategori) WHERE Kategori IS NOT NULL');"),
+            // 87 numaralı komut yeni kolonu aynı SQL paketinde kullandığı için SQL Server
+            // derleme aşamasında hata verebilir. Ayrı dinamik paketlerle güvenli biçimde tamamla.
+            new(88,
+                @"IF COL_LENGTH(N'dbo.BasvuruMetrajBolum',N'Kategori') IS NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruMetrajBolum ADD Kategori INT NULL');
+                  EXEC(N'UPDATE dbo.BasvuruMetrajBolum SET Kategori=CASE
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''TEMEL'',N''KATEGORİ: TEMEL'') THEN 1
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''TAŞIYICI SİSTEM'',N''KATEGORİ: TAŞIYICI SİSTEM'') THEN 2
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''DUVAR'',N''DUVAR İMALATLARI'',N''KATEGORİ: DUVAR İMALATLARI'') THEN 3
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''ÇATI'',N''ÇATI KAPLAMASI'',N''KATEGORİ: ÇATI KAPLAMASI'') THEN 4
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''DİĞER İMALATLAR'',N''KATEGORİ: DİĞER İMALATLAR'') THEN 5
+                    WHEN UPPER(LTRIM(RTRIM(Ad))) IN (N''ÇEVRE DÜZENLEME'',N''ÇEVRE DÜZENLEME İMALATLARI'',N''KATEGORİ: ÇEVRE DÜZENLEME İMALATLARI'') THEN 6
+                    ELSE Kategori END WHERE Kategori IS NULL');
+                  EXEC(N';WITH Tekrar AS
+                    (SELECT Id,ROW_NUMBER() OVER(PARTITION BY BinaId,Kategori ORDER BY Id) AS Sira
+                     FROM dbo.BasvuruMetrajBolum WHERE Kategori IS NOT NULL)
+                    UPDATE mb SET Kategori=NULL FROM dbo.BasvuruMetrajBolum mb
+                    INNER JOIN Tekrar t ON t.Id=mb.Id WHERE t.Sira>1');
+                  IF OBJECT_ID(N'dbo.CK_BasvuruMetrajBolum_Kategori',N'C') IS NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruMetrajBolum ADD CONSTRAINT CK_BasvuruMetrajBolum_Kategori CHECK(Kategori IS NULL OR Kategori BETWEEN 1 AND 6)');
+                  IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.BasvuruMetrajBolum') AND name=N'UX_BasvuruMetrajBolum_BinaKategori')
+                    EXEC(N'CREATE UNIQUE INDEX UX_BasvuruMetrajBolum_BinaKategori ON dbo.BasvuruMetrajBolum(BinaId,Kategori) WHERE Kategori IS NOT NULL');"),
+            new(89,
+                @"IF COL_LENGTH(N'dbo.BasvuruMetrajDetay',N'BenzerSayisi') IS NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruMetrajDetay ADD BenzerSayisi DECIMAL(18,4) NOT NULL CONSTRAINT DF_BasvuruMetrajDetay_BenzerSayisi DEFAULT(1) WITH VALUES');"),
+            new(90,
+                @"IF COL_LENGTH(N'dbo.BasvuruMetrajDetay',N'UrunCinsi') IS NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruMetrajDetay ADD UrunCinsi NVARCHAR(250) NULL');
+                  IF COL_LENGTH(N'dbo.BasvuruMetrajDetay',N'BirimAgirlik') IS NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruMetrajDetay ADD BirimAgirlik DECIMAL(18,4) NULL');"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

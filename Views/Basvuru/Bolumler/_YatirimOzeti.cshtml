@@ -9,7 +9,7 @@
 
 <section class="basvuru-panel active" data-panel="11">
     <div class="section-toolbar">
-        <h2 class="mb-0">Ürünler</h2>
+        <h2 class="mb-0">Ürünler ve Satış Bilgileri</h2>
         <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="YatirimOzetiYazdir" asp-route-id="@b.Id">
             <i class="fas fa-file-excel mr-1"></i>Yazdır
         </a>
@@ -20,13 +20,17 @@
     <script type="application/json" id="yatirimOzetiUrunJson">@Html.Raw(JsonSerializer.Serialize(b.YatirimOnBilgileri.Where(x => x.tur == TarimDonusum.Models.enumYatirimOnBilgiTuru.MevcutUrun || x.tur == TarimDonusum.Models.enumYatirimOnBilgiTuru.UretilecekUrun)))</script>
 
     <div class="yatirim-ozeti-section">
-        <div class="section-toolbar">
-            <div>
-                <h3>@L["Basvuru.YatirimOzeti.Section.Production"]</h3>
-                <p class="mini">@L["Basvuru.YatirimOzeti.Section.ProductionNote"]</p>
+        @if (!ro)
+        {
+            <div class="section-toolbar justify-content-end">
+                <div class="d-flex align-items-center" style="gap:8px">
+                    <a class="btn btn-outline-success" asp-controller="Basvuru" asp-action="UrunlerExcelSablonuIndir"><i class="fas fa-download mr-1"></i>Excel Şablonu</a>
+                    <label class="btn btn-outline-success mb-0" for="urunlerExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label>
+                    <input id="urunlerExcelDosya" type="file" accept=".xlsx,.xls" class="d-none" />
+                    <button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunModalAc(-1)">@L["Basvuru.YatirimOzeti.AddProduct"]</button>
+                </div>
             </div>
-            <button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunModalAc(-1)" disabled="@ro">@L["Basvuru.YatirimOzeti.AddProduct"]</button>
-        </div>
+        }
         <div id="productionInfoBox"></div>
     </div>
 
@@ -38,18 +42,20 @@
     <div class="modal-header"><h5 class="modal-title" id="yoUrunModalBaslik">Ürün ekle</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
     <div class="modal-body">
         <input type="hidden" id="yoUrunIndex"><input type="hidden" id="yoUrunId">
-        <div class="form-grid">
-            <label>Ürün durumu<select id="yoUrunTur"><option value="1">Mevcut</option><option value="2">Yeni</option></select></label>
+        <div class="form-grid urun-modal-form-grid">
+            <label>Ürünün elde edileceği adres<select id="yoUrunUygulamaAdresiId"><option value="">Seçiniz</option>@foreach(var adres in b.YatirimAdresleri.OrderBy(x=>x.siraNo)){<option value="@adres.id">@adres.siraNo. @adres.ilAdi / @adres.ilceAdi - @adres.tamAdres</option>}</select></label>
+            <label>Ürün durumu<select id="yoUrunTur" onchange="YatirimOzetiUrunDurumuGuncelle()"><option value="1">Mevcut</option><option value="2">Yeni</option></select></label>
             <label>Ürün / Ürün Grubu<input id="yoUrunAd" maxlength="250"></label>
             <label>Birim<select id="yoUrunBirim" onchange="YatirimOzetiModalBirimGuncelle()">@foreach(var x in TarimDonusum.Models.OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label>
         </div>
         <div class="table-responsive mt-4"><table class="table table-bordered urun-donem-giris-table">
             <thead><tr><th>Gösterge</th><th>Mevcut</th><th>1. yıl</th></tr></thead>
             <tbody>
-                <tr><th>Kapasite</th><td><div class="input-group"><input id="yoUrunMevcutKapasite" type="text" inputmode="decimal" class="form-control text-right" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td><td><div class="input-group"><input id="yoUrunBirinciYilKapasite" type="text" inputmode="decimal" class="form-control text-right" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td></tr>
-                <tr><th>Satış miktarı</th><td><div class="input-group"><input id="yoUrunMevcutSatisMiktari" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td><td><div class="input-group"><input id="yoUrunSatisMiktari" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td></tr>
-                <tr><th>Birim satış fiyatı</th><td><div class="input-group"><input id="yoUrunMevcutBirimSatisFiyati" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,true)"><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td><td><div class="input-group"><input id="yoUrunBirimSatisFiyati" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,true)"><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td></tr>
-                <tr><th>Satış bedeli</th><td><div class="input-group"><input id="yoUrunMevcutSatisBedeli" class="form-control text-right" readonly><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td><td><div class="input-group"><input id="yoUrunSatisBedeli" class="form-control text-right" readonly><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td></tr>
+                <tr><th>Kapasite</th><td class="yo-mevcut-alani"><div class="input-group"><input id="yoUrunMevcutKapasite" type="text" inputmode="decimal" class="form-control text-right" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td><td><div class="input-group"><input id="yoUrunBirinciYilKapasite" type="text" inputmode="decimal" class="form-control text-right" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td></tr>
+                <tr><th>Üretim miktarı</th><td class="yo-mevcut-alani"><div class="input-group"><input id="yoUrunMevcutUretimMiktari" type="text" inputmode="decimal" class="form-control text-right" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td><td><div class="input-group"><input id="yoUrunBirinciYilUretimMiktari" type="text" inputmode="decimal" class="form-control text-right" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td></tr>
+                <tr><th>Satış miktarı</th><td class="yo-mevcut-alani"><div class="input-group"><input id="yoUrunMevcutSatisMiktari" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td><td><div class="input-group"><input id="yoUrunSatisMiktari" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,false)"><div class="input-group-append"><span class="input-group-text yo-urun-birim">Kg</span></div></div></td></tr>
+                <tr><th>Birim satış fiyatı</th><td class="yo-mevcut-alani"><div class="input-group"><input id="yoUrunMevcutBirimSatisFiyati" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,true)"><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td><td><div class="input-group"><input id="yoUrunBirimSatisFiyati" type="text" inputmode="decimal" class="form-control text-right" oninput="YatirimOzetiModalSatisBedeliGuncelle()" onblur="YatirimOzetiModalSayiyiBicimlendir(this,true)"><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td></tr>
+                <tr><th>Satış bedeli</th><td class="yo-mevcut-alani"><div class="input-group"><input id="yoUrunMevcutSatisBedeli" class="form-control text-right" readonly><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td><td><div class="input-group"><input id="yoUrunSatisBedeli" class="form-control text-right" readonly><div class="input-group-append"><span class="input-group-text">TL</span></div></div></td></tr>
             </tbody>
         </table></div>
     </div>

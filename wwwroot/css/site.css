@@ -431,6 +431,10 @@ body {
   gap: 12px;
 }
 
+.urun-modal-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .adli-sicil-text-grid {
   margin-right: -6px;
   margin-left: -6px;
@@ -1366,6 +1370,23 @@ body {
   padding-right: 6px;
 }
 
+.uygulama-adres-modal .adres-secim-basligi {
+  margin: 20px 0 10px;
+  padding: 8px 12px;
+  border-left: 4px solid #234b7c;
+  border-radius: 0 6px 6px 0;
+  background: #eef4fb;
+  color: #1d3f6e;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.uygulama-adres-modal .adres-secim-listesi {
+  margin-left: 18px;
+  padding-left: 12px;
+  border-left: 1px solid #d8e3f0;
+}
+
 #adliSicilModal .firma-modal-fields {
   max-height: none;
   overflow: visible;
@@ -1684,6 +1705,39 @@ body {
 .urun-donem-giris-table .input-group-text { min-width: 54px; justify-content: center; }
 .urun-liste-table td.urun-donem { text-align: center; white-space: nowrap; }
 .urun-liste-table td.urun-rakam { text-align: right; font-variant-numeric: tabular-nums; }
+
+.yatirim-ozeti-production-table {
+  min-width: 1320px;
+  table-layout: fixed;
+}
+
+.yatirim-ozeti-production-table th,
+.yatirim-ozeti-production-table td {
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.yatirim-ozeti-production-table .urun-col-sira { width: 48px; }
+.yatirim-ozeti-production-table .urun-col-islem { width: 82px; }
+.yatirim-ozeti-production-table .urun-col-adres { width: 260px; }
+.yatirim-ozeti-production-table .urun-col-durum { width: 72px; }
+.yatirim-ozeti-production-table .urun-col-urun { width: 190px; }
+.yatirim-ozeti-production-table .urun-col-donem { width: 72px; }
+.yatirim-ozeti-production-table .urun-col-miktar { width: 110px; }
+.yatirim-ozeti-production-table .urun-col-fiyat { width: 125px; }
+.yatirim-ozeti-production-table .urun-col-bedel { width: 125px; }
+
+.urun-islem-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.urun-islem-buttons .btn {
+  width: 100%;
+  padding-right: 6px;
+  padding-left: 6px;
+}
 
 .db-ctp-table {
   min-width: 900px;
@@ -2108,4 +2162,15 @@ body {
 
 .select2-container .select2-selection--single .select2-selection__arrow {
     height: 36px;
+}
+/* Uygulama yeri koordinat ve kadastro bilgilerini aynı satırda tutar. */
+.uygulama-konum-satiri {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+@media (max-width: 767.98px) {
+    .uygulama-konum-satiri { grid-template-columns: 1fr 1fr; }
 }

@@ -600,6 +600,9 @@
   <data name="Basvuru.Step.3" xml:space="preserve">
     <value>Değer Zinciri - İl bazlı seçim ve aşamalar</value>
   </data>
+  <data name="Basvuru.ApplicationValueChain.Title" xml:space="preserve">
+    <value>Değer Zinciri Ek Bilgiler</value>
+  </data>
   <data name="Basvuru.Step.4" xml:space="preserve">
     <value>Yatırım Bilgileri - Adres ve harcama türleri</value>
   </data>
@@ -969,7 +972,7 @@
   <data name="Basvuru.Step.YatirimOzeti" xml:space="preserve">
     <value>Yatırım Özeti Tablosu</value>
   </data>
-  <data name="Basvuru.Step.Urunler" xml:space="preserve"><value>Ürünler</value></data>
+  <data name="Basvuru.Step.Urunler" xml:space="preserve"><value>Ürünler ve Satış Bilgileri</value></data>
   <data name="Basvuru.Step.ButceGiderler" xml:space="preserve"><value>Bütçe ve Giderler</value></data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
     <value>7. Yatırım Özeti Tablosu</value>
@@ -1271,6 +1274,12 @@
   <data name="enumYatirimTuru_4" xml:space="preserve">
     <value>Teknoloji Yenileme</value>
   </data>
+  <data name="enumKumelenmeOrganizeAlanTuru_0" xml:space="preserve"><value>Lütfen Seçiniz</value></data>
+  <data name="enumKumelenmeOrganizeAlanTuru_1" xml:space="preserve"><value>Organize Tarım Bölgesi</value></data>
+  <data name="enumKumelenmeOrganizeAlanTuru_2" xml:space="preserve"><value>İhtisas Gıda Bölgesi</value></data>
+  <data name="enumKumelenmeOrganizeAlanTuru_3" xml:space="preserve"><value>Organize Sanayi Bölgesi</value></data>
+  <data name="enumKumelenmeOrganizeAlanTuru_4" xml:space="preserve"><value>Diğer organize alan</value></data>
+  <data name="enumKumelenmeOrganizeAlanTuru_5" xml:space="preserve"><value>Organize alan dışında</value></data>
   <data name="enumUygulamaAdresiYatirimYeriStatusu_0" xml:space="preserve">
     <value>Lütfen Seçiniz</value>
   </data>
@@ -1767,7 +1776,7 @@
     <value>Sıra</value>
   </data>
   <data name="Basvuru.Applicant.PeriodProvinceTitle" xml:space="preserve">
-    <value>Başvuru Dönemi ve İli</value>
+    <value>Başvuru Dönemi, İli ve Değer Zinciri</value>
   </data>
   <data name="Basvuru.Applicant.Description" xml:space="preserve">
     <value>Kimlik, iletişim, faaliyet ve hukuki tür bilgileri.</value>
@@ -2151,7 +2160,7 @@
     <value>Uygulama adresi silinemedi.</value>
   </data>
   <data name="Basvuru.Ortaklik.Title" xml:space="preserve">
-    <value>3. Ortaklık ve Yetki Bilgileri</value>
+    <value>Ortaklık ve Yetki Bilgileri</value>
   </data>
   <data name="Basvuru.Ortaklik.Lead" xml:space="preserve">
     <value>Ortak/pay sahibi satırları üzerinden toplam pay oranı ve özel sektör payı sistem tarafından hesaplanır. Gerçek kişi ortaklar için mali veri istenmez; tüzel kişi ortaklar için mali veriler ayrıca alınır ve ortaklık payına göre mali ölçek kontrolüne dahil edilir.</value>

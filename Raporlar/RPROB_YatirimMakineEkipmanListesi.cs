@@ -3,7 +3,7 @@ using TarimDonusum.Models;
 
 namespace TarimDonusum.Raporlar;
 
-public sealed class RPROB_YatirimMakineEkipmanListesi(string uygulamaRootPath) : RPROBTemel(uygulamaRootPath)
+public sealed class RPROB_YatirimMakineEkipmanListesi(string uygulamaRootPath, int? uygulamaAdresiId = null) : RPROBTemel(uygulamaRootPath)
 {
     protected override string SablonAdi => "MakineEkipmanListesi.xltx";
     protected override string GeciciDosyaOnEki => "yatirim-makine-ekipman-listesi";
@@ -11,7 +11,7 @@ public sealed class RPROB_YatirimMakineEkipmanListesi(string uygulamaRootPath) :
 
     protected override void Doldur(Tablo tablo, Basvuru basvuru)
     {
-        List<BasvuruMakine> makineler=(basvuru.Makineler??[]).OrderBy(x=>x.siraNo).ThenBy(x=>x.id).ToList();
+        List<BasvuruMakine> makineler=(basvuru.Makineler??[]).Where(x=>!uygulamaAdresiId.HasValue||x.uygulamaAdresiId==uygulamaAdresiId.Value).OrderBy(x=>x.siraNo).ThenBy(x=>x.id).ToList();
         const int ornekSatir=5;
         if(makineler.Count>1)
         {

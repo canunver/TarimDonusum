@@ -88,9 +88,9 @@ public sealed class RPROB_OnBasvuruYatirimOzeti(string uygulamaRootPath) : RPROB
         new(urun.ad, urun.birim ?? "", new(StringComparer.OrdinalIgnoreCase)
         {
             ["capacity"] = [urun.mevcutKapasite ?? 0, urun.birinciYilKapasite ?? 0],
-            ["production"] = [urun.mevcutKapasite ?? 0, urun.birinciYilKapasite ?? 0],
-            ["sales"] = [0, urun.satisMiktari ?? 0],
-            ["price"] = [0, urun.birimSatisFiyati ?? 0]
+            ["production"] = [urun.mevcutUretimMiktari ?? 0, urun.birinciYilUretimMiktari ?? 0],
+            ["sales"] = [urun.mevcutSatisMiktari ?? 0, urun.satisMiktari ?? 0],
+            ["price"] = [urun.mevcutBirimSatisFiyati ?? 0, urun.birimSatisFiyati ?? 0]
         });
 
     private sealed record UrunSatiri(string Ad, string Birim, Dictionary<string, List<decimal>> Veriler);

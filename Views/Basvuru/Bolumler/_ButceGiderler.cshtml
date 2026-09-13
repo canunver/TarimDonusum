@@ -7,7 +7,10 @@
 <section class="basvuru-panel active" data-panel="@((int)TarimDonusum.Models.enumBasvuruBolum.ButceGiderler)">
     <div class="section-toolbar">
         <h2 class="mb-0">Bütçe ve Giderler</h2>
-        <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="YatirimOzetiYazdir" asp-route-id="@b.Id"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+        <div class="d-flex align-items-center" style="gap:8px">
+            <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="ProjeButcesiYazdir" asp-route-id="@b.Id"><i class="fas fa-file-excel mr-1"></i>Proje Bütçesini Yazdır</a>
+            <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="IsletmeGideriYazdir" asp-route-id="@b.Id"><i class="fas fa-file-excel mr-1"></i>İşletme Giderlerini Yazdır</a>
+        </div>
     </div>
     <p class="lead">Yatırım bütçesi, finansman kaynakları ve yıllık işletme giderlerini giriniz.</p>
     <input type="hidden" id="yatirimOzetiJson" value="@b.yatirimOzeti.yatirimOzetiJson" />
