@@ -84,7 +84,11 @@ namespace TarimDonusum.IsKurallari
             [4] = "Basvuru.Documents.Required.4",
             [5] = "Basvuru.Documents.Required.5",
             [6] = "Basvuru.Documents.Required.6",
-            [7] = "Basvuru.Documents.Required.7"
+            [7] = "Basvuru.Documents.Required.7",
+            [8] = "Basvuru.Documents.Required.8",
+            [9] = "Basvuru.Documents.Required.9",
+            [10] = "Basvuru.Documents.Required.10",
+            [11] = "Basvuru.Documents.Required.11"
         };
         private static readonly IReadOnlyDictionary<int, string> BagliOrtakDosyaTurleri = new Dictionary<int, string>
         {
@@ -94,7 +98,10 @@ namespace TarimDonusum.IsKurallari
             [4] = "Basvuru.Documents.Required.4",
             [5] = "Basvuru.Documents.Required.5",
             [6] = "Basvuru.Documents.Required.6",
-            [7] = "Basvuru.Documents.Required.7"
+            [7] = "Basvuru.Documents.Required.7",
+            [9] = "Basvuru.Documents.Required.9",
+            [10] = "Basvuru.Documents.Required.10",
+            [11] = "Basvuru.Documents.Required.11"
         };
 
         private readonly string _connectionString;
@@ -858,9 +865,12 @@ namespace TarimDonusum.IsKurallari
             Eksikse(!b.IkiYillikFaaliyetSartindanMuaf && b.basvuruFirma.sonIkiYildirFaalMi != true, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
             Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru == enumBasvuruSahibiTuru.Tanimsiz, "Basvuru.Summary.Error.ApplicantTypeRequired");
             Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru == enumHukukiTurSirketTuru.Tanimsiz, "Basvuru.Summary.Error.LegalTypeRequired");
+            Eksikse(!b.ortaklik.ozelSektorPayi.HasValue || b.ortaklik.ozelSektorPayi.Value < 75, "Basvuru.Summary.Error.PrivateShareRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), "Basvuru.Summary.Error.InvestmentNameRequired");
             Eksikse(b.YatirimAdresleri.Any(x => x.yatirimTurleri.Count == 0), "Basvuru.Summary.Error.InvestmentTypeRequired");
             Eksikse(b.YatirimAdresleri.Count == 0, "Basvuru.Summary.Error.InvestmentAddressRequired");
+            if (donem?.uygulamaAdresiSinirliMi == true && b.YatirimAdresleri.Count > 1)
+                sonuc.HataEkle("Bu dönemde yalnızca bir uygulama adresi kullanılabilir.");
             Eksikse(b.YatirimAdresleri.Any(x => x.harcamaTurleri.Count == 0), "Basvuru.Summary.Error.ExpenseTypeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), "Basvuru.Summary.Error.InvestmentPurposeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri), "Basvuru.Summary.Error.InvestmentActivitiesRequired");
@@ -869,8 +879,9 @@ namespace TarimDonusum.IsKurallari
             Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, "Basvuru.Summary.Error.ValueChainRequired");
             Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, "Basvuru.Summary.Error.ValueChainStageRequired");
             Eksikse(!maliOlcekUygun, "Basvuru.Summary.Error.FinancialScaleRequired");
-            Eksikse(b.basvuruFirma.donem.destekOrani.GetValueOrDefault() > 0
-                && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > b.basvuruFirma.donem.destekOrani.GetValueOrDefault(), "Basvuru.Finance.RateLimitExceeded");
+            decimal azamiFinansmanOrani = b.basvuruFirma.donem.AzamiDestekOrani(b.YatirimAdresleri.Select(x => x.ilceId));
+            Eksikse(azamiFinansmanOrani > 0
+                && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > azamiFinansmanOrani, "Basvuru.Finance.RateLimitExceeded");
             Eksikse(b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault() > 0
                 && b.finans.talepEdilenDestekTutari.GetValueOrDefault() > b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault(), "Basvuru.Finance.MaximumSupportExceeded");
             Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, "Basvuru.Finance.InvestmentDurationRequired");
@@ -878,7 +889,11 @@ namespace TarimDonusum.IsKurallari
             Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, "Basvuru.Summary.Error.AuditFileRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirimOzeti.yatirimOzetiJson), "Basvuru.Summary.Error.InvestmentSummaryRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.dbCtpTeknikProje.dbCtpTeknikProjeJson), "Basvuru.Summary.Error.DbCtpRequired");
-            Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.RequiredDocumentsRequired");
+            bool merkeziTuzukBelgesiVar = b.TumBasvuruDosyalari.Any(x =>
+                string.Equals(x.FormAd, BasvuruZorunluBelgeMerkeziFormAd, StringComparison.OrdinalIgnoreCase)
+                && x.DosyaNo == ZorunluBelgeTanimlari.GuncelTuzukBelgeNo);
+            Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue
+                && !(x.dosyaNo == 8 && merkeziTuzukBelgesiVar)), "Basvuru.Summary.Error.RequiredDocumentsRequired");
             Eksikse(b.ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase)
                 && x.zorunluBelgeler.Any(d => !d.dosyaId.HasValue)), "Basvuru.Summary.Error.LegalPartnerDocumentsRequired");
             Eksikse(b.AdliSicilKisileri.Count == 0, "Basvuru.Summary.Error.CriminalPeopleRequired");
@@ -1660,7 +1675,7 @@ namespace TarimDonusum.IsKurallari
                 finans.Dogrula(sonuc);
                 if (!sonuc.basarili) return sonuc;
 
-                decimal azamiFinansmanOrani = mevcut?.basvuruFirma.donem.destekOrani.GetValueOrDefault() ?? 0;
+                decimal azamiFinansmanOrani = mevcut?.basvuruFirma.donem.AzamiDestekOrani(mevcut.YatirimAdresleri.Select(x => x.ilceId)) ?? 0;
                 if (azamiFinansmanOrani > 0 && finans.talepEdilenFinansmanOrani.GetValueOrDefault() > azamiFinansmanOrani)
                 {
                     sonuc.HataEkle($"Talep edilen finansman oranı dönem için tanımlanan %{azamiFinansmanOrani:0.##} oranını aşamaz.");
@@ -2599,10 +2614,8 @@ namespace TarimDonusum.IsKurallari
             {
                 ortaklik ??= new BasvuruOrtaklik();
                 ortaklik.ortaklar ??= new List<BasvuruOrtak>();
-                ortaklik.ozelSektorPayi = ortaklik.ortaklar
-                    .Where(x => string.Equals(x.ozelKamuNiteligi, "Özel", StringComparison.OrdinalIgnoreCase))
-                    .Sum(x => x.payOrani.GetValueOrDefault());
-
+                if (!ortaklik.ozelSektorPayi.HasValue || ortaklik.ozelSektorPayi < 0 || ortaklik.ozelSektorPayi > 100)
+                    sonuc.HataEkle("Özel sektör payı 0 ile 100 arasında girilmelidir.");
                 ortaklik.Dogrula(sonuc);
                 if (!sonuc.basarili)
                     return sonuc;
@@ -3713,6 +3726,12 @@ namespace TarimDonusum.IsKurallari
                 if (!sonuc.basarili || mevcut == null)
                     return sonuc;
 
+                if (adres.id <= 0 && mevcut.basvuruFirma.donem.uygulamaAdresiSinirliMi && mevcut.YatirimAdresleri.Count >= 1)
+                {
+                    sonuc.HataEkle("Bu dönemde yalnızca bir uygulama adresi eklenebilir.");
+                    return sonuc;
+                }
+
                 adres.degerZinciriId = mevcut.yatirim.degerZinciriId;
 
                 TABIlce tabIlce = new TABIlce(connection);
@@ -3964,7 +3983,7 @@ namespace TarimDonusum.IsKurallari
         public async Task<Sonuc<BasvuruMetrajPoz>> MetrajPozKaydetAsync(BasvuruMetrajPoz model,Kullanici kullanici)
         {
             Sonuc<BasvuruMetrajPoz> sonuc=new();model.detaylar??=[];model.detaylar.ForEach(x=>x.urunCinsi=x.urunCinsi?.Trim()??"");if(model.basvuruId<=0||model.bolumId<=0||model.pozId<=0||model.siraNo<=0)sonuc.HataEkle("Yapım bölümü, sıra numarası ve poz zorunludur.");if(model.detaylar.Count==0)sonuc.HataEkle("En az bir metraj detay satırı girilmelidir.");if(model.detaylar.GroupBy(x=>x.siraNo).Any(x=>x.Key<=0||x.Count()>1))sonuc.HataEkle("Metraj detay sıra numaraları geçersiz veya tekrarlıdır.");if(model.detaylar.Any(x=>x.aciklama?.Length>500||x.urunCinsi.Length>250))sonuc.HataEkle("Metraj açıklaması en fazla 500, ürün cinsi en fazla 250 karakter olabilir.");if(model.detaylar.Any(x=>x.benzerSayisi<=0))sonuc.HataEkle("Benzer sayısı sıfırdan büyük olmalıdır.");if(model.detaylar.Any(x=>!x.adet.HasValue&&!x.boy.HasValue&&!x.en.HasValue&&!x.yukseklik.HasValue))sonuc.HataEkle("Her detay satırında en az bir ölçü girilmelidir.");if(model.detaylar.SelectMany(x=>new decimal?[]{x.benzerSayisi,x.adet,x.boy,x.en,x.yukseklik,x.birimAgirlik}).Any(x=>x.HasValue&&Math.Abs(x.Value)>100000000m))sonuc.HataEkle("Metraj ölçüsü izin verilen sınırı aşıyor.");if(!sonuc.basarili)return sonuc;
-            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Basvuru? b=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,sonuc);if(!sonuc.basarili||b==null)return sonuc;BasvuruMetrajVerisi veri=await new TABBasvuruMetraj(connection,_localizer).OkuAsync(model.basvuruId,b.basvuruFirma.donemId);if(!veri.binalar.SelectMany(x=>x.bolumler).Any(x=>x.id==model.bolumId)){sonuc.HataEkle("Yapım bölümü bulunamadı.");return sonuc;}PozDonemFiyat? fiyat=veri.pozlar.FirstOrDefault(x=>x.pozId==model.pozId);if(fiyat==null){sonuc.HataEkle("Poz bulunamadı veya aktif değil.");return sonuc;}if(!fiyat.birimFiyat.HasValue){sonuc.HataEkle("Seçilen poz için başvuru döneminde birim fiyat girilmemiştir.");return sonuc;}if(fiyat.hesaplamaTuru==(int)enumPozHesaplamaTuru.Agirlik&&model.detaylar.Any(x=>string.IsNullOrWhiteSpace(x.urunCinsi)||x.birimAgirlik is null or <=0)){sonuc.HataEkle("Ağırlık metrajında her satır için ürün cinsi ve sıfırdan büyük birim ağırlık (kg/m³) girilmelidir.");return sonuc;}model.birimFiyat=fiyat.birimFiyat.Value;model.pozNo=fiyat.pozNo;model.pozAdi=fiyat.pozAdi;model.birim=fiyat.birim;model.hesaplamaTuru=fiyat.hesaplamaTuru;await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();await new TABBasvuruMetraj(connection,_localizer,tr).PozKaydetAsync(model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj="Poz ve metraj detayları kaydedildi.";}
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Basvuru? b=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,sonuc);if(!sonuc.basarili||b==null)return sonuc;BasvuruMetrajVerisi veri=await new TABBasvuruMetraj(connection,_localizer).OkuAsync(model.basvuruId,b.basvuruFirma.donemId);if(!veri.binalar.SelectMany(x=>x.bolumler).Any(x=>x.id==model.bolumId)){sonuc.HataEkle("Yapım bölümü bulunamadı.");return sonuc;}PozDonemFiyat? fiyat=veri.pozlar.FirstOrDefault(x=>x.pozId==model.pozId);if(fiyat==null){sonuc.HataEkle("Poz bulunamadı veya aktif değil.");return sonuc;}bool agirlikMetraji=fiyat.hesaplamaTuru==(int)enumPozHesaplamaTuru.Agirlik||string.Equals(fiyat.birim,"Kg",StringComparison.OrdinalIgnoreCase)||string.Equals(fiyat.birim,"Ton",StringComparison.OrdinalIgnoreCase);if(agirlikMetraji&&model.detaylar.Any(x=>string.IsNullOrWhiteSpace(x.urunCinsi)||x.birimAgirlik is null or <=0)){sonuc.HataEkle($"Kg veya ton metrajında her satır için ürün cinsi ve sıfırdan büyük birim ağırlık ({fiyat.birim}/m³) girilmelidir.");return sonuc;}model.birimFiyat=fiyat.birimFiyat??0;model.pozNo=fiyat.pozNo;model.pozAdi=fiyat.pozAdi;model.birim=fiyat.birim;model.hesaplamaTuru=fiyat.hesaplamaTuru;await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();await new TABBasvuruMetraj(connection,_localizer,tr).PozKaydetAsync(model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj="Poz ve metraj detayları kaydedildi.";}
             catch(SqlException ex)when(ex.Number is 2601 or 2627){sonuc.HataEkle("Aynı sıra numarası bu yapım bölümünde veya poz detaylarında tekrar kullanılamaz.");}catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Metraj pozu kaydedilemedi. BasvuruId: {BasvuruId}","Poz metrajı kaydedilemedi.",model.basvuruId);}return sonuc;
         }
 
@@ -4397,7 +4416,11 @@ namespace TarimDonusum.IsKurallari
             if (basvuru.Id <= 0)
                 return;
 
-            basvuru.ZorunluBelgeler = await BasvuruDosyaListesiOlusturAsync(basvuru.Id, BasvuruZorunluBelgeFormAd, ZorunluBelgeTurleri);
+            bool tuzukGerekli = basvuru.basvuruFirma.basvuruSahibiTuru is enumBasvuruSahibiTuru.UreticiOrgutu or enumBasvuruSahibiTuru.Kooperatif;
+            IReadOnlyDictionary<int, string> belgeTurleri = tuzukGerekli
+                ? ZorunluBelgeTurleri
+                : ZorunluBelgeTurleri.Where(x => x.Key != 8).ToDictionary(x => x.Key, x => x.Value);
+            basvuru.ZorunluBelgeler = await BasvuruDosyaListesiOlusturAsync(basvuru.Id, BasvuruZorunluBelgeFormAd, belgeTurleri);
             foreach (BasvuruOrtak ortak in basvuru.ortaklik.ortaklar.Where(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase)))
             {
                 ortak.zorunluBelgeler = await BasvuruDosyaListesiOlusturAsync(
@@ -4440,7 +4463,9 @@ namespace TarimDonusum.IsKurallari
         private string BasvuruDosyaTuruBul(string formAd, int dosyaNo)
         {
             if (string.Equals(formAd, BasvuruZorunluBelgeMerkeziFormAd, StringComparison.OrdinalIgnoreCase))
-                return ZorunluBelgeTanimlari.Tum.FirstOrDefault(x => x.No == dosyaNo)?.Ad ?? "";
+                return dosyaNo == ZorunluBelgeTanimlari.GuncelTuzukBelgeNo
+                    ? "Güncel tüzük / ana sözleşme"
+                    : ZorunluBelgeTanimlari.Tum.FirstOrDefault(x => x.No == dosyaNo)?.Ad ?? "";
             if (string.Equals(formAd, BasvuruZorunluBelgeFormAd, StringComparison.OrdinalIgnoreCase)
                 && ZorunluBelgeTurleri.TryGetValue(dosyaNo, out string? zorunluBelgeTuru))
                 return Metin(zorunluBelgeTuru);

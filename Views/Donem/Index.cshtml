@@ -1,3 +1,4 @@
+@model List<TarimDonusum.Models.Il>
 @{
     ViewData["Title"] = "Dönemler";
 }
@@ -56,6 +57,49 @@
                     <label>Maksimum yatırım tutarı<input id="maksimumYatirim" type="text" inputmode="numeric" class="form-control money-integer" /></label>
                     <label>Maksimum destek tutarı (EUR)<input id="maksimumDestek" type="text" inputmode="numeric" class="form-control money-integer" /></label>
                     <label>Destek oranı (%)<input id="destekOrani" type="number" min="0" max="100" step="0.01" class="form-control" /></label>
+                    <label>İstisna kredi oranı (%)<input id="istisnaDestekOrani" type="number" min="0" max="100" step="0.01" class="form-control" /></label>
+                    <label>Uygulama adresi sınırlı mı?
+                        <select id="uygulamaAdresiSinirliMi" class="form-control"><option value="false">Hayır</option><option value="true">Evet (en fazla 1 adres)</option></select>
+                    </label>
+                    <div class="donem-form-full">
+                        <label class="d-block">İstisna ilçeler</label>
+                        <div class="form-row align-items-end mb-3">
+                            <div class="col-md-5">
+                                <label>İl
+                                    <select id="istisnaIl" class="form-control" onchange="IstisnaIlDegisti()">
+                                        <option value="">İl seçiniz</option>
+                                        @foreach (var il in Model.Where(x => x.aktif).OrderBy(x => x.kod))
+                                        {
+                                            <option value="@il.id">@il.ad</option>
+                                        }
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="col-md-5">
+                                <label>İlçe
+                                    <select id="istisnaIlce" class="form-control" disabled><option value="">Önce il seçiniz</option></select>
+                                </label>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-primary btn-block" onclick="IstisnaIlceEkle()"><i class="fas fa-plus mr-1"></i>Ekle</button>
+                            </div>
+                        </div>
+                        <select id="istisnaIlceIds" class="d-none" multiple>
+                            @foreach (var il in Model.OrderBy(x => x.kod))
+                            {
+                                @foreach (var ilce in il.ilceler.Where(x => x.Aktif).OrderBy(x => x.Ad))
+                                {
+                                    <option value="@ilce.Id" data-il-id="@il.id" data-il-adi="@il.ad">@ilce.Ad</option>
+                                }
+                            }
+                        </select>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead><tr><th>İl</th><th>İlçe</th><th class="text-right">İşlem</th></tr></thead>
+                                <tbody id="istisnaIlceListesi"></tbody>
+                            </table>
+                        </div>
+                    </div>
                     <label class="donem-form-full">Açıklama<textarea id="aciklama" rows="3" class="form-control"></textarea></label>
                 </div>
             </div>
@@ -91,6 +135,39 @@
     };
     const htmlEncode = value => $('<div/>').text(value == null ? '' : String(value)).html();
 
+    function IstisnaIlDegisti() {
+        const ilId = Number($('#istisnaIl').val() || 0);
+        const ilce = $('#istisnaIlce').empty();
+        ilce.append(`<option value="">${ilId ? 'İlçe seçiniz' : 'Önce il seçiniz'}</option>`);
+        $('#istisnaIlceIds option').filter(function () { return Number(this.dataset.ilId) === ilId; }).each(function () {
+            ilce.append($('<option/>').val(this.value).text(this.textContent));
+        });
+        ilce.prop('disabled', ilId <= 0);
+    }
+
+    function IstisnaIlceEkle() {
+        const ilceId = String($('#istisnaIlce').val() || '');
+        if (!ilceId) { PopupMesajGoster('İlçe seçiniz.', false); return; }
+        $(`#istisnaIlceIds option[value="${ilceId}"]`).prop('selected', true);
+        IstisnaIlceListesiniYaz();
+    }
+
+    function IstisnaIlceCikart(ilceId) {
+        $(`#istisnaIlceIds option[value="${Number(ilceId)}"]`).prop('selected', false);
+        IstisnaIlceListesiniYaz();
+    }
+
+    function IstisnaIlceListesiniYaz() {
+        const tbody = $('#istisnaIlceListesi').empty();
+        const secili = $('#istisnaIlceIds option:selected').get().sort((a, b) =>
+            String(a.dataset.ilAdi).localeCompare(String(b.dataset.ilAdi), 'tr') || a.text.localeCompare(b.text, 'tr'));
+        if (!secili.length) {
+            tbody.append('<tr><td colspan="3" class="text-center text-muted">Henüz istisna ilçesi eklenmedi.</td></tr>');
+            return;
+        }
+        secili.forEach(option => tbody.append(`<tr><td>${htmlEncode(option.dataset.ilAdi)}</td><td>${htmlEncode(option.text)}</td><td class="text-right"><button type="button" class="btn btn-sm btn-outline-danger" onclick="IstisnaIlceCikart(${Number(option.value)})"><i class="fas fa-times mr-1"></i>Çıkart</button></td></tr>`));
+    }
+
     function DonemListeYaz() {
         const tbody = $('#donemListe').empty();
         donemler.forEach(d => tbody.append(`<tr>
@@ -112,6 +189,10 @@
         $('#onBasvuruCevrimKuru').val(d.onBasvuruCevrimKuru ?? ''); $('#basvuruCevrimKuru').val(d.basvuruCevrimKuru ?? '');
         $('#minimumYatirim').val(d.minimumYatirimTutari ?? ''); $('#maksimumYatirim').val(d.maksimumYatirimTutari ?? '');
         $('#maksimumDestek').val(d.maksimumDestekTutari ?? ''); $('#destekOrani').val(d.destekOrani ?? '');
+        $('#istisnaDestekOrani').val(d.istisnaDestekOrani ?? '');
+        $('#istisnaIlceIds').val((d.istisnaIlceIds || []).map(String));
+        $('#istisnaIl').val(''); IstisnaIlDegisti(); IstisnaIlceListesiniYaz();
+        $('#uygulamaAdresiSinirliMi').val(String(d.uygulamaAdresiSinirliMi === true));
         $('#basvuruyaAcik').val(String(d.basvuruyaAcikMi === true)); $('#aciklama').val(d.aciklama || '');
         document.querySelectorAll('#donemModal .money-integer').forEach(paraFormatla);
         $('#donemModal').modal('show');
@@ -127,7 +208,10 @@
             maksimumYatirimTutari: paraDegeri('#maksimumYatirim'), maksimumDestekTutari: paraDegeri('#maksimumDestek'),
             onBasvuruCevrimKuru: $('#onBasvuruCevrimKuru').val() === '' ? null : Number($('#onBasvuruCevrimKuru').val()),
             basvuruCevrimKuru: $('#basvuruCevrimKuru').val() === '' ? null : Number($('#basvuruCevrimKuru').val()),
-            destekOrani: $('#destekOrani').val() === '' ? null : Number($('#destekOrani').val()), aciklama: $('#aciklama').val()
+            destekOrani: $('#destekOrani').val() === '' ? null : Number($('#destekOrani').val()),
+            istisnaDestekOrani: $('#istisnaDestekOrani').val() === '' ? null : Number($('#istisnaDestekOrani').val()),
+            istisnaIlceIds: ($('#istisnaIlceIds').val() || []).map(Number),
+            uygulamaAdresiSinirliMi: $('#uygulamaAdresiSinirliMi').val() === 'true', aciklama: $('#aciklama').val()
         }, function (sonuc) {
             if (!sonuc || !sonuc.basarili) { PopupMesajGoster((sonuc && sonuc.hataStr) || 'Dönem kaydedilemedi.', false); return; }
             $('#donemModal').modal('hide'); PopupMesajGoster(sonuc.mesaj || 'Dönem kaydedildi.', true); DonemListele();

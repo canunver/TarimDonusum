@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Localization;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
+using System.Text.Json;
 
 namespace TarimDonusum.Tablolar
 {
@@ -30,6 +31,9 @@ namespace TarimDonusum.Tablolar
                     MaksimumYatirimTutari,
                     MaksimumDestekTutari,
                     DestekOrani,
+                    IstisnaDestekOrani,
+                    IstisnaIlceIdsJson,
+                    UygulamaAdresiSinirliMi,
                     Aciklama
                 FROM dbo.Donem
                 WHERE Id = @Id;";
@@ -62,6 +66,9 @@ namespace TarimDonusum.Tablolar
                     MaksimumYatirimTutari,
                     MaksimumDestekTutari,
                     DestekOrani,
+                    IstisnaDestekOrani,
+                    IstisnaIlceIdsJson,
+                    UygulamaAdresiSinirliMi,
                     Aciklama
                 FROM dbo.Donem
                 ORDER BY Yil DESC, BasvuruBaslangicTarihi DESC, Id DESC;";
@@ -84,12 +91,12 @@ namespace TarimDonusum.Tablolar
                 INSERT INTO dbo.Donem
                     (Yil, Ad, BasvuruyaAcikMi, BasvuruBaslangicTarihi, BasvuruBitisTarihi,
                      OnBasvuruBaslangicTarihi, OnBasvuruBitisTarihi, OnBasvuruCevrimKuru, BasvuruCevrimKuru, MinimumYatirimTutari, MaksimumYatirimTutari,
-                     MaksimumDestekTutari, DestekOrani, Aciklama)
+                     MaksimumDestekTutari, DestekOrani, IstisnaDestekOrani, IstisnaIlceIdsJson, UygulamaAdresiSinirliMi, Aciklama)
                 OUTPUT INSERTED.Id
                 VALUES
                     (@Yil, @Ad, @BasvuruyaAcikMi, @BasvuruBaslangicTarihi, @BasvuruBitisTarihi,
                      @OnBasvuruBaslangicTarihi, @OnBasvuruBitisTarihi, @OnBasvuruCevrimKuru, @BasvuruCevrimKuru, @MinimumYatirimTutari, @MaksimumYatirimTutari,
-                     @MaksimumDestekTutari, @DestekOrani, @Aciklama);";
+                     @MaksimumDestekTutari, @DestekOrani, @IstisnaDestekOrani, @IstisnaIlceIdsJson, @UygulamaAdresiSinirliMi, @Aciklama);";
 
             await using SqlCommand command = KomutOlustur(sql);
             ParametreleriEkle(command, donem);
@@ -110,7 +117,11 @@ namespace TarimDonusum.Tablolar
                     MinimumYatirimTutari = @MinimumYatirimTutari,
                     MaksimumYatirimTutari = @MaksimumYatirimTutari,
                     MaksimumDestekTutari = @MaksimumDestekTutari,
-                    DestekOrani = @DestekOrani, Aciklama = @Aciklama
+                    DestekOrani = @DestekOrani,
+                    IstisnaDestekOrani = @IstisnaDestekOrani,
+                    IstisnaIlceIdsJson = @IstisnaIlceIdsJson,
+                    UygulamaAdresiSinirliMi = @UygulamaAdresiSinirliMi,
+                    Aciklama = @Aciklama
                 WHERE Id = @Id;";
 
             await using SqlCommand command = KomutOlustur(sql);
@@ -134,6 +145,9 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@MaksimumYatirimTutari", (object?)donem.maksimumYatirimTutari ?? DBNull.Value);
             command.Parameters.AddWithValue("@MaksimumDestekTutari", (object?)donem.maksimumDestekTutari ?? DBNull.Value);
             command.Parameters.AddWithValue("@DestekOrani", (object?)donem.destekOrani ?? DBNull.Value);
+            command.Parameters.AddWithValue("@IstisnaDestekOrani", (object?)donem.istisnaDestekOrani ?? DBNull.Value);
+            command.Parameters.AddWithValue("@IstisnaIlceIdsJson", JsonSerializer.Serialize(donem.istisnaIlceIds.Distinct().OrderBy(x => x)));
+            command.Parameters.AddWithValue("@UygulamaAdresiSinirliMi", donem.uygulamaAdresiSinirliMi ? 1 : 0);
             command.Parameters.AddWithValue("@Aciklama", donem.aciklama?.Trim() ?? "");
         }
 
@@ -155,6 +169,9 @@ namespace TarimDonusum.Tablolar
             d.maksimumYatirimTutari = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
             d.maksimumDestekTutari = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
             d.destekOrani = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
+            d.istisnaDestekOrani = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
+            d.istisnaIlceIds = reader.IsDBNull(kol) ? new List<int>() : JsonSerializer.Deserialize<List<int>>(reader.GetString(kol)) ?? new List<int>(); kol++;
+            d.uygulamaAdresiSinirliMi = BoolYap(NullDuzeltInt(reader, kol++));
             d.aciklama = reader.GetString(kol++);
             return d;
         }

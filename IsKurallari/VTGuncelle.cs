@@ -1125,6 +1125,41 @@ namespace TarimDonusum.IsKurallari
                     EXEC(N'ALTER TABLE dbo.BasvuruMetrajDetay ADD UrunCinsi NVARCHAR(250) NULL');
                   IF COL_LENGTH(N'dbo.BasvuruMetrajDetay',N'BirimAgirlik') IS NULL
                     EXEC(N'ALTER TABLE dbo.BasvuruMetrajDetay ADD BirimAgirlik DECIMAL(18,4) NULL');"),
+            new(91,
+                @"IF COL_LENGTH(N'dbo.BasvuruMetrajDetay',N'BirimAgirlik') IS NOT NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruMetrajDetay ALTER COLUMN BirimAgirlik DECIMAL(18,6) NULL');"),
+            new(92,
+                @"IF COL_LENGTH(N'dbo.Donem',N'IstisnaDestekOrani') IS NULL
+                    EXEC(N'ALTER TABLE dbo.Donem ADD IstisnaDestekOrani DECIMAL(5,2) NULL');
+                  IF COL_LENGTH(N'dbo.Donem',N'IstisnaIlceIdsJson') IS NULL
+                    EXEC(N'ALTER TABLE dbo.Donem ADD IstisnaIlceIdsJson NVARCHAR(MAX) NOT NULL CONSTRAINT DF_Donem_IstisnaIlceIdsJson DEFAULT(N''[]'') WITH VALUES');"),
+            new(93,
+                @"IF COL_LENGTH(N'dbo.Donem',N'UygulamaAdresiSinirliMi') IS NULL
+                    EXEC(N'ALTER TABLE dbo.Donem ADD UygulamaAdresiSinirliMi INT NOT NULL CONSTRAINT DF_Donem_UygulamaAdresiSinirliMi DEFAULT(0) WITH VALUES');"),
+            new(94,
+                @"IF COL_LENGTH(N'dbo.Donem',N'UygulamaAdresiSinirliMi') IS NOT NULL
+                    AND EXISTS (
+                        SELECT 1
+                        FROM sys.columns
+                        WHERE object_id = OBJECT_ID(N'dbo.Donem')
+                          AND name = N'UygulamaAdresiSinirliMi'
+                          AND system_type_id = TYPE_ID(N'bit'))
+                    EXEC(N'ALTER TABLE dbo.Donem ALTER COLUMN UygulamaAdresiSinirliMi INT NOT NULL');"),
+            new(95,
+                @"IF COL_LENGTH(N'dbo.Donem',N'UygulamaAdresiSinirliMi') IS NOT NULL
+                    AND EXISTS (
+                        SELECT 1
+                        FROM sys.columns
+                        WHERE object_id = OBJECT_ID(N'dbo.Donem')
+                          AND name = N'UygulamaAdresiSinirliMi'
+                          AND system_type_id = TYPE_ID(N'bit'))
+                  BEGIN
+                    IF OBJECT_ID(N'dbo.DF_Donem_UygulamaAdresiSinirliMi', N'D') IS NOT NULL
+                        ALTER TABLE dbo.Donem DROP CONSTRAINT DF_Donem_UygulamaAdresiSinirliMi;
+                    ALTER TABLE dbo.Donem ALTER COLUMN UygulamaAdresiSinirliMi INT NOT NULL;
+                    IF OBJECT_ID(N'dbo.DF_Donem_UygulamaAdresiSinirliMi', N'D') IS NULL
+                        ALTER TABLE dbo.Donem ADD CONSTRAINT DF_Donem_UygulamaAdresiSinirliMi DEFAULT(0) FOR UygulamaAdresiSinirliMi;
+                  END"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

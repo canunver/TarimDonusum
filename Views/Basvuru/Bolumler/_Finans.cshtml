@@ -8,6 +8,7 @@
     decimal kur = b.basvuruFirma.donem.onBasvuruCevrimKuru.GetValueOrDefault();
     decimal? toplamEur = toplamTl > 0 && kur > 0 ? Math.Round(toplamTl / kur, 2) : null;
     decimal azamiDestek = b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault();
+    decimal azamiOran = b.basvuruFirma.donem.AzamiDestekOrani(b.YatirimAdresleri.Select(x => x.ilceId));
     decimal? hesaplananFinansmanTutari = toplamEur.HasValue && b.finans.talepEdilenFinansmanOrani.HasValue
         ? Math.Round(toplamEur.Value * b.finans.talepEdilenFinansmanOrani.Value / 100m, 2)
         : null;
@@ -21,7 +22,7 @@
                 <div class="finans-plan-form">
                     <label><span>Toplam yatırım tutarı (TL):</span><div class="finans-plan-value">@IsimBul.MetneCevirKurussuz(toplamTl)</div></label>
                     <label><span>Toplam yatırım tutarı (EUR):</span><div class="finans-plan-value">@(toplamEur?.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) ?? "")</div><input name="Basvuru.finans.ToplamYatirimTutari" type="hidden" value="@toplamEurHam" data-hesaplanan-deger="@toplamEurHam" /></label>
-                    <label><span>Talep edilen oran (%):</span><input name="Basvuru.finans.TalepEdilenFinansmanOrani" type="number" min="0.01" max="@b.basvuruFirma.donem.destekOrani?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" step="0.01" value="@b.finans.talepEdilenFinansmanOrani?.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture)" oninput="FinansTutarlariniHesapla()" onchange="FinansTutarlariniHesapla()" disabled="@ro" /></label>
+                    <label><span>Talep edilen oran (%):</span><input name="Basvuru.finans.TalepEdilenFinansmanOrani" type="number" min="0.01" max="@azamiOran.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" step="0.01" value="@b.finans.talepEdilenFinansmanOrani?.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture)" oninput="FinansTutarlariniHesapla()" onchange="FinansTutarlariniHesapla()" disabled="@ro" /></label>
                     <label><span>Talep edilen finansman yatırım (EUR):</span><div id="finansTalepEdilenGosterge" class="finans-plan-value">@(hesaplananFinansmanTutari?.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) ?? "")</div><small id="finansMaksimumDestekUyarisi" class="text-danger d-none">Maksimum destek tutarı aşılıyor. Oranı düşürünüz.</small><input name="Basvuru.finans.TalepEdilenDestekTutari" type="hidden" value="@(hesaplananFinansmanTutari?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" /></label>
                     <label><span>Öz kaynak tutarı (EUR):</span><div id="finansOzKaynakGosterge" class="finans-plan-value">@(hesaplananOzKaynak?.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) ?? "")</div><input name="Basvuru.finans.BasvuruSahibiKatkisi" type="hidden" value="@(hesaplananOzKaynak?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" /></label>
                     <label><span>@L["Basvuru.Field.TalepEdilenVadeSuresiAy"]:</span><input name="Basvuru.finans.TalepEdilenVadeSuresiAy" type="number" min="1" step="1" value="@b.finans.talepEdilenVadeSuresiAy" disabled="@ro" /></label>

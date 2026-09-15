@@ -94,11 +94,13 @@ namespace TarimDonusum.Models
         public decimal Miktar(int hesaplamaTuru, string birim)
         {
             decimal hacim = miktar;
-            if (hesaplamaTuru != (int)enumPozHesaplamaTuru.Agirlik)
+            bool agirlikMetraji = hesaplamaTuru == (int)enumPozHesaplamaTuru.Agirlik ||
+                string.Equals(birim?.Trim(), "Kg", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(birim?.Trim(), "Ton", StringComparison.OrdinalIgnoreCase);
+            if (!agirlikMetraji)
                 return hacim;
 
-            decimal agirlikKg = hacim * (birimAgirlik ?? 0);
-            return string.Equals(birim?.Trim(), "Ton", StringComparison.OrdinalIgnoreCase) ? agirlikKg / 1000m : agirlikKg;
+            return hacim * (birimAgirlik ?? 0);
         }
     }
 }

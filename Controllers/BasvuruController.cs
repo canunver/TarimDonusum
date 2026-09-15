@@ -201,6 +201,10 @@ namespace TarimDonusum.Controllers
         public Task<IActionResult> IzlemeGostergeleriYazdir(int id)=>RaporYazdirAsync(id,new RPROB_IzlemeGostergeleri(_environment.ContentRootPath),"İzleme göstergeleri yazdırılmadan önce başvuru kaydedilmelidir.");
         [OturumKontrol][HttpGet]
         public Task<IActionResult> BilancoGelirYazdir(int id)=>RaporYazdirAsync(id,new RPROB_BilancoGelir(_environment.ContentRootPath),"Bilanço ve gelir tablosu yazdırılmadan önce başvuru kaydedilmelidir.");
+        [OturumKontrol][HttpGet]
+        public Task<IActionResult> MetrajCetveliYazdir(int id,int binaId)=>binaId<=0
+            ? Task.FromResult<IActionResult>(BadRequest("Yazdırılacak bina seçilmelidir."))
+            : RaporYazdirAsync(id,new RPROB_MetrajCetveli(_environment.ContentRootPath,binaId),"Metraj cetveli yazdırılmadan önce başvuru kaydedilmelidir.");
 
         private async Task<IActionResult> RaporYazdirAsync(int id, IRPROB rapor, string kayitUyarisi, bool denetciRaporu = false, bool tumDegerZinciriAsamalariniYukle = false)
         {
@@ -216,6 +220,14 @@ namespace TarimDonusum.Controllers
             Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
             if (!sonuc.basarili || sonuc.nesne == null)
                 return NotFound(sonuc.hatalar.Count > 0 ? string.Join(" ", sonuc.hatalar) : L["Basvuru.Message.NotFound"].ToString());
+
+            if (rapor is RPROB_MetrajCetveli metrajRaporu)
+            {
+                Sonuc<BasvuruMetrajVerisi> metrajSonucu = await _basvuruIsKurallari.MetrajOkuAsync(id, kullanici);
+                if (!metrajSonucu.basarili || metrajSonucu.nesne == null)
+                    return BadRequest(metrajSonucu.hatalar.Count > 0 ? string.Join(" ", metrajSonucu.hatalar) : "Metraj bilgileri okunamadı.");
+                metrajRaporu.Veri = metrajSonucu.nesne;
+            }
 
             if (denetciRaporu) _basvuruIsKurallari.DenetimListeleriniIlkDegerle(sonuc.nesne);
             if (tumDegerZinciriAsamalariniYukle && sonuc.nesne.yatirim.degerZinciriId.GetValueOrDefault() > 0)

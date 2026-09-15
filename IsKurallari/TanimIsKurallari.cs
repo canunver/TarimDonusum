@@ -169,6 +169,8 @@ namespace TarimDonusum.IsKurallari
 
                 donem.ad = donem.ad?.Trim() ?? "";
                 donem.aciklama = donem.aciklama?.Trim() ?? "";
+                donem.istisnaIlceIds ??= new List<int>();
+                donem.istisnaIlceIds = donem.istisnaIlceIds.Where(x => x > 0).Distinct().ToList();
                 if (donem.yil < 2000 || donem.yil > 2200)
                     sonuc.HataEkle("Geçerli bir dönem yılı girilmelidir.");
                 if (string.IsNullOrWhiteSpace(donem.ad))
@@ -183,6 +185,12 @@ namespace TarimDonusum.IsKurallari
                     sonuc.HataEkle("Ön başvuru çevrim kuru sıfırdan büyük olmalıdır.");
                 if (donem.basvuruCevrimKuru.HasValue && donem.basvuruCevrimKuru <= 0)
                     sonuc.HataEkle("Başvuru çevrim kuru sıfırdan büyük olmalıdır.");
+                if (donem.destekOrani is < 0 or > 100)
+                    sonuc.HataEkle("Maksimum kredi oranı 0 ile 100 arasında olmalıdır.");
+                if (donem.istisnaDestekOrani is < 0 or > 100)
+                    sonuc.HataEkle("İstisna kredi oranı 0 ile 100 arasında olmalıdır.");
+                if (donem.istisnaIlceIds.Count > 0 && !donem.istisnaDestekOrani.HasValue)
+                    sonuc.HataEkle("İstisna ilçeler seçildiğinde istisna kredi oranı girilmelidir.");
                 if (!sonuc.basarili)
                     return sonuc;
 

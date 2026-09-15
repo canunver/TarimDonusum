@@ -9,6 +9,18 @@ public static class ZorunluBelgeTanimlari
 {
     private static readonly Lazy<IReadOnlyList<ZorunluBelgeTanimi>> Liste = new(Yukle);
     public static IReadOnlyList<ZorunluBelgeTanimi> Tum => Liste.Value;
+    public const int GuncelTuzukBelgeNo = 49;
+
+    public static IReadOnlyList<ZorunluBelgeTanimi> BasvuruIcin(enumBasvuruSahibiTuru? basvuruSahibiTuru)
+    {
+        if (basvuruSahibiTuru is not (enumBasvuruSahibiTuru.UreticiOrgutu or enumBasvuruSahibiTuru.Kooperatif))
+            return Tum;
+
+        return Tum.Concat(new[]
+        {
+            new ZorunluBelgeTanimi(GuncelTuzukBelgeNo, "Kuruluş Belgeleri", "Güncel tüzük / ana sözleşme", "Evet", "Üretici örgütü ve kooperatifler için zorunludur.")
+        }).ToList();
+    }
 
     private static IReadOnlyList<ZorunluBelgeTanimi> Yukle()
     {

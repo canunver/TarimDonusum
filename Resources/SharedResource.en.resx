@@ -1425,13 +1425,13 @@
     <value>Ownership and Authority - Shares and UBO</value>
   </data>
   <data name="Basvuru.Documents.Required.1" xml:space="preserve">
-    <value>Income statement</value>
+    <value>Income statement for the last year</value>
   </data>
   <data name="Basvuru.Documents.Required.2" xml:space="preserve">
-    <value>Balance sheet</value>
+    <value>Balance sheet for the last year</value>
   </data>
   <data name="Basvuru.Documents.Required.3" xml:space="preserve">
-    <value>Detailed trial balance</value>
+    <value>Detailed trial balance for the last year</value>
   </data>
   <data name="Basvuru.Documents.Required.4" xml:space="preserve">
     <value>Interim period reports</value>
@@ -2779,4 +2779,11 @@
   <data name="MenuBasvuru.tahminAyarlari" xml:space="preserve"><value>Exchange Rate and Inflation Forecasts</value></data>
   <data name="MenuBasvuru.pozSozlugu" xml:space="preserve"><value>Item Dictionary</value></data>
   <data name="MenuBasvuru.pozDonemFiyatlari" xml:space="preserve"><value>Period Item Prices</value></data>
+  <data name="Basvuru.Summary.Error.PrivateShareRequired" xml:space="preserve">
+    <value>The private sector share must be at least 75%. A share of exactly 75% is eligible.</value>
+  </data>
+  <data name="Basvuru.Documents.Required.8" xml:space="preserve"><value>Current bylaws / articles of association</value></data>
+  <data name="Basvuru.Documents.Required.9" xml:space="preserve"><value>Income statement for the previous year</value></data>
+  <data name="Basvuru.Documents.Required.10" xml:space="preserve"><value>Balance sheet for the previous year</value></data>
+  <data name="Basvuru.Documents.Required.11" xml:space="preserve"><value>Detailed trial balance for the previous year</value></data>
 </root>

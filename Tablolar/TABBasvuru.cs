@@ -3,6 +3,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
+using System.Text.Json;
 
 namespace TarimDonusum.Tablolar
 {
@@ -133,6 +134,9 @@ namespace TarimDonusum.Tablolar
                     D.MaksimumYatirimTutari,
                     D.MaksimumDestekTutari,
                     D.DestekOrani,
+                    D.IstisnaDestekOrani,
+                    D.IstisnaIlceIdsJson,
+                    D.UygulamaAdresiSinirliMi,
                     D.Aciklama,
 
                     I.Kod,
@@ -1208,6 +1212,9 @@ namespace TarimDonusum.Tablolar
             basvuru.basvuruFirma.donem.maksimumYatirimTutari = NullOkuDecimal(reader, kol++);
             basvuru.basvuruFirma.donem.maksimumDestekTutari = NullOkuDecimal(reader, kol++);
             basvuru.basvuruFirma.donem.destekOrani = NullOkuDecimal(reader, kol++);
+            basvuru.basvuruFirma.donem.istisnaDestekOrani = NullOkuDecimal(reader, kol++);
+            basvuru.basvuruFirma.donem.istisnaIlceIds = reader.IsDBNull(kol) ? new List<int>() : JsonSerializer.Deserialize<List<int>>(reader.GetString(kol)) ?? new List<int>(); kol++;
+            basvuru.basvuruFirma.donem.uygulamaAdresiSinirliMi = BoolYap(NullDuzeltInt(reader, kol++));
             basvuru.basvuruFirma.donem.aciklama = reader.GetString(kol++);
             basvuru.basvuruFirma.il.kod = NullDuzeltInt(reader, kol++);
             basvuru.basvuruFirma.il.ad = reader.GetString(kol++);

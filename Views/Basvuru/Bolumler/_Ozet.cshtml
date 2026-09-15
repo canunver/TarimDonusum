@@ -100,9 +100,7 @@
         || MaliDegerUygun(kontrolSonYilAktifToplami);
 
     decimal ortaklikPayToplami = b.ortaklik.ortaklar.Sum(x => x.payOrani.GetValueOrDefault());
-    decimal ozelSektorPayi = b.ortaklik.ortaklar.Count > 0
-        ? b.ortaklik.ortaklar.Where(x => string.Equals(x.ozelKamuNiteligi, "Özel", StringComparison.OrdinalIgnoreCase)).Sum(x => x.payOrani.GetValueOrDefault())
-        : b.ortaklik.ozelSektorPayi.GetValueOrDefault();
+    decimal ozelSektorPayi = b.ortaklik.ozelSektorPayi.GetValueOrDefault();
 
     string degerZinciriAdi = b.yatirim.degerZinciriAsamalari.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.dz.ad))?.dz.ad ?? "-";
     string secilenAsamalar = b.yatirim.degerZinciriAsamalari.Count > 0
@@ -162,6 +160,7 @@
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), R("Basvuru.Summary.Error.InvestmentNameRequired"));
     Eksikse(b.YatirimAdresleri.Any(x => x.yatirimTurleri.Count == 0), R("Basvuru.Summary.Error.InvestmentTypeRequired"));
     Eksikse(b.YatirimAdresleri.Count == 0, R("Basvuru.Summary.Error.InvestmentAddressRequired"));
+    Eksikse(b.basvuruFirma.donem.uygulamaAdresiSinirliMi && b.YatirimAdresleri.Count > 1, "Bu dönemde yalnızca bir uygulama adresi kullanılabilir.");
     Eksikse(b.YatirimAdresleri.Any(x => x.harcamaTurleri.Count == 0), R("Basvuru.Summary.Error.ExpenseTypeRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), R("Basvuru.Summary.Error.InvestmentPurposeRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri), R("Basvuru.Summary.Error.InvestmentActivitiesRequired"));
@@ -170,8 +169,9 @@
     Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, R("Basvuru.Summary.Error.ValueChainRequired"));
     Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, R("Basvuru.Summary.Error.ValueChainStageRequired"));
     Eksikse(!maliOlcekUygun, R("Basvuru.Summary.Error.FinancialScaleRequired"));
-    Eksikse(b.basvuruFirma.donem.destekOrani.GetValueOrDefault() > 0
-        && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > b.basvuruFirma.donem.destekOrani.GetValueOrDefault(), R("Basvuru.Finance.RateLimitError").Replace("{0}", b.basvuruFirma.donem.destekOrani.GetValueOrDefault().ToString("0.##")));
+    decimal azamiFinansmanOrani = b.basvuruFirma.donem.AzamiDestekOrani(b.YatirimAdresleri.Select(x => x.ilceId));
+    Eksikse(azamiFinansmanOrani > 0
+        && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > azamiFinansmanOrani, R("Basvuru.Finance.RateLimitError").Replace("{0}", azamiFinansmanOrani.ToString("0.##")));
     Eksikse(b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault() > 0
         && b.finans.talepEdilenDestekTutari.GetValueOrDefault() > b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault(), R("Basvuru.Finance.MaximumSupportExceeded"));
     Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, R("Basvuru.Finance.InvestmentDurationRequired"));
@@ -180,7 +180,8 @@
     Eksikse(string.IsNullOrWhiteSpace(b.dbCtpTeknikProje.dbCtpTeknikProjeJson), R("Basvuru.Summary.Error.DbCtpRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.TaahhutBeyanlarJson), R("Basvuru.Summary.Error.DeclarationsRequired"));
     Eksikse(string.IsNullOrWhiteSpace(rawYatirimOzeti), R("Basvuru.Summary.Error.InvestmentSummaryRequired"));
-    Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), R("Basvuru.Summary.Error.RequiredDocumentsRequired"));
+    bool merkeziTuzukBelgesiVar = b.TumBasvuruDosyalari.Any(x => x.FormAd == "Basvuru_ZorunluBelgeMerkezi" && x.DosyaNo == ZorunluBelgeTanimlari.GuncelTuzukBelgeNo);
+    Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue && !(x.dosyaNo == 8 && merkeziTuzukBelgesiVar)), R("Basvuru.Summary.Error.RequiredDocumentsRequired"));
     Eksikse(b.ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "T\u00FCzel Ki\u015Fi", StringComparison.OrdinalIgnoreCase)
         && x.zorunluBelgeler.Any(d => !d.dosyaId.HasValue)), R("Basvuru.Summary.Error.LegalPartnerDocumentsRequired"));
     Eksikse(b.AdliSicilKisileri.Count == 0, R("Basvuru.Summary.Error.CriminalPeopleRequired"));

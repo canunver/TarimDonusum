@@ -27,7 +27,8 @@ namespace TarimDonusum.Controllers
             if (kullanici?.Yetkiler.Any(x => x.Rol == KullaniciRol.SistemYoneticisi) != true)
                 return Forbid();
 
-            return View();
+            Sonuc<List<Il>> iller = await _tanimIsKurallari.IlleriIlceleriyleListeleAsync(kullanici);
+            return View(iller.nesne ?? new List<Il>());
         }
 
         [HttpGet]

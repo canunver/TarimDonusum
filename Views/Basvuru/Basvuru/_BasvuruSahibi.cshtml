@@ -78,6 +78,11 @@
             <label class="company-name-field">@L["Basvuru.Field.TicaretUnvani"]<input id="firmaAdi" name="Basvuru.TicaretUnvani" value="@b.basvuruFirma.firma.ticaretUnvani" readonly /></label>
         </div>
 
+        <div class="form-grid">
+            <label>@L["Basvuru.Field.NaceKodu"]<input id="firmaNaceKodu" value="@b.basvuruFirma.firma.naceKodu" readonly /></label>
+        </div>
+        <label class="wide-label">@L["Basvuru.Field.FaaliyetKonusu"]<textarea id="firmaFaaliyetKonusu" readonly>@b.basvuruFirma.firma.faaliyetKonusu</textarea></label>
+
         <details class="company-details">
             <summary>@L["Basvuru.Firma.InfoTitle"]</summary>
             <div class="form-grid">
@@ -86,11 +91,9 @@
                 <label>@L["Basvuru.Field.Telefon"]<input id="firmaTelefon" value="@b.basvuruFirma.firma.telefon" readonly /></label>
                 <label>@L["Basvuru.Field.WebSitesi"]<input id="firmaWebSitesi" value="@b.basvuruFirma.firma.webSitesi" readonly /></label>
                 <label>@L["Basvuru.Field.MersisNo"]<input id="firmaMersisNo" value="@b.basvuruFirma.firma.mersisNo" readonly /></label>
-                <label>@L["Basvuru.Field.NaceKodu"]<input id="firmaNaceKodu" value="@b.basvuruFirma.firma.naceKodu" readonly /></label>
                 <label>@L["Basvuru.Field.KepAdresi"]<input id="firmaKepAdresi" value="@b.basvuruFirma.firma.kepAdresi" readonly /></label>
                 <label>@L["Basvuru.Field.Eposta"]<input id="firmaEposta" type="email" value="@b.basvuruFirma.firma.eposta" readonly /></label>
             </div>
-            <label class="wide-label">@L["Basvuru.Field.FaaliyetKonusu"]<textarea id="firmaFaaliyetKonusu" readonly>@b.basvuruFirma.firma.faaliyetKonusu</textarea></label>
             <label class="wide-label">@L["Basvuru.Field.FirmaAdresi"]<textarea id="firmaAdres" readonly>@b.basvuruFirma.firma.adres</textarea></label>
         </details>
 

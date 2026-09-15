@@ -1473,13 +1473,13 @@
     <value>Ortaklık ve Yetki Bilgileri</value>
   </data>
   <data name="Basvuru.Documents.Required.1" xml:space="preserve">
-    <value>Gelir tablosu</value>
+    <value>Geçen yıla ait gelir tablosu</value>
   </data>
   <data name="Basvuru.Documents.Required.2" xml:space="preserve">
-    <value>Bilanço</value>
+    <value>Geçen yıla ait bilanço</value>
   </data>
   <data name="Basvuru.Documents.Required.3" xml:space="preserve">
-    <value>Detaylı mizan</value>
+    <value>Geçen yıla ait detaylı mizan</value>
   </data>
   <data name="Basvuru.Documents.Required.4" xml:space="preserve">
     <value>Ara dönem raporları</value>
@@ -2827,4 +2827,11 @@
   <data name="MenuBasvuru.tahminAyarlari" xml:space="preserve"><value>Kur ve Enflasyon Tahminleri</value></data>
   <data name="MenuBasvuru.pozSozlugu" xml:space="preserve"><value>Poz Sözlüğü</value></data>
   <data name="MenuBasvuru.pozDonemFiyatlari" xml:space="preserve"><value>Poz Dönem Fiyatları</value></data>
+  <data name="Basvuru.Summary.Error.PrivateShareRequired" xml:space="preserve">
+    <value>Özel sektör payı en az %75 olmalıdır. %75 uygundur.</value>
+  </data>
+  <data name="Basvuru.Documents.Required.8" xml:space="preserve"><value>Güncel tüzük / ana sözleşme</value></data>
+  <data name="Basvuru.Documents.Required.9" xml:space="preserve"><value>Önceki yıla ait gelir tablosu</value></data>
+  <data name="Basvuru.Documents.Required.10" xml:space="preserve"><value>Önceki yıla ait bilanço</value></data>
+  <data name="Basvuru.Documents.Required.11" xml:space="preserve"><value>Önceki yıla ait detaylı mizan</value></data>
 </root>

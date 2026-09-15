@@ -16,7 +16,16 @@ namespace TarimDonusum.Models
         public decimal? maksimumYatirimTutari { get; set; }
         public decimal? maksimumDestekTutari { get; set; }
         public decimal? destekOrani { get; set; }
+        public decimal? istisnaDestekOrani { get; set; }
+        public List<int> istisnaIlceIds { get; set; } = new();
+        public bool uygulamaAdresiSinirliMi { get; set; }
         public string aciklama { get; set; } = "";
+
+        public decimal AzamiDestekOrani(IEnumerable<int?> yatirimIlceIds)
+        {
+            bool istisna = istisnaDestekOrani.HasValue && yatirimIlceIds.Any(x => x.HasValue && istisnaIlceIds.Contains(x.Value));
+            return istisna ? istisnaDestekOrani!.Value : destekOrani.GetValueOrDefault();
+        }
 
         public bool SecilebilirMi()
         {
