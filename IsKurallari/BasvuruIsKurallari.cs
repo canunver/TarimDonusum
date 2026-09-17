@@ -656,7 +656,7 @@ namespace TarimDonusum.IsKurallari
                 && x.yatirimTurleri.Count > 0 && x.harcamaTurleri.Count > 0 && !string.IsNullOrWhiteSpace(x.yatirimFaaliyetleri)
                 && !string.IsNullOrWhiteSpace(x.yatirimGirdileri) && !string.IsNullOrWhiteSpace(x.yatirimCiktilari));
             bool degerZinciri = b.basvuruFirma.ilId > 0 && b.yatirim.degerZinciriId.GetValueOrDefault() > 0 && b.yatirim.degerZinciriAsamalari.Count > 0;
-            bool finans = b.finans.toplamYatirimTutari.GetValueOrDefault() > 0 && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > 0
+            bool finans = b.HesaplananToplamYatirimTutariEur.GetValueOrDefault() > 0 && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > 0
                 && b.finans.talepEdilenVadeSuresiAy.GetValueOrDefault() > 0
                 && b.finans.yatirimSuresiAy.GetValueOrDefault() > 0;
             bool mali = b.mali.oncekiYilNetSatis.GetValueOrDefault() > 0 && b.mali.sonYilNetSatis.GetValueOrDefault() > 0
@@ -791,6 +791,20 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        private static decimal GuncelTalepEdilenFinansmanTutariHesapla(Basvuru basvuru)
+        {
+            decimal kur = basvuru.kayitTuru == enumBasvuruKayitTuru.OnBasvuru
+                ? basvuru.basvuruFirma.donem.onBasvuruCevrimKuru.GetValueOrDefault()
+                : basvuru.basvuruFirma.donem.basvuruCevrimKuru.GetValueOrDefault();
+            decimal toplamTl = basvuru.yatirimOzeti.toplamYatirimButcesiTl;
+            decimal oran = basvuru.finans.talepEdilenFinansmanOrani.GetValueOrDefault();
+
+            if (kur > 0 && toplamTl > 0 && oran > 0)
+                return Math.Round(toplamTl / kur * oran / 100m, 2);
+
+            return basvuru.HesaplananTalepEdilenFinansmanTutari.GetValueOrDefault();
+        }
+
         private static bool DenetimListesiTamamMi(string? json, bool sistemListesi)
         {
             if (string.IsNullOrWhiteSpace(json)) return false;
@@ -882,8 +896,10 @@ namespace TarimDonusum.IsKurallari
             decimal azamiFinansmanOrani = b.basvuruFirma.donem.AzamiDestekOrani(b.YatirimAdresleri.Select(x => x.ilceId));
             Eksikse(azamiFinansmanOrani > 0
                 && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > azamiFinansmanOrani, "Basvuru.Finance.RateLimitExceeded");
-            Eksikse(b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault() > 0
-                && b.finans.talepEdilenDestekTutari.GetValueOrDefault() > b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault(), "Basvuru.Finance.MaximumSupportExceeded");
+            decimal guncelTalepTutari = GuncelTalepEdilenFinansmanTutariHesapla(b);
+            decimal azamiDestekTutari = b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault();
+            if (azamiDestekTutari > 0 && guncelTalepTutari > azamiDestekTutari)
+                sonuc.HataEkle($"Talep edilen finansman tutarı azami tutarı aşamaz. Finansman oranını düşürünüz. (Talep edilen: {guncelTalepTutari:N2} EUR, azami: {azamiDestekTutari:N2} EUR)");
             Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, "Basvuru.Finance.InvestmentDurationRequired");
             Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, "Basvuru.Summary.Error.AuditChoiceRequired");
             Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, "Basvuru.Summary.Error.AuditFileRequired");
@@ -1042,8 +1058,10 @@ namespace TarimDonusum.IsKurallari
             Eksikse(!maliOlcekUygun, "Basvuru.Summary.Error.FinancialScaleRequired");
             Eksikse(b.basvuruFirma.donem.destekOrani.GetValueOrDefault() > 0
                 && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > b.basvuruFirma.donem.destekOrani.GetValueOrDefault(), "Basvuru.Finance.RateLimitExceeded");
-            Eksikse(b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault() > 0
-                && b.finans.talepEdilenDestekTutari.GetValueOrDefault() > b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault(), "Basvuru.Finance.MaximumSupportExceeded");
+            decimal guncelTalepTutari = GuncelTalepEdilenFinansmanTutariHesapla(b);
+            decimal azamiDestekTutari = b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault();
+            if (azamiDestekTutari > 0 && guncelTalepTutari > azamiDestekTutari)
+                sonuc.HataEkle($"Talep edilen finansman tutarı azami tutarı aşamaz. Finansman oranını düşürünüz. (Talep edilen: {guncelTalepTutari:N2} EUR, azami: {azamiDestekTutari:N2} EUR)");
             Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, "Basvuru.Finance.InvestmentDurationRequired");
             Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, "Basvuru.Summary.Error.AuditChoiceRequired");
             Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, "Basvuru.Summary.Error.AuditFileRequired");
@@ -1664,12 +1682,12 @@ namespace TarimDonusum.IsKurallari
                     decimal toplamTl = mevcut.yatirimOzeti.toplamYatirimButcesiTl;
                     if (kur <= 0) sonuc.HataEkle("Dönem için EUR çevrim kuru tanımlanmalıdır.");
                     if (toplamTl <= 0) sonuc.HataEkle("Bütçe ve Giderler sayfasında toplam yatırım bütçesi oluşturulmalıdır.");
-                    finans.toplamYatirimTutari = kur > 0 ? Math.Round(toplamTl / kur, 2) : null;
                 }
-                if (finans.toplamYatirimTutari.HasValue && finans.talepEdilenFinansmanOrani.HasValue)
+                decimal? hesaplananToplamEur = mevcut?.HesaplananToplamYatirimTutariEur;
+                if (hesaplananToplamEur.HasValue && finans.talepEdilenFinansmanOrani.HasValue)
                 {
-                    finans.talepEdilenDestekTutari = Math.Round(finans.toplamYatirimTutari.Value * finans.talepEdilenFinansmanOrani.Value / 100m, 2);
-                    finans.basvuruSahibiKatkisi = finans.toplamYatirimTutari.Value - finans.talepEdilenDestekTutari.Value;
+                    decimal hesaplananTalep = Math.Round(hesaplananToplamEur.Value * finans.talepEdilenFinansmanOrani.Value / 100m, 2);
+                    finans.basvuruSahibiKatkisi = hesaplananToplamEur.Value - hesaplananTalep;
                     finans.onBasvuruSahibiKatkisi = finans.basvuruSahibiKatkisi;
                 }
                 finans.Dogrula(sonuc);
@@ -2039,13 +2057,6 @@ namespace TarimDonusum.IsKurallari
                 {
                     TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
                     await tabBasvuru.YatirimOzetiKaydetAsync(yatirimOzeti);
-                    decimal kur = mevcut.kayitTuru == enumBasvuruKayitTuru.OnBasvuru
-                        ? mevcut.basvuruFirma.donem.onBasvuruCevrimKuru.GetValueOrDefault()
-                        : mevcut.basvuruFirma.donem.basvuruCevrimKuru.GetValueOrDefault();
-                    decimal toplamTl = yatirimOzeti.toplamYatirimButcesiTl;
-                    decimal? toplamEur = toplamTl > 0 && kur > 0 ? Math.Round(toplamTl / kur, 2) : null;
-                    await tabBasvuru.ToplamYatirimTutariniKaydetAsync(yatirimOzeti.basvuruId, toplamEur);
-
                     TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     await tabBasvuruLog.EkleAsync(yatirimOzeti.basvuruId, kullanici, "KaydetYatirimOzetiAsync", yatirimOzeti);
 
@@ -2576,12 +2587,22 @@ namespace TarimDonusum.IsKurallari
                         return sonuc;
                 }
 
+                decimal girilenOzelOrtakPayi = mevcut?.ortaklik.ortaklar
+                    .Where(x => string.Equals(x.ozelKamuNiteligi, "Özel", StringComparison.OrdinalIgnoreCase))
+                    .Sum(x => x.payOrani.GetValueOrDefault()) ?? 0;
+                if (mali.ozelSektorPayi!.Value < girilenOzelOrtakPayi)
+                {
+                    sonuc.HataEkle($"Özel sektör payı, özel sektör ortağı olarak girilen toplam %{girilenOzelOrtakPayi:0.##} paydan küçük olamaz.");
+                    return sonuc;
+                }
+
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
 
                 try
                 {
                     TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
                     await tabBasvuru.BasvuruMaliGuncelleAsync(mali);
+                    await tabBasvuru.BasvuruOzelSektorPayiGuncelleAsync(mali.basvuruId, mali.ozelSektorPayi.Value);
 
                     TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     await tabBasvuruLog.EkleAsync(mali.basvuruId, kullanici, "KaydetMaliAsync", mali);
@@ -2671,6 +2692,16 @@ namespace TarimDonusum.IsKurallari
                 await connection.OpenAsync();
                 Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, ortaklik.basvuruId, kullanici, sonuc);
                 if (!sonuc.basarili || mevcut == null) return sonuc;
+
+                if (ortaklik.ozelSektorPayi.HasValue)
+                {
+                    if (ortaklik.ozelSektorPayi < 0 || ortaklik.ozelSektorPayi > 100)
+                    {
+                        sonuc.HataEkle("Özel sektör payı 0 ile 100 arasında girilmelidir.");
+                        return sonuc;
+                    }
+                    mevcut.ortaklik.ozelSektorPayi = ortaklik.ozelSektorPayi;
+                }
 
                 BasvuruOrtak ortak = ortaklik.ortaklar[0];
                 ortak.sahiplikNiteligi = ortak.SahiplikNiteligiHesapla(DateTime.Today);
@@ -4249,9 +4280,7 @@ namespace TarimDonusum.IsKurallari
 
         //private static void Asama5Kopyala(Basvuru hedef, Basvuru kaynak)
         //{
-        //    hedef.ToplamYatirimTutari = kaynak.ToplamYatirimTutari;
         //    hedef.UygunHarcamaTutari = kaynak.UygunHarcamaTutari;
-        //    hedef.TalepEdilenDestekTutari = kaynak.TalepEdilenDestekTutari;
         //    hedef.BasvuruSahibiKatkisi = kaynak.BasvuruSahibiKatkisi;
         //    hedef.DestekOrani = kaynak.DestekOrani;
         //    hedef.YatiriminAmaci = kaynak.YatiriminAmaci;
@@ -4306,9 +4335,7 @@ namespace TarimDonusum.IsKurallari
         //        "Asama5Update" => new BasvuruFinans
         //        {
         //            BasvuruId = basvuru.Id,
-        //            ToplamYatirimTutari = basvuru.ToplamYatirimTutari,
         //            UygunHarcamaTutari = basvuru.UygunHarcamaTutari,
-        //            TalepEdilenDestekTutari = basvuru.TalepEdilenDestekTutari,
         //            BasvuruSahibiKatkisi = basvuru.BasvuruSahibiKatkisi,
         //            DestekOrani = basvuru.DestekOrani,
         //            YatiriminAmaci = basvuru.YatiriminAmaci

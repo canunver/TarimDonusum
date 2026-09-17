@@ -317,6 +317,23 @@ namespace TarimDonusum.Models
         public BasvuruIstihdam istihdam { get; set; } = new();
         public List<BasvuruYatirimOnBilgi> YatirimOnBilgileri { get; set; } = new();
         public BasvuruFinans finans = new();
+        public decimal HesaplananToplamYatirimTutariTl => yatirimOzeti.toplamYatirimButcesiTl;
+        public decimal? HesaplananToplamYatirimTutariEur
+        {
+            get
+            {
+                decimal kur = kayitTuru == enumBasvuruKayitTuru.OnBasvuru
+                    ? basvuruFirma.donem.onBasvuruCevrimKuru.GetValueOrDefault()
+                    : basvuruFirma.donem.basvuruCevrimKuru.GetValueOrDefault();
+                return kur > 0 && HesaplananToplamYatirimTutariTl > 0
+                    ? Math.Round(HesaplananToplamYatirimTutariTl / kur, 2)
+                    : null;
+            }
+        }
+        public decimal? HesaplananTalepEdilenFinansmanTutari =>
+            HesaplananToplamYatirimTutariEur.HasValue && finans.talepEdilenFinansmanOrani.HasValue
+                ? Math.Round(HesaplananToplamYatirimTutariEur.Value * finans.talepEdilenFinansmanOrani.Value / 100m, 2)
+                : null;
         public BasvuruMali mali = new BasvuruMali();
         public BasvuruBilancoGelir bilancoGelir { get; set; } = new();
         public BasvuruUygunHarcama uygunHarcama { get; set; } = new();
@@ -571,6 +588,11 @@ namespace TarimDonusum.Models
                 sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
 
             OrtaklariDogrula(sonuc, dogrulanacakSiraNo);
+            decimal girilenOzelOrtakPayi = ortaklar
+                .Where(x => string.Equals(x.ozelKamuNiteligi, "Özel", StringComparison.OrdinalIgnoreCase))
+                .Sum(x => x.payOrani.GetValueOrDefault());
+            if (ozelSektorPayi.HasValue && ozelSektorPayi.Value < girilenOzelOrtakPayi)
+                sonuc.HataEkle($"Özel sektör payı, özel sektör ortağı olarak girilen toplam %{girilenOzelOrtakPayi:0.##} paydan küçük olamaz.");
             bagliOrtakIsletmeVarMi = ortaklar.Any(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase));
 
             decimal AgirlikliToplam(Func<BasvuruOrtak, decimal?> alan) => ortaklar
@@ -1001,9 +1023,7 @@ namespace TarimDonusum.Models
     public class BasvuruFinans
     {
         public int basvuruId { get; set; }
-        public decimal? toplamYatirimTutari { get; set; }
         public decimal? uygunHarcamaTutari { get; set; }
-        public decimal? talepEdilenDestekTutari { get; set; }
         public decimal? talepEdilenFinansmanOrani { get; set; }
         public decimal? onBasvuruSahibiKatkisi { get; set; }
         public decimal? basvuruSahibiKatkisi { get; set; }
@@ -1024,9 +1044,6 @@ namespace TarimDonusum.Models
         {
             if (basvuruId < 0)
                 sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
-
-            if (toplamYatirimTutari == null || toplamYatirimTutari.Value <= 0)
-                sonuc.HataEkle("Toplam yatırım tutarı verilmelidir.");
 
             if (talepEdilenFinansmanOrani == null || talepEdilenFinansmanOrani.Value <= 0)
                 sonuc.HataEkle("Talep edilen finansman oranı verilmelidir.");
@@ -1126,6 +1143,7 @@ namespace TarimDonusum.Models
     public class BasvuruMali
     {
         public int basvuruId { get; set; }
+        public decimal? ozelSektorPayi { get; set; }
         public decimal? oncekiYilNetSatis { get; set; }
         public decimal? sonYilNetSatis { get; set; }
         public decimal? oncekiYilAktifToplami { get; set; }
@@ -1147,6 +1165,9 @@ namespace TarimDonusum.Models
 
             if (!bagimsizDenetimeTabiMi.HasValue)
                 sonuc.HataEkle("Bağımsız denetime tabi mi seçilmelidir.");
+
+            if (!ozelSektorPayi.HasValue || ozelSektorPayi < 0 || ozelSektorPayi > 100)
+                sonuc.HataEkle("Özel sektör payı 0 ile 100 arasında girilmelidir.");
 
             if (oncekiYilNetSatis == null || oncekiYilNetSatis.Value <= 0)
                 sonuc.HataEkle("Önceki yıl net satış tutarı verilmelidir.");

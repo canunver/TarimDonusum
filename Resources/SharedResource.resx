@@ -747,9 +747,6 @@
   <data name="Basvuru.Field.UygunHarcamaTutari" xml:space="preserve">
     <value>Uygun harcama tutarı (EUR)</value>
   </data>
-  <data name="Basvuru.Field.TalepEdilenDestekTutari" xml:space="preserve">
-    <value>Talep edilen destek tutarı (EUR)</value>
-  </data>
   <data name="Basvuru.Field.BasvuruSahibiKatkisi" xml:space="preserve">
     <value>Ön başvuru sahibi katkısı (EUR)</value>
   </data>

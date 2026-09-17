@@ -19,12 +19,12 @@ public sealed class RPROB_TedarikciEntegrasyonu(string uygulamaRootPath) : RPROB
         Yaz(t, 4, 6, b.basvuruFirma.firma.ticaretUnvani);
         Yaz(t, 4, 10, b.yatirim.yatirimAdi);
         Yaz(t, 5, 2, string.Join(" / ", new[] { adres?.ilAdi ?? b.basvuruFirma.il.ad, adres?.ilceAdi ?? "" }.Where(x => !string.IsNullOrWhiteSpace(x))));
-        Yaz(t, 5, 6, b.finans.talepEdilenDestekTutari.GetValueOrDefault());
+        Yaz(t, 5, 6, b.HesaplananTalepEdilenFinansmanTutari.GetValueOrDefault());
         Yaz(t, 5, 10, DateTime.Today);
 
         int mevcutCiftci = satirlar.Sum(x => x.mevcutKayitliCiftci);
         int eklenecekCiftci = satirlar.Sum(x => x.eklenecekKayitliCiftci);
-        decimal destek = b.finans.talepEdilenDestekTutari.GetValueOrDefault();
+        decimal destek = b.HesaplananTalepEdilenFinansmanTutari.GetValueOrDefault();
         decimal? yeniCiftciYuzBin = destek > 0 ? eklenecekCiftci * 100000m / destek : null;
         decimal toplamHedef = satirlar.Sum(x => x.hedefYillikMiktar);
         bool segeVerisiTam = satirlar.All(x => x.segeKademesi is >= 1 and <= 6 && x.hedefYillikMiktar >= 0);

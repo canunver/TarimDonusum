@@ -3,14 +3,13 @@
 @{
     var f = Model.Basvuru.finans;
     bool ro = Model.SaltOkunur;
-    decimal toplamTl = Model.Basvuru.yatirimOzeti.toplamYatirimButcesiTl;
-    decimal kur = Model.Basvuru.basvuruFirma.donem.basvuruCevrimKuru.GetValueOrDefault();
-    decimal? toplamEur = toplamTl > 0 && kur > 0 ? Math.Round(toplamTl / kur, 2) : null;
+    decimal toplamTl = Model.Basvuru.HesaplananToplamYatirimTutariTl;
+    decimal? toplamEur = Model.Basvuru.HesaplananToplamYatirimTutariEur;
     decimal azamiDestek = Model.Basvuru.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault();
     decimal azamiOran = Model.Basvuru.basvuruFirma.donem.AzamiDestekOrani(Model.Basvuru.YatirimAdresleri.Select(x => x.ilceId));
     decimal? finansman = toplamEur.HasValue && f.talepEdilenFinansmanOrani.HasValue
         ? Math.Round(toplamEur.Value * f.talepEdilenFinansmanOrani.Value / 100m, 2)
-        : f.talepEdilenDestekTutari;
+        : null;
     decimal? katkı = toplamEur.HasValue && finansman.HasValue ? toplamEur - finansman : f.basvuruSahibiKatkisi;
     string toplamEurHam = toplamEur?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0";
     string[] evetHayir = ["Evet", "Hayır"];
@@ -25,8 +24,9 @@
         <a class="btn btn-outline-primary" href="@Url.Action("FinansmanYazdir", "Basvuru", new { id = Model.Basvuru.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
     </div>
     <div class="form-grid">
-        <label>Toplam yatırım tutarı (EUR)<input class="money-integer" name="Basvuru.finans.ToplamYatirimTutari" type="text" value="@IsimBul.MetneCevirKurussuz(toplamEur)" data-hesaplanan-deger="@toplamEurHam" readonly /></label>
-        <label>Talep edilen RFF tutarı (EUR)<input class="money-integer" name="Basvuru.finans.TalepEdilenDestekTutari" type="text" value="@IsimBul.MetneCevirKurussuz(finansman)" readonly /><small id="finansMaksimumDestekUyarisi" class="text-danger d-none">Maksimum destek tutarı aşılıyor. Oranı düşürünüz.</small></label>
+        <label>Toplam yatırım tutarı (TL)<input class="money-integer" type="text" value="@IsimBul.MetneCevirKurussuz(toplamTl)" readonly /></label>
+        <label>Toplam yatırım tutarı (EUR)<input id="finansToplamYatirimTutari" class="money-integer" type="text" value="@IsimBul.MetneCevirKurussuz(toplamEur)" data-hesaplanan-deger="@toplamEurHam" readonly /></label>
+        <label>Talep edilen RFF tutarı (EUR)<input class="money-integer" type="text" value="@IsimBul.MetneCevirKurussuz(finansman)" readonly /><small id="finansMaksimumDestekUyarisi" class="text-danger d-none">Maksimum destek tutarı aşılıyor. Oranı düşürünüz.</small></label>
         <label>Talep edilen finansman oranı (%)<input name="Basvuru.finans.TalepEdilenFinansmanOrani" type="number" min="0.01" max="@azamiOran.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" step="0.01" value="@f.talepEdilenFinansmanOrani?.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture)" oninput="FinansTutarlariniHesapla()" disabled="@ro" /></label>
         <label>Başvuru sahibi katkısı (EUR)<input class="money-integer" name="Basvuru.finans.BasvuruSahibiKatkisi" type="text" value="@IsimBul.MetneCevirKurussuz(katkı)" readonly /></label>
         <label>Talep edilen vade (ay)<input name="Basvuru.finans.TalepEdilenVadeSuresiAy" type="number" min="1" step="1" value="@f.talepEdilenVadeSuresiAy" disabled="@ro" /></label>

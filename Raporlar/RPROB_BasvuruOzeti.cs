@@ -16,7 +16,7 @@ public sealed class RPROB_BasvuruOzeti(string uygulamaRootPath) : RPROBTemel(uyg
         BasvuruOzetiHesapSonucu o=BasvuruOzetiHesaplayici.Hesapla(b);
         Yaz(t,5,2,b.basvuruFirma.firma.ticaretUnvani);Yaz(t,5,6,b.yatirim.yatirimAdi);
         Yaz(t,6,2,o.YatirimYeri);Yaz(t,6,6,o.DegerZinciri);
-        Yaz(t,7,2,b.finans.talepEdilenDestekTutari);Yaz(t,7,6,o.OnSiralamaPuani);
+        Yaz(t,7,2,b.HesaplananTalepEdilenFinansmanTutari);Yaz(t,7,6,o.OnSiralamaPuani);
         Yaz(t,8,2,o.BelgeTamamlanmaOrani);Yaz(t,8,6,o.GenelDurum);
         Dictionary<string,Dictionary<string,string>> tamlik=Oku(b.basvuruOzetiKurum.kurumJson,"tamlik");
         Dictionary<string,Dictionary<string,string>> uygunluk=Oku(b.basvuruOzetiKurum.kurumJson,"uygunluk");

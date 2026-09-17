@@ -37,7 +37,7 @@ public static class BasvuruOzetiHesaplayici
             new("yatirim","4 Yatırım Bilgileri",8,Dolu(Var(b.yatirim.yatirimAdi),b.YatirimAdresleri.Count>0,adres?.ilceId>0,Var(adres?.tamAdres),b.yatirim.yatirimTurleri.Count>0,b.yatirim.harcamaTurleri.Count>0,Var(b.yatirim.yatirimFaaliyetleri),b.yatirim.planlananBaslangicTarihi.HasValue),"Yatırım Bilgileri","İl/ilçe ve yer hakkı"),
             new("deger","5 Değer Zinciri",5,Dolu(b.yatirim.degerZinciriId>0,b.yatirim.degerZinciriAsamalari.Count>0,Var(b.yatirim.ilDegerZinciriEslesmesi),Var(b.yatirim.tarimGidaBaglantiTuru),Var(b.yatirim.degerZinciriUygunlukAciklamasi)),"Değer Zinciri","İl-zincir eşleşmesi"),
             new("harcama","6 Uygun Harcama",1,Dolu(Var(b.uygunHarcama.pikkListesiJson)),"Uygun Harcama","En az bir kalem"),
-            new("finans","7 Finansman",5,Dolu(b.finans.toplamYatirimTutari>0,b.finans.uygunHarcamaTutari>0,b.finans.talepEdilenDestekTutari>0,b.finans.basvuruSahibiKatkisi>=0,b.finans.talepEdilenVadeSuresiAy>0),"Finansman","RFF ve katkı"),
+            new("finans","7 Finansman",5,Dolu(b.HesaplananToplamYatirimTutariEur>0,b.finans.uygunHarcamaTutari>0,b.HesaplananTalepEdilenFinansmanTutari>0,b.finans.basvuruSahibiKatkisi>=0,b.finans.talepEdilenVadeSuresiAy>0),"Finansman","RFF ve katkı"),
             new("ozet","8 Yatırım Özeti",3,Dolu(Var(b.yatirimOzeti.yatirimOzetiJson),b.YatirimOnBilgileri.Any(x=>x.tur==enumYatirimOnBilgiTuru.UretilecekUrun),b.YatirimOnBilgileri.Any(x=>x.tur==enumYatirimOnBilgiTuru.Girdi)),"Yatırım Özeti","Üretim/gider bilgileri"),
             new("teknik","9 Teknik Proje",3,Dolu(b.YatirimOnBilgileri.Count>0,b.Makineler.Count>0,b.UrunSurecleri.Count>0),"Teknik Proje","Ürün/girdi/makine"),
             new("belge","10 Belgeler",1,Dolu(b.TumBasvuruDosyalari.Count>0||b.ZorunluBelgeler.Count>0),"Zorunlu Belgeler","Uygulanabilir belgeler"),
@@ -49,10 +49,10 @@ public static class BasvuruOzetiHesaplayici
         decimal? faaliyetYili=f.kurulusTarihi.HasValue?(decimal)Math.Round((referans-f.kurulusTarihi.Value.Date).TotalDays/365.25,1):null;
         decimal ozelPay=b.ortaklik.ozelSektorPayi??b.basvuruFirma.ozelSektorPayi??0;
         bool maliTam=b.mali.oncekiYilNetSatis>0&&b.mali.sonYilNetSatis>0&&b.mali.oncekiYilAktifToplami>0&&b.mali.sonYilAktifToplami>0;
-        decimal talep=b.finans.talepEdilenDestekTutari.GetValueOrDefault(),kumulatif=b.finans.oncekiRffOnayliTutar.GetValueOrDefault()+talep;
+        decimal talep=b.HesaplananTalepEdilenFinansmanTutari.GetValueOrDefault(),kumulatif=b.finans.oncekiRffOnayliTutar.GetValueOrDefault()+talep;
         decimal alt=b.basvuruFirma.donem.minimumYatirimTutari.GetValueOrDefault(),ust=b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault();
         bool rffUygun=talep>0&&(alt<=0||talep>=alt)&&(ust<=0||talep<=ust)&&(ust<=0||kumulatif<=ust);
-        string rff=b.finans.talepEdilenDestekTutari.HasValue?$"{talep:N0} EUR / {kumulatif:N0} EUR":"";
+        string rff=b.HesaplananTalepEdilenFinansmanTutari.HasValue?$"{talep:N0} EUR / {kumulatif:N0} EUR":"";
         List<BasvuruOzetiUygunlukSatiri> u=
         [
             new("faaliyet","Faaliyet süresi en az 2 yıl",b.IkiYillikFaaliyetSartindanMuaf?"Organize Sanayi / İhtisas Alanı muafiyeti":faaliyetYili.HasValue?$"{faaliyetYili:0.0} yıl":"",b.IkiYillikFaaliyetSartindanMuaf||faaliyetYili>=2?"Uygun":"Eksik","Başvuru Sahibi","Ticaret sicil / yatırım yeri statüsü"),

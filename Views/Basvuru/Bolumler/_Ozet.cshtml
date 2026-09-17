@@ -172,8 +172,15 @@
     decimal azamiFinansmanOrani = b.basvuruFirma.donem.AzamiDestekOrani(b.YatirimAdresleri.Select(x => x.ilceId));
     Eksikse(azamiFinansmanOrani > 0
         && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > azamiFinansmanOrani, R("Basvuru.Finance.RateLimitError").Replace("{0}", azamiFinansmanOrani.ToString("0.##")));
-    Eksikse(b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault() > 0
-        && b.finans.talepEdilenDestekTutari.GetValueOrDefault() > b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault(), R("Basvuru.Finance.MaximumSupportExceeded"));
+    decimal finansmanKuru = b.kayitTuru == enumBasvuruKayitTuru.OnBasvuru
+        ? b.basvuruFirma.donem.onBasvuruCevrimKuru.GetValueOrDefault()
+        : b.basvuruFirma.donem.basvuruCevrimKuru.GetValueOrDefault();
+    decimal guncelTalepTutari = finansmanKuru > 0 && yatirimButcesi > 0
+        ? Math.Round(yatirimButcesi / finansmanKuru * b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() / 100m, 2)
+        : b.HesaplananTalepEdilenFinansmanTutari.GetValueOrDefault();
+    decimal azamiDestekTutari = b.basvuruFirma.donem.maksimumDestekTutari.GetValueOrDefault();
+    Eksikse(azamiDestekTutari > 0 && guncelTalepTutari > azamiDestekTutari,
+        $"Talep edilen finansman tutarı azami tutarı aşamaz. Finansman oranını düşürünüz. (Talep edilen: {guncelTalepTutari:N2} EUR, azami: {azamiDestekTutari:N2} EUR)");
     Eksikse(b.finans.yatirimSuresiAy.GetValueOrDefault() <= 0, R("Basvuru.Finance.InvestmentDurationRequired"));
     Eksikse(!b.mali.bagimsizDenetimeTabiMi.HasValue, R("Basvuru.Summary.Error.AuditChoiceRequired"));
     Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, R("Basvuru.Summary.Error.AuditFileRequired"));

@@ -502,7 +502,7 @@
     ]);
 
     function TekUygulamaAdresiSecimleriniUygula() {
-        if (!uygulamaAdresiSinirli || tekUygulamaAdresiId <= 0) return;
+        if (tekUygulamaAdresiId <= 0) return;
         uygulamaAdresiSecimAlanlari.forEach(id => {
             const select = document.getElementById(id);
             if (!select || !Array.from(select.options).some(x => Number(x.value) === tekUygulamaAdresiId)) return;
@@ -706,7 +706,7 @@
             basvuruDegerZinciriId = Number(this.value || 0);
         });
         BasvuruDegerZincirleriniYukle();
-        document.querySelectorAll('[name="Basvuru.finans.ToplamYatirimTutari"], [name="Basvuru.finans.TalepEdilenFinansmanOrani"]').forEach(input => {
+        document.querySelectorAll('#finansToplamYatirimTutari, [name="Basvuru.finans.TalepEdilenFinansmanOrani"]').forEach(input => {
             input.addEventListener('input', FinansTutarlariniHesapla);
             input.addEventListener('change', FinansTutarlariniHesapla);
         });
@@ -839,6 +839,7 @@
             bolumBasvuruSahibi,
             bolumBasvuruMaliVeriler,
             bolumBasvuruBilancoGelir,
+            bolumBasvuruOrtaklikYetki,
             bolumBasvuruYatirimBilgileri,
             bolumBasvuruDegerZinciri,
             bolumBasvuruFinansman,
@@ -2432,6 +2433,7 @@
         if (kaydetButton) kaydetButton.disabled = true;
         const model = {
             basvuruId: ortak.basvuruId,
+            ozelSektorPayi: sayiOkuId('privateShareCalculated'),
             ortaklar: [ortak],
             degisenOrtakSiraNo: ortak.siraNo || null
         };
@@ -2702,7 +2704,7 @@
 
     function FinansKaydet(afterSuccess) {
         FinansTutarlariniHesapla();
-        const toplamAlani = document.querySelector('[name="Basvuru.finans.ToplamYatirimTutari"]');
+        const toplamAlani = document.getElementById('finansToplamYatirimTutari');
         const oranAlani = document.querySelector('[name="Basvuru.finans.TalepEdilenFinansmanOrani"]');
         const oran = Number(oranAlani?.value || 0);
         const azamiOran = Number(oranAlani?.max || 0);
@@ -2713,9 +2715,7 @@
         }
         const model = {
             ...BasvuruKimlikleri(),
-            toplamYatirimTutari: Number(toplamAlani?.dataset.hesaplananDeger || (toplamAlani?.value || '').replace(/[^0-9]/g, '') || 0),
             talepEdilenFinansmanOrani: oran,
-            talepEdilenDestekTutari: degerDec('Basvuru.finans.TalepEdilenDestekTutari'),
             basvuruSahibiKatkisi: degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
             onBasvuruSahibiKatkisi: degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
             talepEdilenVadeSuresiAy: degerInt('Basvuru.finans.TalepEdilenVadeSuresiAy'),
@@ -2733,7 +2733,7 @@
     }
 
     function FinansTutarlariniHesapla() {
-        const toplamAlani = document.querySelector('[name="Basvuru.finans.ToplamYatirimTutari"]');
+        const toplamAlani = document.getElementById('finansToplamYatirimTutari');
         const oranAlani = document.querySelector('[name="Basvuru.finans.TalepEdilenFinansmanOrani"]');
         // Toplam yatırım alanı kuruşsuz para alanıdır; nokta/virgül gibi
         // görüntüleme ayraçlarından bağımsız olarak yalnızca rakamları oku.
@@ -2745,13 +2745,11 @@
         const finansman = Math.round(toplam * oran) / 100;
         const maksimumDestekAsildi = maksimumDestek > 0 && finansman > maksimumDestek;
         const ozKaynak = Math.max(0, toplam - finansman);
-        const finansmanAlani = document.querySelector('[name="Basvuru.finans.TalepEdilenDestekTutari"]');
         const ozKaynakAlani = document.querySelector('[name="Basvuru.finans.BasvuruSahibiKatkisi"]');
         const onBasvuruFinansi = !!toplamAlani?.dataset.hesaplananDeger;
         const paraBicimle = deger => deger.toLocaleString('tr-TR', onBasvuruFinansi
             ? { minimumFractionDigits: 2, maximumFractionDigits: 2 }
             : { maximumFractionDigits: 0 });
-        if (finansmanAlani) finansmanAlani.value = onBasvuruFinansi ? finansman.toFixed(2) : String(Math.round(finansman));
         if (ozKaynakAlani) ozKaynakAlani.value = onBasvuruFinansi ? ozKaynak.toFixed(2) : String(Math.round(ozKaynak));
         const finansmanGosterge = document.getElementById('finansTalepEdilenGosterge');
         const ozKaynakGosterge = document.getElementById('finansOzKaynakGosterge');
@@ -2761,8 +2759,11 @@
             finansmanGosterge.classList.toggle('border', maksimumDestekAsildi);
             finansmanGosterge.classList.toggle('border-danger', maksimumDestekAsildi);
         }
-        if (finansmanAlani) finansmanAlani.classList.toggle('is-invalid', maksimumDestekAsildi);
-        document.getElementById('finansMaksimumDestekUyarisi')?.classList.toggle('d-none', !maksimumDestekAsildi);
+        const maksimumDestekUyarisi = document.getElementById('finansMaksimumDestekUyarisi');
+        if (maksimumDestekUyarisi) {
+            maksimumDestekUyarisi.classList.toggle('d-none', !maksimumDestekAsildi);
+            maksimumDestekUyarisi.textContent = `Maksimum destek tutarı aşılıyor. Oranı düşürünüz. (Talep edilen: ${paraBicimle(finansman)} EUR, azami: ${paraBicimle(maksimumDestek)} EUR)`;
+        }
         if (ozKaynakGosterge) ozKaynakGosterge.textContent = paraBicimle(ozKaynak);
         const onceki = degerDec('Basvuru.finans.OncekiRffOnayliTutar') || 0;
         const kumulatif = document.getElementById('finansKumulatifKontrol');
@@ -2781,6 +2782,7 @@
     function MaliKaydet(afterSuccess) {
         const model = {
             ...BasvuruKimlikleri(),
+            ozelSektorPayi: sayiOkuId('privateShareCalculated'),
             oncekiYilNetSatis: degerDec('Basvuru.mali.OncekiYilNetSatis'),
             sonYilNetSatis: degerDec('Basvuru.mali.SonYilNetSatis'),
             oncekiYilAktifToplami: degerDec('Basvuru.mali.OncekiYilAktifToplami'),

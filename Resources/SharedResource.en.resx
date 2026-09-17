@@ -747,9 +747,6 @@
   <data name="Basvuru.Field.UygunHarcamaTutari" xml:space="preserve">
     <value>Eligible expense amount (EUR)</value>
   </data>
-  <data name="Basvuru.Field.TalepEdilenDestekTutari" xml:space="preserve">
-    <value>Requested support amount (EUR)</value>
-  </data>
   <data name="Basvuru.Field.BasvuruSahibiKatkisi" xml:space="preserve">
     <value>Pre-applicant contribution (EUR)</value>
   </data>

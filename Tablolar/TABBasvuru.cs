@@ -64,9 +64,7 @@ namespace TarimDonusum.Tablolar
                     B.OrganizeAlanTuru,
                     B.PlanlananBaslangicTarihi,
                     B.PlanlananTamamlanmaTarihi,
-                    B.ToplamYatirimTutari,
                     B.UygunHarcamaTutari,
-                    B.TalepEdilenDestekTutari,
                     B.TalepEdilenFinansmanOrani,
                     B.OnBasvuruSahibiKatkisi,
                     B.BasvuruSahibiKatkisi,
@@ -323,9 +321,7 @@ namespace TarimDonusum.Tablolar
             const string sql = @"
                 UPDATE dbo.Basvuru
                 SET
-                    ToplamYatirimTutari = @ToplamYatirimTutari,
                     UygunHarcamaTutari = @UygunHarcamaTutari,
-                    TalepEdilenDestekTutari = @TalepEdilenDestekTutari,
                     TalepEdilenFinansmanOrani = @TalepEdilenFinansmanOrani,
                     OnBasvuruSahibiKatkisi = @OnBasvuruSahibiKatkisi,
                     BasvuruSahibiKatkisi = @BasvuruSahibiKatkisi,
@@ -343,9 +339,7 @@ namespace TarimDonusum.Tablolar
 
             await using SqlCommand command = KomutOlustur(sql);
 
-            command.Parameters.AddWithValue("@ToplamYatirimTutari", DbNull(finans.toplamYatirimTutari));
             command.Parameters.AddWithValue("@UygunHarcamaTutari", DbNull(finans.uygunHarcamaTutari));
-            command.Parameters.AddWithValue("@TalepEdilenDestekTutari", DbNull(finans.talepEdilenDestekTutari));
             command.Parameters.AddWithValue("@TalepEdilenFinansmanOrani", DbNull(finans.talepEdilenFinansmanOrani));
             command.Parameters.AddWithValue("@OnBasvuruSahibiKatkisi", DbNull(finans.onBasvuruSahibiKatkisi));
             command.Parameters.AddWithValue("@BasvuruSahibiKatkisi", DbNull(finans.basvuruSahibiKatkisi));
@@ -390,14 +384,6 @@ namespace TarimDonusum.Tablolar
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task ToplamYatirimTutariniKaydetAsync(int basvuruId, decimal? toplamYatirimTutari)
-        {
-            const string sql = "UPDATE dbo.Basvuru SET ToplamYatirimTutari = @ToplamYatirimTutari WHERE Id = @Id;";
-            await using SqlCommand command = KomutOlustur(sql);
-            command.Parameters.AddWithValue("@ToplamYatirimTutari", DbNull(toplamYatirimTutari));
-            command.Parameters.AddWithValue("@Id", basvuruId);
-            await command.ExecuteNonQueryAsync();
-        }
 
         public async Task DbCtpTeknikProjeKaydetAsync(BasvuruDbCtpTeknikProje teknikProje)
         {
@@ -458,6 +444,18 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@BagimsizDenetimeTabiMi", mali.bagimsizDenetimeTabiMi.HasValue ? (mali.bagimsizDenetimeTabiMi.Value ? 1 : 0) : DBNull.Value);
             command.Parameters.AddWithValue("@Id", mali.basvuruId);
 
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task BasvuruOzelSektorPayiGuncelleAsync(int basvuruId, decimal ozelSektorPayi)
+        {
+            const string sql = @"UPDATE dbo.Basvuru
+                SET OzelSektorPayi = @OzelSektorPayi
+                WHERE Id = @Id;";
+
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@OzelSektorPayi", ozelSektorPayi);
+            command.Parameters.AddWithValue("@Id", basvuruId);
             await command.ExecuteNonQueryAsync();
         }
 
@@ -1122,9 +1120,7 @@ namespace TarimDonusum.Tablolar
             basvuru.yatirim.organizeAlanTuru = NullOkuString(reader, kol++);
             basvuru.yatirim.planlananBaslangicTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             basvuru.yatirim.planlananTamamlanmaTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
-            basvuru.finans.toplamYatirimTutari = NullOkuDecimal(reader, kol++);
             basvuru.finans.uygunHarcamaTutari = NullOkuDecimal(reader, kol++);
-            basvuru.finans.talepEdilenDestekTutari = NullOkuDecimal(reader, kol++);
             basvuru.finans.talepEdilenFinansmanOrani = NullOkuDecimal(reader, kol++);
             basvuru.finans.onBasvuruSahibiKatkisi = NullOkuDecimal(reader, kol++);
             basvuru.finans.basvuruSahibiKatkisi = NullOkuDecimal(reader, kol++);
@@ -1848,7 +1844,7 @@ namespace TarimDonusum.Tablolar
                 SELECT Id,BasvuruId,SiraNo,Ad,MevcutYeni,YatirimSekli,DestekTalebi,VaziyetPlaniNo,UygulamaAdresiId FROM dbo.BasvuruBina WHERE BasvuruId=@BasvuruId ORDER BY SiraNo,Id;
                 SELECT m.Id,m.BinaId,m.SiraNo,m.MahalAdi,m.AlanM2 FROM dbo.BasvuruBinaMahal m INNER JOIN dbo.BasvuruBina b ON b.Id=m.BinaId WHERE b.BasvuruId=@BasvuruId ORDER BY m.BinaId,m.SiraNo,m.Id;
 
-                SELECT ISNULL(SUM(OncekiBasvuru.TalepEdilenDestekTutari), 0)
+                SELECT ISNULL(SUM(OncekiBasvuru.HesaplananFinansmanTutari), 0)
                 FROM dbo.Basvuru MevcutBasvuru
                 INNER JOIN dbo.BasvuruAna MevcutAna ON MevcutAna.Id = MevcutBasvuru.BasvuruAnaId
                 INNER JOIN dbo.Donem MevcutDonem ON MevcutDonem.Id = MevcutAna.DonemId
@@ -1859,8 +1855,27 @@ namespace TarimDonusum.Tablolar
                         OR (OncekiDonem.Yil = MevcutDonem.Yil AND OncekiDonem.Id < MevcutDonem.Id))
                 CROSS APPLY
                 (
-                    SELECT TOP (1) B.TalepEdilenDestekTutari
+                    SELECT TOP (1)
+                        ROUND(ISNULL(Butce.ToplamTl, 0) / NULLIF(D.BasvuruCevrimKuru, 0)
+                            * ISNULL(B.TalepEdilenFinansmanOrani, 0) / 100, 2) AS HesaplananFinansmanTutari
                     FROM dbo.Basvuru B
+                    INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
+                    INNER JOIN dbo.Donem D ON D.Id = BA.DonemId
+                    OUTER APPLY
+                    (
+                        SELECT SUM(CASE
+                            WHEN Tutar.[type] = 2 THEN TRY_CONVERT(DECIMAL(18,2), Tutar.[value])
+                            ELSE TRY_CONVERT(DECIMAL(18,2), REPLACE(REPLACE(Tutar.[value], '.', ''), ',', '.'))
+                        END) AS ToplamTl
+                        FROM OPENJSON(B.YatirimOzetiJson, '$.investmentBudgetData') J
+                        OUTER APPLY
+                        (
+                            SELECT [value], [type]
+                            FROM OPENJSON(J.[value])
+                            WHERE [key] = 'amount'
+                        ) Tutar
+                        WHERE J.[key] IN ('A1','A2','A3','A4','B1','B2','B3','B4','B5','B6','B7')
+                    ) Butce
                     WHERE B.BasvuruAnaId = OncekiAna.Id
                         AND B.KayitTuru = @BasvuruKayitTuru
                     ORDER BY B.RevizyonNo DESC, B.Id DESC
