@@ -47,6 +47,31 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<List<Nace>>> NaceAraAsync(string? metin, Kullanici? kullanici, bool yonetim = false)
+        {
+            Sonuc<List<Nace>> sonuc=new();
+            if (kullanici==null) { sonuc.HataEkle("Oturum kullanıcısı bulunamadı."); return sonuc; }
+            if (yonetim && !SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            try { await using SqlConnection c=new(_connectionString); await c.OpenAsync(); sonuc.nesne=await new TABNace(c,_localizer).AraAsync(metin,!yonetim); }
+            catch(Exception ex){_logger.LogError(ex,"NACE kodları okunamadı.");sonuc.HataEkle("NACE kodları okunamadı.");}
+            return sonuc;
+        }
+
+        public async Task<Sonuc<string>> NaceKaydetAsync(Nace nace, Kullanici? kullanici)
+        {
+            Sonuc<string> sonuc=new(); if(!SistemYoneticisiMi(kullanici,sonuc))return sonuc;
+            nace.kod=(nace.kod??"").Trim();nace.eskiKod=(nace.eskiKod??"").Trim();nace.ad=(nace.ad??"").Trim();
+            if(string.IsNullOrWhiteSpace(nace.kod))sonuc.HataEkle("NACE kodu zorunludur.");
+            if(string.IsNullOrWhiteSpace(nace.ad))sonuc.HataEkle("NACE açıklaması zorunludur.");
+            if(nace.kod.Length>20)sonuc.HataEkle("NACE kodu en fazla 20 karakter olabilir.");
+            if(nace.ad.Length>500)sonuc.HataEkle("NACE açıklaması en fazla 500 karakter olabilir.");
+            if(!sonuc.basarili)return sonuc;
+            try { await using SqlConnection c=new(_connectionString);await c.OpenAsync();sonuc.nesne=await new TABNace(c,_localizer).KaydetAsync(nace);sonuc.mesaj="NACE kodu kaydedildi."; }
+            catch(SqlException ex) when(ex.Number is 2601 or 2627){sonuc.HataEkle("Bu NACE kodu zaten kayıtlıdır.");}
+            catch(Exception ex){_logger.LogError(ex,"NACE kodu kaydedilemedi.");sonuc.HataEkle("NACE kodu kaydedilemedi.");}
+            return sonuc;
+        }
+
         public async Task<Sonuc<List<Il>>> IlleriIlceleriyleListeleAsync(Kullanici? kullanici)
         {
             Sonuc<List<Il>> sonuc = new();
@@ -309,10 +334,14 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                TABBirim tabBirim = new TABBirim(connection, _localizer);
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                TABBirim tabBirim = new TABBirim(connection, _localizer, transaction);
                 await BirimDogrulaAsync(tabBirim, birim, sonuc);
                 if (!sonuc.basarili)
+                {
+                    await transaction.RollbackAsync();
                     return sonuc;
+                }
 
                 if (birim.id > 0)
                 {
@@ -320,6 +349,7 @@ namespace TarimDonusum.IsKurallari
                     if (!guncellendi)
                     {
                         sonuc.HataEkle(Metin("Business.Unit.NotFound"));
+                        await transaction.RollbackAsync();
                         return sonuc;
                     }
 
@@ -329,6 +359,8 @@ namespace TarimDonusum.IsKurallari
                 {
                     sonuc.nesne = await tabBirim.EkleAsync(birim);
                 }
+
+                await transaction.CommitAsync();
 
                 sonuc.mesaj = Metin("Business.Unit.Saved");
             }
@@ -391,16 +423,18 @@ namespace TarimDonusum.IsKurallari
             if (birim.siraNo <= 0)
                 sonuc.HataEkle(Metin("Business.Unit.OrderRequired"));
 
+            birim.ilKodlari = (birim.ilKodlari ?? []).Where(x => x > 0).Distinct().ToList();
+
             if (birim.birimTuru == enumBirimTuru.Merkez)
-                birim.ilKod = null;
+                birim.ilKodlari.Clear();
 
             if (birim.birimTuru == enumBirimTuru.Tasra)
             {
-                if (!birim.ilKod.HasValue || birim.ilKod <= 0)
+                if (birim.ilKodlari.Count == 0)
                 {
                     sonuc.HataEkle(Metin("Business.Unit.ProvinceRequired"));
                 }
-                else if (!await tabBirim.IlKoduVarMiAsync(birim.ilKod.Value))
+                else if (!await tabBirim.IlKodlariGecerliMiAsync(birim.ilKodlari))
                 {
                     sonuc.HataEkle(Metin("Business.Unit.ProvinceNotFound"));
                 }

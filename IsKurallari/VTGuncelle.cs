@@ -201,7 +201,6 @@ namespace TarimDonusum.IsKurallari
                         BasvuruSahibiTuru INT NULL,
                         HukukiTurSirketTuru INT NULL,
                         YonetimKuruluUyeleriAdliSicilKisiler NVARCHAR(MAX) NULL,
-                        SonIkiYildirFaalMi INT NULL,
                         YatirimAdi NVARCHAR(250) NULL,
                         YatirimTuru INT NULL,
                         YatiriminAmaci NVARCHAR(MAX) NULL,
@@ -1158,6 +1157,179 @@ namespace TarimDonusum.IsKurallari
                     IF OBJECT_ID(N'dbo.DF_Donem_UygulamaAdresiSinirliMi', N'D') IS NULL
                         ALTER TABLE dbo.Donem ADD CONSTRAINT DF_Donem_UygulamaAdresiSinirliMi DEFAULT(0) FOR UygulamaAdresiSinirliMi;
                   END"),
+            new(96,
+                @"IF OBJECT_ID(N'dbo.BirimIl', N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BirimIl
+                    (
+                        BirimId INT NOT NULL,
+                        IlKod INT NOT NULL,
+                        CONSTRAINT PK_BirimIl PRIMARY KEY(BirimId, IlKod),
+                        CONSTRAINT FK_BirimIl_Birim FOREIGN KEY(BirimId) REFERENCES dbo.Birim(Id) ON DELETE CASCADE,
+                        CONSTRAINT FK_BirimIl_Il FOREIGN KEY(IlKod) REFERENCES dbo.Il(Kod)
+                    );
+                    CREATE INDEX IX_BirimIl_IlKod ON dbo.BirimIl(IlKod);
+                  END;
+
+                  IF COL_LENGTH(N'dbo.Birim', N'IlKod') IS NOT NULL
+                  BEGIN
+                    INSERT INTO dbo.BirimIl(BirimId, IlKod)
+                    SELECT B.Id, B.IlKod
+                    FROM dbo.Birim B
+                    WHERE B.IlKod IS NOT NULL
+                      AND NOT EXISTS (SELECT 1 FROM dbo.BirimIl BI WHERE BI.BirimId=B.Id AND BI.IlKod=B.IlKod);
+
+                    IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE name=N'CK_Birim_TasraIlKod')
+                        ALTER TABLE dbo.Birim DROP CONSTRAINT CK_Birim_TasraIlKod;
+                    IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name=N'FK_Birim_IlKod')
+                        ALTER TABLE dbo.Birim DROP CONSTRAINT FK_Birim_IlKod;
+                    IF EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.Birim') AND name=N'IX_Birim_IlKod')
+                        DROP INDEX IX_Birim_IlKod ON dbo.Birim;
+                    ALTER TABLE dbo.Birim DROP COLUMN IlKod;
+                  END"),
+            new(97,
+                @"IF OBJECT_ID(N'dbo.Nace',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.Nace(Kod NVARCHAR(20) NOT NULL CONSTRAINT PK_Nace PRIMARY KEY,Ad NVARCHAR(500) NOT NULL,Aktif INT NOT NULL CONSTRAINT DF_Nace_Aktif DEFAULT(1));
+                  END;
+                  UPDATE dbo.Firma SET NaceKodu=NULL
+                  ALTER TABLE dbo.Firma ALTER COLUMN NaceKodu NVARCHAR(20) NULL;
+                  IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name=N'FK_Firma_NaceKodu') ALTER TABLE dbo.Firma ADD CONSTRAINT FK_Firma_NaceKodu FOREIGN KEY(NaceKodu) REFERENCES dbo.Nace(Kod) ON UPDATE CASCADE;
+                  IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.Firma') AND name=N'IX_Firma_NaceKodu') CREATE INDEX IX_Firma_NaceKodu ON dbo.Firma(NaceKodu);"),
+            new(99,
+                @"IF OBJECT_ID(N'dbo.CevreselSosyalAnketSurum',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.CevreselSosyalAnketSurum
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_CevreselSosyalAnketSurum PRIMARY KEY,
+                        SurumNo INT NOT NULL,
+                        Durum INT NOT NULL,
+                        Aciklama NVARCHAR(1000) NOT NULL CONSTRAINT DF_CevreselSosyalAnketSurum_Aciklama DEFAULT(N''),
+                        YayinTarihi DATETIME2 NULL,
+                        CONSTRAINT UQ_CevreselSosyalAnketSurum_SurumNo UNIQUE(SurumNo)
+                    );
+                    CREATE UNIQUE INDEX UX_CevreselSosyalAnketSurum_Yayinda ON dbo.CevreselSosyalAnketSurum(Durum) WHERE Durum=1;
+                  END;
+
+                  IF OBJECT_ID(N'dbo.CevreselSosyalAnketBolum',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.CevreselSosyalAnketBolum
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_CevreselSosyalAnketBolum PRIMARY KEY,
+                        AnketSurumId INT NOT NULL,
+                        Kod NVARCHAR(100) NOT NULL,
+                        Baslik NVARCHAR(1000) NOT NULL,
+                        Aciklama NVARCHAR(MAX) NULL,
+                        SiraNo INT NOT NULL,
+                        Aktif BIT NOT NULL CONSTRAINT DF_CevreselSosyalAnketBolum_Aktif DEFAULT(1),
+                        CONSTRAINT FK_CevreselSosyalAnketBolum_Surum FOREIGN KEY(AnketSurumId) REFERENCES dbo.CevreselSosyalAnketSurum(Id) ON DELETE CASCADE,
+                        CONSTRAINT UQ_CevreselSosyalAnketBolum_Kod UNIQUE(AnketSurumId,Kod)
+                    );
+                  END;
+
+                  IF OBJECT_ID(N'dbo.CevreselSosyalAnketSoru',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.CevreselSosyalAnketSoru
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_CevreselSosyalAnketSoru PRIMARY KEY,
+                        BolumId INT NOT NULL,
+                        AnketSurumId INT NOT NULL,
+                        Anahtar NVARCHAR(100) NOT NULL,
+                        GorunumKodu NVARCHAR(100) NOT NULL,
+                        Baslik NVARCHAR(1000) NOT NULL,
+                        Metin NVARCHAR(MAX) NOT NULL,
+                        CevapTuru NVARCHAR(30) NOT NULL,
+                        CevapBaglami INT NOT NULL,
+                        YapimIsindeGoster BIT NOT NULL,
+                        GuncellemeIsindeGoster BIT NOT NULL,
+                        ZorunluMu BIT NOT NULL,
+                        MaksimumUzunluk INT NULL,
+                        NotMetni NVARCHAR(MAX) NULL,
+                        BilgiMetni NVARCHAR(MAX) NULL,
+                        YerTutucu NVARCHAR(1000) NULL,
+                        KapsamDisiBirakirMi BIT NOT NULL,
+                        HerZamanAciklamaIste BIT NOT NULL,
+                        OtomatikKaynakKodu NVARCHAR(100) NULL,
+                        SiraNo INT NOT NULL,
+                        Aktif BIT NOT NULL CONSTRAINT DF_CevreselSosyalAnketSoru_Aktif DEFAULT(1),
+                        CONSTRAINT FK_CevreselSosyalAnketSoru_Bolum FOREIGN KEY(BolumId) REFERENCES dbo.CevreselSosyalAnketBolum(Id) ON DELETE CASCADE,
+                        CONSTRAINT FK_CevreselSosyalAnketSoru_Surum FOREIGN KEY(AnketSurumId) REFERENCES dbo.CevreselSosyalAnketSurum(Id),
+                        CONSTRAINT UQ_CevreselSosyalAnketSoru_Anahtar UNIQUE(AnketSurumId,Anahtar)
+                    );
+                  END;
+
+                  IF OBJECT_ID(N'dbo.CevreselSosyalAnketSoruSecenek',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.CevreselSosyalAnketSoruSecenek
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_CevreselSosyalAnketSoruSecenek PRIMARY KEY,
+                        SoruId INT NOT NULL,
+                        Deger NVARCHAR(500) NOT NULL,
+                        Metin NVARCHAR(1000) NOT NULL,
+                        SiraNo INT NOT NULL,
+                        Aktif BIT NOT NULL CONSTRAINT DF_CevreselSosyalAnketSoruSecenek_Aktif DEFAULT(1),
+                        CONSTRAINT FK_CevreselSosyalAnketSoruSecenek_Soru FOREIGN KEY(SoruId) REFERENCES dbo.CevreselSosyalAnketSoru(Id) ON DELETE CASCADE,
+                        CONSTRAINT UQ_CevreselSosyalAnketSoruSecenek_Deger UNIQUE(SoruId,Deger)
+                    );
+                  END;
+
+                  IF OBJECT_ID(N'dbo.CevreselSosyalAnketSoruKosul',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.CevreselSosyalAnketSoruKosul
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_CevreselSosyalAnketSoruKosul PRIMARY KEY,
+                        SoruId INT NOT NULL,
+                        SecenekDegeri NVARCHAR(500) NOT NULL,
+                        AciklamaIstensinMi BIT NOT NULL,
+                        DosyaIstensinMi BIT NOT NULL,
+                        SiraNo INT NOT NULL,
+                        CONSTRAINT FK_CevreselSosyalAnketSoruKosul_Soru FOREIGN KEY(SoruId) REFERENCES dbo.CevreselSosyalAnketSoru(Id) ON DELETE CASCADE,
+                        CONSTRAINT UQ_CevreselSosyalAnketSoruKosul_Deger UNIQUE(SoruId,SecenekDegeri)
+                    );
+                  END;
+
+                  IF OBJECT_ID(N'dbo.CevreselSosyalAnketBilgi',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.CevreselSosyalAnketBilgi
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_CevreselSosyalAnketBilgi PRIMARY KEY,
+                        BolumId INT NOT NULL,
+                        Tur NVARCHAR(30) NOT NULL,
+                        Baslik NVARCHAR(1000) NULL,
+                        Metin NVARCHAR(MAX) NULL,
+                        MaddelerJson NVARCHAR(MAX) NULL,
+                        SiraNo INT NOT NULL,
+                        Aktif BIT NOT NULL CONSTRAINT DF_CevreselSosyalAnketBilgi_Aktif DEFAULT(1),
+                        CONSTRAINT FK_CevreselSosyalAnketBilgi_Bolum FOREIGN KEY(BolumId) REFERENCES dbo.CevreselSosyalAnketBolum(Id) ON DELETE CASCADE
+                    );
+                  END;"),
+            new(100,
+                @"UPDATE dbo.CevreselSosyalAnketSoru SET OtomatikKaynakKodu=CASE Anahtar
+                    WHEN N'1.1' THEN N'Firma.TicaretUnvani'
+                    WHEN N'1.2' THEN N'Yatirim.Adi'
+                    WHEN N'1.3' THEN N'Yatirim.Adresleri'
+                    WHEN N'1.4' THEN N'Yatirim.Turleri'
+                    WHEN N'1.5' THEN N'Yatirim.OzetVeGerekce'
+                    WHEN N'2.2' THEN N'Yatirim.HarcamaTurleri'
+                    WHEN N'6.1' THEN N'Yatirim.KullanimHakkiBelgesiDurumu'
+                    WHEN N'6.2' THEN N'Yatirim.AraziStatusleri'
+                    ELSE OtomatikKaynakKodu END
+                  WHERE Anahtar IN(N'1.1',N'1.2',N'1.3',N'1.4',N'1.5',N'2.2',N'6.1',N'6.2');"),
+            new(101,
+                @"IF COL_LENGTH(N'dbo.CevreselSosyalAnketSoru',N'AnketSurumId') IS NULL
+                  BEGIN
+                    ALTER TABLE dbo.CevreselSosyalAnketSoru ADD AnketSurumId INT NULL;
+                    UPDATE S SET AnketSurumId=B.AnketSurumId
+                    FROM dbo.CevreselSosyalAnketSoru S
+                    INNER JOIN dbo.CevreselSosyalAnketBolum B ON B.Id=S.BolumId;
+                    ALTER TABLE dbo.CevreselSosyalAnketSoru ALTER COLUMN AnketSurumId INT NOT NULL;
+                  END;
+                  IF EXISTS(SELECT 1 FROM sys.key_constraints WHERE name=N'UQ_CevreselSosyalAnketSoru_Anahtar')
+                    ALTER TABLE dbo.CevreselSosyalAnketSoru DROP CONSTRAINT UQ_CevreselSosyalAnketSoru_Anahtar;
+                  IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name=N'FK_CevreselSosyalAnketSoru_Surum')
+                    ALTER TABLE dbo.CevreselSosyalAnketSoru ADD CONSTRAINT FK_CevreselSosyalAnketSoru_Surum FOREIGN KEY(AnketSurumId) REFERENCES dbo.CevreselSosyalAnketSurum(Id);
+                  IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.CevreselSosyalAnketSoru') AND name=N'UX_CevreselSosyalAnketSoru_SurumAnahtar')
+                    CREATE UNIQUE INDEX UX_CevreselSosyalAnketSoru_SurumAnahtar ON dbo.CevreselSosyalAnketSoru(AnketSurumId,Anahtar);"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

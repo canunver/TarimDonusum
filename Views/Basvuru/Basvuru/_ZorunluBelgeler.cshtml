@@ -7,7 +7,7 @@
     {
         [1] = "Mali Veriler ve Ölçek Kontrolü", [2] = "Mali Veriler ve Ölçek Kontrolü",
         [7] = "Ortaklık ve Yetki", [8] = "Mali Veriler ve Ölçek Kontrolü",
-        [9] = "Mali Veriler ve Ölçek Kontrolü", [10] = "Ortaklık ve Yetki",
+        [9] = "Mali Veriler ve Ölçek Kontrolü", [10] = "Mali Veriler ve Ölçek Kontrolü",
         [11] = "Ortaklık ve Yetki", [14] = "Tedarikçi Entegrasyonu",
         [15] = "İstihdam", [16] = "Mali Veriler ve Ölçek Kontrolü",
         [19] = "Makine Ekipman Teklifleri", [23] = "Yatırım Bilgileri",
@@ -23,7 +23,6 @@
             || no == 7 && x.FormAd == "Basvuru_ImzaYetki"
             || no == 8 && b.mali.denetimDosyaId == x.Id
             || no == 9 && x.FormAd.StartsWith("BOMALI_")
-            || no == 10 && (x.FormAd.StartsWith("OBOKYC_") || x.FormAd == "Basvuru_OrtakUboKyc")
             || no == 11 && x.FormAd == "Basvuru_AdliSicil"
             || no == 14 && x.FormAd.StartsWith("BTED_")
             || no == 15 && (x.FormAd == "Basvuru_IstihdamSgk" || x.FormAd == "Basvuru_MaliBelge" && x.DosyaNo is 7 or 8)

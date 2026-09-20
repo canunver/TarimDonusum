@@ -100,12 +100,8 @@
         <div class="form-grid">
             <label>
                 @L["Basvuru.Field.SonIkiYildirFaalMi"]
-                <select id="sonIkiYil" name="Basvuru.SonIkiYildirFaalMi" disabled="@ro">
-                    <option value="" selected="@(!b.basvuruFirma.sonIkiYildirFaalMi.HasValue)">@L["Basvuru.Common.Select"]</option>
-                    <option value="false" selected="@(b.basvuruFirma.sonIkiYildirFaalMi == false)">@hayirMetni</option>
-                    <option value="true" selected="@(b.basvuruFirma.sonIkiYildirFaalMi == true)">@evetMetni</option>
-                </select>
-                @if (b.IkiYillikFaaliyetSartindanMuaf) { <small class="text-success">Organize Sanayi / İhtisas Alanı yatırım yeri nedeniyle bu şart aranmaz.</small> }
+                <input type="text" value="@b.FaaliyetSuresiDurumuMetni" readonly />
+                @if (b.IkiYillikFaaliyetSartindanMuaf) { <small class="text-success">Organize Tarım Bölgesi yatırım adresi nedeniyle bir yıllık faaliyet uygundur.</small> }
             </label>
             <label>
                 @L["Basvuru.Field.BasvuruSahibiTuru"]

@@ -70,6 +70,13 @@ namespace TarimDonusum.IsKurallari
             {
                 await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
+                Nace? nace = string.IsNullOrWhiteSpace(firma.naceKodu) ? null : await new TABNace(connection).OkuAsync(firma.naceKodu);
+                if (nace == null || !nace.aktif)
+                {
+                    sonuc.HataEkle("Geçerli ve aktif bir NACE kodu seçilmelidir."); return sonuc;
+                }
+                firma.naceKodu = nace.kod;
+                firma.naceAdi = nace.ad;
                 if (firma.id > 0 && !await FirmaErisimiVarMiAsync(connection, firma.id, mevcutKullanici))
                 {
                     sonuc.HataEkle("Bu firmaya erişim yetkiniz yok."); return sonuc;

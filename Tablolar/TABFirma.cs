@@ -34,7 +34,8 @@ namespace TarimDonusum.Tablolar
                         INNER JOIN dbo.Kullanici k ON k.Id = fk.KullaniciId
                         WHERE fk.FirmaId = f.Id
                         FOR JSON PATH
-                    ), N'[]') AS BasvuranlarJson
+                    ), N'[]') AS BasvuranlarJson,
+                    ISNULL((SELECT N.Ad FROM dbo.Nace N WHERE N.Kod=f.NaceKodu),N'') AS NaceAdi
                 FROM dbo.Firma f WHERE ";
 
             if (firmaId > 0)
@@ -85,7 +86,8 @@ namespace TarimDonusum.Tablolar
                         INNER JOIN dbo.Kullanici k ON k.Id = fk.KullaniciId
                         WHERE fk.FirmaId = f.Id
                         FOR JSON PATH
-                    ), N'[]') AS BasvuranlarJson
+                    ), N'[]') AS BasvuranlarJson,
+                    ISNULL((SELECT N.Ad FROM dbo.Nace N WHERE N.Kod=f.NaceKodu),N'') AS NaceAdi
                 FROM dbo.Firma f
                 WHERE f.Id = @Id;";
 
@@ -105,7 +107,8 @@ namespace TarimDonusum.Tablolar
                 SELECT f.Id, f.VergiKimlikNo, f.TicaretUnvani, f.TicaretSicilNo,
                     f.KurulusTarihi, f.MersisNo, f.NaceKodu, f.WebSitesi,
                     f.Telefon, f.KepAdresi, f.Eposta, f.FaaliyetKonusu, f.Adres,
-                    N'[]' AS BasvuranlarJson
+                    N'[]' AS BasvuranlarJson,
+                    ISNULL((SELECT N.Ad FROM dbo.Nace N WHERE N.Kod=f.NaceKodu),N'') AS NaceAdi
                 FROM dbo.Firma f ";
             if (kullaniciId.HasValue)
                 sql += @"INNER JOIN dbo.FirmaKullanici fk ON fk.FirmaId=f.Id
@@ -183,7 +186,7 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@TicaretSicilNo", firma.ticaretSicilNo ?? "");
             command.Parameters.AddWithValue("@KurulusTarihi", (object?)firma.kurulusTarihi ?? DBNull.Value);
             command.Parameters.AddWithValue("@MersisNo", firma.mersisNo ?? "");
-            command.Parameters.AddWithValue("@NaceKodu", firma.naceKodu ?? "");
+            command.Parameters.AddWithValue("@NaceKodu", string.IsNullOrWhiteSpace(firma.naceKodu) ? DBNull.Value : firma.naceKodu);
             command.Parameters.AddWithValue("@WebSitesi", firma.webSitesi ?? "");
             command.Parameters.AddWithValue("@Telefon", firma.telefon ?? "");
             command.Parameters.AddWithValue("@KepAdresi", firma.kepAdresi ?? "");
@@ -202,14 +205,15 @@ namespace TarimDonusum.Tablolar
                 ticaretSicilNo = reader.GetString(3),
                 kurulusTarihi = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
                 mersisNo = reader.GetString(5),
-                naceKodu = reader.GetString(6),
+                naceKodu = reader.IsDBNull(6) ? "" : reader.GetString(6),
                 webSitesi = reader.GetString(7),
                 telefon = reader.GetString(8),
                 kepAdresi = reader.GetString(9),
                 eposta = reader.GetString(10),
                 faaliyetKonusu = reader.GetString(11),
                 adres = reader.GetString(12),
-                basvuranlar = BasvuranlariOku(reader.GetString(13))
+                basvuranlar = BasvuranlariOku(reader.GetString(13)),
+                naceAdi = reader.GetString(14)
             };
         }
 

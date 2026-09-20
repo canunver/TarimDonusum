@@ -1,0 +1,12 @@
+@{ ViewData["Title"]="NACE Kodları"; }
+<div class="basvuru-page"><div class="basvuru-titlebar"><div><h1>NACE Kodları</h1><p>NACE kod ve açıklamalarını yönetin.</p></div><button class="btn btn-primary" onclick="ac()">Yeni NACE kodu</button></div>
+<div class="basvuru-card p-3 mb-3"><div class="input-group"><input id="ara" class="form-control" placeholder="Kod veya açıklama"><div class="input-group-append"><button class="btn btn-outline-primary" onclick="listele()">Ara</button></div></div></div>
+<div class="table-responsive basvuru-card"><table class="table"><thead><tr><th>Kod</th><th>Açıklama</th><th>Durum</th><th></th></tr></thead><tbody id="liste"></tbody></table></div></div>
+<div class="modal fade" id="modal"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>NACE Kodu</h5><button class="close" data-dismiss="modal">&times;</button></div><div class="modal-body"><input id="eskiKod" type="hidden"><label class="w-100">Kod<input id="kod" class="form-control" maxlength="20"></label><label class="w-100">Açıklama<textarea id="ad" class="form-control" maxlength="500"></textarea></label><label class="w-100">Durum<select id="aktif" class="form-control"><option value="true">Aktif</option><option value="false">Pasif</option></select></label></div><div class="modal-footer"><button class="btn btn-secondary" data-dismiss="modal">Kapat</button><button class="btn btn-primary" onclick="kaydet()">Kaydet</button></div></div></div></div>
+@section Scripts{<script>
+let veriler=[];const esc=x=>$('<div>').text(x??'').html();
+function listele(){AjaxGet('/Nace/Ara',{metin:$('#ara').val(),yonetim:true},s=>{if(!s?.basarili)return PopupMesajGoster(s?.hataStr||'',false);veriler=s.nesne||[];$('#liste').html(veriler.map(x=>`<tr><td>${esc(x.kod)}</td><td>${esc(x.ad)}</td><td>${x.aktif?'Aktif':'Pasif'}</td><td><button class="btn btn-sm btn-outline-primary" data-kod="${esc(x.kod)}" onclick="ac(this.dataset.kod)">Düzenle</button></td></tr>`).join(''));});}
+function ac(kod=''){const x=veriler.find(y=>y.kod===kod)||{kod:'',ad:'',aktif:true};$('#eskiKod').val(x.kod);$('#kod').val(x.kod);$('#ad').val(x.ad);$('#aktif').val(String(x.aktif));$('#modal').modal('show');}
+function kaydet(){AjaxPost('/Nace/Kaydet',{eskiKod:$('#eskiKod').val(),kod:$('#kod').val(),ad:$('#ad').val(),aktif:$('#aktif').val()==='true'},s=>{if(!s?.basarili)return PopupMesajGoster(s?.hataStr||'',false);$('#modal').modal('hide');listele();});}
+$(listele);
+</script>}

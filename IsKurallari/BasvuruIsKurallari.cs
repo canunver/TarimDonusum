@@ -130,6 +130,8 @@ namespace TarimDonusum.IsKurallari
                 sonuc = BasvuruKullanicisiMi(kullanici)
                     ? await tabBasvuru.KullaniciBasvurulariniListeleAsync(kullanici.Id)
                     : await tabBasvuru.TumunuListeleAsync();
+                if (sonuc.basarili && !BasvuruKullanicisiMi(kullanici))
+                    sonuc.nesne = await BasvurulariBirimIllerineGoreFiltreleAsync(connection, kullanici, sonuc.nesne ?? []);
             }
             catch (Exception ex)
             {
@@ -152,6 +154,8 @@ namespace TarimDonusum.IsKurallari
                 sonuc = BasvuruKullanicisiMi(kullanici)
                     ? await tabBasvuru.KullaniciBasvuruVersiyonlariniListeleAsync(kullanici.Id)
                     : await tabBasvuru.TumVersiyonlariListeleAsync();
+                if (sonuc.basarili && !BasvuruKullanicisiMi(kullanici))
+                    sonuc.nesne = await BasvurulariBirimIllerineGoreFiltreleAsync(connection, kullanici, sonuc.nesne ?? []);
             }
             catch (Exception ex)
             {
@@ -704,6 +708,25 @@ namespace TarimDonusum.IsKurallari
             if (string.IsNullOrWhiteSpace(b.DenetimAnketi)
                 || b.DenetimAnketi.Contains("Uzman kontrol maddesi", StringComparison.OrdinalIgnoreCase))
                 b.DenetimAnketi = UzmanKontrolListesi.Json;
+            b.DenetimAnketi = UboKycKontrolleriniCikar(b.DenetimAnketi);
+        }
+
+        private static string UboKycKontrolleriniCikar(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return "";
+            try
+            {
+                using JsonDocument belge = JsonDocument.Parse(json);
+                if (belge.RootElement.ValueKind != JsonValueKind.Array) return json;
+                JsonElement[] maddeler = belge.RootElement.EnumerateArray()
+                    .Where(x => !x.TryGetProperty("no", out JsonElement no) || no.GetInt32() is not (22 or 23))
+                    .Select(x => x.Clone()).ToArray();
+                return JsonSerializer.Serialize(maddeler);
+            }
+            catch (JsonException)
+            {
+                return json;
+            }
         }
 
         public async Task<Sonuc<string>> SistemDenetimListesiniYenidenUretAsync(int basvuruId, Kullanici kullanici)
@@ -876,7 +899,7 @@ namespace TarimDonusum.IsKurallari
             Eksikse(b.basvuruFirma.firmaId <= 0, "Basvuru.Summary.Error.CompanyRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.irtibat.kisi), "Basvuru.Summary.Error.ContactPersonRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.irtibat.telefon), "Basvuru.Summary.Error.ContactPhoneRequired");
-            Eksikse(!b.IkiYillikFaaliyetSartindanMuaf && b.basvuruFirma.sonIkiYildirFaalMi != true, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
+            Eksikse(!b.FaaliyetSuresiUygunMu, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
             Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru == enumBasvuruSahibiTuru.Tanimsiz, "Basvuru.Summary.Error.ApplicantTypeRequired");
             Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru == enumHukukiTurSirketTuru.Tanimsiz, "Basvuru.Summary.Error.LegalTypeRequired");
             Eksikse(!b.ortaklik.ozelSektorPayi.HasValue || b.ortaklik.ozelSektorPayi.Value < 75, "Basvuru.Summary.Error.PrivateShareRequired");
@@ -1042,7 +1065,7 @@ namespace TarimDonusum.IsKurallari
             Eksikse(b.basvuruFirma.firmaId <= 0, "Basvuru.Summary.Error.CompanyRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.irtibat.kisi), "Basvuru.Summary.Error.ContactPersonRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.irtibat.telefon), "Basvuru.Summary.Error.ContactPhoneRequired");
-            Eksikse(!b.IkiYillikFaaliyetSartindanMuaf && b.basvuruFirma.sonIkiYildirFaalMi != true, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
+            Eksikse(!b.FaaliyetSuresiUygunMu, "Basvuru.Summary.Error.ActiveTwoYearsRequired");
             Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru == enumBasvuruSahibiTuru.Tanimsiz, "Basvuru.Summary.Error.ApplicantTypeRequired");
             Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru == enumHukukiTurSirketTuru.Tanimsiz, "Basvuru.Summary.Error.LegalTypeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), "Basvuru.Summary.Error.InvestmentNameRequired");
@@ -1159,6 +1182,15 @@ namespace TarimDonusum.IsKurallari
 
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
+
+                Nace? nace = string.IsNullOrWhiteSpace(firma.naceKodu) ? null : await new TABNace(connection).OkuAsync(firma.naceKodu);
+                if (nace == null || !nace.aktif)
+                {
+                    sonuc.HataEkle("Geçerli ve aktif bir NACE kodu seçilmelidir.");
+                    return sonuc;
+                }
+                firma.naceKodu = nace.kod;
+                firma.naceAdi = nace.ad;
 
                 TABFirma tabFirma = new TABFirma(connection);
                 Firma? mevcut = await tabFirma.VergiKimlikNoIleOkuAsync(0, vergiKimlikNo);
@@ -1737,6 +1769,28 @@ namespace TarimDonusum.IsKurallari
                 BeklenmeyenHata(sonuc, ex, "Firma basvurusu  kaydedilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}", "Başvuru kaydedilemedi.", finans.basvuruId, kullanici.Id);
             }
             return sonuc;
+        }
+
+        private async Task<List<Basvuru>> BasvurulariBirimIllerineGoreFiltreleAsync(
+            SqlConnection connection, Kullanici kullanici, List<Basvuru> basvurular)
+        {
+            HashSet<int> birimIdleri = kullanici.Yetkiler
+                .Where(x => x.Rol == KullaniciRol.BirimKullanicisi && x.Birim.HasValue)
+                .Select(x => x.Birim!.Value)
+                .ToHashSet();
+
+            // Herhangi bir birime bağlı olmayan kullanıcı tüm başvuruları görür.
+            if (birimIdleri.Count == 0)
+                return basvurular;
+
+            List<Birim> birimler = (await new TABBirim(connection, _localizer).ListeleAsync(true))
+                .Where(x => birimIdleri.Contains(x.id))
+                .ToList();
+            if (birimler.Any(x => x.birimTuru == enumBirimTuru.Merkez))
+                return basvurular;
+
+            HashSet<int> ilKodlari = birimler.SelectMany(x => x.ilKodlari).ToHashSet();
+            return basvurular.Where(x => ilKodlari.Contains(x.basvuruFirma.il.kod)).ToList();
         }
 
         public async Task<Sonuc<List<DegerZinciriAsama>>> DegerZinciriAsamalariListeleAsync(Kullanici? kullanici, int degerZinciriId, int basvuruId)
@@ -2498,6 +2552,7 @@ namespace TarimDonusum.IsKurallari
                         return sonuc;
                     }
                     json["mode"] = yeni && modernizasyon ? "both" : yeni ? "planned" : "existing";
+                    json["anketSurumId"] = CevreselSosyalAnketTanimSaglayici.YayindakiSurum.id;
                     cevreselSosyal.cevreselSosyalJson = json.ToJsonString();
                 }
 
@@ -2533,7 +2588,7 @@ namespace TarimDonusum.IsKurallari
             if (!root.TryGetProperty("answers", out JsonElement answers) || answers.ValueKind != JsonValueKind.Object)
                 return;
 
-            HashSet<string> tanimliSorular = CevreselSosyalAnketTanimlari.Tum
+            HashSet<string> tanimliSorular = CevreselSosyalAnketTanimSaglayici.Tum
                 .SelectMany(grup => grup.Questions)
                 .Select(soru => soru.Id)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -3983,7 +4038,6 @@ namespace TarimDonusum.IsKurallari
             return mevcut.basvuruFirma.firmaId != gelen.basvuruFirma.firmaId ||
                    mevcut.basvuruFirma.donemId != gelen.basvuruFirma.donemId ||
                    mevcut.basvuruFirma.ilId != gelen.basvuruFirma.ilId ||
-                   mevcut.basvuruFirma.sonIkiYildirFaalMi != gelen.basvuruFirma.sonIkiYildirFaalMi ||
                    mevcut.basvuruFirma.basvuruSahibiTuru != gelen.basvuruFirma.basvuruSahibiTuru ||
                    mevcut.basvuruFirma.hukukiTurSirketTuru != gelen.basvuruFirma.hukukiTurSirketTuru ||
                    Metin(mevcut.irtibat.kisi) != Metin(gelen.irtibat.kisi) ||
@@ -4248,7 +4302,6 @@ namespace TarimDonusum.IsKurallari
         //    hedef.IlId = kaynak.IlId;
         //    hedef.BasvuruKonusu = kaynak.BasvuruKonusu;
         //    hedef.BasvuruSahibiTuru = kaynak.BasvuruSahibiTuru;
-        //    hedef.SonIkiYildirFaalMi = kaynak.SonIkiYildirFaalMi;
         //    hedef.OzelSektorPayi = kaynak.OzelSektorPayi;
         //    hedef.BagliOrtakIsletmeVarMi = kaynak.BagliOrtakIsletmeVarMi;
         //    hedef.BagliOrtakAciklama = kaynak.BagliOrtakAciklama;

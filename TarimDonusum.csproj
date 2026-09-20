@@ -4,8 +4,14 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <DefaultItemExcludes>$(DefaultItemExcludes);tmp_codex_test\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);.codex-temp\**;.tmp\**;Artifacts\**;Logs\**;qa\**;tmp_codex_test\**</DefaultItemExcludes>
+    <DebugType Condition="'$(Configuration)' == 'Release'">None</DebugType>
+    <DebugSymbols Condition="'$(Configuration)' == 'Release'">false</DebugSymbols>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json;appsettings.Development.json;appsettings.local.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
@@ -37,6 +43,12 @@
 
   <Target Name="CheckResourceEncoding" BeforeTargets="BeforeBuild">
     <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Araclar\CheckResourceEncoding.ps1&quot;" />
+  </Target>
+
+  <Target Name="RemovePublishDebugFiles" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(ResolvedFileToPublish.Extension)' == '.pdb'" />
+    </ItemGroup>
   </Target>
 
 </Project>

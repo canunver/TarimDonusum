@@ -171,7 +171,7 @@
                             <label>@L["Basvuru.Field.TicaretSicilNo"]<input id="modalTicaretSicilNo" /></label>
                             <label>@L["Basvuru.Field.KurulusTarihi"]<input id="modalKurulusTarihi" type="date" required /></label>
                             <label>@L["Basvuru.Field.MersisNo"]<input id="modalMersisNo" /></label>
-                            <label>@L["Basvuru.Field.NaceKodu"]<input id="modalNaceKodu" /></label>
+                            <label>@L["Basvuru.Field.NaceKodu"]<div class="input-group nace-code-group"><input id="modalNaceKodu" onblur="BasvuruNaceKoddanBul()" /><div class="input-group-append"><button type="button" class="btn btn-outline-primary" onclick="BasvuruNaceAramaAc()" aria-label="NACE kodu ara" title="NACE kodu ara"><i class="fas fa-search"></i></button></div></div><small id="modalNaceAdi" class="text-muted"></small></label>
                             <label>@L["Basvuru.Field.WebSitesi"]<input id="modalWebSitesi" /></label>
                             <label>@L["Basvuru.Field.Telefon"]<input id="modalTelefon" /></label>
                             <label>@L["Basvuru.Field.KepAdresi"]<input id="modalKepAdresi" /></label>
@@ -440,6 +440,8 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade nace-search-modal" id="basvuruNaceAramaModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5>NACE kodu seçimi</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body"><div class="input-group nace-search-toolbar"><input id="basvuruNaceAramaMetni" class="form-control" placeholder="Kod veya açıklama" onkeydown="if(event.key==='Enter'){event.preventDefault();BasvuruNaceAra();}"><div class="input-group-append"><button type="button" class="btn btn-primary" onclick="BasvuruNaceAra()"><i class="fas fa-search mr-1"></i>Ara</button></div></div><div id="basvuruNaceSonuclar" class="nace-search-results"><div class="text-muted">Aramak istediğiniz kodu veya açıklamayı yazınız.</div></div></div></div></div></div>
 </div>
 
 <script>
@@ -1722,7 +1724,7 @@
     function CevreselSosyalSoruHtml(question, disabled) {
         const contexts = CevreselSosyalSoruBaglamlari(question);
         const plannedOnly = Array.isArray(question.contexts) && question.contexts.length === 1 && question.contexts[0] === 'planned' && CevreselSosyalBaglamlari().includes('existing');
-        let html = `<div class="esf-question"><div class="esf-question-title">${htmlEncode(question.id)} ${htmlEncode(question.text || '')}${question.note ? `<small>${htmlEncode(question.note)}</small>` : ''}</div>`;
+        let html = `<div class="esf-question"><div class="esf-question-title">${htmlEncode(question.code || question.id)} ${htmlEncode(question.text || '')}${question.note ? `<small>${htmlEncode(question.note)}</small>` : ''}</div>`;
         if (question.info) html += `<div class="esf-info"><strong>${htmlEncode(cevreselSosyalMetinleri.informativeNote)}</strong> ${htmlEncode(question.info)}</div>`;
         if (plannedOnly) html += `<div class="esf-hidden-note">${htmlEncode(cevreselSosyalMetinleri.plannedOnlyNote)}</div>`;
         html += `<div class="esf-cols ${contexts.length === 1 ? 'single' : ''}">`;
@@ -2512,6 +2514,7 @@
         modalSet('modalKurulusTarihi', firma.kurulusTarihi);
         modalSet('modalMersisNo', firma.mersisNo);
         modalSet('modalNaceKodu', firma.naceKodu);
+        $('#modalNaceAdi').text(firma.naceAdi || '');
         modalSet('modalWebSitesi', firma.webSitesi);
         modalSet('modalTelefon', firma.telefon);
         modalSet('modalKepAdresi', firma.kepAdresi);
@@ -2605,7 +2608,6 @@
             ilId: degerInt('Basvuru.IlId'),
             degerZinciriId: degerInt('Basvuru.DegerZinciriId'),
             basvuruKonusu: '',
-            sonIkiYildirFaalMi: degerStr('Basvuru.SonIkiYildirFaalMi') === '' ? null : degerBool('Basvuru.SonIkiYildirFaalMi'),
             basvuruSahibiTuru: degerInt('Basvuru.BasvuruSahibiTuru'),
             hukukiTurSirketTuru: degerInt('Basvuru.HukukiTurSirketTuru'),
             yonetimKuruluUyeleriAdliSicilKisiler: degerStr('Basvuru.YonetimKuruluUyeleriAdliSicilKisiler'),
@@ -3096,6 +3098,11 @@
     function YatirimOzetiParaKuruslu(value) {
         return Number(value || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
+
+    function BasvuruNaceSec(x) { modalSet('modalNaceKodu', x.kod); $('#modalNaceAdi').text(x.ad || ''); $('#basvuruNaceAramaModal').modal('hide'); }
+    function BasvuruNaceAramaAc() { $('#basvuruNaceAramaMetni').val(modalValue('modalNaceKodu')); $('#basvuruNaceSonuclar').html('<div class="text-muted">Aramak istediğiniz kodu veya açıklamayı yazınız.</div>'); $('#basvuruNaceAramaModal').modal('show'); setTimeout(()=>$('#basvuruNaceAramaMetni').trigger('focus').select(),150); }
+    function BasvuruNaceAra() { const metin=($('#basvuruNaceAramaMetni').val()||'').trim(); if(!metin){$('#basvuruNaceSonuclar').html('<div class="text-muted">Arama yapmak için kod veya açıklama giriniz.</div>');return;} AjaxGet('/Nace/Ara', { metin }, s => { const esc=x=>$('<div>').text(x??'').html(); if (!s?.basarili) return SonucGoster(s); $('#basvuruNaceSonuclar').html((s.nesne||[]).map(x => `<button type="button" class="list-group-item list-group-item-action" data-kod="${esc(x.kod)}" data-ad="${esc(x.ad)}" onclick="BasvuruNaceSec({kod:this.dataset.kod,ad:this.dataset.ad})"><strong>${esc(x.kod)}</strong> - ${esc(x.ad)}</button>`).join('') || '<div class="text-muted">Kayıt bulunamadı.</div>'); }); }
+    function BasvuruNaceKoddanBul() { const kod=modalValue('modalNaceKodu').trim(); $('#modalNaceAdi').text(''); if(!kod)return; AjaxGet('/Nace/Ara',{metin:kod},s=>{const x=(s?.nesne||[]).find(n=>String(n.kod).toLocaleLowerCase('tr-TR')===kod.toLocaleLowerCase('tr-TR'));if(x)BasvuruNaceSec(x);else $('#modalNaceAdi').text('Geçerli bir NACE kodu seçiniz.');}); }
 
     function BasvuruDegerZincirleriniYukle() {
         const ilId = Number($('#basvuruIl').val() || basvuruIlId || 0);

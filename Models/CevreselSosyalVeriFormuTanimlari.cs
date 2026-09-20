@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Xml.Linq;
+using TarimDonusum.IsKurallari;
 
 namespace TarimDonusum.Models;
 
@@ -72,6 +73,31 @@ public static class CevreselSosyalVeriFormuTanimlari
             ["2.2"] = HarcamaTurleri(b),
             ["6.1"] = KullanimHakkiBelgesiDurumu(b),
             ["6.2"] = AraziStatusleri(b)
+        };
+    }
+
+    public static IReadOnlyDictionary<string,string> OtomatikCevaplar(Basvuru b,IEnumerable<CevreselSosyalSoruGrubu> gruplar)
+    {
+        Dictionary<string,string> sonuc=new(StringComparer.OrdinalIgnoreCase);
+        foreach(CevreselSosyalSoru soru in gruplar.SelectMany(x=>x.Questions).Where(x=>!string.IsNullOrWhiteSpace(x.AutoSource)))
+            sonuc[soru.Id]=OtomatikKaynakDegeri(b,soru.AutoSource!);
+        return sonuc;
+    }
+
+    private static string OtomatikKaynakDegeri(Basvuru b,string kaynak)
+    {
+        string Tur(int v)=>((enumYatirimTuru)v) switch{enumYatirimTuru.Yeni=>"Yeni",enumYatirimTuru.KapasiteArtirimi=>"Kapasite Artırımı",enumYatirimTuru.Modernizasyon=>"Modernizasyon",enumYatirimTuru.TeknolojiYenileme=>"Teknoloji Yenileme",_=>""};
+        return kaynak switch
+        {
+            "Firma.TicaretUnvani"=>b.basvuruFirma.firma.ticaretUnvani??"",
+            "Yatirim.Adi"=>b.yatirim.yatirimAdi??"",
+            "Yatirim.Adresleri"=>string.Join("; ",(b.YatirimAdresleri??[]).OrderBy(x=>x.siraNo).Select(x=>string.Join(" / ",new[]{x.ilAdi,x.ilceAdi,x.tamAdres}.Where(y=>!string.IsNullOrWhiteSpace(y))))),
+            "Yatirim.Turleri"=>string.Join(", ",(b.yatirim.yatirimTurleri??[]).Select(Tur).Where(x=>x.Length>0)),
+            "Yatirim.OzetVeGerekce"=>YatirimKisaOzetiVeGerekcesi(b),
+            "Yatirim.HarcamaTurleri"=>HarcamaTurleri(b),
+            "Yatirim.KullanimHakkiBelgesiDurumu"=>KullanimHakkiBelgesiDurumu(b),
+            "Yatirim.AraziStatusleri"=>AraziStatusleri(b),
+            _=>""
         };
     }
 

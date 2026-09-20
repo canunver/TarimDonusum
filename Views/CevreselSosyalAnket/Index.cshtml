@@ -1,0 +1,77 @@
+@{ ViewData["Title"] = "Çevresel-Sosyal Anket Yönetimi"; }
+
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div><h1>Çevresel-Sosyal Anket Yönetimi</h1><p>Anket sürümlerini, bölümleri ve soruları yönetin.</p></div>
+        <div class="d-flex gap-2"><button class="btn btn-outline-primary" onclick="taslakOlustur()">Taslak oluştur</button><button id="kaydetBtn" class="btn btn-primary" onclick="kaydet()">Taslağı kaydet</button><button id="yayinlaBtn" class="btn btn-success" onclick="yayinla()">Yayınla</button></div>
+    </div>
+
+    <div class="basvuru-card p-3 mb-3">
+        <div class="row align-items-end">
+            <div class="col-md-3"><label>Sürüm<select id="surum" class="form-control" onchange="yukle(this.value)"></select></label></div>
+            <div class="col-md-7"><label>Açıklama<input id="aciklama" class="form-control" maxlength="1000" oninput="if(anket)anket.aciklama=this.value"></label></div>
+            <div class="col-md-2"><span id="durum" class="badge badge-secondary"></span></div>
+        </div>
+        <div class="alert alert-info mt-3 mb-0">Bölüm numarasını <strong>1</strong>, soru numarasını <strong>1.4</strong> biçiminde girin. Bölümler ve sorular kaydedildiğinde bu numaralara göre otomatik sıralanır. Yayındaki soru numaraları cevap bağlantısını korumak için değiştirilemez.</div>
+    </div>
+    <div id="bolumler"></div>
+    <button id="bolumEkleBtn" class="btn btn-outline-primary mb-4" onclick="bolumEkle()"><i class="fas fa-plus mr-1"></i>Bölüm ekle</button>
+</div>
+
+@section Scripts {
+<script>
+let anket=null, saltOkunur=true;
+const esc=x=>$('<div>').text(x??'').html(), satirlar=x=>(x||[]).join('\n');
+const turler=[['yesno','Evet / Hayır'],['select','Seçim listesi'],['text','Kısa metin'],['textarea','Uzun metin'],['percent','Yüzde'],['staff','Çalışan tablosu']];
+const kaynaklar=[['','Elle girilecek'],['Firma.TicaretUnvani','Firma ticaret unvanı'],['Yatirim.Adi','Yatırım adı'],['Yatirim.Adresleri','Yatırım adresleri'],['Yatirim.Turleri','Yatırım türleri'],['Yatirim.OzetVeGerekce','Yatırım özeti ve gerekçesi'],['Yatirim.HarcamaTurleri','Harcama türleri'],['Yatirim.KullanimHakkiBelgesiDurumu','Kullanım hakkı belgesi durumu'],['Yatirim.AraziStatusleri','Arazi statüleri']];
+function hata(s){PopupMesajGoster(s?.hataStr||'İşlem gerçekleştirilemedi.',false)}
+function yukle(id){AjaxGet('/CevreselSosyalAnket/SayfaVerisi',id?{surumId:id}:{},s=>{if(!s?.basarili)return hata(s);const d=s.nesne||{};$('#surum').html((d.surumler||[]).map(x=>`<option value="${x.id}" ${d.anket?.id===x.id?'selected':''}>Sürüm ${x.surumNo} - ${x.durum===1?'Yayında':x.durum===0?'Taslak':'Arşiv'}</option>`).join(''));anket=d.anket;saltOkunur=!anket||anket.durum!==0;render();});}
+function render(){if(!anket){$('#bolumler').html('<div class="alert alert-warning">Anket bulunamadı.</div>');return;}saltOkunur=anket.durum===2;$('#aciklama').val(anket.aciklama).prop('disabled',saltOkunur);$('#durum').text(anket.durum===1?'Yayında':anket.durum===0?'Taslak':'Arşiv').attr('class','badge '+(anket.durum===1?'badge-success':anket.durum===0?'badge-warning':'badge-secondary'));$('#kaydetBtn,#bolumEkleBtn').toggle(!saltOkunur);$('#yayinlaBtn').toggle(anket.durum===0);$('#bolumler').html((anket.bolumler||[]).map(bolumHtml).join(''));}
+function bolumHtml(b,bi){return `<div class="basvuru-card p-3 mb-3"><div class="d-flex align-items-start gap-2 mb-3"><input class="form-control" style="max-width:110px" value="${esc(b.kod)}" ${saltOkunur?'disabled':''} onchange="setB(${bi},'kod',this.value)" placeholder="Kod"><input class="form-control font-weight-bold" value="${esc(b.baslik)}" ${saltOkunur?'disabled':''} onchange="setB(${bi},'baslik',this.value)" placeholder="Bölüm başlığı">${saltOkunur||anket.durum===1?'':`<button class="btn btn-outline-danger" onclick="bolumSil(${bi})">Sil</button>`}</div><div>${(b.sorular||[]).map((q,qi)=>soruHtml(q,bi,qi)).join('')}</div>${saltOkunur?'':`<button class="btn btn-sm btn-outline-primary" onclick="soruEkle(${bi})"><i class="fas fa-plus mr-1"></i>Soru ekle</button>`}</div>`;}
+function soruHtml(q,bi,qi){const dis=saltOkunur?'disabled':'';const gizli=q.aktif===false;return `<div class="border rounded p-3 mb-3 ${gizli?'bg-white text-muted':'bg-light'}"><div class="d-flex gap-2 mb-2"><input class="form-control" style="max-width:110px" value="${esc(q.gorunumKodu||q.anahtar)}" ${dis} onchange="setQ(${bi},${qi},'gorunumKodu',this.value)" title="Ekranda gösterilen ve sıralamada kullanılan soru numarası"><input class="form-control" value="${esc(q.baslik)}" ${dis} onchange="setQ(${bi},${qi},'baslik',this.value)" placeholder="Kısa başlık (isteğe bağlı)">${gizli?'<span class="badge badge-secondary align-self-center">Gizli</span>':''}</div><textarea class="form-control mb-2" rows="2" ${dis} onchange="setQ(${bi},${qi},'metin',this.value)" placeholder="Soru metni">${esc(q.metin)}</textarea><div class="row"><div class="col-md-3"><label>Cevap tipi<select class="form-control" ${dis} onchange="setQ(${bi},${qi},'cevapTuru',this.value)">${turler.map(t=>`<option value="${t[0]}" ${q.cevapTuru===t[0]?'selected':''}>${t[1]}</option>`).join('')}</select></label></div><div class="col-md-3"><label>Otomatik veri kaynağı<select class="form-control" ${dis} onchange="setQ(${bi},${qi},'otomatikKaynakKodu',this.value||null)">${kaynaklar.map(t=>`<option value="${t[0]}" ${(q.otomatikKaynakKodu||'')===t[0]?'selected':''}>${t[1]}</option>`).join('')}</select></label></div><div class="col-md-3"><label class="d-block">Gösterim</label>${check('ortak','Ortak alan',q.ortak,bi,qi)} ${check('yapim','Planlanan yatırım',q.yapim,bi,qi)} ${check('guncelleme','Mevcut tesis',q.guncelleme,bi,qi)}</div><div class="col-md-3"><label class="d-block">Kurallar</label>${gizliCheck(q,bi,qi)} ${check('zorunlu','Zorunlu',q.zorunlu,bi,qi)} ${check('herZamanAciklamaIste','Her zaman açıklama',q.herZamanAciklamaIste,bi,qi)} ${check('kapsamDisiBirakir','Kapsam dışı bırakır',q.kapsamDisiBirakir,bi,qi)}</div><div class="col-md-3"><label>Maksimum uzunluk<input type="number" min="1" class="form-control" value="${q.maksimumUzunluk??''}" ${dis} onchange="setQ(${bi},${qi},'maksimumUzunluk',this.value?Number(this.value):null)"></label></div></div><details><summary>Seçenekler ve yardımcı metinler</summary><div class="row mt-2"><div class="col-md-4"><label>Seçenekler (satır başına bir tane)<textarea class="form-control" rows="4" ${dis} onchange="setListe(${bi},${qi},'secenekler',this.value)">${esc(satirlar(q.secenekler))}</textarea></label></div><div class="col-md-4"><label>Açıklama istenecek cevaplar<textarea class="form-control" rows="4" ${dis} onchange="setListe(${bi},${qi},'aciklamaKosullari',this.value)">${esc(satirlar(q.aciklamaKosullari))}</textarea></label></div><div class="col-md-4"><label>Dosya istenecek cevaplar<textarea class="form-control" rows="4" ${dis} onchange="setListe(${bi},${qi},'dosyaKosullari',this.value)">${esc(satirlar(q.dosyaKosullari))}</textarea></label></div><div class="col-md-4"><label>Not<textarea class="form-control" ${dis} onchange="setQ(${bi},${qi},'notMetni',this.value)">${esc(q.notMetni)}</textarea></label></div><div class="col-md-4"><label>Bilgi metni<textarea class="form-control" ${dis} onchange="setQ(${bi},${qi},'bilgiMetni',this.value)">${esc(q.bilgiMetni)}</textarea></label></div><div class="col-md-4"><label>Yer tutucu<input class="form-control" value="${esc(q.yerTutucu)}" ${dis} onchange="setQ(${bi},${qi},'yerTutucu',this.value)"></label></div></div></details></div>`;}
+function soruHtml(q,bi,qi){
+    const dis=saltOkunur?'disabled':'';
+    const gizli=q.aktif===false;
+    return `<div class="border rounded p-3 mb-3 ${gizli?'bg-white text-muted':'bg-light'}">
+        <div class="d-flex align-items-start gap-2 mb-2">
+            <input class="form-control" style="max-width:110px" value="${esc(q.gorunumKodu||q.anahtar)}" ${dis} onchange="setQ(${bi},${qi},'gorunumKodu',this.value)" title="Ekranda gösterilen ve sıralamada kullanılan soru numarası">
+            <textarea class="form-control flex-grow-1" rows="2" ${dis} onchange="setQ(${bi},${qi},'metin',this.value)" placeholder="Soru metni">${esc(q.metin)}</textarea>
+            ${gizli?'<span class="badge badge-secondary mt-2">Gizli</span>':''}
+        </div>
+        <div class="row">
+            <div class="col-md-3"><label>Cevap tipi<select class="form-control" ${dis} onchange="setQ(${bi},${qi},'cevapTuru',this.value)">${turler.map(t=>`<option value="${t[0]}" ${q.cevapTuru===t[0]?'selected':''}>${t[1]}</option>`).join('')}</select></label></div>
+            <div class="col-md-3"><label>Otomatik veri kaynağı<select class="form-control" ${dis} onchange="setQ(${bi},${qi},'otomatikKaynakKodu',this.value||null)">${kaynaklar.map(t=>`<option value="${t[0]}" ${(q.otomatikKaynakKodu||'')===t[0]?'selected':''}>${t[1]}</option>`).join('')}</select></label></div>
+            <div class="col-md-3"><label class="d-block">Gösterim</label>${check('ortak','Ortak alan',q.ortak,bi,qi)} ${check('yapim','Planlanan yatırım',q.ortak||q.yapim,bi,qi,q.ortak)} ${check('guncelleme','Mevcut tesis',q.ortak||q.guncelleme,bi,qi,q.ortak)}</div>
+            <div class="col-md-3"><label class="d-block">Kurallar</label>${gizliCheck(q,bi,qi)} ${check('zorunlu','Zorunlu',q.zorunlu,bi,qi)} ${check('herZamanAciklamaIste','Her zaman açıklama',q.herZamanAciklamaIste,bi,qi)} ${check('kapsamDisiBirakir','Kapsam dışı bırakır',q.kapsamDisiBirakir,bi,qi)}</div>
+            <div class="col-md-3"><label>Maksimum uzunluk<input type="number" min="1" class="form-control" value="${q.maksimumUzunluk??''}" ${dis} onchange="setQ(${bi},${qi},'maksimumUzunluk',this.value?Number(this.value):null)"></label></div>
+        </div>
+        <details><summary>Seçenekler ve yardımcı metinler</summary><div class="row mt-2">
+            <div class="col-md-4"><label>Seçenekler (satır başına bir tane)<textarea class="form-control" rows="4" ${dis} onchange="setListe(${bi},${qi},'secenekler',this.value)">${esc(satirlar(q.secenekler))}</textarea></label></div>
+            <div class="col-md-4"><label>Açıklama istenecek cevaplar<textarea class="form-control" rows="4" ${dis} onchange="setListe(${bi},${qi},'aciklamaKosullari',this.value)">${esc(satirlar(q.aciklamaKosullari))}</textarea></label></div>
+            <div class="col-md-4"><label>Dosya istenecek cevaplar<textarea class="form-control" rows="4" ${dis} onchange="setListe(${bi},${qi},'dosyaKosullari',this.value)">${esc(satirlar(q.dosyaKosullari))}</textarea></label></div>
+            <div class="col-md-4"><label>Not<textarea class="form-control" ${dis} onchange="setQ(${bi},${qi},'notMetni',this.value)">${esc(q.notMetni)}</textarea></label></div>
+            <div class="col-md-4"><label>Bilgi metni<textarea class="form-control" ${dis} onchange="setQ(${bi},${qi},'bilgiMetni',this.value)">${esc(q.bilgiMetni)}</textarea></label></div>
+            <div class="col-md-4"><label>Yer tutucu<input class="form-control" value="${esc(q.yerTutucu)}" ${dis} onchange="setQ(${bi},${qi},'yerTutucu',this.value)"></label></div>
+        </div></details>
+    </div>`;
+}
+function check(k,l,v,bi,qi,kilitli=false){return `<label class="d-block mb-1"><input type="checkbox" ${v?'checked':''} ${saltOkunur||kilitli?'disabled':''} onchange="setQ(${bi},${qi},'${k}',this.checked)"> ${l}</label>`;}
+function gizliCheck(q,bi,qi){return `<label class="d-block mb-1"><input type="checkbox" ${q.aktif===false?'checked':''} ${saltOkunur?'disabled':''} onchange="setQ(${bi},${qi},'aktif',!this.checked);render()"> Gizli</label>`;}
+function setB(i,k,v){anket.bolumler[i][k]=v}
+function setQ(i,j,k,v){
+    const q=anket.bolumler[i].sorular[j];
+    q[k]=v;
+    if(k==='ortak'){
+        if(v){q.yapim=true;q.guncelleme=true;}
+        render();
+    }
+}
+function setListe(i,j,k,v){setQ(i,j,k,v.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))}
+function bolumEkle(){anket.bolumler.push({kod:String(anket.bolumler.length+1),baslik:'Yeni Bölüm',siraNo:anket.bolumler.length+1,bilgiler:[],sorular:[]});render()} function bolumSil(i){if(confirm('Bölüm ve soruları silinsin mi?')){anket.bolumler.splice(i,1);render()}}
+function soruEkle(i){const b=anket.bolumler[i];b.sorular.push({anahtar:'',gorunumKodu:'',baslik:'',metin:'',cevapTuru:'yesno',otomatikKaynakKodu:null,aktif:true,ortak:false,yapim:true,guncelleme:true,zorunlu:false,maksimumUzunluk:null,notMetni:'',bilgiMetni:'',yerTutucu:'',kapsamDisiBirakir:false,herZamanAciklamaIste:false,siraNo:b.sorular.length+1,secenekler:[],aciklamaKosullari:[],dosyaKosullari:[]});render()}
+function taslakOlustur(){AjaxPost('/CevreselSosyalAnket/TaslakOlustur',{},s=>{if(!s?.basarili)return hata(s);yukle(s.nesne)})}
+function kaydet(){AjaxPost('/CevreselSosyalAnket/Kaydet',anket,s=>{if(!s?.basarili)return hata(s);PopupMesajGoster(s.mesaj,true);yukle(anket.id)})}
+function yayinla(){if(!confirm('Bu taslak yayınlansın mı? Mevcut yayın arşive alınacaktır.'))return;AjaxPost('/CevreselSosyalAnket/Yayinla',{id:anket.id},s=>{if(!s?.basarili)return hata(s);PopupMesajGoster(s.mesaj,true);yukle(anket.id)})}
+$(function(){yukle()});
+</script>
+}

@@ -73,10 +73,9 @@
                             </select>
                         </label>
                         <label id="birimIlKodSatir">
-                            @L["Birim.Field.ProvinceCode"]
-                            <select id="birimIlKod">
-                                <option value="">@L["Basvuru.Common.Select"]</option>
-                            </select>
+                            İller
+                            <select id="birimIlKodlari" multiple size="8"></select>
+                            <small class="text-muted">Birime bağlanacak bir veya daha fazla ili seçiniz.</small>
                         </label>
                     </div>
                     <div class="birim-form-row birim-status-row">
@@ -134,8 +133,8 @@
                     <td>${htmlEncode(birim.siraNo)}</td>
                     <td>${htmlEncode(birim.birimAdi)}</td>
                     <td>${htmlEncode(tur)}</td>
-                    <td>${htmlEncode(birim.ilKod || '-')}</td>
-                    <td>${htmlEncode(birim.ilAdi || '-')}</td>
+                    <td>${htmlEncode(birim.ilKodlariMetni || '-')}</td>
+                    <td>${htmlEncode(birim.ilAdlariMetni || '-')}</td>
                     <td><span class="badge ${badge}">${htmlEncode(durum)}</span></td>
                     <td class="text-right">
                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="BirimModalAc(${birim.id})">${htmlEncode(birimMetinleri.edit)}</button>
@@ -146,11 +145,10 @@
     }
 
     function IlListesiYaz(liste) {
-        const select = $('#birimIlKod');
-        const secili = select.val();
+        const select = $('#birimIlKodlari');
+        const secili = select.val() || [];
 
         select.empty();
-        select.append($('<option/>', { value: '', text: birimMetinleri.select }));
 
         (liste || [])
             .slice()
@@ -162,8 +160,7 @@
                 }));
             });
 
-        if (secili)
-            select.val(secili);
+        select.val(secili.map(String));
     }
 
     function BirimModalAc(id) {
@@ -171,7 +168,7 @@
             id: 0,
             birimAdi: '',
             birimTuru: 1,
-            ilKod: '',
+            ilKodlari: [],
             siraNo: (birimler || []).length + 1,
             aktif: true
         };
@@ -179,7 +176,7 @@
         $('#birimId').val(birim.id || 0);
         $('#birimAdi').val(birim.birimAdi || '');
         $('#birimTuru').val(String(birim.birimTuru || 1));
-        $('#birimIlKod').val(birim.ilKod || '');
+        $('#birimIlKodlari').val((birim.ilKodlari || []).map(String));
         $('#birimSiraNo').val(birim.siraNo || 1);
         $('#birimAktif').val(String(birim.aktif !== false));
 
@@ -190,7 +187,7 @@
     function BirimTuruDegisti() {
         const tasraMi = Number($('#birimTuru').val()) === 2;
         $('#birimIlKodSatir').toggle(tasraMi);
-        if (!tasraMi) $('#birimIlKod').val('');
+        if (!tasraMi) $('#birimIlKodlari').val([]);
     }
 
     function BirimModelOku() {
@@ -198,7 +195,7 @@
             id: Number($('#birimId').val() || 0),
             birimAdi: $('#birimAdi').val(),
             birimTuru: Number($('#birimTuru').val() || 1),
-            ilKod: $('#birimIlKod').val() ? Number($('#birimIlKod').val()) : null,
+            ilKodlari: ($('#birimIlKodlari').val() || []).map(Number),
             siraNo: Number($('#birimSiraNo').val() || 0),
             aktif: $('#birimAktif').val() === 'true'
         };

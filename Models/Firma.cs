@@ -15,6 +15,7 @@ namespace TarimDonusum.Models
         public string? mersisNo { get; set; } = "";
 
         public string? naceKodu { get; set; } = "";
+        public string? naceAdi { get; set; } = "";
 
         public string? webSitesi { get; set; } = "";
 
@@ -51,8 +52,10 @@ namespace TarimDonusum.Models
             if (mersisNo?.Length > 50)
                 sonuc.HataEkle("MERSİS no en fazla 50 karakter olmalıdır.");
 
-            if (naceKodu?.Length > 50)
-                sonuc.HataEkle("NACE kodu en fazla 50 karakter olmalıdır.");
+            if (string.IsNullOrWhiteSpace(naceKodu))
+                sonuc.HataEkle("NACE kodu seçilmelidir.");
+            else if (naceKodu.Length > 20)
+                sonuc.HataEkle("NACE kodu en fazla 20 karakter olmalıdır.");
 
             if (webSitesi?.Length > 250)
                 sonuc.HataEkle("Web sitesi en fazla 250 karakter olmalıdır.");

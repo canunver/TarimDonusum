@@ -37,6 +37,7 @@ builder.Services.AddSingleton<CaptchaGenerator>();
 builder.Services.AddScoped<KullaniciIsKurallari>();
 builder.Services.AddScoped<BasvuruIsKurallari>();
 builder.Services.AddScoped<TanimIsKurallari>();
+builder.Services.AddScoped<CevreselSosyalAnketYonetimIsKurallari>();
 builder.Services.AddScoped<DosyaYonetimIsKurallari>();
 builder.Services.AddScoped<FirmaIsKurallari>();
 builder.Services.AddScoped<IMailServisi, MailServisi>();
@@ -59,6 +60,7 @@ builder.Services.AddSession(options =>
 WebApplication app = builder.Build();
 
 await VTGuncelle.GuncelleAsync(app.Configuration, app.Logger);
+await CevreselSosyalAnketAktarici.AktarVeYukleAsync(app.Configuration, app.Logger);
 
 app.UseExceptionHandler("/Home/Error");
 

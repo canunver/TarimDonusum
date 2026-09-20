@@ -29,7 +29,7 @@ public sealed class RPROB_OnBasvuruCevreselSosyal(int uygulamaAdresiId) : IRPROB
             foreach (JsonProperty cevap in cevapNesnesi.EnumerateObject())
                 cevaplar[cevap.Name] = cevap.Value.ValueKind == JsonValueKind.String ? cevap.Value.GetString() ?? "" : cevap.Value.ToString();
 
-        IReadOnlyDictionary<string, string> otomatikCevaplar = CevreselSosyalVeriFormuTanimlari.OtomatikCevaplar(basvuru);
+        IReadOnlyDictionary<string, string> otomatikCevaplar = CevreselSosyalVeriFormuTanimlari.OtomatikCevaplar(basvuru, CevreselSosyalAnketTanimSaglayici.Tum);
         Dictionary<string, string> adresCevaplari = new(otomatikCevaplar, StringComparer.OrdinalIgnoreCase)
         {
             ["1.3"] = string.Join(" / ", new[] { adres.ilAdi, adres.ilceAdi, adres.tamAdres }.Where(x => !string.IsNullOrWhiteSpace(x))),
@@ -85,7 +85,7 @@ public sealed class RPROB_OnBasvuruCevreselSosyal(int uygulamaAdresiId) : IRPROB
         int satir = 3;
         List<int> bolumSatirlari = [];
         List<int> calisanBaslikSatirlari = [];
-        foreach (CevreselSosyalSoruGrubu grup in CevreselSosyalAnketTanimlari.Tum)
+        foreach (CevreselSosyalSoruGrubu grup in CevreselSosyalAnketTanimSaglayici.Tum)
         {
             List<CevreselSosyalSoru> sorular = grup.Questions.Where(x => SoruKapsamdaMi(x, kapsam)).ToList();
             if (sorular.Count == 0)
@@ -108,7 +108,7 @@ public sealed class RPROB_OnBasvuruCevreselSosyal(int uygulamaAdresiId) : IRPROB
                     dosyaAdi = adres.kullanimHakkiDosyaAdi?.Trim() ?? "";
                 bool dosyaYuklenecek = soru.DocOn?.Contains(cevap, StringComparer.OrdinalIgnoreCase) == true;
 
-                hucreler[satir, 1].PutValue($"{soru.Id} {soru.Text}");
+                hucreler[satir, 1].PutValue($"{soru.Code ?? soru.Id} {soru.Text}");
                 if (!calisanSorusu)
                     hucreler[satir, 2].PutValue(cevap);
                 hucreler[satir, 3].PutValue(ekBilgi);

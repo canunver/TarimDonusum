@@ -154,7 +154,7 @@
     Eksikse(b.basvuruFirma.firmaId <= 0, R("Basvuru.Summary.Error.CompanyRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.irtibat.kisi), R("Basvuru.Summary.Error.ContactPersonRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.irtibat.telefon), R("Basvuru.Summary.Error.ContactPhoneRequired"));
-    Eksikse(!b.IkiYillikFaaliyetSartindanMuaf && b.basvuruFirma.sonIkiYildirFaalMi != true, R("Basvuru.Summary.Error.ActiveTwoYearsRequired"));
+    Eksikse(!b.FaaliyetSuresiUygunMu, R("Basvuru.Summary.Error.ActiveTwoYearsRequired"));
     Eksikse(!b.basvuruFirma.basvuruSahibiTuru.HasValue || b.basvuruFirma.basvuruSahibiTuru.Value == enumBasvuruSahibiTuru.Tanimsiz, R("Basvuru.Summary.Error.ApplicantTypeRequired"));
     Eksikse(!b.basvuruFirma.hukukiTurSirketTuru.HasValue || b.basvuruFirma.hukukiTurSirketTuru.Value == enumHukukiTurSirketTuru.Tanimsiz, R("Basvuru.Summary.Error.LegalTypeRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), R("Basvuru.Summary.Error.InvestmentNameRequired"));

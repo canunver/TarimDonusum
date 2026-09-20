@@ -72,7 +72,7 @@ namespace TarimDonusum.Controllers
             List<Basvuru> liste = (kaynak.nesne ?? new())
                 .Where(x => x.basvuruFirma.donemId == donemId)
                 .Where(x => seciliBirim.birimTuru == enumBirimTuru.Merkez
-                    || (seciliBirim.ilKod.HasValue && x.basvuruFirma.il.kod == seciliBirim.ilKod.Value))
+                    || seciliBirim.ilKodlari.Contains(x.basvuruFirma.il.kod))
                 .ToList();
             sonuc.nesne = new
             {

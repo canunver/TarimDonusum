@@ -8,7 +8,8 @@ public sealed record ZorunluBelgeTanimi(int No, string Grup, string Ad, string U
 public static class ZorunluBelgeTanimlari
 {
     private static readonly Lazy<IReadOnlyList<ZorunluBelgeTanimi>> Liste = new(Yukle);
-    public static IReadOnlyList<ZorunluBelgeTanimi> Tum => Liste.Value;
+    public const int UboKycBelgeNo = 10;
+    public static IReadOnlyList<ZorunluBelgeTanimi> Tum => Liste.Value.Where(x => x.No != UboKycBelgeNo).ToList();
     public const int GuncelTuzukBelgeNo = 49;
 
     public static IReadOnlyList<ZorunluBelgeTanimi> BasvuruIcin(enumBasvuruSahibiTuru? basvuruSahibiTuru)

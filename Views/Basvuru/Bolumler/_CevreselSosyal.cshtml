@@ -30,10 +30,10 @@
         }), jsonOptions))
     </script>
     <script type="application/json" id="cevreselSosyalSoruTanimlariJson">
-        @Html.Raw(JsonSerializer.Serialize(CevreselSosyalAnketTanimlari.Tum, jsonOptions))
+        @Html.Raw(JsonSerializer.Serialize(CevreselSosyalAnketTanimSaglayici.Tum, jsonOptions))
     </script>
     <script type="application/json" id="cevreselSosyalOtomatikCevaplarJson">
-        @Html.Raw(JsonSerializer.Serialize(CevreselSosyalVeriFormuTanimlari.OtomatikCevaplar(b), jsonOptions))
+        @Html.Raw(JsonSerializer.Serialize(CevreselSosyalVeriFormuTanimlari.OtomatikCevaplar(b, CevreselSosyalAnketTanimSaglayici.Tum), jsonOptions))
     </script>
 
     <div class="esf-mode-box">

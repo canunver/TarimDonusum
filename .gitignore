@@ -365,3 +365,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Codex local working files
+.codex-temp/
+
+# Local build, QA and agent scratch directories
+.tmp/
+tmp_codex_test/
+qa/

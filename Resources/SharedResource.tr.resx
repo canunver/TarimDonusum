@@ -658,7 +658,7 @@
     <value>NACE kodu</value>
   </data>
   <data name="Basvuru.Field.SonIkiYildirFaalMi" xml:space="preserve">
-    <value>Son 2 yıldır faal mi?</value>
+    <value>Faaliyet süresi durumu</value>
   </data>
   <data name="Basvuru.Field.BasvuruSahibiTuru" xml:space="preserve">
     <value>Başvuru sahibi türü</value>
@@ -2788,4 +2788,6 @@
   <data name="Basvuru.Documents.Required.9" xml:space="preserve"><value>Önceki yıla ait gelir tablosu</value></data>
   <data name="Basvuru.Documents.Required.10" xml:space="preserve"><value>Önceki yıla ait bilanço</value></data>
   <data name="Basvuru.Documents.Required.11" xml:space="preserve"><value>Önceki yıla ait detaylı mizan</value></data>
+  <data name="MenuBasvuru.naceKodlari" xml:space="preserve"><value>NACE Kodları</value></data>
+  <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Çevresel-Sosyal Anket</value></data>
 </root>

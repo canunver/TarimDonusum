@@ -60,6 +60,14 @@ namespace TarimDonusum.Models
         OrganizeAlanDisinda = 5
     }
 
+    public enum enumFaaliyetSuresiDurumu : int
+    {
+        AktifDegil = 0,
+        BirYildirAktifOtb = 1,
+        BirYildirAktifUygunDegil = 2,
+        EnAzIkiYildirAktif = 3
+    }
+
     public enum enumUygulamaAdresiYatirimYeriStatusu : int
     {
         Tanimsiz = 0, //"Tanımsız";
@@ -202,8 +210,38 @@ namespace TarimDonusum.Models
         public BasvuruYatirim yatirim { get; set; } = new();
         public BasvuruOrtaklik ortaklik { get; set; } = new();
         public List<BasvuruUygulamaAdresi> YatirimAdresleri { get; set; } = new();
-        public bool IkiYillikFaaliyetSartindanMuaf => YatirimAdresleri.Any(x =>
-            x.yatirimYeriStatusu == enumUygulamaAdresiYatirimYeriStatusu.OrganizeSanayi_IhtisasAlaniTahsisi);
+        public enumFaaliyetSuresiDurumu FaaliyetSuresiDurumu
+        {
+            get
+            {
+                bool sonYilVerisiVar = mali.sonYilNetSatis.GetValueOrDefault() > 0
+                    || mali.sonYilAktifToplami.GetValueOrDefault() > 0;
+                if (!sonYilVerisiVar)
+                    return enumFaaliyetSuresiDurumu.AktifDegil;
+
+                bool oncekiYilVerisiVar = mali.oncekiYilNetSatis.GetValueOrDefault() > 0
+                    || mali.oncekiYilAktifToplami.GetValueOrDefault() > 0;
+                if (oncekiYilVerisiVar)
+                    return enumFaaliyetSuresiDurumu.EnAzIkiYildirAktif;
+
+                bool otbAdresiVar = YatirimAdresleri.Any(x =>
+                    x.kumelenmeOrganizeAlanTuru == enumKumelenmeOrganizeAlanTuru.OrganizeTarimBolgesi);
+                return otbAdresiVar
+                    ? enumFaaliyetSuresiDurumu.BirYildirAktifOtb
+                    : enumFaaliyetSuresiDurumu.BirYildirAktifUygunDegil;
+            }
+        }
+        public bool FaaliyetSuresiUygunMu => FaaliyetSuresiDurumu is
+            enumFaaliyetSuresiDurumu.BirYildirAktifOtb or enumFaaliyetSuresiDurumu.EnAzIkiYildirAktif;
+        public bool IkiYillikFaaliyetSartindanMuaf =>
+            FaaliyetSuresiDurumu == enumFaaliyetSuresiDurumu.BirYildirAktifOtb;
+        public string FaaliyetSuresiDurumuMetni => FaaliyetSuresiDurumu switch
+        {
+            enumFaaliyetSuresiDurumu.BirYildirAktifOtb => "1 yıldır aktif - OTB",
+            enumFaaliyetSuresiDurumu.BirYildirAktifUygunDegil => "1 yıldır aktif - uygun değil",
+            enumFaaliyetSuresiDurumu.EnAzIkiYildirAktif => "En az 2 yıldır aktif",
+            _ => "Aktif değil"
+        };
         public void AdresYatirimBilgileriniBirlestir()
         {
             yatirim.yatirimTurleri = YatirimAdresleri.SelectMany(x => x.yatirimTurleri ?? []).Where(x => x > 0).Distinct().ToList();
@@ -422,7 +460,6 @@ namespace TarimDonusum.Models
         public int ilId { get { return il.id; } set { il.id = value; } }
         public int? degerZinciriId { get; set; }
         public string? basvuruKonusu { get; set; } = "";
-        public bool? sonIkiYildirFaalMi { get; set; }
         public enumBasvuruSahibiTuru? basvuruSahibiTuru { get; set; }
         public enumHukukiTurSirketTuru? hukukiTurSirketTuru { get; set; }
         public string? yonetimKuruluUyeleriAdliSicilKisiler { get; set; } = "";

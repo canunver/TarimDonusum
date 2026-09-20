@@ -33,7 +33,7 @@ public static class BasvuruOzetiHesaplayici
         [
             new("sahibi","1 Başvuru Sahibi",12,Dolu(Var(f.ticaretUnvani),Var(f.vergiKimlikNo),Var(f.ticaretSicilNo),Var(f.mersisNo),f.kurulusTarihi.HasValue,Var(f.naceKodu),Var(f.faaliyetKonusu),Var(f.adres),Var(b.irtibat.kisi),Var(b.irtibat.telefon),Var(b.irtibat.ePosta),Var(b.irtibat.unvan)),"Başvuru Sahibi","Kimlik/iletişim"),
             new("mali","2 Mali Veriler",6,Dolu(b.mali.oncekiYilNetSatis>0,b.mali.sonYilNetSatis>0,b.mali.oncekiYilAktifToplami>0,b.mali.sonYilAktifToplami>0,b.mali.oncekiYilCalisanSayisi.HasValue,b.mali.sonYilCalisanSayisi.HasValue),"Mali Veriler","İki yıl ve belgeler"),
-            new("ortaklik","3 Ortaklık Yetki",4,Dolu(b.ortaklik.ortaklar.Count>0,b.ortaklik.ozelSektorPayi.HasValue,b.ortaklik.ortaklar.All(x=>Var(x.adUnvan)&&Var(x.tcknVkn))),"Ortaklık Yetki","Özel sektör payı ve UBO"),
+            new("ortaklik","3 Ortaklık Yetki",4,Dolu(b.ortaklik.ortaklar.Count>0,b.ortaklik.ozelSektorPayi.HasValue,b.ortaklik.ortaklar.All(x=>Var(x.adUnvan)&&Var(x.tcknVkn))),"Ortaklık Yetki","Özel sektör payı ve ortak bilgileri"),
             new("yatirim","4 Yatırım Bilgileri",8,Dolu(Var(b.yatirim.yatirimAdi),b.YatirimAdresleri.Count>0,adres?.ilceId>0,Var(adres?.tamAdres),b.yatirim.yatirimTurleri.Count>0,b.yatirim.harcamaTurleri.Count>0,Var(b.yatirim.yatirimFaaliyetleri),b.yatirim.planlananBaslangicTarihi.HasValue),"Yatırım Bilgileri","İl/ilçe ve yer hakkı"),
             new("deger","5 Değer Zinciri",5,Dolu(b.yatirim.degerZinciriId>0,b.yatirim.degerZinciriAsamalari.Count>0,Var(b.yatirim.ilDegerZinciriEslesmesi),Var(b.yatirim.tarimGidaBaglantiTuru),Var(b.yatirim.degerZinciriUygunlukAciklamasi)),"Değer Zinciri","İl-zincir eşleşmesi"),
             new("harcama","6 Uygun Harcama",1,Dolu(Var(b.uygunHarcama.pikkListesiJson)),"Uygun Harcama","En az bir kalem"),
@@ -45,8 +45,6 @@ public static class BasvuruOzetiHesaplayici
             new("beyan","12 Beyanlar",21,BeyanKabulSayisi(b.TaahhutBeyanlarJson),"Beyanlar","Tüm zorunlu beyanlar"),
             new("izleme","15 İzleme",3,Dolu(b.IzlemeGostergeleri.Count>0,b.IzlemeGostergeleri.Count>0&&b.IzlemeGostergeleri.All(x=>Var(x.baslangicDegeri)&&Var(x.hedefDeger)),b.IzlemeGostergeleri.Any(x=>Var(x.aciklama))),"İzleme Göstergeleri","Başlangıç/hedef/açıklama")
         ];
-        DateTime referans=b.basvuruFirma.donem.basvuruBaslangicTarihi?.Date??DateTime.Today;
-        decimal? faaliyetYili=f.kurulusTarihi.HasValue?(decimal)Math.Round((referans-f.kurulusTarihi.Value.Date).TotalDays/365.25,1):null;
         decimal ozelPay=b.ortaklik.ozelSektorPayi??b.basvuruFirma.ozelSektorPayi??0;
         bool maliTam=b.mali.oncekiYilNetSatis>0&&b.mali.sonYilNetSatis>0&&b.mali.oncekiYilAktifToplami>0&&b.mali.sonYilAktifToplami>0;
         decimal talep=b.HesaplananTalepEdilenFinansmanTutari.GetValueOrDefault(),kumulatif=b.finans.oncekiRffOnayliTutar.GetValueOrDefault()+talep;
@@ -55,7 +53,7 @@ public static class BasvuruOzetiHesaplayici
         string rff=b.HesaplananTalepEdilenFinansmanTutari.HasValue?$"{talep:N0} EUR / {kumulatif:N0} EUR":"";
         List<BasvuruOzetiUygunlukSatiri> u=
         [
-            new("faaliyet","Faaliyet süresi en az 2 yıl",b.IkiYillikFaaliyetSartindanMuaf?"Organize Sanayi / İhtisas Alanı muafiyeti":faaliyetYili.HasValue?$"{faaliyetYili:0.0} yıl":"",b.IkiYillikFaaliyetSartindanMuaf||faaliyetYili>=2?"Uygun":"Eksik","Başvuru Sahibi","Ticaret sicil / yatırım yeri statüsü"),
+            new("faaliyet","Faaliyet süresi",b.FaaliyetSuresiDurumuMetni,b.FaaliyetSuresiUygunMu?"Uygun":"Eksik","Mali Veriler / Yatırım Bilgileri","Mali yıllar ve OTB yatırım adresi"),
             new("ozelPay","Özel sektör payı en az %75",$"%{ozelPay:0.##}",ozelPay>=75?"Uygun":"Eksik","Ortaklık Yetki","Ortaklık belgesi"),
             new("maliOlcek","Mali ölçek bandı",maliTam?"Hesaplanabilir":"Eksik veri",maliTam?"Uygun":"Eksik","Mali Veriler","Mali tablolar"),
             new("ilDz","İl–değer zinciri eşleşmesi",b.yatirim.ilDegerZinciriEslesmesi??"",b.yatirim.ilDegerZinciriEslesmesi=="Evet"?"Uygun":"Eksik","Değer Zinciri","Sistem/liste"),

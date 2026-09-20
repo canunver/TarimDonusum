@@ -150,7 +150,9 @@ namespace TarimDonusum.IsKurallari
         bool Exclusion = false,
         IReadOnlyList<string>? ExplainOn = null,
         IReadOnlyList<string>? DocOn = null,
-        bool AlwaysExplain = false);
+        bool AlwaysExplain = false,
+        string? AutoSource = null,
+        string? Code = null);
 
     public sealed record CevreselSosyalAciklama(
         string Type,

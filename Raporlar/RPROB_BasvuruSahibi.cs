@@ -16,7 +16,7 @@ public sealed class RPROB_BasvuruSahibi(string uygulamaRootPath, bool onBasvuruC
         BasvuruFirma bf = basvuru.basvuruFirma;
 
         Yaz(tablo, 5, 2, f.ticaretUnvani); Yaz(tablo, 5, 4, f.ticaretSicilNo);
-        Yaz(tablo, 6, 2, f.kurulusTarihi?.ToString("dd.MM.yyyy")); Yaz(tablo, 6, 4, EvetHayir(bf.sonIkiYildirFaalMi));
+        Yaz(tablo, 6, 2, f.kurulusTarihi?.ToString("dd.MM.yyyy")); Yaz(tablo, 6, 4, basvuru.FaaliyetSuresiDurumuMetni);
         Yaz(tablo, 7, 2, f.telefon); Yaz(tablo, 7, 4, f.webSitesi);
         Yaz(tablo, 8, 2, f.vergiKimlikNo); Yaz(tablo, 8, 4, f.mersisNo);
         Yaz(tablo, 9, 2, f.naceKodu); Yaz(tablo, 9, 4, f.kepAdresi);

@@ -658,7 +658,7 @@
     <value>NACE code</value>
   </data>
   <data name="Basvuru.Field.SonIkiYildirFaalMi" xml:space="preserve">
-    <value>Active for the last 2 years?</value>
+    <value>Activity duration status</value>
   </data>
   <data name="Basvuru.Field.BasvuruSahibiTuru" xml:space="preserve">
     <value>Applicant type</value>
@@ -2783,4 +2783,6 @@
   <data name="Basvuru.Documents.Required.9" xml:space="preserve"><value>Income statement for the previous year</value></data>
   <data name="Basvuru.Documents.Required.10" xml:space="preserve"><value>Balance sheet for the previous year</value></data>
   <data name="Basvuru.Documents.Required.11" xml:space="preserve"><value>Detailed trial balance for the previous year</value></data>
+  <data name="MenuBasvuru.naceKodlari" xml:space="preserve"><value>NACE Codes</value></data>
+  <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Environmental-Social Questionnaire</value></data>
 </root>

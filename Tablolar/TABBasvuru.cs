@@ -57,7 +57,6 @@ namespace TarimDonusum.Tablolar
                     B.BasvuruSahibiTuru,
                     B.HukukiTurSirketTuru,
                     B.YonetimKuruluUyeleriAdliSicilKisiler,
-                    B.SonIkiYildirFaalMi,
                     B.YatirimAdi,
                     B.YatirimTuru,
                     B.BasvuruKonusuTesis,
@@ -244,10 +243,10 @@ namespace TarimDonusum.Tablolar
             basvuru.basvuruAnaId = await BasvuruAnaEkleAsync(basvuru);
 
             const string sql = @"INSERT INTO dbo.Basvuru (
-                    BasvuruAnaId, RevizyonNo, SiraNo, KayitTuru, DegerZinciriId, BasvuruSahibiTuru, HukukiTurSirketTuru, YonetimKuruluUyeleriAdliSicilKisiler, SonIkiYildirFaalMi)
+                    BasvuruAnaId, RevizyonNo, SiraNo, KayitTuru, DegerZinciriId, BasvuruSahibiTuru, HukukiTurSirketTuru, YonetimKuruluUyeleriAdliSicilKisiler)
                 OUTPUT INSERTED.Id
                 VALUES (
-                    @BasvuruAnaId, @RevizyonNo, @SiraNo, @KayitTuru, @DegerZinciriId, @BasvuruSahibiTuru, @HukukiTurSirketTuru, @YonetimKuruluUyeleriAdliSicilKisiler, @SonIkiYildirFaalMi);";
+                    @BasvuruAnaId, @RevizyonNo, @SiraNo, @KayitTuru, @DegerZinciriId, @BasvuruSahibiTuru, @HukukiTurSirketTuru, @YonetimKuruluUyeleriAdliSicilKisiler);";
 
             await using SqlCommand command = KomutOlustur(sql);
             BasvuruIlkSayfaParametreleriEkle(command, basvuru);
@@ -268,7 +267,6 @@ namespace TarimDonusum.Tablolar
                     BasvuruSahibiTuru = @BasvuruSahibiTuru,
                     HukukiTurSirketTuru = @HukukiTurSirketTuru,
                     YonetimKuruluUyeleriAdliSicilKisiler = @YonetimKuruluUyeleriAdliSicilKisiler,
-                    SonIkiYildirFaalMi = @SonIkiYildirFaalMi,
                     DegerZinciriId = CASE WHEN EXISTS(SELECT 1 FROM dbo.BasvuruUygulamaAdresleri WHERE BasvuruId=@Id) THEN DegerZinciriId ELSE @DegerZinciriId END
                 WHERE Id = @Id;";
 
@@ -277,7 +275,6 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@BasvuruSahibiTuru", basvuru.basvuruSahibiTuru.HasValue ? (int)basvuru.basvuruSahibiTuru.Value : DBNull.Value);
             command.Parameters.AddWithValue("@HukukiTurSirketTuru", basvuru.hukukiTurSirketTuru.HasValue ? (int)basvuru.hukukiTurSirketTuru.Value : DBNull.Value);
             command.Parameters.AddWithValue("@YonetimKuruluUyeleriAdliSicilKisiler", DbNull(basvuru.yonetimKuruluUyeleriAdliSicilKisiler));
-            command.Parameters.AddWithValue("@SonIkiYildirFaalMi", basvuru.sonIkiYildirFaalMi.HasValue ? (basvuru.sonIkiYildirFaalMi.Value ? 1 : 0) : DBNull.Value);
             command.Parameters.AddWithValue("@DegerZinciriId", basvuru.degerZinciriId!.Value);
             command.Parameters.AddWithValue("@OnBasvuruSonrasiDegisiklikVarMi", basvuru.onBasvuruSonrasiDegisiklikVarMi.HasValue ? (basvuru.onBasvuruSonrasiDegisiklikVarMi.Value ? 1 : 0) : DBNull.Value);
             command.Parameters.AddWithValue("@OnBasvuruSonrasiDegisiklikSebebi", DbNull(basvuru.onBasvuruSonrasiDegisiklikSebebi));
@@ -789,7 +786,7 @@ namespace TarimDonusum.Tablolar
                 SELECT @Kolonlar = STRING_AGG(QUOTENAME(name), N',')
                 FROM sys.columns
                 WHERE object_id = OBJECT_ID(N'dbo.Basvuru')
-                  AND name NOT IN (N'Id', N'RevizyonNo', N'SiraNo',
+                  AND name NOT IN (N'Id', N'RevizyonNo', N'SiraNo', N'SonIkiYildirFaalMi',
                                    N'DenetimAnketi', N'SistemDenetimAnketi', N'DenetimGerekcesi', N'DenetimSonucu',
                                    N'KayitTuru', N'OnBasvuruSonrasiDegisiklikVarMi', N'OnBasvuruSonrasiDegisiklikSebebi');
 
@@ -1035,7 +1032,6 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@BasvuruSahibiTuru", basvuru.basvuruSahibiTuru.HasValue ? (int)basvuru.basvuruSahibiTuru.Value : DBNull.Value);
             command.Parameters.AddWithValue("@HukukiTurSirketTuru", basvuru.hukukiTurSirketTuru.HasValue ? (int)basvuru.hukukiTurSirketTuru.Value : DBNull.Value);
             command.Parameters.AddWithValue("@YonetimKuruluUyeleriAdliSicilKisiler", DbNull(basvuru.yonetimKuruluUyeleriAdliSicilKisiler));
-            command.Parameters.AddWithValue("@SonIkiYildirFaalMi", basvuru.sonIkiYildirFaalMi.HasValue ? (basvuru.sonIkiYildirFaalMi.Value ? 1 : 0) : DBNull.Value);
             command.Parameters.AddWithValue("@OnBasvuruSonrasiDegisiklikVarMi", basvuru.onBasvuruSonrasiDegisiklikVarMi.HasValue ? (basvuru.onBasvuruSonrasiDegisiklikVarMi.Value ? 1 : 0) : DBNull.Value);
             command.Parameters.AddWithValue("@OnBasvuruSonrasiDegisiklikSebebi", DbNull(basvuru.onBasvuruSonrasiDegisiklikSebebi));
         }
@@ -1113,7 +1109,6 @@ namespace TarimDonusum.Tablolar
             basvuru.basvuruFirma.basvuruSahibiTuru = (enumBasvuruSahibiTuru)NullDuzeltInt(reader, kol++);
             basvuru.basvuruFirma.hukukiTurSirketTuru = (enumHukukiTurSirketTuru)NullDuzeltInt(reader, kol++);
             basvuru.basvuruFirma.yonetimKuruluUyeleriAdliSicilKisiler = NullOkuString(reader, kol++);
-            basvuru.basvuruFirma.sonIkiYildirFaalMi = NullOkuBool(reader, kol++);
             basvuru.yatirim.yatirimAdi = NullOkuString(reader, kol++);
             basvuru.yatirim.yatirimTuru = (enumYatirimTuru)NullDuzeltInt(reader, kol++);
             basvuru.yatirim.basvuruKonusuTesis = NullOkuString(reader, kol++);
@@ -1221,7 +1216,7 @@ namespace TarimDonusum.Tablolar
             basvuru.basvuruFirma.firma.ticaretSicilNo = reader.GetString(kol++);
             basvuru.basvuruFirma.firma.kurulusTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             basvuru.basvuruFirma.firma.mersisNo = reader.GetString(kol++);
-            basvuru.basvuruFirma.firma.naceKodu = reader.GetString(kol++);
+            basvuru.basvuruFirma.firma.naceKodu = reader.IsDBNull(kol) ? "" : reader.GetString(kol); kol++;
             basvuru.basvuruFirma.firma.webSitesi = reader.GetString(kol++);
             basvuru.basvuruFirma.firma.telefon = reader.GetString(kol++);
             basvuru.basvuruFirma.firma.kepAdresi = reader.GetString(kol++);
