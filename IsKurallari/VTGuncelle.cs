@@ -1192,8 +1192,8 @@ namespace TarimDonusum.IsKurallari
                   BEGIN
                     CREATE TABLE dbo.Nace(Kod NVARCHAR(20) NOT NULL CONSTRAINT PK_Nace PRIMARY KEY,Ad NVARCHAR(500) NOT NULL,Aktif INT NOT NULL CONSTRAINT DF_Nace_Aktif DEFAULT(1));
                   END;
-                  UPDATE dbo.Firma SET NaceKodu=NULL
                   ALTER TABLE dbo.Firma ALTER COLUMN NaceKodu NVARCHAR(20) NULL;
+                  UPDATE dbo.Firma SET NaceKodu=NULL;
                   IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name=N'FK_Firma_NaceKodu') ALTER TABLE dbo.Firma ADD CONSTRAINT FK_Firma_NaceKodu FOREIGN KEY(NaceKodu) REFERENCES dbo.Nace(Kod) ON UPDATE CASCADE;
                   IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.Firma') AND name=N'IX_Firma_NaceKodu') CREATE INDEX IX_Firma_NaceKodu ON dbo.Firma(NaceKodu);"),
             new(99,

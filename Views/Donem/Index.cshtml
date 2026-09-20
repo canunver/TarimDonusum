@@ -61,51 +61,70 @@
                     <label>Uygulama adresi sınırlı mı?
                         <select id="uygulamaAdresiSinirliMi" class="form-control"><option value="false">Hayır</option><option value="true">Evet (en fazla 1 adres)</option></select>
                     </label>
-                    <div class="donem-form-full">
-                        <label class="d-block">İstisna ilçeler</label>
-                        <div class="form-row align-items-end mb-3">
-                            <div class="col-md-5">
-                                <label>İl
-                                    <select id="istisnaIl" class="form-control" onchange="IstisnaIlDegisti()">
-                                        <option value="">İl seçiniz</option>
-                                        @foreach (var il in Model.Where(x => x.aktif).OrderBy(x => x.kod))
-                                        {
-                                            <option value="@il.id">@il.ad</option>
-                                        }
-                                    </select>
-                                </label>
-                            </div>
-                            <div class="col-md-5">
-                                <label>İlçe
-                                    <select id="istisnaIlce" class="form-control" disabled><option value="">Önce il seçiniz</option></select>
-                                </label>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="button" class="btn btn-outline-primary btn-block" onclick="IstisnaIlceEkle()"><i class="fas fa-plus mr-1"></i>Ekle</button>
-                            </div>
-                        </div>
-                        <select id="istisnaIlceIds" class="d-none" multiple>
-                            @foreach (var il in Model.OrderBy(x => x.kod))
-                            {
-                                @foreach (var ilce in il.ilceler.Where(x => x.Aktif).OrderBy(x => x.Ad))
-                                {
-                                    <option value="@ilce.Id" data-il-id="@il.id" data-il-adi="@il.ad">@ilce.Ad</option>
-                                }
-                            }
-                        </select>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered mb-0">
-                                <thead><tr><th>İl</th><th>İlçe</th><th class="text-right">İşlem</th></tr></thead>
-                                <tbody id="istisnaIlceListesi"></tbody>
-                            </table>
-                        </div>
-                    </div>
                     <label class="donem-form-full">Açıklama<textarea id="aciklama" rows="3" class="form-control"></textarea></label>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button>
                 <button type="button" class="btn btn-primary" onclick="DonemKaydet()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="istisnaIlceModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content firma-modal-content istisna-ilce-modal-content">
+            <div class="modal-header firma-modal-header">
+                <div>
+                    <h5 class="modal-title">İstisna ilçeleri düzenle</h5>
+                    <small id="istisnaIlceDonemAdi" class="text-muted"></small>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Kapat"><span>&times;</span></button>
+            </div>
+            <div class="modal-body firma-modal-body istisna-ilce-modal-body">
+                <input type="hidden" id="istisnaIlceDonemId" value="0" />
+                <select id="istisnaIlceIds" class="d-none" multiple>
+                    @foreach (var il in Model.OrderBy(x => x.kod))
+                    {
+                        @foreach (var ilce in il.ilceler.Where(x => x.Aktif).OrderBy(x => x.Ad))
+                        {
+                            <option value="@ilce.Id" data-il-id="@il.id" data-il-adi="@il.ad">@ilce.Ad</option>
+                        }
+                    }
+                </select>
+                <div class="istisna-ilce-araclar">
+                    <div class="form-row align-items-end">
+                        <div class="col-md-4">
+                            <label>İl
+                                <select id="istisnaIl" class="form-control" onchange="IstisnaIlDegisti()">
+                                    <option value="">İl seçiniz</option>
+                                    @foreach (var il in Model.Where(x => x.aktif).OrderBy(x => x.kod))
+                                    {
+                                        <option value="@il.id">@il.ad</option>
+                                    }
+                                </select>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label>İlçe
+                                <select id="istisnaIlce" class="form-control" disabled><option value="">Önce il seçiniz</option></select>
+                            </label>
+                        </div>
+                        <div class="col-md-2 mt-2 mt-md-0">
+                            <button type="button" class="btn btn-outline-primary btn-block" onclick="IstisnaIlceEkle()"><i class="fas fa-plus mr-1"></i>Ekle</button>
+                        </div>
+                        <div class="col-md-2 mt-2 mt-md-0">
+                            <button type="button" class="btn btn-primary btn-block" onclick="IstisnaIlceleriKaydet()"><i class="fas fa-save mr-1"></i>Kaydet</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive istisna-ilce-liste">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead><tr><th>İl</th><th>İlçe</th><th class="text-right">İşlem</th></tr></thead>
+                        <tbody id="istisnaIlceListesi"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -119,6 +138,12 @@
     }
     .donem-form-grid label { margin: 0; }
     .donem-form-full { grid-column: 1 / -1; }
+    .istisna-ilce-modal-content { height: min(760px, calc(100vh - 3.5rem)); }
+    .istisna-ilce-modal-body { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+    .istisna-ilce-araclar { flex: 0 0 auto; position: sticky; top: 0; z-index: 2; padding-bottom: 1rem; background: #fff; }
+    .istisna-ilce-araclar label { display: block; margin-bottom: 0; }
+    .istisna-ilce-liste { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+    .istisna-ilce-liste thead th { position: sticky; top: 0; z-index: 1; background: #f8f9fa; }
     @@media (max-width: 767.98px) {
         .donem-form-grid { grid-template-columns: 1fr; }
         .donem-form-full { grid-column: auto; }
@@ -175,7 +200,10 @@
             <td>${htmlEncode(tarihDegeri(d.basvuruBaslangicTarihi) || '-')}</td>
             <td>${htmlEncode(tarihDegeri(d.basvuruBitisTarihi) || '-')}</td>
             <td><span class="badge ${d.basvuruyaAcikMi ? 'badge-success' : 'badge-secondary'}">${d.basvuruyaAcikMi ? 'Açık' : 'Kapalı'}</span></td>
-            <td class="text-right"><button type="button" class="btn btn-sm btn-outline-primary" onclick="DonemModalAc(${d.id})">Düzenle</button></td>
+            <td class="text-right text-nowrap">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="DonemModalAc(${d.id})">Düzenle</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary ml-1" onclick="IstisnaIlceModalAc(${d.id})">İlçe Düzenle</button>
+            </td>
         </tr>`));
     }
 
@@ -190,17 +218,50 @@
         $('#minimumYatirim').val(d.minimumYatirimTutari ?? ''); $('#maksimumYatirim').val(d.maksimumYatirimTutari ?? '');
         $('#maksimumDestek').val(d.maksimumDestekTutari ?? ''); $('#destekOrani').val(d.destekOrani ?? '');
         $('#istisnaDestekOrani').val(d.istisnaDestekOrani ?? '');
-        $('#istisnaIlceIds').val((d.istisnaIlceIds || []).map(String));
-        $('#istisnaIl').val(''); IstisnaIlDegisti(); IstisnaIlceListesiniYaz();
         $('#uygulamaAdresiSinirliMi').val(String(d.uygulamaAdresiSinirliMi === true));
         $('#basvuruyaAcik').val(String(d.basvuruyaAcikMi === true)); $('#aciklama').val(d.aciklama || '');
         document.querySelectorAll('#donemModal .money-integer').forEach(paraFormatla);
         $('#donemModal').modal('show');
     }
 
+    function IstisnaIlceModalAc(id) {
+        const d = donemler.find(x => Number(x.id) === Number(id));
+        if (!d) { PopupMesajGoster('Dönem bulunamadı.', false); return; }
+        $('#istisnaIlceDonemId').val(d.id);
+        $('#istisnaIlceDonemAdi').text(`${d.yil} - ${d.ad}`);
+        $('#istisnaIlceIds').val((d.istisnaIlceIds || []).map(String));
+        $('#istisnaIl').val('');
+        IstisnaIlDegisti();
+        IstisnaIlceListesiniYaz();
+        $('#istisnaIlceModal').modal('show');
+    }
+
+    function DonemKayitModeli(d) {
+        return {
+            ...d,
+            istisnaIlceIds: Array.isArray(d.istisnaIlceIds) ? d.istisnaIlceIds.map(Number) : []
+        };
+    }
+
+    function IstisnaIlceleriKaydet() {
+        const id = Number($('#istisnaIlceDonemId').val() || 0);
+        const d = donemler.find(x => Number(x.id) === id);
+        if (!d) { PopupMesajGoster('Dönem bulunamadı.', false); return; }
+        const model = DonemKayitModeli(d);
+        model.istisnaIlceIds = ($('#istisnaIlceIds').val() || []).map(Number);
+        AjaxPost('/Donem/Kaydet', model, function (sonuc) {
+            if (!sonuc || !sonuc.basarili) { PopupMesajGoster((sonuc && sonuc.hataStr) || 'İstisna ilçeleri kaydedilemedi.', false); return; }
+            $('#istisnaIlceModal').modal('hide');
+            PopupMesajGoster('İstisna ilçeleri kaydedildi.', true);
+            DonemListele();
+        });
+    }
+
     function DonemKaydet() {
+        const donemId = Number($('#donemId').val() || 0);
+        const mevcutDonem = donemler.find(x => Number(x.id) === donemId);
         AjaxPost('/Donem/Kaydet', {
-            id: Number($('#donemId').val() || 0), yil: Number($('#donemYil').val() || 0), ad: $('#donemAd').val(),
+            id: donemId, yil: Number($('#donemYil').val() || 0), ad: $('#donemAd').val(),
             basvuruyaAcikMi: $('#basvuruyaAcik').val() === 'true',
             basvuruBaslangicTarihi: $('#basvuruBaslangic').val() || null,
             onBasvuruBaslangicTarihi: $('#onBasvuruBaslangic').val() || null, onBasvuruBitisTarihi: $('#onBasvuruBitis').val() || null,
@@ -210,7 +271,7 @@
             basvuruCevrimKuru: $('#basvuruCevrimKuru').val() === '' ? null : Number($('#basvuruCevrimKuru').val()),
             destekOrani: $('#destekOrani').val() === '' ? null : Number($('#destekOrani').val()),
             istisnaDestekOrani: $('#istisnaDestekOrani').val() === '' ? null : Number($('#istisnaDestekOrani').val()),
-            istisnaIlceIds: ($('#istisnaIlceIds').val() || []).map(Number),
+            istisnaIlceIds: (mevcutDonem?.istisnaIlceIds || []).map(Number),
             uygulamaAdresiSinirliMi: $('#uygulamaAdresiSinirliMi').val() === 'true', aciklama: $('#aciklama').val()
         }, function (sonuc) {
             if (!sonuc || !sonuc.basarili) { PopupMesajGoster((sonuc && sonuc.hataStr) || 'Dönem kaydedilemedi.', false); return; }
