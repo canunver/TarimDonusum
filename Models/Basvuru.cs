@@ -862,6 +862,8 @@ namespace TarimDonusum.Models
         public int id { get; set; }
         public int basvuruId { get; set; }
         public int? uygulamaAdresiId { get; set; }
+        public enumDegerZinciriAsamaTuru? degerZinciriAsamaTuru { get; set; }
+        public string degerZinciriAsamaTuruAdi => degerZinciriAsamaTuru.HasValue ? DegerZinciriAsamaTuruTanimlari.Ad(degerZinciriAsamaTuru.Value) : "";
         public enumYatirimOnBilgiTuru tur { get; set; }
         public int siraNo { get; set; }
         public string ad { get; set; } = "";
@@ -894,6 +896,8 @@ namespace TarimDonusum.Models
         public int basvuruId { get; set; }
         public int? uygulamaAdresiId { get; set; }
         public string uygulamaAdresiAciklama { get; set; } = "";
+        public enumDegerZinciriAsamaTuru? degerZinciriAsamaTuru { get; set; }
+        public string degerZinciriAsamaTuruAdi => degerZinciriAsamaTuru.HasValue ? DegerZinciriAsamaTuruTanimlari.Ad(degerZinciriAsamaTuru.Value) : "";
         public int siraNo { get; set; }
         public string ad { get; set; } = "";
         public string birim { get; set; } = "";

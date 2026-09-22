@@ -23,7 +23,7 @@
    <div class="d-flex justify-content-between align-items-center mt-4 mb-2"><h6 class="mb-0">Aşamalar</h6>
     <button class="btn btn-sm btn-outline-primary" type="button" onclick="asamaEkle()">Yeni Aşama Satırı</button></div>
    <div class="table-responsive"><table class="table table-sm table-hover mb-0">
-    <thead><tr><th style="width:90px">Sıra</th><th>Ad</th><th>Açıklama</th><th style="width:115px">Durum</th><th style="width:80px"></th></tr></thead>
+    <thead><tr><th style="width:90px">Sıra</th><th style="width:230px">Aşama Türü</th><th>Ad</th><th>Açıklama</th><th style="width:115px">Durum</th><th style="width:80px"></th></tr></thead>
     <tbody id="asamaListe"></tbody>
    </table></div>
   </div>
@@ -55,6 +55,10 @@
 @section Scripts {
 <script>
 const zincirler=[], tumIller=[], kisitliIller=[]; let aktifZincirId=0;
+const asamaTurleri=[
+ [1,'Birincil Üretim'],[2,'Depolama / Soğuk Zincir'],[3,'Lojistik'],[4,'İşleme'],[5,'İleri İşleme'],
+ [6,'Tarımsal Bileşen Üretimi'],[7,'Atık ve Yan Ürün Değerlendirme']
+];
 const enc=v=>$('<div/>').text(v==null?'':String(v)).html();
 const attr=v=>enc(v).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
@@ -80,6 +84,7 @@ function asamaSatiri(x){
  const id=Number(x.id||0), aktif=x.aktif!==false;
  const islem=id?'<span class="text-muted">Silinemez</span>':`<button class="btn btn-sm btn-outline-danger" type="button" onclick="$(this).closest('tr').remove()">Sil</button>`;
  $('#asamaListe').append(`<tr data-id="${id}"><td><input class="form-control form-control-sm asama-sira" type="number" min="1" value="${attr(x.siraNo||'')}"></td>
+ <td><select class="form-control form-control-sm asama-turu"><option value="">Seçiniz</option>${asamaTurleri.map(t=>`<option value="${t[0]}"${Number(x.asamaTuru)===t[0]?' selected':''}>${t[1]}</option>`).join('')}</select></td>
  <td><input class="form-control form-control-sm asama-ad" maxlength="250" value="${attr(x.ad||'')}"></td>
  <td><input class="form-control form-control-sm asama-aciklama" value="${attr(x.aciklama||'')}"></td>
  <td><select class="form-control form-control-sm asama-aktif"><option value="true"${aktif?' selected':''}>Aktif</option><option value="false"${!aktif?' selected':''}>Pasif</option></select></td><td>${islem}</td></tr>`);
@@ -87,7 +92,7 @@ function asamaSatiri(x){
 function asamaEkle(){asamaSatiri({id:0,siraNo:$('#asamaListe tr').length+1,aktif:true});}
 function zincirKaydet(){
  const m={id:Number($('#zincirId').val()||0),ad:$('#zincirAd').val(),aciklama:$('#zincirAciklama').val(),aktif:$('#zincirAktif').val()==='true',asamalar:[]};
- $('#asamaListe tr').each(function(){m.asamalar.push({id:Number($(this).data('id')||0),degerZinciriId:m.id,siraNo:Number($(this).find('.asama-sira').val()||0),ad:$(this).find('.asama-ad').val(),aciklama:$(this).find('.asama-aciklama').val(),aktif:$(this).find('.asama-aktif').val()==='true'});});
+ $('#asamaListe tr').each(function(){const tur=$(this).find('.asama-turu').val();m.asamalar.push({id:Number($(this).data('id')||0),degerZinciriId:m.id,siraNo:Number($(this).find('.asama-sira').val()||0),asamaTuru:tur?Number(tur):null,ad:$(this).find('.asama-ad').val(),aciklama:$(this).find('.asama-aciklama').val(),aktif:$(this).find('.asama-aktif').val()==='true'});});
  AjaxPost('/DegerZinciri/Kaydet',m,s=>{if(!s||!s.basarili)return PopupMesajGoster((s&&s.hataStr)||'Kayıt başarısız.',false);$('#zincirModal').modal('hide');PopupMesajGoster(s.mesaj,true);zincirListele();});
 }
 function ilKisitAc(id){

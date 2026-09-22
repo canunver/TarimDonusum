@@ -514,6 +514,7 @@ namespace TarimDonusum.IsKurallari
             }
             if (string.IsNullOrWhiteSpace(model.ad)) sonuc.HataEkle("Değer zinciri adı zorunludur.");
             if (model.asamalar.Any(x => x.siraNo <= 0)) sonuc.HataEkle("Aşama sıra numarası sıfırdan büyük olmalıdır.");
+            if (model.asamalar.Any(x => x.asamaTuru.HasValue && !Enum.IsDefined(x.asamaTuru.Value))) sonuc.HataEkle("Değer zinciri aşama türü geçersizdir.");
             if (model.asamalar.Any(x => string.IsNullOrWhiteSpace(x.ad))) sonuc.HataEkle("Aşama adı boş bırakılamaz.");
             if (model.asamalar.GroupBy(x => x.siraNo).Any(x => x.Count() > 1)) sonuc.HataEkle("Aynı sıra numarası birden fazla aşamada kullanılamaz.");
             if (!sonuc.basarili) return sonuc;

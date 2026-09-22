@@ -44,6 +44,7 @@
         <input type="hidden" id="yoUrunIndex"><input type="hidden" id="yoUrunId">
         <div class="form-grid urun-modal-form-grid">
             <label>Ürünün elde edileceği adres<select id="yoUrunUygulamaAdresiId"><option value="">Seçiniz</option>@foreach(var adres in b.YatirimAdresleri.OrderBy(x=>x.siraNo)){<option value="@adres.id">@adres.siraNo. @adres.ilAdi / @adres.ilceAdi - @adres.tamAdres</option>}</select></label>
+            <label>Değer zinciri aşaması<select id="yoUrunDegerZinciriAsamaTuru"><option value="">Seçiniz</option>@foreach(TarimDonusum.Models.enumDegerZinciriAsamaTuru tur in Enum.GetValues<TarimDonusum.Models.enumDegerZinciriAsamaTuru>()){<option value="@((int)tur)">@TarimDonusum.Models.DegerZinciriAsamaTuruTanimlari.Ad(tur)</option>}</select></label>
             <label>Ürün durumu<select id="yoUrunTur" onchange="YatirimOzetiUrunDurumuGuncelle()"><option value="1">Mevcut</option><option value="2">Yeni</option></select></label>
             <label>Ürün / Ürün Grubu<input id="yoUrunAd" maxlength="250"></label>
             <label>Birim<select id="yoUrunBirim" onchange="YatirimOzetiModalBirimGuncelle()">@foreach(var x in TarimDonusum.Models.OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label>

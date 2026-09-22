@@ -1395,6 +1395,30 @@ namespace TarimDonusum.IsKurallari
                         ALTER TABLE dbo.CevreselSosyalAnketSoru DROP CONSTRAINT FK_CevreselSosyalAnketSoru_Surum;
                     ALTER TABLE dbo.CevreselSosyalAnketSoru DROP COLUMN AnketSurumId;
                   END;"),
+            new(111,
+                @"IF COL_LENGTH(N'dbo.DegerZinciriAsama',N'AsamaTuru') IS NULL
+                    ALTER TABLE dbo.DegerZinciriAsama ADD AsamaTuru INT NULL;
+                  IF NOT EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'CK_DegerZinciriAsama_AsamaTuru')
+                    EXEC(N'ALTER TABLE dbo.DegerZinciriAsama WITH CHECK ADD CONSTRAINT CK_DegerZinciriAsama_AsamaTuru
+                           CHECK(AsamaTuru IS NULL OR AsamaTuru IN(1,2,3,4,5,6,7));');"),
+            new(112,
+                @"IF COL_LENGTH(N'dbo.DegerZinciriAsama',N'AsamaTuru') IS NULL
+                    ALTER TABLE dbo.DegerZinciriAsama ADD AsamaTuru INT NULL;
+                  IF NOT EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'CK_DegerZinciriAsama_AsamaTuru')
+                    EXEC(N'ALTER TABLE dbo.DegerZinciriAsama WITH CHECK ADD CONSTRAINT CK_DegerZinciriAsama_AsamaTuru
+                           CHECK(AsamaTuru IS NULL OR AsamaTuru IN(1,2,3,4,5,6,7));');"),
+            new(113,
+                @"IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi',N'DegerZinciriAsamaTuru') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD DegerZinciriAsamaTuru INT NULL;
+                  IF NOT EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'CK_BasvuruYatirimOnBilgi_DegerZinciriAsamaTuru')
+                    EXEC(N'ALTER TABLE dbo.BasvuruYatirimOnBilgi WITH CHECK ADD CONSTRAINT CK_BasvuruYatirimOnBilgi_DegerZinciriAsamaTuru
+                           CHECK(DegerZinciriAsamaTuru IS NULL OR DegerZinciriAsamaTuru IN(1,2,3,4,5,6,7));');"),
+            new(114,
+                @"IF COL_LENGTH(N'dbo.BasvuruMakine',N'DegerZinciriAsamaTuru') IS NULL
+                    ALTER TABLE dbo.BasvuruMakine ADD DegerZinciriAsamaTuru INT NULL;
+                  IF NOT EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'CK_BasvuruMakine_DegerZinciriAsamaTuru')
+                    EXEC(N'ALTER TABLE dbo.BasvuruMakine WITH CHECK ADD CONSTRAINT CK_BasvuruMakine_DegerZinciriAsamaTuru
+                           CHECK(DegerZinciriAsamaTuru IS NULL OR DegerZinciriAsamaTuru IN(1,2,3,4,5,6,7));');"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

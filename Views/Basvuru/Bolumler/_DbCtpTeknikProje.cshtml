@@ -48,6 +48,7 @@
                 <input id="dbCtpGirdiIndex" type="hidden" />
                 <div class="form-grid">
                     <label>Girdinin kullanılacağı adres<select id="dbCtpGirdiUygulamaAdresiId"><option value="">Seçiniz</option>@foreach(var adres in b.YatirimAdresleri.OrderBy(x=>x.siraNo)){<option value="@adres.id">@adres.siraNo. @adres.ilAdi / @adres.ilceAdi - @adres.tamAdres</option>}</select></label>
+                    <label>Değer zinciri aşaması<select id="dbCtpGirdiDegerZinciriAsamaTuru"><option value="">Seçiniz</option>@foreach(TarimDonusum.Models.enumDegerZinciriAsamaTuru tur in Enum.GetValues<TarimDonusum.Models.enumDegerZinciriAsamaTuru>()){<option value="@((int)tur)">@TarimDonusum.Models.DegerZinciriAsamaTuruTanimlari.Ad(tur)</option>}</select></label>
                     <label>Sıra no<input id="dbCtpGirdiSiraNo" type="number" min="1" step="1" /></label>
                     <label>Girdi / Hammadde adı<input id="dbCtpGirdiAdi" maxlength="250" /></label>
                     <label>Yıllık ihtiyaç<input id="dbCtpGirdiMiktar" type="number" min="0.001" step="0.001" /></label>

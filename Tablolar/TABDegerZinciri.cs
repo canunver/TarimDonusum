@@ -17,7 +17,7 @@ namespace TarimDonusum.Tablolar
         {
             const string sql = @"SELECT Id, Ad, Aciklama, Aktif
                                  FROM dbo.DegerZinciri ORDER BY Ad;
-                                 SELECT Id, DegerZinciriId, SiraNo, Ad, Aciklama, Aktif
+                                 SELECT Id, DegerZinciriId, SiraNo, AsamaTuru, Ad, Aciklama, Aktif
                                  FROM dbo.DegerZinciriAsama ORDER BY DegerZinciriId, SiraNo, Ad;";
             await using SqlCommand command = KomutOlustur(sql);
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
@@ -148,16 +148,17 @@ namespace TarimDonusum.Tablolar
                 id = reader.GetInt32(0),
                 degerZinciriId = reader.GetInt32(1),
                 siraNo = reader.GetInt32(2),
-                ad = reader.GetString(3),
-                aciklama = reader.GetString(4),
-                aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(5)) == 1
+                asamaTuru = reader.IsDBNull(3) ? null : (enumDegerZinciriAsamaTuru)reader.GetInt32(3),
+                ad = reader.GetString(4),
+                aciklama = reader.GetString(5),
+                aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(6)) == 1
             };
         }
 
         internal async Task<Sonuc<List<DegerZinciriAsama>>> AsamalariOku(int degerZinciriId, int basvuruId, int uygulamaAdresiId)
         {
             Sonuc<List<DegerZinciriAsama>> liste = new Sonuc<List<DegerZinciriAsama>>();
-            string sql = @"SELECT dza.Id, dza.DegerZinciriId, dza.SiraNo, dza.Ad, dza.Aciklama, dza.Aktif, bdza.Id, bdza.YapilacakFaaliyetler
+            string sql = @"SELECT dza.Id, dza.DegerZinciriId, dza.SiraNo, dza.AsamaTuru, dza.Ad, dza.Aciklama, dza.Aktif, bdza.Id, bdza.YapilacakFaaliyetler
                            FROM dbo.DegerZinciriAsama dza
                            OUTER APPLY(SELECT TOP(1) b.Id,b.YapilacakFaaliyetler
                                        FROM dbo.BasvuruDegerZinciriAsama b
@@ -183,7 +184,7 @@ namespace TarimDonusum.Tablolar
         internal async Task<Sonuc<List<DegerZinciriAsama>>> AsamalariOku(int degerZinciriId, int basvuruId)
         {
             Sonuc<List<DegerZinciriAsama>> liste = new();
-            const string sql = @"SELECT dza.Id, dza.DegerZinciriId, dza.SiraNo, dza.Ad, dza.Aciklama, dza.Aktif, bdza.Id, bdza.YapilacakFaaliyetler
+            const string sql = @"SELECT dza.Id, dza.DegerZinciriId, dza.SiraNo, dza.AsamaTuru, dza.Ad, dza.Aciklama, dza.Aktif, bdza.Id, bdza.YapilacakFaaliyetler
                                  FROM dbo.DegerZinciriAsama dza
                                  OUTER APPLY (SELECT TOP (1) b.Id, b.YapilacakFaaliyetler
                                               FROM dbo.BasvuruDegerZinciriAsama b
@@ -206,11 +207,12 @@ namespace TarimDonusum.Tablolar
                 id = reader.GetInt32(0),
                 degerZinciriId = reader.GetInt32(1),
                 siraNo = reader.GetInt32(2),
-                ad = reader.GetString(3),
-                aciklama = reader.GetString(4),
-                aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(5)) == 1,
-                secili = BoolYap(NullDuzeltInt(reader, 6)),
-                yapilacakFaaliyetler = NullOkuString(reader, 7)
+                asamaTuru = reader.IsDBNull(3) ? null : (enumDegerZinciriAsamaTuru)reader.GetInt32(3),
+                ad = reader.GetString(4),
+                aciklama = reader.GetString(5),
+                aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(6)) == 1,
+                secili = BoolYap(NullDuzeltInt(reader, 7)),
+                yapilacakFaaliyetler = NullOkuString(reader, 8)
             };
         }
     }

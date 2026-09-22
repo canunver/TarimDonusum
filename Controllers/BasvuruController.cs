@@ -707,11 +707,13 @@ namespace TarimDonusum.Controllers
                 for (int sutun = 0; sutun < BasvuruIsKurallari.UrunExcelSablonBasliklari.Count; sutun++)
                     tablo.HucreDegerYaz(0, sutun, BasvuruIsKurallari.UrunExcelSablonBasliklari[sutun]);
 
-                tablo.SutunGenislikAyarla(0, 11, 24);
-                tablo.SatirGercekYukseklikAyarla(0, 0, 90);
+                tablo.SutunGenislikAyarla(0, 12, 24);
+                tablo.SutunGenislikAyarla(1, 1, 42);
+                tablo.SatirGercekYukseklikAyarla(0, 0, 180);
                 tablo.HucreMetniKaydir(0, 1, true);
-                tablo.HucreMetniKaydir(0, 3, true);
-                tablo.CerceveCiz(0, 0, 0, 11, LineStyle.THIN, TabloRenk.BLACK);
+                tablo.HucreMetniKaydir(0, 2, true);
+                tablo.HucreMetniKaydir(0, 4, true);
+                tablo.CerceveCiz(0, 0, 0, 12, LineStyle.THIN, TabloRenk.BLACK);
                 tablo.DosyaSaklaTamYol();
                 tablo.DosyaKapat();
                 tablo = null;
@@ -873,11 +875,12 @@ namespace TarimDonusum.Controllers
                 tablo.BosDosyaAc(geciciDosya);
                 for (int sutun = 0; sutun < BasvuruIsKurallari.YatirimEkipmaniExcelSablonBasliklari.Count; sutun++)
                     tablo.HucreDegerYaz(0, sutun, BasvuruIsKurallari.YatirimEkipmaniExcelSablonBasliklari[sutun]);
-                tablo.SutunGenislikAyarla(0, 9, 24);
-                tablo.SatirGercekYukseklikAyarla(0, 0, 90);
+                tablo.SutunGenislikAyarla(0, 10, 24);
+                tablo.SutunGenislikAyarla(1, 1, 42);
+                tablo.SatirGercekYukseklikAyarla(0, 0, 180);
                 for (int sutun = 0; sutun < BasvuruIsKurallari.YatirimEkipmaniExcelSablonBasliklari.Count; sutun++)
                     tablo.HucreMetniKaydir(0, sutun, true);
-                tablo.CerceveCiz(0, 0, 0, 9, LineStyle.THIN, TabloRenk.BLACK);
+                tablo.CerceveCiz(0, 0, 0, 10, LineStyle.THIN, TabloRenk.BLACK);
                 tablo.DosyaSaklaTamYol();
                 tablo.DosyaKapat();
                 tablo = null;
@@ -902,11 +905,12 @@ namespace TarimDonusum.Controllers
                 tablo.BosDosyaAc(geciciDosya);
                 for (int sutun = 0; sutun < BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari.Count; sutun++)
                     tablo.HucreDegerYaz(0, sutun, BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari[sutun]);
-                tablo.SutunGenislikAyarla(0, 4, 24);
-                tablo.SatirGercekYukseklikAyarla(0, 0, 90);
+                tablo.SutunGenislikAyarla(0, 5, 24);
+                tablo.SutunGenislikAyarla(1, 1, 42);
+                tablo.SatirGercekYukseklikAyarla(0, 0, 180);
                 for (int sutun = 0; sutun < BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari.Count; sutun++)
                     tablo.HucreMetniKaydir(0, sutun, true);
-                tablo.CerceveCiz(0, 0, 0, 4, LineStyle.THIN, TabloRenk.BLACK);
+                tablo.CerceveCiz(0, 0, 0, 5, LineStyle.THIN, TabloRenk.BLACK);
                 tablo.DosyaSaklaTamYol();
                 tablo.DosyaKapat();
                 tablo = null;

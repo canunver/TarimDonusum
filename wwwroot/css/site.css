@@ -1817,7 +1817,7 @@ body {
 .urun-liste-table td.urun-rakam { text-align: right; font-variant-numeric: tabular-nums; }
 
 .yatirim-ozeti-production-table {
-  min-width: 1320px;
+  min-width: 1500px;
   table-layout: fixed;
 }
 
@@ -1830,6 +1830,7 @@ body {
 .yatirim-ozeti-production-table .urun-col-sira { width: 48px; }
 .yatirim-ozeti-production-table .urun-col-islem { width: 82px; }
 .yatirim-ozeti-production-table .urun-col-adres { width: 260px; }
+.yatirim-ozeti-production-table .urun-col-asama { width: 175px; }
 .yatirim-ozeti-production-table .urun-col-durum { width: 72px; }
 .yatirim-ozeti-production-table .urun-col-urun { width: 190px; }
 .yatirim-ozeti-production-table .urun-col-donem { width: 72px; }

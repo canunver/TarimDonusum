@@ -23,7 +23,7 @@
         <h3>3- Girdiler</h3>
         @if(duzenlenebilir){<div class="d-flex align-items-center" style="gap:8px"><a class="btn btn-outline-success" asp-controller="Basvuru" asp-action="TeknikProjeGirdileriExcelSablonuIndir"><i class="fas fa-download mr-1"></i>Excel Şablonu</a><label class="btn btn-outline-success mb-0" for="yobiGirdiExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label><input id="yobiGirdiExcelDosya" type="file" accept=".xlsx,.xls" class="d-none" /><button type="button" class="btn btn-outline-primary" onclick="YatirimOnBilgiModalAc(3,-1)">Girdi ekle</button></div>}
     </div>
-    <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Sıra</th><th>Adres</th><th>Girdi / Hammadde</th><th>Tam kapasitede yıllık ihtiyaç</th><th>Birim</th><th>İşlem</th></tr></thead><tbody id="yobi-3"></tbody></table></div>
+        <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Sıra</th><th>Adres</th><th>Girdi / Hammadde</th><th>Tam kapasitede yıllık ihtiyaç</th><th>Birim</th><th>İşlem</th></tr></thead><tbody id="yobi-3"></tbody></table></div>
 
     <div class="yatirim-ozeti-section mt-4">
         <h3>Yenilenebilir Enerji Bilgileri</h3>
@@ -51,6 +51,7 @@
         <input type="hidden" id="yoUrunIndex"><input type="hidden" id="yoUrunId">
         <div class="form-grid urun-modal-form-grid">
             <label>Ürünün elde edileceği adres<select id="yoUrunUygulamaAdresiId"><option value="">Seçiniz</option>@foreach(var adres in Model.Basvuru.YatirimAdresleri.OrderBy(x=>x.siraNo)){<option value="@adres.id">@adres.siraNo. @adres.ilAdi / @adres.ilceAdi - @adres.tamAdres</option>}</select></label>
+            <label>Değer zinciri aşaması<select id="yoUrunDegerZinciriAsamaTuru"><option value="">Seçiniz</option>@foreach(enumDegerZinciriAsamaTuru tur in Enum.GetValues<enumDegerZinciriAsamaTuru>()){<option value="@((int)tur)">@DegerZinciriAsamaTuruTanimlari.Ad(tur)</option>}</select></label>
             <label>Ürün durumu<select id="yoUrunTur" onchange="YatirimOzetiUrunDurumuGuncelle()"><option value="1">Mevcut</option><option value="2">Yeni</option></select></label>
             <label>Ürün / Ürün Grubu<input id="yoUrunAd" maxlength="250"></label>
             <label>Birim<select id="yoUrunBirim" onchange="YatirimOzetiModalBirimGuncelle()">@foreach(var x in OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label>
