@@ -147,7 +147,7 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@DestekOrani", (object?)donem.destekOrani ?? DBNull.Value);
             command.Parameters.AddWithValue("@IstisnaDestekOrani", (object?)donem.istisnaDestekOrani ?? DBNull.Value);
             command.Parameters.AddWithValue("@IstisnaIlceIdsJson", JsonSerializer.Serialize(donem.istisnaIlceIds.Distinct().OrderBy(x => x)));
-            command.Parameters.AddWithValue("@UygulamaAdresiSinirliMi", donem.uygulamaAdresiSinirliMi ? 1 : 0);
+            command.Parameters.AddWithValue("@UygulamaAdresiSinirliMi", donem.uygulamaAdresiSinirliMi);
             command.Parameters.AddWithValue("@Aciklama", donem.aciklama?.Trim() ?? "");
         }
 
@@ -158,7 +158,7 @@ namespace TarimDonusum.Tablolar
             d.id = reader.GetInt32(kol++);
             d.yil = NullDuzeltInt(reader, kol++);
             d.ad = reader.GetString(kol++);
-            d.basvuruyaAcikMi = BoolYap(NullDuzeltInt(reader, kol++));
+            kol++; // Eski manuel durum alanı; açıklık artık tarih aralığından hesaplanıyor.
             d.basvuruBaslangicTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             d.basvuruBitisTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             d.onBasvuruBaslangicTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
@@ -171,7 +171,7 @@ namespace TarimDonusum.Tablolar
             d.destekOrani = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
             d.istisnaDestekOrani = reader.IsDBNull(kol) ? null : reader.GetDecimal(kol); kol++;
             d.istisnaIlceIds = reader.IsDBNull(kol) ? new List<int>() : JsonSerializer.Deserialize<List<int>>(reader.GetString(kol)) ?? new List<int>(); kol++;
-            d.uygulamaAdresiSinirliMi = BoolYap(NullDuzeltInt(reader, kol++));
+            d.uygulamaAdresiSinirliMi = NullDuzeltInt(reader, kol++);
             d.aciklama = reader.GetString(kol++);
             return d;
         }

@@ -975,7 +975,7 @@
     <value>7. Yatırım Özeti Tablosu</value>
   </data>
   <data name="Basvuru.Step.CevreselSosyal" xml:space="preserve">
-    <value>Çevresel-Sosyal - Ek V</value>
+    <value>Çevresel Sosyal Veri Formu</value>
   </data>
   <data name="Basvuru.Section.CevreselSosyal.Title" xml:space="preserve">
     <value>10. Çevresel-Sosyal</value>
@@ -1518,7 +1518,7 @@
     <value>Yükle</value>
   </data>
   <data name="Basvuru.CevreselSosyal.Title" xml:space="preserve">
-    <value>10. Çevresel ve Sosyal Veri Formu</value>
+    <value>Çevresel Sosyal Veri Formu</value>
   </data>
   <data name="Basvuru.CevreselSosyal.Description" xml:space="preserve">
     <value>Yeni Ek V soru setine göre düzenlenmiştir. Form, yatırımın niteliğine göre sadece ilgili alanları açar; dokümandaki gri/kapsam dışı hücreler kullanıcıya gösterilmez.</value>
@@ -2655,10 +2655,10 @@
     <value>Taahhüt ve beyan bölümündeki tüm beyanlar onaylanmalıdır.</value>
   </data>
   <data name="Basvuru.Step.SystemResults" xml:space="preserve">
-    <value>Sistem Sonuçları</value>
+    <value>Tamlık Kontrolü</value>
   </data>
   <data name="Basvuru.Step.ExpertResults" xml:space="preserve">
-    <value>Uzman Sonuçları</value>
+    <value>Uygunluk Cevapları</value>
   </data>
   <data name="Basvuru.Step.Decision" xml:space="preserve">
     <value>Karar</value>
@@ -2832,5 +2832,6 @@
   <data name="Basvuru.Documents.Required.10" xml:space="preserve"><value>Önceki yıla ait bilanço</value></data>
   <data name="Basvuru.Documents.Required.11" xml:space="preserve"><value>Önceki yıla ait detaylı mizan</value></data>
   <data name="MenuBasvuru.naceKodlari" xml:space="preserve"><value>NACE Kodları</value></data>
-  <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Çevresel-Sosyal Anket</value></data>
+  <data name="MenuBasvuru.uygunlukSorulari" xml:space="preserve"><value>Uygunluk Soruları</value></data>
+  <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Çevresel Sosyal V.F.</value></data>
 </root>

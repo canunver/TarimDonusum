@@ -50,18 +50,14 @@
                     <label>Başvuru bitiş tarihi<input id="basvuruBitis" type="date" class="form-control" /></label>
                     <label>Ön Başvuru Çevrim kuru<input id="onBasvuruCevrimKuru" type="number" min="0" step="0.000001" class="form-control" /></label>
                     <label>Başvuru Çevrim kuru<input id="basvuruCevrimKuru" type="number" min="0" step="0.000001" class="form-control" /></label>
-                    <label>Başvuru durumu
-                        <select id="basvuruyaAcik" class="form-control"><option value="true">Açık</option><option value="false">Kapalı</option></select>
-                    </label>
-                    <label>Minimum yatırım tutarı<input id="minimumYatirim" type="text" inputmode="numeric" class="form-control money-integer" /></label>
-                    <label>Maksimum yatırım tutarı<input id="maksimumYatirim" type="text" inputmode="numeric" class="form-control money-integer" /></label>
+                    <label>Net satış hasılatı veya aktif toplamı Min. (TL)<input id="minimumYatirim" type="text" inputmode="numeric" class="form-control money-integer" /></label>
+                    <label>Net satış hasılatı veya aktif toplamı Maks. (TL)<input id="maksimumYatirim" type="text" inputmode="numeric" class="form-control money-integer" /></label>
                     <label>Maksimum destek tutarı (EUR)<input id="maksimumDestek" type="text" inputmode="numeric" class="form-control money-integer" /></label>
                     <label>Destek oranı (%)<input id="destekOrani" type="number" min="0" max="100" step="0.01" class="form-control" /></label>
-                    <label>İstisna kredi oranı (%)<input id="istisnaDestekOrani" type="number" min="0" max="100" step="0.01" class="form-control" /></label>
-                    <label>Uygulama adresi sınırlı mı?
-                        <select id="uygulamaAdresiSinirliMi" class="form-control"><option value="false">Hayır</option><option value="true">Evet (en fazla 1 adres)</option></select>
+                    <label>İstisna destek oranı (%)<input id="istisnaDestekOrani" type="number" min="0" max="100" step="0.01" class="form-control" /></label>
+                    <label>Maksimum uygulama adresi sayısı (0 = sınırsız)
+                        <input id="uygulamaAdresiSinirliMi" type="number" min="0" step="1" class="form-control" />
                     </label>
-                    <label class="donem-form-full">Açıklama<textarea id="aciklama" rows="3" class="form-control"></textarea></label>
                 </div>
             </div>
             <div class="modal-footer">
@@ -208,7 +204,7 @@
     }
 
     function DonemModalAc(id) {
-        const d = donemler.find(x => Number(x.id) === Number(id)) || { id: 0, yil: new Date().getFullYear(), basvuruyaAcikMi: false };
+        const d = donemler.find(x => Number(x.id) === Number(id)) || { id: 0, yil: new Date().getFullYear() };
         $('#donemModalBaslik').text(d.id ? 'Dönem düzenle' : 'Yeni dönem');
         $('#donemId').val(d.id || 0); $('#donemYil').val(d.yil || ''); $('#donemAd').val(d.ad || '');
         $('#basvuruBaslangic').val(tarihDegeri(d.basvuruBaslangicTarihi));
@@ -218,8 +214,7 @@
         $('#minimumYatirim').val(d.minimumYatirimTutari ?? ''); $('#maksimumYatirim').val(d.maksimumYatirimTutari ?? '');
         $('#maksimumDestek').val(d.maksimumDestekTutari ?? ''); $('#destekOrani').val(d.destekOrani ?? '');
         $('#istisnaDestekOrani').val(d.istisnaDestekOrani ?? '');
-        $('#uygulamaAdresiSinirliMi').val(String(d.uygulamaAdresiSinirliMi === true));
-        $('#basvuruyaAcik').val(String(d.basvuruyaAcikMi === true)); $('#aciklama').val(d.aciklama || '');
+        $('#uygulamaAdresiSinirliMi').val(Number(d.uygulamaAdresiSinirliMi || 0));
         document.querySelectorAll('#donemModal .money-integer').forEach(paraFormatla);
         $('#donemModal').modal('show');
     }
@@ -262,7 +257,6 @@
         const mevcutDonem = donemler.find(x => Number(x.id) === donemId);
         AjaxPost('/Donem/Kaydet', {
             id: donemId, yil: Number($('#donemYil').val() || 0), ad: $('#donemAd').val(),
-            basvuruyaAcikMi: $('#basvuruyaAcik').val() === 'true',
             basvuruBaslangicTarihi: $('#basvuruBaslangic').val() || null,
             onBasvuruBaslangicTarihi: $('#onBasvuruBaslangic').val() || null, onBasvuruBitisTarihi: $('#onBasvuruBitis').val() || null,
             basvuruBitisTarihi: $('#basvuruBitis').val() || null, minimumYatirimTutari: paraDegeri('#minimumYatirim'),
@@ -272,7 +266,7 @@
             destekOrani: $('#destekOrani').val() === '' ? null : Number($('#destekOrani').val()),
             istisnaDestekOrani: $('#istisnaDestekOrani').val() === '' ? null : Number($('#istisnaDestekOrani').val()),
             istisnaIlceIds: (mevcutDonem?.istisnaIlceIds || []).map(Number),
-            uygulamaAdresiSinirliMi: $('#uygulamaAdresiSinirliMi').val() === 'true', aciklama: $('#aciklama').val()
+            uygulamaAdresiSinirliMi: Number($('#uygulamaAdresiSinirliMi').val() || 0), aciklama: mevcutDonem?.aciklama || ''
         }, function (sonuc) {
             if (!sonuc || !sonuc.basarili) { PopupMesajGoster((sonuc && sonuc.hataStr) || 'Dönem kaydedilemedi.', false); return; }
             $('#donemModal').modal('hide'); PopupMesajGoster(sonuc.mesaj || 'Dönem kaydedildi.', true); DonemListele();

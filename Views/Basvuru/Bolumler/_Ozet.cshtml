@@ -160,7 +160,8 @@
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), R("Basvuru.Summary.Error.InvestmentNameRequired"));
     Eksikse(b.YatirimAdresleri.Any(x => x.yatirimTurleri.Count == 0), R("Basvuru.Summary.Error.InvestmentTypeRequired"));
     Eksikse(b.YatirimAdresleri.Count == 0, R("Basvuru.Summary.Error.InvestmentAddressRequired"));
-    Eksikse(b.basvuruFirma.donem.uygulamaAdresiSinirliMi && b.YatirimAdresleri.Count > 1, "Bu dönemde yalnızca bir uygulama adresi kullanılabilir.");
+    int uygulamaAdresiSiniri = b.basvuruFirma.donem.uygulamaAdresiSinirliMi;
+    Eksikse(uygulamaAdresiSiniri > 0 && b.YatirimAdresleri.Count > uygulamaAdresiSiniri, $"Bu dönemde en fazla {uygulamaAdresiSiniri} uygulama adresi kullanılabilir.");
     Eksikse(b.YatirimAdresleri.Any(x => x.harcamaTurleri.Count == 0), R("Basvuru.Summary.Error.ExpenseTypeRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), R("Basvuru.Summary.Error.InvestmentPurposeRequired"));
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri), R("Basvuru.Summary.Error.InvestmentActivitiesRequired"));

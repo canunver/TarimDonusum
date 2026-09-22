@@ -36,6 +36,10 @@
             <input id="privateShareCalculated" name="Basvuru.ortaklik.OzelSektorPayi" type="number" min="0" max="100" step="0.01" value="@ortaklik.ozelSektorPayi?.ToString(System.Globalization.CultureInfo.InvariantCulture)" disabled="@ro" />
             <small class="text-muted">Başvurunun uygun olması için en az %75 olmalıdır. %75 uygundur.</small>
         </label>
+        <label>
+            Halka açıklık oranı (%)
+            <input id="publicFloatRate" name="Basvuru.ortaklik.HalkaAciklikOrani" type="number" min="0" max="100" step="0.01" value="@ortaklik.halkaAciklikOrani?.ToString(System.Globalization.CultureInfo.InvariantCulture)" disabled="@ro" />
+        </label>
     </div>
 
     <h3 class="subhead mt-4">Mali Kontrol Toplamları</h3>

@@ -11,7 +11,7 @@
         b.DenetimSonucu.HasValue &&
         b.DenetimSonucu != enumOnBasvuruDenetimSonucu.Tanimsiz;
     int sistemToplam = 17, sistemCevaplanan = 0, sistemOlumsuz = 0;
-    int uzmanToplam = 76, uzmanCevaplanan = 0, uzmanHayir = 0;
+    int uzmanToplam = 74, uzmanCevaplanan = 0, uzmanOlumsuz = 0;
     try
     {
         using JsonDocument sistemBelgesi = JsonDocument.Parse(string.IsNullOrWhiteSpace(b.SistemDenetimAnketi) ? "[]" : b.SistemDenetimAnketi);
@@ -39,8 +39,8 @@
             {
                 string cevap = satir.TryGetProperty("sonuc", out JsonElement sonuc) ? sonuc.GetString() ?? "" : "";
                 if (!string.IsNullOrWhiteSpace(cevap)) uzmanCevaplanan++;
-                if (string.Equals(cevap, "H", StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(cevap, "Hayır", StringComparison.OrdinalIgnoreCase)) uzmanHayir++;
+                if (string.Equals(cevap, "Ret", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(cevap, "Düzeltme", StringComparison.OrdinalIgnoreCase)) uzmanOlumsuz++;
             }
         }
     }
@@ -76,8 +76,8 @@
         </div>
         <div class="col-sm-6 col-xl-3 mb-3">
             <div class="card h-100 border-danger"><div class="card-body">
-                <div class="font-weight-bold">Uygunluk Hayır</div>
-                <div class="display-4 font-weight-bold text-danger mt-2">@uzmanHayir</div>
+                <div class="font-weight-bold">Ret / Düzeltme</div>
+                <div class="display-4 font-weight-bold text-danger mt-2">@uzmanOlumsuz</div>
             </div></div>
         </div>
     </div>
@@ -91,18 +91,32 @@
                 </button>
             </div>
         }
-        <label class="denetim-result-field">
-            <span>@L["Basvuru.Review.Result"]: <span class="required-mark">*</span></span>
-            <select id="denetimSonucu" disabled="@(!tamamlanabilir)">
-                <option value="">@L["Basvuru.Common.Select"]</option>
-                <option value="@((int)enumOnBasvuruDenetimSonucu.Reddedildi)"
-                        selected="@(b.DenetimSonucu == enumOnBasvuruDenetimSonucu.Reddedildi)">@L["Basvuru.Review.Rejected"]</option>
-                <option value="@((int)enumOnBasvuruDenetimSonucu.KabulEdildi)"
-                        selected="@(b.DenetimSonucu == enumOnBasvuruDenetimSonucu.KabulEdildi)">@L["Basvuru.Review.Accepted"]</option>
-                <option value="@((int)enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi)"
-                        selected="@(b.DenetimSonucu == enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi)">@L["Basvuru.Review.Returned"]</option>
-            </select>
-        </label>
+        <div class="denetim-inline-fields">
+            <div class="denetim-inline-field">
+                <label for="bankaKrediLimiti">Banka tarafından bildirilen verilebilecek kredi limiti (EUR):</label>
+                <input id="bankaKrediLimiti" class="form-control" type="text" inputmode="numeric" value="@b.BankaKrediLimiti.ToString("0")" disabled="@(!tamamlanabilir)" />
+            </div>
+            <div class="denetim-inline-field">
+                <label for="bankaMaksimumAylikOdeme">Maksimum aylık ödeme (EUR):</label>
+                <input id="bankaMaksimumAylikOdeme" class="form-control" type="text" inputmode="numeric" value="@b.BankaMaksimumAylikOdeme.ToString("0")" disabled="@(!tamamlanabilir)" />
+            </div>
+            <div class="denetim-inline-field">
+                <label for="tahminiVadeSuresiAy">Tahmini vade süresi (ay):</label>
+                <input id="tahminiVadeSuresiAy" class="form-control" type="number" value="@b.TahminiVadeSuresiAy" readonly />
+            </div>
+            <div class="denetim-inline-field">
+                <label for="denetimSonucu">@L["Basvuru.Review.Result"]: <span class="required-mark">*</span></label>
+                <select id="denetimSonucu" disabled="@(!tamamlanabilir)">
+                    <option value="">@L["Basvuru.Common.Select"]</option>
+                    <option value="@((int)enumOnBasvuruDenetimSonucu.Reddedildi)"
+                            selected="@(b.DenetimSonucu == enumOnBasvuruDenetimSonucu.Reddedildi)">@L["Basvuru.Review.Rejected"]</option>
+                    <option value="@((int)enumOnBasvuruDenetimSonucu.KabulEdildi)"
+                            selected="@(b.DenetimSonucu == enumOnBasvuruDenetimSonucu.KabulEdildi)">@L["Basvuru.Review.Accepted"]</option>
+                    <option value="@((int)enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi)"
+                            selected="@(b.DenetimSonucu == enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi)">@L["Basvuru.Review.Returned"]</option>
+                </select>
+            </div>
+        </div>
 
         <label class="denetim-reason-field">
             <span>@L["Basvuru.Review.Reason"]: <span class="required-mark">*</span></span>

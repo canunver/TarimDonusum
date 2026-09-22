@@ -1330,6 +1330,71 @@ namespace TarimDonusum.IsKurallari
                     ALTER TABLE dbo.CevreselSosyalAnketSoru ADD CONSTRAINT FK_CevreselSosyalAnketSoru_Surum FOREIGN KEY(AnketSurumId) REFERENCES dbo.CevreselSosyalAnketSurum(Id);
                   IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.CevreselSosyalAnketSoru') AND name=N'UX_CevreselSosyalAnketSoru_SurumAnahtar')
                     CREATE UNIQUE INDEX UX_CevreselSosyalAnketSoru_SurumAnahtar ON dbo.CevreselSosyalAnketSoru(AnketSurumId,Anahtar);"),
+            new(102,
+                @"IF COL_LENGTH(N'dbo.Basvuru', N'HalkaAciklikOrani') IS NULL
+                    ALTER TABLE dbo.Basvuru ADD HalkaAciklikOrani DECIMAL(5,2) NULL;"),
+            new(103,
+                @"IF COL_LENGTH(N'dbo.Birim', N'UzmanBirimTuru') IS NULL
+                    ALTER TABLE dbo.Birim ADD UzmanBirimTuru NVARCHAR(20) NULL;"),
+            new(104,
+                @"IF OBJECT_ID(N'dbo.UygunlukSorusu', N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.UygunlukSorusu
+                    (
+                        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_UygunlukSorusu PRIMARY KEY,
+                        SiraNo INT NOT NULL,
+                        Konu NVARCHAR(250) NOT NULL,
+                        Soru NVARCHAR(2000) NOT NULL,
+                        Kaynak NVARCHAR(1000) NOT NULL CONSTRAINT DF_UygunlukSorusu_Kaynak DEFAULT N'',
+                        BirimTuru NVARCHAR(20) NULL,
+                        EvetSonucu NVARCHAR(20) NOT NULL,
+                        HayirSonucu NVARCHAR(20) NOT NULL,
+                        Aktif INT NOT NULL CONSTRAINT DF_UygunlukSorusu_Aktif DEFAULT 1,
+                        CONSTRAINT CK_UygunlukSorusu_EvetSonucu CHECK(EvetSonucu IN(N'Kabul',N'Ret',N'Düzeltme')),
+                        CONSTRAINT CK_UygunlukSorusu_HayirSonucu CHECK(HayirSonucu IN(N'Kabul',N'Ret',N'Düzeltme'))
+                    );
+                    CREATE INDEX IX_UygunlukSorusu_SiraNo ON dbo.UygunlukSorusu(SiraNo);
+                  END;"),
+            new(105,
+                @"IF OBJECT_ID(N'dbo.UygunlukSorusu', N'U') IS NOT NULL
+                    AND NOT EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'CK_UygunlukSorusu_TekKabul')
+                  BEGIN
+                    UPDATE dbo.UygunlukSorusu
+                    SET EvetSonucu=N'Kabul', HayirSonucu=N'Ret'
+                    WHERE (CASE WHEN EvetSonucu=N'Kabul' THEN 1 ELSE 0 END
+                         + CASE WHEN HayirSonucu=N'Kabul' THEN 1 ELSE 0 END) <> 1;
+                    ALTER TABLE dbo.UygunlukSorusu WITH CHECK ADD CONSTRAINT CK_UygunlukSorusu_TekKabul
+                    CHECK ((CASE WHEN EvetSonucu=N'Kabul' THEN 1 ELSE 0 END
+                          + CASE WHEN HayirSonucu=N'Kabul' THEN 1 ELSE 0 END) = 1);
+                  END;"),
+            new(106,
+                @"IF COL_LENGTH(N'dbo.UygunlukSorusu', N'ZorunluBelgeNolariJson') IS NULL
+                    ALTER TABLE dbo.UygunlukSorusu ADD ZorunluBelgeNolariJson NVARCHAR(500) NOT NULL
+                    CONSTRAINT DF_UygunlukSorusu_ZorunluBelgeNolariJson DEFAULT N'[]';"),
+            new(107,
+                @"IF COL_LENGTH(N'dbo.OnBasvuruItiraz',N'YaziNo') IS NULL ALTER TABLE dbo.OnBasvuruItiraz ADD YaziNo NVARCHAR(100) NULL;
+                  IF COL_LENGTH(N'dbo.OnBasvuruItiraz',N'YaziTarihi') IS NULL ALTER TABLE dbo.OnBasvuruItiraz ADD YaziTarihi DATE NULL;
+                  IF COL_LENGTH(N'dbo.OnBasvuruItiraz',N'YaziDosyaId') IS NULL ALTER TABLE dbo.OnBasvuruItiraz ADD YaziDosyaId INT NULL;
+                  IF COL_LENGTH(N'dbo.OnBasvuruItiraz',N'YaziDosyaAdi') IS NULL ALTER TABLE dbo.OnBasvuruItiraz ADD YaziDosyaAdi NVARCHAR(500) NULL;"),
+            new(108,
+                @"IF COL_LENGTH(N'dbo.Basvuru',N'BankaKrediLimiti') IS NULL ALTER TABLE dbo.Basvuru ADD BankaKrediLimiti DECIMAL(18,2) NOT NULL CONSTRAINT DF_Basvuru_BankaKrediLimiti DEFAULT 0;
+                  IF COL_LENGTH(N'dbo.Basvuru',N'BankaMaksimumAylikOdeme') IS NULL ALTER TABLE dbo.Basvuru ADD BankaMaksimumAylikOdeme DECIMAL(18,2) NOT NULL CONSTRAINT DF_Basvuru_BankaMaksimumAylikOdeme DEFAULT 0;"),
+            new(109,
+                @"IF COL_LENGTH(N'dbo.CevreselSosyalAnketSurum',N'KapsamDisiFaaliyetlerBaslik') IS NULL
+                    ALTER TABLE dbo.CevreselSosyalAnketSurum ADD KapsamDisiFaaliyetlerBaslik NVARCHAR(500) NOT NULL CONSTRAINT DF_CevreselSosyalAnketSurum_KapsamBaslik DEFAULT N'';
+                  IF COL_LENGTH(N'dbo.CevreselSosyalAnketSurum',N'KapsamDisiFaaliyetlerHtml') IS NULL
+                    ALTER TABLE dbo.CevreselSosyalAnketSurum ADD KapsamDisiFaaliyetlerHtml NVARCHAR(MAX) NOT NULL CONSTRAINT DF_CevreselSosyalAnketSurum_KapsamHtml DEFAULT N'';
+                  IF COL_LENGTH(N'dbo.CevreselSosyalAnketSoru',N'KapsamDisiFaaliyetlerListesiniGosterMi') IS NULL
+                    ALTER TABLE dbo.CevreselSosyalAnketSoru ADD KapsamDisiFaaliyetlerListesiniGosterMi BIT NOT NULL CONSTRAINT DF_CevreselSosyalAnketSoru_KapsamListe DEFAULT 0;"),
+            new(110,
+                @"IF COL_LENGTH(N'dbo.CevreselSosyalAnketSoru',N'AnketSurumId') IS NOT NULL
+                  BEGIN
+                    IF EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.CevreselSosyalAnketSoru') AND name=N'UX_CevreselSosyalAnketSoru_SurumAnahtar')
+                        DROP INDEX UX_CevreselSosyalAnketSoru_SurumAnahtar ON dbo.CevreselSosyalAnketSoru;
+                    IF EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name=N'FK_CevreselSosyalAnketSoru_Surum')
+                        ALTER TABLE dbo.CevreselSosyalAnketSoru DROP CONSTRAINT FK_CevreselSosyalAnketSoru_Surum;
+                    ALTER TABLE dbo.CevreselSosyalAnketSoru DROP COLUMN AnketSurumId;
+                  END;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

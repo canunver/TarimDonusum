@@ -64,7 +64,7 @@ namespace TarimDonusum.Controllers
                     TempData["Mesaj"] = HataMesaji(sonuc, "Başvuru kaydı okunamadı.");
                     return RedirectToAction(nameof(Index));
                 }
-                _basvuruIsKurallari.DenetimListeleriniIlkDegerle(sonuc.nesne);
+                await _basvuruIsKurallari.DenetimListeleriniIlkDegerleAsync(sonuc.nesne);
 
                 Sonuc<List<Donem>> donemSonuc = await _basvuruIsKurallari.DonemleriListeleAsync();
                 Sonuc<List<Il>> ilSonuc = await _basvuruIsKurallari.IlleriListeleAsync();

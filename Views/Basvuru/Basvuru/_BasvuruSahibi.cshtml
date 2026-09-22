@@ -25,7 +25,7 @@
                     @foreach (var donem in Model.Donemler)
                     {
                         bool secili = b.basvuruFirma.donem.id == donem.id;
-                        bool secilebilir = donem.SecilebilirMi();
+                        bool secilebilir = donem.SecilebilirMi(enumBasvuruKayitTuru.Basvuru);
                         string durum = secilebilir ? T("Basvuru.Donem.Open") : T("Basvuru.Donem.Closed");
                         <option value="@donem.id" selected="@secili" disabled="@(!secilebilir && !secili)">
                             @donem.ad (@durum)

@@ -75,6 +75,7 @@ namespace TarimDonusum.IsKurallari
         private const string BasvuruTedarikDayanakFormAdPrefix = "BTED_";
         private const string BasvuruCevreselSosyalBelgeFormAdPrefix = "BCS_";
         private const string BasvuruIstihdamSgkFormAd = "Basvuru_IstihdamSgk";
+        private const string BasvuruItirazYazisiFormAd = "Basvuru_ItirazYazisi";
         private const string BasvuruZorunluBelgeMerkeziFormAd = "Basvuru_ZorunluBelgeMerkezi";
         private static readonly IReadOnlyDictionary<int, string> ZorunluBelgeTurleri = new Dictionary<int, string>
         {
@@ -482,6 +483,8 @@ namespace TarimDonusum.IsKurallari
             if (!sonuclandir && (!denetim.DenetimSonucu.HasValue ||
                 denetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.Tanimsiz))
                 sonuc.HataEkle("Denetim sonucu seçilmelidir.");
+            if (denetim.BankaKrediLimiti < 0 || denetim.BankaMaksimumAylikOdeme < 0)
+                sonuc.HataEkle("Banka kredi limiti ve maksimum aylık ödeme negatif olamaz.");
             if (!sonuc.basarili) return sonuc;
 
             try
@@ -511,7 +514,7 @@ namespace TarimDonusum.IsKurallari
                     {
                         if (!DenetimListesiTamamMi(kayitliDenetim.SistemDenetimAnketi, true))
                             sonuc.HataEkle("Sonuçlandırmadan önce sistem kontrol listesi kaydedilmelidir.");
-                        if (string.IsNullOrWhiteSpace(kayitliDenetim.DenetimAnketi))
+                        if (!DenetimListesiTamamMi(kayitliDenetim.DenetimAnketi, false))
                             sonuc.HataEkle("Sonuçlandırmadan önce uzman kontrol listesi kaydedilmelidir.");
                         if (string.IsNullOrWhiteSpace(kayitliDenetim.DenetimGerekcesi) ||
                             !kayitliDenetim.DenetimSonucu.HasValue ||
@@ -529,6 +532,8 @@ namespace TarimDonusum.IsKurallari
                     denetim.DenetimAnketi = kayitliDenetim.DenetimAnketi;
                     denetim.DenetimGerekcesi = kayitliDenetim.DenetimGerekcesi;
                     denetim.DenetimSonucu = kayitliDenetim.DenetimSonucu;
+                    denetim.BankaKrediLimiti = kayitliDenetim.BankaKrediLimiti;
+                    denetim.BankaMaksimumAylikOdeme = kayitliDenetim.BankaMaksimumAylikOdeme;
                 }
 
                 if (sonuclandir &&
@@ -605,6 +610,9 @@ namespace TarimDonusum.IsKurallari
                         denetim.DenetimAnketi,
                         denetim.DenetimGerekcesi,
                         denetim.DenetimSonucu,
+                        denetim.BankaKrediLimiti,
+                        denetim.BankaMaksimumAylikOdeme,
+                        denetim.TahminiVadeSuresiAy,
                         YeniDurum = yeniDurum,
                         YeniRevizyonBasvuruId = yeniRevizyonId
                     });
@@ -640,7 +648,7 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        public void DenetimListeleriniIlkDegerle(Basvuru b, bool sistemListesiniYenidenUret = false)
+        public async Task DenetimListeleriniIlkDegerleAsync(Basvuru b, bool sistemListesiniYenidenUret = false)
         {
             if (b.kayitTuru != enumBasvuruKayitTuru.OnBasvuru) return;
             Firma f = b.basvuruFirma.firma;
@@ -705,10 +713,41 @@ namespace TarimDonusum.IsKurallari
             };
             if (sistemListesiniYenidenUret || DenetimListesiBosMu(b.SistemDenetimAnketi))
                 b.SistemDenetimAnketi = JsonSerializer.Serialize(maddeler);
-            if (string.IsNullOrWhiteSpace(b.DenetimAnketi)
-                || b.DenetimAnketi.Contains("Uzman kontrol maddesi", StringComparison.OrdinalIgnoreCase))
-                b.DenetimAnketi = UzmanKontrolListesi.Json;
-            b.DenetimAnketi = UboKycKontrolleriniCikar(b.DenetimAnketi);
+            await using SqlConnection uygunlukConnection = new(_connectionString);
+            await uygunlukConnection.OpenAsync();
+            List<UygunlukSorusu> sorular = await new TABUygunlukSorusu(uygunlukConnection, _localizer).ListeleAsync(true);
+            b.DenetimAnketi = UzmanSonuclariniSozluktenOlustur(b.DenetimAnketi, sorular, b.ZorunluBelgeler);
+        }
+
+        private static string UzmanSonuclariniSozluktenOlustur(string? kayitliJson, List<UygunlukSorusu> sorular, List<BasvuruOrtaklikDosya> yuklenenBelgeler)
+        {
+            List<UzmanSonucSozlukMaddesi> kayitli = [];
+            try
+            {
+                kayitli = JsonSerializer.Deserialize<List<UzmanSonucSozlukMaddesi>>(kayitliJson ?? "") ?? [];
+            }
+            catch (JsonException) { }
+
+            Dictionary<int, UzmanSonucSozlukMaddesi> idCevaplari = kayitli.Where(x=>x.soruId>0).GroupBy(x=>x.soruId).ToDictionary(x=>x.Key,x=>x.Last());
+            Dictionary<int, UzmanSonucSozlukMaddesi> noCevaplari = kayitli.GroupBy(x=>x.no).ToDictionary(x=>x.Key,x=>x.Last());
+            List<UzmanSonucSozlukMaddesi> sozluk=[];
+            foreach (UygunlukSorusu soru in sorular)
+            {
+                UzmanSonucSozlukMaddesi madde=new(){soruId=soru.id,no=soru.siraNo,konu=soru.konu,soru=soru.soru,kaynak=soru.kaynak,birimTuru=soru.birimTuru,evetSonucu=soru.evetSonucu,hayirSonucu=soru.hayirSonucu};
+                madde.belgeler = soru.zorunluBelgeNolari.Select(no => {
+                    BasvuruOrtaklikDosya? belge=yuklenenBelgeler.FirstOrDefault(x=>x.dosyaNo==no);
+                    return new UygunlukBelgeBaglantisi { dosyaNo=no, dosyaTuru=belge?.dosyaTuru??$"Zorunlu belge {no}", dosyaId=belge?.dosyaId, dosyaAdi=belge?.dosyaAdi??"" };
+                }).ToList();
+                UzmanSonucSozlukMaddesi? cevap = idCevaplari.GetValueOrDefault(soru.id) ?? noCevaplari.GetValueOrDefault(soru.siraNo);
+                if (cevap != null)
+                {
+                    madde.cevap = cevap.cevap is "Evet" or "Hayır" ? cevap.cevap : cevap.sonuc == "Uygun" ? "Evet" : "";
+                    madde.sonuc = madde.cevap == "Evet" ? soru.evetSonucu : madde.cevap == "Hayır" ? soru.hayirSonucu : "";
+                    madde.duzeltilecekBilgi = cevap.duzeltilecekBilgi?.Trim() ?? "";
+                }
+                sozluk.Add(madde);
+            }
+            return JsonSerializer.Serialize(sozluk);
         }
 
         private static string UboKycKontrolleriniCikar(string? json)
@@ -754,7 +793,7 @@ namespace TarimDonusum.IsKurallari
                 return sonuc;
             }
 
-            DenetimListeleriniIlkDegerle(basvuru, true);
+            await DenetimListeleriniIlkDegerleAsync(basvuru, true);
             Sonuc kaydetmeSonucu = await DenetimListesiKaydetAsync(new DenetimListesiKayit
             {
                 basvuruId = basvuruId,
@@ -787,6 +826,7 @@ namespace TarimDonusum.IsKurallari
         public async Task<Sonuc> DenetimListesiKaydetAsync(DenetimListesiKayit model, Kullanici kullanici)
         {
             Sonuc sonuc = new();
+            List<UzmanSonucSozlukMaddesi> gelenUzmanSonuclari = [];
             bool sistem = string.Equals(model.listeTuru, "sistem", StringComparison.OrdinalIgnoreCase);
             bool uzman = string.Equals(model.listeTuru, "uzman", StringComparison.OrdinalIgnoreCase);
             if (BasvuruKullanicisiMi(kullanici)) sonuc.HataEkle("Başvuru kullanıcıları denetim listesi kaydedemez.");
@@ -796,6 +836,8 @@ namespace TarimDonusum.IsKurallari
             {
                 using JsonDocument belge = JsonDocument.Parse(model.json ?? "");
                 if (belge.RootElement.ValueKind != JsonValueKind.Array) sonuc.HataEkle("Kontrol listesi geçersizdir.");
+                if (uzman)
+                    gelenUzmanSonuclari = JsonSerializer.Deserialize<List<UzmanSonucSozlukMaddesi>>(model.json ?? "") ?? [];
             }
             catch { sonuc.HataEkle("Kontrol listesi geçersizdir."); }
             if (!sonuc.basarili) return sonuc;
@@ -803,6 +845,63 @@ namespace TarimDonusum.IsKurallari
             {
                 await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
+                if (uzman)
+                {
+                    List<UygunlukSorusu> soruTanimlari = await new TABUygunlukSorusu(connection, _localizer).ListeleAsync(true);
+                    Dictionary<int, UzmanSonucSozlukMaddesi> gelen = gelenUzmanSonuclari.Where(x=>x.soruId>0).GroupBy(x=>x.soruId).ToDictionary(x=>x.Key,x=>x.Last());
+
+                    const string yetkiSql = @"SELECT DISTINCT B.UzmanBirimTuru
+                        FROM dbo.KullaniciYetki KY INNER JOIN dbo.Birim B ON B.Id=KY.Birim
+                        WHERE KY.KullaniciId=@KullaniciId AND KY.Rol=@Rol AND B.Aktif=1 AND B.UzmanBirimTuru IS NOT NULL;";
+                    await using SqlCommand yetkiKomutu = new(yetkiSql, connection);
+                    yetkiKomutu.Parameters.AddWithValue("@KullaniciId", kullanici.Id);
+                    yetkiKomutu.Parameters.AddWithValue("@Rol", (int)KullaniciRol.BirimKullanicisi);
+                    HashSet<string> kullaniciBirimTurleri = new(StringComparer.OrdinalIgnoreCase);
+                    await using (SqlDataReader okuyucu = await yetkiKomutu.ExecuteReaderAsync())
+                        while (await okuyucu.ReadAsync()) kullaniciBirimTurleri.Add(okuyucu.GetString(0));
+
+                    await using SqlCommand mevcutKomutu = new("SELECT DenetimAnketi FROM dbo.Basvuru WHERE Id=@Id;", connection);
+                    mevcutKomutu.Parameters.AddWithValue("@Id", model.basvuruId);
+                    string mevcutJson = Convert.ToString(await mevcutKomutu.ExecuteScalarAsync()) ?? "";
+                    List<UzmanSonucSozlukMaddesi> mevcutListe;
+                    try { mevcutListe = JsonSerializer.Deserialize<List<UzmanSonucSozlukMaddesi>>(mevcutJson) ?? []; }
+                    catch (JsonException) { mevcutListe = []; }
+                    Dictionary<int, UzmanSonucSozlukMaddesi> mevcutCevaplar = mevcutListe.Where(x=>x.soruId>0).GroupBy(x=>x.soruId).ToDictionary(x=>x.Key,x=>x.Last());
+
+                    bool sistemYoneticisi = kullanici.Yetkiler.Any(x => x.Rol == KullaniciRol.SistemYoneticisi);
+                    List<UzmanSonucSozlukMaddesi> sozluk=[];
+                    foreach (UygunlukSorusu soru in soruTanimlari)
+                    {
+                        UzmanSonucSozlukMaddesi tanim=new(){soruId=soru.id,no=soru.siraNo,konu=soru.konu,soru=soru.soru,kaynak=soru.kaynak,birimTuru=soru.birimTuru,evetSonucu=soru.evetSonucu,hayirSonucu=soru.hayirSonucu};
+                        tanim.birimTuru = tanim.birimTuru?.Trim().ToUpperInvariant() ?? "";
+                        if (!string.IsNullOrEmpty(tanim.birimTuru) && !sistemYoneticisi && !kullaniciBirimTurleri.Contains(tanim.birimTuru))
+                        {
+                            if (mevcutCevaplar.TryGetValue(tanim.soruId, out UzmanSonucSozlukMaddesi? mevcutCevap))
+                            {
+                                tanim.cevap = mevcutCevap.cevap;
+                                tanim.sonuc = mevcutCevap.sonuc;
+                                tanim.duzeltilecekBilgi = mevcutCevap.duzeltilecekBilgi;
+                            }
+                            sozluk.Add(tanim);
+                            continue;
+                        }
+                        if (!gelen.TryGetValue(tanim.soruId, out UzmanSonucSozlukMaddesi? cevap))
+                        {
+                            sonuc.HataEkle($"{tanim.no}. sorunun cevabı bulunamadı.");
+                            continue;
+                        }
+                        if (cevap.cevap is not ("" or "Evet" or "Hayır"))
+                            sonuc.HataEkle($"{tanim.no}. sorunun cevabı geçersizdir.");
+                        tanim.cevap=cevap.cevap;
+                        tanim.sonuc=cevap.cevap=="Evet"?tanim.evetSonucu:cevap.cevap=="Hayır"?tanim.hayirSonucu:"";
+                        if (tanim.sonuc == "Düzeltme" && string.IsNullOrWhiteSpace(cevap.duzeltilecekBilgi))
+                            sonuc.HataEkle($"{tanim.no}. soru için düzeltilecek bilgi girilmelidir.");
+                        tanim.duzeltilecekBilgi = cevap.duzeltilecekBilgi?.Trim() ?? "";
+                        sozluk.Add(tanim);
+                    }
+                    if (!sonuc.basarili) return sonuc;
+                    model.json = JsonSerializer.Serialize(sozluk);
+                }
                 bool kaydedildi = await new TABBasvuru(connection, _localizer).DenetimListesiKaydetAsync(model.basvuruId, model.json ?? "", sistem);
                 if (!kaydedildi) sonuc.HataEkle("Başvuru inceleme aşamasında değil veya liste kaydedilemedi.");
                 else sonuc.mesaj = sistem ? "Sistem sonuçları kaydedildi." : "Uzman sonuçları kaydedildi.";
@@ -840,11 +939,13 @@ namespace TarimDonusum.IsKurallari
 
                 string[] gecerliSonuclar = sistemListesi
                     ? ["Tam", "Eksik"]
-                    : ["E", "H", "UD"];
+                    : ["Kabul", "Ret", "Düzeltme"];
                 return belge.RootElement.EnumerateArray().All(madde =>
                     madde.TryGetProperty("sonuc", out JsonElement sonuc) &&
                     sonuc.ValueKind == JsonValueKind.String &&
-                    gecerliSonuclar.Contains(sonuc.GetString(), StringComparer.OrdinalIgnoreCase));
+                    gecerliSonuclar.Contains(sonuc.GetString(), StringComparer.OrdinalIgnoreCase) &&
+                    (sistemListesi || !string.Equals(sonuc.GetString(), "Düzeltme", StringComparison.OrdinalIgnoreCase) ||
+                     (madde.TryGetProperty("duzeltilecekBilgi", out JsonElement bilgi) && bilgi.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(bilgi.GetString()))));
             }
             catch (JsonException)
             {
@@ -906,8 +1007,9 @@ namespace TarimDonusum.IsKurallari
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi), "Basvuru.Summary.Error.InvestmentNameRequired");
             Eksikse(b.YatirimAdresleri.Any(x => x.yatirimTurleri.Count == 0), "Basvuru.Summary.Error.InvestmentTypeRequired");
             Eksikse(b.YatirimAdresleri.Count == 0, "Basvuru.Summary.Error.InvestmentAddressRequired");
-            if (donem?.uygulamaAdresiSinirliMi == true && b.YatirimAdresleri.Count > 1)
-                sonuc.HataEkle("Bu dönemde yalnızca bir uygulama adresi kullanılabilir.");
+            int uygulamaAdresiSiniri = donem?.uygulamaAdresiSinirliMi ?? 0;
+            if (uygulamaAdresiSiniri > 0 && b.YatirimAdresleri.Count > uygulamaAdresiSiniri)
+                sonuc.HataEkle($"Bu dönemde en fazla {uygulamaAdresiSiniri} uygulama adresi kullanılabilir.");
             Eksikse(b.YatirimAdresleri.Any(x => x.harcamaTurleri.Count == 0), "Basvuru.Summary.Error.ExpenseTypeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), "Basvuru.Summary.Error.InvestmentPurposeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri), "Basvuru.Summary.Error.InvestmentActivitiesRequired");
@@ -1013,11 +1115,13 @@ namespace TarimDonusum.IsKurallari
 
                 string[] gecerliSonuclar = sistemListesi
                     ? ["Tam", "Eksik"]
-                    : ["E", "H", "UD"];
+                    : ["Kabul", "Ret", "Düzeltme"];
                 return belge.RootElement.EnumerateArray().All(madde =>
                     madde.TryGetProperty("sonuc", out JsonElement sonuc) &&
                     sonuc.ValueKind == JsonValueKind.String &&
-                    gecerliSonuclar.Contains(sonuc.GetString(), StringComparer.OrdinalIgnoreCase));
+                    gecerliSonuclar.Contains(sonuc.GetString(), StringComparer.OrdinalIgnoreCase) &&
+                    (sistemListesi || !string.Equals(sonuc.GetString(), "Düzeltme", StringComparison.OrdinalIgnoreCase) ||
+                     (madde.TryGetProperty("duzeltilecekBilgi", out JsonElement bilgi) && bilgi.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(bilgi.GetString()))));
             }
             catch (JsonException)
             {
@@ -1740,7 +1844,6 @@ namespace TarimDonusum.IsKurallari
                     finans.digerFinansmanKaynaklari = mevcut?.finans.digerFinansmanKaynaklari;
                     finans.oncekiRffSozlesmesiKapaliMi = mevcut?.finans.oncekiRffSozlesmesiKapaliMi;
                     finans.bankaTeminatMektubuSaglanabilirMi = mevcut?.finans.bankaTeminatMektubuSaglanabilirMi;
-                    finans.odemeSuresiAy = mevcut?.finans.odemeSuresiAy;
                 }
 
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
@@ -1867,14 +1970,16 @@ namespace TarimDonusum.IsKurallari
             {
                 await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
-                const string sql = @"SELECT I.Id,I.BasvuruId,I.IslemTuru,I.Metin,I.IslemTarihi,I.KullaniciId,LTRIM(RTRIM(K.Ad+N' '+K.Soyad))
+                const string sql = @"SELECT I.Id,I.BasvuruId,I.IslemTuru,I.Metin,I.IslemTarihi,I.KullaniciId,LTRIM(RTRIM(K.Ad+N' '+K.Soyad)),I.YaziNo,I.YaziTarihi,I.YaziDosyaId,I.YaziDosyaAdi
                     FROM dbo.OnBasvuruItiraz I INNER JOIN dbo.Kullanici K ON K.Id=I.KullaniciId
                     WHERE I.BasvuruAnaId=(SELECT BasvuruAnaId FROM dbo.Basvuru WHERE Id=@Id) ORDER BY I.Id;";
                 await using SqlCommand command = new(sql, connection); command.Parameters.AddWithValue("@Id", basvuruId);
                 await using SqlDataReader reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync()) sonuc.nesne.Add(new OnBasvuruItiraz {
                     Id=reader.GetInt32(0), BasvuruId=reader.GetInt32(1), IslemTuru=(enumOnBasvuruItirazIslemTuru)reader.GetInt32(2),
-                    Metin=reader.GetString(3), IslemTarihi=reader.GetDateTime(4), KullaniciId=reader.GetInt32(5), KullaniciAdi=reader.GetString(6) });
+                    Metin=reader.GetString(3), IslemTarihi=reader.GetDateTime(4), KullaniciId=reader.GetInt32(5), KullaniciAdi=reader.GetString(6),
+                    YaziNo=reader.IsDBNull(7)?"":reader.GetString(7), YaziTarihi=reader.IsDBNull(8)?null:reader.GetDateTime(8),
+                    YaziDosyaId=reader.IsDBNull(9)?null:reader.GetInt32(9), YaziDosyaAdi=reader.IsDBNull(10)?"":reader.GetString(10) });
             }
             catch(Exception ex) { BeklenmeyenHata(sonuc,ex,"İtiraz tarihçesi okunamadı. BasvuruId: {BasvuruId}","İtiraz tarihçesi okunamadı.",basvuruId); }
             return sonuc;
@@ -1943,12 +2048,16 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        public async Task<Sonuc<int>> OnBasvuruItirazKarariKaydetAsync(OnBasvuruItirazKayitModel model, Kullanici kullanici)
+        public async Task<Sonuc<int>> OnBasvuruItirazKarariKaydetAsync(OnBasvuruItirazKayitModel model, Kullanici kullanici, string yaziDosyaAdi = "", byte[]? yaziIcerik = null)
         {
             Sonuc<int> sonuc=new();
             if (BasvuruKullanicisiMi(kullanici)) sonuc.HataEkle("Başvuru kullanıcıları itiraz kararı veremez.");
             if (model.BasvuruId<=0 || string.IsNullOrWhiteSpace(model.Metin)) sonuc.HataEkle("Karar gerekçesi girilmelidir.");
             if (model.Metin?.Length>4000) sonuc.HataEkle("Karar gerekçesi en fazla 4000 karakter olabilir.");
+            model.YaziNo=(model.YaziNo??"").Trim();
+            if(string.IsNullOrWhiteSpace(model.YaziNo)) sonuc.HataEkle("Yazı no girilmelidir.");
+            if(model.YaziNo.Length>100) sonuc.HataEkle("Yazı no en fazla 100 karakter olabilir.");
+            if(!model.YaziTarihi.HasValue) sonuc.HataEkle("Yazı tarihi girilmelidir.");
             if (!sonuc.basarili) return sonuc;
             try {
                 await using SqlConnection connection=new(_connectionString); await connection.OpenAsync();
@@ -1967,8 +2076,15 @@ namespace TarimDonusum.IsKurallari
                     yeniDurum=enumBasvuruDurum.OnBasvuruDurumu; tur=enumOnBasvuruItirazIslemTuru.RevizyonaGonderildi;
                 } else { yeniDurum=enumBasvuruDurum.IptalDurumu; tur=enumOnBasvuruItirazIslemTuru.ItirazReddedildi; }
                 if(!await tab.BasvuruAnaDurumGuncelleAsync(hedefId,enumBasvuruDurum.OnBasvuruItirazEdildiDurumu,yeniDurum)){sonuc.HataEkle("İtiraz durumu değiştirilemedi.");await transaction.RollbackAsync();return sonuc;}
-                const string ekle=@"INSERT dbo.OnBasvuruItiraz(BasvuruAnaId,BasvuruId,IslemTuru,Metin,KullaniciId) VALUES(@AnaId,@Id,@Tur,@Metin,@KullaniciId);";
-                await using SqlCommand command=new(ekle,connection,transaction); command.Parameters.AddWithValue("@AnaId",mevcut.BasvuruAnaId);command.Parameters.AddWithValue("@Id",model.BasvuruId);command.Parameters.AddWithValue("@Tur",(int)tur);command.Parameters.AddWithValue("@Metin",model.Metin.Trim());command.Parameters.AddWithValue("@KullaniciId",kullanici.Id);await command.ExecuteNonQueryAsync();
+                const string ekle=@"INSERT dbo.OnBasvuruItiraz(BasvuruAnaId,BasvuruId,IslemTuru,Metin,KullaniciId,YaziNo,YaziTarihi) OUTPUT INSERTED.Id VALUES(@AnaId,@Id,@Tur,@Metin,@KullaniciId,@YaziNo,@YaziTarihi);";
+                await using SqlCommand command=new(ekle,connection,transaction); command.Parameters.AddWithValue("@AnaId",mevcut.BasvuruAnaId);command.Parameters.AddWithValue("@Id",model.BasvuruId);command.Parameters.AddWithValue("@Tur",(int)tur);command.Parameters.AddWithValue("@Metin",model.Metin.Trim());command.Parameters.AddWithValue("@KullaniciId",kullanici.Id);command.Parameters.AddWithValue("@YaziNo",model.YaziNo);command.Parameters.AddWithValue("@YaziTarihi",model.YaziTarihi!.Value.Date);
+                int itirazId=Convert.ToInt32(await command.ExecuteScalarAsync());
+                if(yaziIcerik is { Length:>0 }) {
+                    Sonuc<DosyaBilgisi> dosyaSonucu=await _dosyaYonetimIsKurallari.DosyaEkleVeyaGuncelleAsync(BasvuruDosyaModeliOlustur(model.BasvuruId,BasvuruItirazYazisiFormAd,itirazId,yaziDosyaAdi,yaziIcerik,"İtiraz karar yazısı"),new BasvuruDosyaYetkiKontrol(model.BasvuruId));
+                    if(!dosyaSonucu.basarili||dosyaSonucu.nesne==null){SonucHatalariniAktar(dosyaSonucu,sonuc);await transaction.RollbackAsync();return sonuc;}
+                    await using SqlCommand dosyaKomutu=new("UPDATE dbo.OnBasvuruItiraz SET YaziDosyaId=@DosyaId,YaziDosyaAdi=@DosyaAdi WHERE Id=@Id;",connection,transaction);
+                    dosyaKomutu.Parameters.AddWithValue("@DosyaId",dosyaSonucu.nesne.Id);dosyaKomutu.Parameters.AddWithValue("@DosyaAdi",dosyaSonucu.nesne.DosyaAdi);dosyaKomutu.Parameters.AddWithValue("@Id",itirazId);await dosyaKomutu.ExecuteNonQueryAsync();
+                }
                 await new TABBasvuruLog(connection,_localizer,transaction).EkleAsync(model.BasvuruId,kullanici,model.RevizyonaGonder?"OnBasvuruItiraziRevizyonaGonderildi":"OnBasvuruItiraziReddedildi",new { model.Metin,YeniDurum=yeniDurum,YeniBasvuruId=hedefId });
                 await transaction.CommitAsync(); sonuc.nesne=hedefId; sonuc.mesaj=model.RevizyonaGonder?"İtiraz kabul edildi ve ön başvuru revizyona gönderildi.":"İtiraz gerekçeli olarak reddedildi.";
             } catch(Exception ex){BeklenmeyenHata(sonuc,ex,"İtiraz kararı kaydedilemedi. BasvuruId: {BasvuruId}","İtiraz kararı kaydedilemedi.",model.BasvuruId);}
@@ -2692,6 +2808,8 @@ namespace TarimDonusum.IsKurallari
                 ortaklik.ortaklar ??= new List<BasvuruOrtak>();
                 if (!ortaklik.ozelSektorPayi.HasValue || ortaklik.ozelSektorPayi < 0 || ortaklik.ozelSektorPayi > 100)
                     sonuc.HataEkle("Özel sektör payı 0 ile 100 arasında girilmelidir.");
+                if (ortaklik.halkaAciklikOrani is < 0 or > 100)
+                    sonuc.HataEkle("Halka açıklık oranı 0 ile 100 arasında girilmelidir.");
                 ortaklik.Dogrula(sonuc);
                 if (!sonuc.basarili)
                     return sonuc;
@@ -2756,6 +2874,16 @@ namespace TarimDonusum.IsKurallari
                         return sonuc;
                     }
                     mevcut.ortaklik.ozelSektorPayi = ortaklik.ozelSektorPayi;
+                }
+
+                if (ortaklik.halkaAciklikOrani.HasValue)
+                {
+                    if (ortaklik.halkaAciklikOrani < 0 || ortaklik.halkaAciklikOrani > 100)
+                    {
+                        sonuc.HataEkle("Halka açıklık oranı 0 ile 100 arasında girilmelidir.");
+                        return sonuc;
+                    }
+                    mevcut.ortaklik.halkaAciklikOrani = ortaklik.halkaAciklikOrani;
                 }
 
                 BasvuruOrtak ortak = ortaklik.ortaklar[0];
@@ -3812,9 +3940,10 @@ namespace TarimDonusum.IsKurallari
                 if (!sonuc.basarili || mevcut == null)
                     return sonuc;
 
-                if (adres.id <= 0 && mevcut.basvuruFirma.donem.uygulamaAdresiSinirliMi && mevcut.YatirimAdresleri.Count >= 1)
+                int uygulamaAdresiSiniri = mevcut.basvuruFirma.donem.uygulamaAdresiSinirliMi;
+                if (adres.id <= 0 && uygulamaAdresiSiniri > 0 && mevcut.YatirimAdresleri.Count >= uygulamaAdresiSiniri)
                 {
-                    sonuc.HataEkle("Bu dönemde yalnızca bir uygulama adresi eklenebilir.");
+                    sonuc.HataEkle($"Bu dönemde en fazla {uygulamaAdresiSiniri} uygulama adresi eklenebilir.");
                     return sonuc;
                 }
 
@@ -4784,7 +4913,8 @@ namespace TarimDonusum.IsKurallari
                 || MakineUzmanDokumanFormAdMi(formAd)
                 || TedarikDayanakFormAdMi(formAd)
                 || CevreselSosyalBelgeFormAdMi(formAd)
-                || string.Equals(formAd, BasvuruIstihdamSgkFormAd, StringComparison.OrdinalIgnoreCase);
+                || string.Equals(formAd, BasvuruIstihdamSgkFormAd, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(formAd, BasvuruItirazYazisiFormAd, StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool OrtakZorunluBelgeFormAdMi(string? formAd)

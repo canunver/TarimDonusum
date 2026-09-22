@@ -975,7 +975,7 @@
     <value>7. Investment Summary Table</value>
   </data>
   <data name="Basvuru.Step.CevreselSosyal" xml:space="preserve">
-    <value>Environmental-Social - Annex V</value>
+    <value>Environmental and Social D.F.</value>
   </data>
   <data name="Basvuru.Section.CevreselSosyal.Title" xml:space="preserve">
     <value>10. Environmental-Social</value>
@@ -1470,7 +1470,7 @@
     <value>Upload</value>
   </data>
   <data name="Basvuru.CevreselSosyal.Title" xml:space="preserve">
-    <value>10. Environmental and Social Data Form</value>
+    <value>Environmental and Social Data Form</value>
   </data>
   <data name="Basvuru.CevreselSosyal.Description" xml:space="preserve">
     <value>Prepared according to the new Annex V question set. The form opens only the relevant fields based on the nature of the investment; grey/out-of-scope cells in the document are not shown to the user.</value>
@@ -2607,10 +2607,10 @@
     <value>All declarations in the commitment and declaration section must be accepted.</value>
   </data>
   <data name="Basvuru.Step.SystemResults" xml:space="preserve">
-    <value>System Results</value>
+    <value>Completeness Check</value>
   </data>
   <data name="Basvuru.Step.ExpertResults" xml:space="preserve">
-    <value>Expert Results</value>
+    <value>Eligibility Responses</value>
   </data>
   <data name="Basvuru.Step.Decision" xml:space="preserve">
     <value>Decision</value>
@@ -2784,5 +2784,6 @@
   <data name="Basvuru.Documents.Required.10" xml:space="preserve"><value>Balance sheet for the previous year</value></data>
   <data name="Basvuru.Documents.Required.11" xml:space="preserve"><value>Detailed trial balance for the previous year</value></data>
   <data name="MenuBasvuru.naceKodlari" xml:space="preserve"><value>NACE Codes</value></data>
+  <data name="MenuBasvuru.uygunlukSorulari" xml:space="preserve"><value>Eligibility Questions</value></data>
   <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Environmental-Social Questionnaire</value></data>
 </root>

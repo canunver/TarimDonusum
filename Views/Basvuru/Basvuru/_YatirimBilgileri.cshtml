@@ -14,23 +14,28 @@
     </div>
     <div class="preapp-form"><div class="preapp-line"><label for="basvuruYatirimAdi">Yatırımın adı</label><input id="basvuruYatirimAdi" name="Basvuru.YatirimAdi" value="@b.yatirim.yatirimAdi" disabled="@ro" /></div></div>
     <label class="wide-label">Yatırımın amacı<textarea name="Basvuru.yatirim.YatiriminAmaci" disabled="@ro">@b.yatirim.yatiriminAmaci</textarea></label>
-    <div class="preapp-form">
-        <div class="preapp-line">
-            <label>Planlanan başlangıç tarihi<input type="date" name="Basvuru.yatirim.PlanlananBaslangicTarihi" value="@(b.yatirim.planlananBaslangicTarihi?.ToString("yyyy-MM-dd"))" disabled="@ro" /></label>
-            <label>Planlanan tamamlanma tarihi<input type="date" name="Basvuru.yatirim.PlanlananTamamlanmaTarihi" value="@(b.yatirim.planlananTamamlanmaTarihi?.ToString("yyyy-MM-dd"))" disabled="@ro" /></label>
-        </div>
-    </div>
-    <h3 class="subhead mt-4">Adreslerden Birleştirilen Yatırım Bilgileri</h3>
-    <label class="wide-label">Yatırım türü<textarea id="adresOzetYatirimTurleri" readonly>@YatirimTurleriMetni()</textarea></label>
-    <label class="wide-label">Talep edilen harcama türleri<textarea id="adresOzetHarcamaTurleri" readonly>@HarcamaTurleriMetni()</textarea></label>
-    <label class="wide-label">Yatırım faaliyetleri<textarea id="adresOzetFaaliyetler" name="Basvuru.yatirim.YatirimFaaliyetleri" readonly>@b.yatirim.yatirimFaaliyetleri</textarea></label>
-    <label class="wide-label">Yatırım girdileri<textarea id="adresOzetGirdiler" name="Basvuru.yatirim.YatirimGirdileri" readonly>@b.yatirim.yatirimGirdileri</textarea></label>
-    <label class="wide-label">Yatırım çıktıları<textarea id="adresOzetCiktilar" name="Basvuru.yatirim.YatirimCiktilari" readonly>@b.yatirim.yatirimCiktilari</textarea></label>
-    <p class="section-description">Bu alanlar aşağıdaki adres kayıtlarından otomatik olarak birleştirilir.</p>
-
     <div class="section-toolbar mt-4"><h3 class="mb-0">Yatırım Uygulama Yerleri</h3>@if (!ro) { <button type="button" class="btn btn-outline-primary" id="adresYeniBtn"><i class="fas fa-plus mr-1"></i>Yatırım Yeri Ekle</button> }</div>
     <div class="table-responsive"><table class="table uygulama-adres-table"><thead><tr><th>No</th><th>İl</th><th>İlçe</th><th>SEGE</th><th>Açık adres</th><th>Koordinat</th><th>Ada/parsel</th><th>Belge ref.</th><th>İşlem</th></tr></thead><tbody id="uygulamaAdresListesi"></tbody></table></div>
 
-    <h3 class="mt-4">Yatırım Yeri Kullanım Hakkı ve İzinler</h3>
-    <div class="table-responsive"><table class="table uygulama-adres-table"><thead><tr><th>Adres no</th><th>Kullanım hakkı türü</th><th>Başlangıç tarihi</th><th>Bitiş tarihi</th><th>Dönemleri kapsıyor mu?</th><th>Tapu/kira/tahsis ref.</th><th>İzin/ruhsat durumu</th><th>Takvim / açıklama</th><th>Kanıt ref.</th></tr></thead><tbody id="yatirimYeriKullanimHaklariListesi"></tbody></table></div>
+    <details class="company-details">
+        <summary>Adreslerden Birleştirilen Yatırım Bilgileri</summary>
+        <label class="wide-label">Yatırım türü<textarea id="adresOzetYatirimTurleri" readonly>@YatirimTurleriMetni()</textarea></label>
+        <label class="wide-label">Talep edilen harcama türleri<textarea id="adresOzetHarcamaTurleri" readonly>@HarcamaTurleriMetni()</textarea></label>
+        <label class="wide-label">Yatırım faaliyetleri<textarea id="adresOzetFaaliyetler" name="Basvuru.yatirim.YatirimFaaliyetleri" readonly>@b.yatirim.yatirimFaaliyetleri</textarea></label>
+        <label class="wide-label">Yatırım girdileri<textarea id="adresOzetGirdiler" name="Basvuru.yatirim.YatirimGirdileri" readonly>@b.yatirim.yatirimGirdileri</textarea></label>
+        <label class="wide-label">Yatırım çıktıları<textarea id="adresOzetCiktilar" name="Basvuru.yatirim.YatirimCiktilari" readonly>@b.yatirim.yatirimCiktilari</textarea></label>
+        <p class="section-description">Bu alanlar yukarıdaki adres kayıtlarından otomatik olarak birleştirilir.</p>
+    </details>
+
+    <details class="company-details">
+        <summary>Diğer yatırım bilgileri</summary>
+        <div class="preapp-form">
+            <div class="preapp-line">
+                <label>Planlanan başlangıç tarihi<input type="date" name="Basvuru.yatirim.PlanlananBaslangicTarihi" value="@(b.yatirim.planlananBaslangicTarihi?.ToString("yyyy-MM-dd"))" disabled="@ro" /></label>
+                <label>Planlanan tamamlanma tarihi<input type="date" name="Basvuru.yatirim.PlanlananTamamlanmaTarihi" value="@(b.yatirim.planlananTamamlanmaTarihi?.ToString("yyyy-MM-dd"))" disabled="@ro" /></label>
+            </div>
+        </div>
+        <h3 class="mt-4">Yatırım Yeri Kullanım Hakkı ve İzinler</h3>
+        <div class="table-responsive"><table class="table uygulama-adres-table"><thead><tr><th>Adres no</th><th>Kullanım hakkı türü</th><th>Başlangıç tarihi</th><th>Bitiş tarihi</th><th>Dönemleri kapsıyor mu?</th><th>Tapu/kira/tahsis ref.</th><th>İzin/ruhsat durumu</th><th>Takvim / açıklama</th><th>Kanıt ref.</th></tr></thead><tbody id="yatirimYeriKullanimHaklariListesi"></tbody></table></div>
+    </details>
 </section>

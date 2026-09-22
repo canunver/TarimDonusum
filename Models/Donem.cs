@@ -5,7 +5,7 @@ namespace TarimDonusum.Models
         public int id { get; set; } = 0;
         public int yil { get; set; } = 0;
         public string ad { get; set; } = "";
-        public bool basvuruyaAcikMi { get; set; }
+        public bool basvuruyaAcikMi => OnBasvuruyaAcikMi() || BasvuruyaAcikMi();
         public DateTime? basvuruBaslangicTarihi { get; set; }
         public DateTime? basvuruBitisTarihi { get; set; }
         public DateTime? onBasvuruBaslangicTarihi { get; set; }
@@ -18,7 +18,7 @@ namespace TarimDonusum.Models
         public decimal? destekOrani { get; set; }
         public decimal? istisnaDestekOrani { get; set; }
         public List<int> istisnaIlceIds { get; set; } = new();
-        public bool uygulamaAdresiSinirliMi { get; set; }
+        public int uygulamaAdresiSinirliMi { get; set; }
         public string aciklama { get; set; } = "";
 
         public decimal AzamiDestekOrani(IEnumerable<int?> yatirimIlceIds)
@@ -27,20 +27,30 @@ namespace TarimDonusum.Models
             return istisna ? istisnaDestekOrani!.Value : destekOrani.GetValueOrDefault();
         }
 
-        public bool SecilebilirMi()
+        public bool OnBasvuruyaAcikMi()
         {
+            return TarihAraligindaMi(onBasvuruBaslangicTarihi, onBasvuruBitisTarihi);
+        }
+
+        public bool BasvuruyaAcikMi()
+        {
+            return TarihAraligindaMi(basvuruBaslangicTarihi, basvuruBitisTarihi);
+        }
+
+        public bool SecilebilirMi(enumBasvuruKayitTuru kayitTuru)
+        {
+            return kayitTuru == enumBasvuruKayitTuru.OnBasvuru
+                ? OnBasvuruyaAcikMi()
+                : BasvuruyaAcikMi();
+        }
+
+        private static bool TarihAraligindaMi(DateTime? baslangic, DateTime? bitis)
+        {
+            if (!baslangic.HasValue || !bitis.HasValue)
+                return false;
+
             DateTime bugun = DateTime.Today;
-
-            if (!basvuruyaAcikMi)
-                return false;
-
-            if (basvuruBaslangicTarihi.HasValue && basvuruBaslangicTarihi.Value.Date > bugun)
-                return false;
-
-            if (basvuruBitisTarihi.HasValue && basvuruBitisTarihi.Value.Date < bugun)
-                return false;
-
-            return true;
+            return baslangic.Value.Date <= bugun && bugun <= bitis.Value.Date;
         }
     }
 }

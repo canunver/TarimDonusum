@@ -54,6 +54,10 @@
                             <span class="text-muted">@kayit.IslemTarihi.ToString("dd.MM.yyyy HH:mm")</span>
                         </div>
                         <div class="small text-muted mb-2">@kayit.KullaniciAdi</div>
+                        @if (!string.IsNullOrWhiteSpace(kayit.YaziNo))
+                        {
+                            <div class="mb-2"><strong>Yazı No:</strong> @kayit.YaziNo <span class="ml-3"><strong>Yazı Tarihi:</strong> @kayit.YaziTarihi?.ToString("dd.MM.yyyy")</span>@if(kayit.YaziDosyaId.HasValue){<a class="btn btn-sm btn-outline-primary ml-3" href="@Url.Action("DosyaIndir","Basvuru",new{id=kayit.YaziDosyaId})" target="_blank"><i class="fas fa-download mr-1"></i>@(string.IsNullOrWhiteSpace(kayit.YaziDosyaAdi)?"Taranmış yazıyı indir":kayit.YaziDosyaAdi)</a>}</div>
+                        }
                         <div style="white-space:pre-wrap">@kayit.Metin</div>
                     </div>
                 }
@@ -77,6 +81,8 @@
         <div class="card">
             <div class="card-header font-weight-bold">Uzman Kararı</div>
             <div class="card-body">
+                <div class="form-row mb-3"><div class="col-md-6"><label for="onBasvuruItirazYaziNo">Yazı No <span class="text-danger">*</span></label><input id="onBasvuruItirazYaziNo" class="form-control" maxlength="100" /></div><div class="col-md-6"><label for="onBasvuruItirazYaziTarihi">Yazı Tarihi <span class="text-danger">*</span></label><input id="onBasvuruItirazYaziTarihi" class="form-control" type="date" /></div></div>
+                <div class="form-group"><label for="onBasvuruItirazTaranmisYazi">Taranmış Yazı <span class="text-muted">(isteğe bağlı)</span></label><input id="onBasvuruItirazTaranmisYazi" class="form-control-file" type="file" /></div>
                 <label for="onBasvuruItirazKararGerekcesi">Karar gerekçesi</label>
                 <textarea id="onBasvuruItirazKararGerekcesi" class="form-control" rows="6" maxlength="4000"></textarea>
                 <div class="mt-3">

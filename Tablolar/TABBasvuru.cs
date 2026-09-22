@@ -41,6 +41,7 @@ namespace TarimDonusum.Tablolar
                     B.OnBasvuruSonrasiDegisiklikVarMi,
                     B.OnBasvuruSonrasiDegisiklikSebebi,
                     B.OzelSektorPayi,
+                    B.HalkaAciklikOrani,
                     B.BagliOrtakIsletmeVarMi,
                     B.BagliOrtakAciklama,
                     B.BagliOrtakUnvani,
@@ -117,6 +118,8 @@ namespace TarimDonusum.Tablolar
                     B.SistemDenetimAnketi,
                     B.DenetimGerekcesi,
                     B.DenetimSonucu,
+                    B.BankaKrediLimiti,
+                    B.BankaMaksimumAylikOdeme,
 
                     D.Yil,
                     D.Ad,
@@ -521,6 +524,7 @@ namespace TarimDonusum.Tablolar
                 UPDATE dbo.Basvuru
                 SET
                     OzelSektorPayi = @OzelSektorPayi,
+                    HalkaAciklikOrani = @HalkaAciklikOrani,
                     BagliOrtakIsletmeVarMi = @BagliOrtakIsletmeVarMi,
                     BagliOrtakAciklama = @BagliOrtakAciklama,
                     BagliOrtakUnvani = @BagliOrtakUnvani,
@@ -534,6 +538,7 @@ namespace TarimDonusum.Tablolar
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@Id", basvuru.Id);
             command.Parameters.AddWithValue("@OzelSektorPayi", DbNull(basvuru.ortaklik.ozelSektorPayi));
+            command.Parameters.AddWithValue("@HalkaAciklikOrani", DbNull(basvuru.ortaklik.halkaAciklikOrani));
             command.Parameters.AddWithValue("@BagliOrtakIsletmeVarMi", basvuru.ortaklik.bagliOrtakIsletmeVarMi.HasValue ? (basvuru.ortaklik.bagliOrtakIsletmeVarMi.Value ? 1 : 0) : DBNull.Value);
             command.Parameters.AddWithValue("@BagliOrtakAciklama", DbNull(basvuru.ortaklik.bagliOrtakUnvani));
             command.Parameters.AddWithValue("@BagliOrtakUnvani", DbNull(basvuru.ortaklik.bagliOrtakUnvani));
@@ -692,7 +697,9 @@ namespace TarimDonusum.Tablolar
             const string sql = @"
                 UPDATE B
                 SET B.DenetimGerekcesi = @DenetimGerekcesi,
-                    B.DenetimSonucu = @DenetimSonucu
+                    B.DenetimSonucu = @DenetimSonucu,
+                    B.BankaKrediLimiti = @BankaKrediLimiti,
+                    B.BankaMaksimumAylikOdeme = @BankaMaksimumAylikOdeme
                 FROM dbo.Basvuru B
                 INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
                 WHERE B.Id = @BasvuruId
@@ -715,6 +722,8 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@BasvuruId", basvuru.Id);
             command.Parameters.AddWithValue("@DenetimGerekcesi", DbNull(basvuru.DenetimGerekcesi));
             command.Parameters.AddWithValue("@DenetimSonucu", (int)basvuru.DenetimSonucu!.Value);
+            command.Parameters.AddWithValue("@BankaKrediLimiti", basvuru.BankaKrediLimiti);
+            command.Parameters.AddWithValue("@BankaMaksimumAylikOdeme", basvuru.BankaMaksimumAylikOdeme);
             command.Parameters.AddWithValue("@MevcutDurum", (int)enumBasvuruDurum.OnBasvuruIncelemeDurumu);
             command.Parameters.AddWithValue("@YeniDurum", (int)yeniDurum);
             return Convert.ToInt32(await command.ExecuteScalarAsync()) == 1;
@@ -725,7 +734,9 @@ namespace TarimDonusum.Tablolar
             const string sql = @"
                 UPDATE B
                 SET B.DenetimGerekcesi = @DenetimGerekcesi,
-                    B.DenetimSonucu = @DenetimSonucu
+                    B.DenetimSonucu = @DenetimSonucu,
+                    B.BankaKrediLimiti = @BankaKrediLimiti,
+                    B.BankaMaksimumAylikOdeme = @BankaMaksimumAylikOdeme
                 FROM dbo.Basvuru B
                 INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
                 WHERE B.Id = @BasvuruId
@@ -739,6 +750,8 @@ namespace TarimDonusum.Tablolar
                     ? (int)basvuru.DenetimSonucu.Value
                     : DBNull.Value);
             command.Parameters.AddWithValue("@MevcutDurum", (int)enumBasvuruDurum.OnBasvuruIncelemeDurumu);
+            command.Parameters.AddWithValue("@BankaKrediLimiti", basvuru.BankaKrediLimiti);
+            command.Parameters.AddWithValue("@BankaMaksimumAylikOdeme", basvuru.BankaMaksimumAylikOdeme);
             return await command.ExecuteNonQueryAsync() == 1;
         }
 
@@ -901,7 +914,7 @@ namespace TarimDonusum.Tablolar
         public async Task<Basvuru?> OnBasvuruDenetimBilgisiOkuAsync(int basvuruId)
         {
             const string sql = @"
-                SELECT B.DenetimAnketi, B.SistemDenetimAnketi, B.DenetimGerekcesi, B.DenetimSonucu
+                SELECT B.DenetimAnketi, B.SistemDenetimAnketi, B.DenetimGerekcesi, B.DenetimSonucu,B.BankaKrediLimiti,B.BankaMaksimumAylikOdeme
                 FROM dbo.Basvuru B
                 INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
                 WHERE B.Id = @BasvuruId
@@ -922,7 +935,9 @@ namespace TarimDonusum.Tablolar
                 DenetimAnketi = NullOkuString(reader, 0) ?? "",
                 SistemDenetimAnketi = NullOkuString(reader, 1) ?? "",
                 DenetimGerekcesi = NullOkuString(reader, 2) ?? "",
-                DenetimSonucu = sonuc.HasValue ? (enumOnBasvuruDenetimSonucu)sonuc.Value : null
+                DenetimSonucu = sonuc.HasValue ? (enumOnBasvuruDenetimSonucu)sonuc.Value : null,
+                BankaKrediLimiti = NullOkuDecimal(reader,4).GetValueOrDefault(),
+                BankaMaksimumAylikOdeme = NullOkuDecimal(reader,5).GetValueOrDefault()
             };
         }
 
@@ -1093,6 +1108,7 @@ namespace TarimDonusum.Tablolar
             basvuru.basvuruFirma.onBasvuruSonrasiDegisiklikVarMi = NullOkuBool(reader, kol++);
             basvuru.basvuruFirma.onBasvuruSonrasiDegisiklikSebebi = NullOkuString(reader, kol++);
             basvuru.basvuruFirma.ozelSektorPayi = NullOkuDecimal(reader, kol++);
+            basvuru.basvuruFirma.halkaAciklikOrani = NullOkuDecimal(reader, kol++);
             basvuru.basvuruFirma.bagliOrtakIsletmeVarMi = NullOkuBool(reader, kol++);
             basvuru.basvuruFirma.bagliOrtakAciklama = NullOkuString(reader, kol++);
             string? bagliOrtakUnvani = NullOkuString(reader, kol++);
@@ -1180,8 +1196,11 @@ namespace TarimDonusum.Tablolar
             basvuru.DenetimSonucu = denetimSonucu.HasValue
                 ? (enumOnBasvuruDenetimSonucu)denetimSonucu.Value
                 : null;
+            basvuru.BankaKrediLimiti = NullOkuDecimal(reader, kol++).GetValueOrDefault();
+            basvuru.BankaMaksimumAylikOdeme = NullOkuDecimal(reader, kol++).GetValueOrDefault();
             basvuru.ortaklik.basvuruId = basvuru.Id;
             basvuru.ortaklik.ozelSektorPayi = basvuru.basvuruFirma.ozelSektorPayi;
+            basvuru.ortaklik.halkaAciklikOrani = basvuru.basvuruFirma.halkaAciklikOrani;
             basvuru.ortaklik.bagliOrtakIsletmeVarMi = basvuru.basvuruFirma.bagliOrtakIsletmeVarMi;
             basvuru.ortaklik.bagliOrtakUnvani = bagliOrtakUnvani ?? basvuru.basvuruFirma.bagliOrtakAciklama;
             basvuru.ortaklik.bagliOrtakKimlikNo = bagliOrtakKimlikNo;
@@ -1192,7 +1211,7 @@ namespace TarimDonusum.Tablolar
 
             basvuru.basvuruFirma.donem.yil = NullDuzeltInt(reader, kol++);
             basvuru.basvuruFirma.donem.ad = reader.GetString(kol++);
-            basvuru.basvuruFirma.donem.basvuruyaAcikMi = BoolYap(NullOkuInt(reader, kol++));
+            kol++; // Eski manuel durum alanı; açıklık artık tarih aralığından hesaplanıyor.
             basvuru.basvuruFirma.donem.basvuruBaslangicTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             basvuru.basvuruFirma.donem.basvuruBitisTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
             basvuru.basvuruFirma.donem.onBasvuruBaslangicTarihi = reader.IsDBNull(kol) ? null : reader.GetDateTime(kol); kol++;
@@ -1205,7 +1224,7 @@ namespace TarimDonusum.Tablolar
             basvuru.basvuruFirma.donem.destekOrani = NullOkuDecimal(reader, kol++);
             basvuru.basvuruFirma.donem.istisnaDestekOrani = NullOkuDecimal(reader, kol++);
             basvuru.basvuruFirma.donem.istisnaIlceIds = reader.IsDBNull(kol) ? new List<int>() : JsonSerializer.Deserialize<List<int>>(reader.GetString(kol)) ?? new List<int>(); kol++;
-            basvuru.basvuruFirma.donem.uygulamaAdresiSinirliMi = BoolYap(NullDuzeltInt(reader, kol++));
+            basvuru.basvuruFirma.donem.uygulamaAdresiSinirliMi = NullDuzeltInt(reader, kol++);
             basvuru.basvuruFirma.donem.aciklama = reader.GetString(kol++);
             basvuru.basvuruFirma.il.kod = NullDuzeltInt(reader, kol++);
             basvuru.basvuruFirma.il.ad = reader.GetString(kol++);
@@ -1735,12 +1754,13 @@ namespace TarimDonusum.Tablolar
 
         public async Task OnBasvuruFinansGuncelleAsync(BasvuruFinans finans)
         {
-            const string sql = @"UPDATE dbo.Basvuru SET TalepEdilenFinansmanOrani=@Oran, TalepEdilenVadeSuresiAy=@Vade, YatirimSuresiAy=@YatirimSuresi WHERE Id=@Id;";
+            const string sql = @"UPDATE dbo.Basvuru SET TalepEdilenFinansmanOrani=@Oran, TalepEdilenVadeSuresiAy=@Vade, YatirimSuresiAy=@YatirimSuresi, OdemeSuresiAy=@GeriOdemesizDonem WHERE Id=@Id;";
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@Id", finans.basvuruId);
             command.Parameters.AddWithValue("@Oran", DbNull(finans.talepEdilenFinansmanOrani));
             command.Parameters.AddWithValue("@Vade", DbNull(finans.talepEdilenVadeSuresiAy));
             command.Parameters.AddWithValue("@YatirimSuresi", DbNull(finans.yatirimSuresiAy));
+            command.Parameters.AddWithValue("@GeriOdemesizDonem", DbNull(finans.odemeSuresiAy));
             await command.ExecuteNonQueryAsync();
         }
 

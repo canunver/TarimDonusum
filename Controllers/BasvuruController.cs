@@ -229,7 +229,7 @@ namespace TarimDonusum.Controllers
                 metrajRaporu.Veri = metrajSonucu.nesne;
             }
 
-            if (denetciRaporu) _basvuruIsKurallari.DenetimListeleriniIlkDegerle(sonuc.nesne);
+            if (denetciRaporu) await _basvuruIsKurallari.DenetimListeleriniIlkDegerleAsync(sonuc.nesne);
             if (tumDegerZinciriAsamalariniYukle && sonuc.nesne.yatirim.degerZinciriId.GetValueOrDefault() > 0)
             {
                 int degerZinciriId = sonuc.nesne.yatirim.degerZinciriId!.Value;
@@ -305,7 +305,7 @@ namespace TarimDonusum.Controllers
 
                 BasvuruFormViewModel model = await FormViewModelHazirlaAsync(basvuru, kullanici);
                 if (model.DenetciGorunumu)
-                    _basvuruIsKurallari.DenetimListeleriniIlkDegerle(model.Basvuru);
+                    await _basvuruIsKurallari.DenetimListeleriniIlkDegerleAsync(model.Basvuru);
                 BasvuruBolumTanim? bolumTanim = BasvuruBolumleri.Bul(bolum, model.DenetciGorunumu, model.Basvuru.kayitTuru);
                 if (bolumTanim == null)
                     return BadRequest();

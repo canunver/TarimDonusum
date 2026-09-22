@@ -399,6 +399,17 @@ namespace TarimDonusum.Models
         public string SistemDenetimAnketi { get; set; } = "";
         public string DenetimGerekcesi { get; set; } = "";
         public enumOnBasvuruDenetimSonucu? DenetimSonucu { get; set; }
+        public decimal BankaKrediLimiti { get; set; }
+        public decimal BankaMaksimumAylikOdeme { get; set; }
+        public int TahminiVadeSuresiAy
+        {
+            get
+            {
+                if (BankaKrediLimiti <= 0 || BankaMaksimumAylikOdeme <= 0) return 0;
+                decimal ay = Math.Ceiling(BankaKrediLimiti / BankaMaksimumAylikOdeme);
+                return ay >= int.MaxValue ? int.MaxValue : (int)ay;
+            }
+        }
     }
 
     public class DenetimListesiKayit
@@ -406,6 +417,44 @@ namespace TarimDonusum.Models
         public int basvuruId { get; set; }
         public string listeTuru { get; set; } = "";
         public string json { get; set; } = "";
+    }
+
+    public class UzmanSonucSozlukMaddesi
+    {
+        public int soruId { get; set; }
+        public int no { get; set; }
+        public string konu { get; set; } = "";
+        public string soru { get; set; } = "";
+        public string kaynak { get; set; } = "";
+        public string birimTuru { get; set; } = "";
+        public string evetSonucu { get; set; } = "Kabul";
+        public string hayirSonucu { get; set; } = "Ret";
+        public List<UygunlukBelgeBaglantisi> belgeler { get; set; } = [];
+        public string cevap { get; set; } = "";
+        public string sonuc { get; set; } = "";
+        public string duzeltilecekBilgi { get; set; } = "";
+    }
+
+    public class UygunlukBelgeBaglantisi
+    {
+        public int dosyaNo { get; set; }
+        public string dosyaTuru { get; set; } = "";
+        public int? dosyaId { get; set; }
+        public string dosyaAdi { get; set; } = "";
+    }
+
+    public class UygunlukSorusu
+    {
+        public int id { get; set; }
+        public int siraNo { get; set; }
+        public string konu { get; set; } = "";
+        public string soru { get; set; } = "";
+        public string kaynak { get; set; } = "";
+        public string birimTuru { get; set; } = "";
+        public string evetSonucu { get; set; } = "Kabul";
+        public string hayirSonucu { get; set; } = "Ret";
+        public List<int> zorunluBelgeNolari { get; set; } = [];
+        public bool aktif { get; set; } = true;
     }
 
     public class OnBasvuruBildirimBilgisi
@@ -426,6 +475,10 @@ namespace TarimDonusum.Models
         public DateTime IslemTarihi { get; set; }
         public int KullaniciId { get; set; }
         public string KullaniciAdi { get; set; } = "";
+        public string YaziNo { get; set; } = "";
+        public DateTime? YaziTarihi { get; set; }
+        public int? YaziDosyaId { get; set; }
+        public string YaziDosyaAdi { get; set; } = "";
     }
 
     public class OnBasvuruItirazViewModel
@@ -440,6 +493,8 @@ namespace TarimDonusum.Models
         public int BasvuruId { get; set; }
         public string Metin { get; set; } = "";
         public bool RevizyonaGonder { get; set; }
+        public string YaziNo { get; set; } = "";
+        public DateTime? YaziTarihi { get; set; }
     }
 
     public class BasvuruFirma
@@ -467,6 +522,7 @@ namespace TarimDonusum.Models
         [StringLength(2000)]
         public string? onBasvuruSonrasiDegisiklikSebebi { get; set; } = "";
         public decimal? ozelSektorPayi { get; set; }
+        public decimal? halkaAciklikOrani { get; set; }
         public bool? bagliOrtakIsletmeVarMi { get; set; }
         public string? bagliOrtakAciklama { get; set; } = "";
         public Sonuc Dogrula(Sonuc sonuc)
@@ -609,6 +665,7 @@ namespace TarimDonusum.Models
         public int basvuruId { get; set; }
         public bool? bagliOrtakIsletmeVarMi { get; set; }
         public decimal? ozelSektorPayi { get; set; }
+        public decimal? halkaAciklikOrani { get; set; }
         public List<BasvuruOrtak> ortaklar { get; set; } = new();
         public int? degisenOrtakSiraNo { get; set; }
         public string? bagliOrtakUnvani { get; set; } = "";
@@ -1096,6 +1153,10 @@ namespace TarimDonusum.Models
 
             if (yatirimSuresiAy == null || yatirimSuresiAy <= 0)
                 sonuc.HataEkle("Yatırım süresi ay olarak girilmelidir.");
+            if (odemeSuresiAy.GetValueOrDefault() < 0)
+                sonuc.HataEkle("Geri ödemesiz dönem negatif olamaz.");
+            if (yatirimSuresiAy.GetValueOrDefault() + odemeSuresiAy.GetValueOrDefault() > 24)
+                sonuc.HataEkle("Yatırım süresi ile geri ödemesiz dönem toplamı 24 ayı geçemez.");
             if (!string.IsNullOrWhiteSpace(finansmanParaBirimi) && !ParaBirimleri.GecerliMi(finansmanParaBirimi))
                 sonuc.HataEkle("Geçerli bir finansman para birimi seçiniz.");
         }

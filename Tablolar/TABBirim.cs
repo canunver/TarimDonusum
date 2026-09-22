@@ -15,7 +15,7 @@ namespace TarimDonusum.Tablolar
         public async Task<List<Birim>> ListeleAsync(bool sadeceAktif = false)
         {
             const string sql = @"
-                SELECT B.Id, B.BirimAdi, B.BirimTuru, B.SiraNo, B.Aktif
+                SELECT B.Id, B.BirimAdi, B.BirimTuru, B.SiraNo, B.Aktif, B.UzmanBirimTuru
                 FROM dbo.Birim B
                 WHERE @SadeceAktif = 0 OR B.Aktif = 1
                 ORDER BY B.SiraNo, B.BirimAdi;
@@ -50,7 +50,7 @@ namespace TarimDonusum.Tablolar
         public async Task<Birim?> OkuAsync(int id)
         {
             const string sql = @"
-                SELECT B.Id, B.BirimAdi, B.BirimTuru, B.SiraNo, B.Aktif
+                SELECT B.Id, B.BirimAdi, B.BirimTuru, B.SiraNo, B.Aktif, B.UzmanBirimTuru
                 FROM dbo.Birim B
                 WHERE B.Id = @Id;
                 SELECT I.Id, I.Kod, I.Ad, I.Aktif
@@ -90,9 +90,9 @@ namespace TarimDonusum.Tablolar
         public async Task<int> EkleAsync(Birim birim)
         {
             const string sql = @"
-                INSERT INTO dbo.Birim (BirimAdi, BirimTuru, SiraNo, Aktif)
+                INSERT INTO dbo.Birim (BirimAdi, BirimTuru, SiraNo, Aktif, UzmanBirimTuru)
                 OUTPUT INSERTED.Id
-                VALUES (@BirimAdi, @BirimTuru, @SiraNo, @Aktif);";
+                VALUES (@BirimAdi, @BirimTuru, @SiraNo, @Aktif, @UzmanBirimTuru);";
 
             await using SqlCommand command = KomutOlustur(sql);
             ParametreleriEkle(command, birim);
@@ -110,7 +110,8 @@ namespace TarimDonusum.Tablolar
                 SET BirimAdi = @BirimAdi,
                     BirimTuru = @BirimTuru,
                     SiraNo = @SiraNo,
-                    Aktif = @Aktif
+                    Aktif = @Aktif,
+                    UzmanBirimTuru = @UzmanBirimTuru
                 WHERE Id = @Id;";
 
             await using SqlCommand command = KomutOlustur(sql);
@@ -138,6 +139,7 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@BirimTuru", (int)birim.birimTuru);
             command.Parameters.AddWithValue("@SiraNo", birim.siraNo);
             command.Parameters.AddWithValue("@Aktif", birim.aktif ? 1 : 0);
+            command.Parameters.AddWithValue("@UzmanBirimTuru", string.IsNullOrWhiteSpace(birim.uzmanBirimTuru) ? DBNull.Value : birim.uzmanBirimTuru.Trim().ToUpperInvariant());
         }
 
         private static Birim Oku(SqlDataReader reader)
@@ -148,7 +150,8 @@ namespace TarimDonusum.Tablolar
                 birimAdi = reader.GetString(1),
                 birimTuru = (enumBirimTuru)reader.GetInt32(2),
                 siraNo = OrtakFonksiyonlar.Int32Yap(reader.GetValue(3)),
-                aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(4)) == 1
+                aktif = OrtakFonksiyonlar.Int32Yap(reader.GetValue(4)) == 1,
+                uzmanBirimTuru = reader.IsDBNull(5) ? "" : reader.GetString(5)
             };
         }
 

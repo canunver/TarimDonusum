@@ -30,7 +30,7 @@
         <label>Talep edilen finansman oranı (%)<input name="Basvuru.finans.TalepEdilenFinansmanOrani" type="number" min="0.01" max="@azamiOran.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" step="0.01" value="@f.talepEdilenFinansmanOrani?.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture)" oninput="FinansTutarlariniHesapla()" disabled="@ro" /></label>
         <label>Başvuru sahibi katkısı (EUR)<input class="money-integer" name="Basvuru.finans.BasvuruSahibiKatkisi" type="text" value="@IsimBul.MetneCevirKurussuz(katkı)" readonly /></label>
         <label>Talep edilen vade (ay)<input name="Basvuru.finans.TalepEdilenVadeSuresiAy" type="number" min="1" step="1" value="@f.talepEdilenVadeSuresiAy" disabled="@ro" /></label>
-        <label>Talep edilen ödemesiz dönem (ay)<input name="Basvuru.finans.OdemeSuresiAy" type="number" min="0" step="1" value="@f.odemeSuresiAy" disabled="@ro" /></label>
+        <label>Geri ödemesiz dönem (ay)<input name="Basvuru.finans.OdemeSuresiAy" type="number" min="0" step="1" value="@(f.odemeSuresiAy ?? 0)" disabled="@ro" /></label>
         <label>Yatırım süresi (ay)<input name="Basvuru.finans.YatirimSuresiAy" type="number" min="1" step="1" value="@f.yatirimSuresiAy" disabled="@ro" /></label>
         <label>Finansman para birimi<select name="Basvuru.finans.FinansmanParaBirimi" disabled="@ro"><option value="">Seçiniz</option>@foreach (var x in ParaBirimleri.Tum) { <option value="@x" selected="@(f.finansmanParaBirimi == x)">@x</option> }</select></label>
         <label>Diğer finansman kaynakları<input name="Basvuru.finans.DigerFinansmanKaynaklari" maxlength="1000" value="@f.digerFinansmanKaynaklari" disabled="@ro" /></label>

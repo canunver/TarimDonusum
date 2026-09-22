@@ -821,6 +821,56 @@ body {
   font-size: 16px;
 }
 
+.denetim-inline-fields {
+  display: grid;
+  grid-template-columns: max-content minmax(260px, 440px);
+  gap: 12px 18px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.denetim-inline-field {
+  display: contents;
+}
+
+.denetim-inline-field label {
+  margin: 0;
+  white-space: nowrap;
+  color: #1f2a44;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.denetim-inline-field input,
+.denetim-inline-field select {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  font-size: 16px;
+}
+
+@media (max-width: 900px) {
+  .denetim-inline-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .denetim-inline-field {
+    display: block;
+  }
+
+  .denetim-inline-field label {
+    display: block;
+    margin-bottom: 6px;
+    white-space: normal;
+  }
+
+  .denetim-inline-field input,
+  .denetim-inline-field select {
+    margin-bottom: 10px;
+  }
+}
+
 .denetim-reason-field {
   margin-top: 22px;
 }

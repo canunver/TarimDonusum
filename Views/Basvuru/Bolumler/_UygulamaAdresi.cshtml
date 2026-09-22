@@ -19,13 +19,6 @@
                     </div>
                 </div>
                 <label class="wide-label">@L["Basvuru.Field.YatiriminAmaci"] <span class="required-mark">*</span><textarea name="Basvuru.yatirim.YatiriminAmaci" disabled="@ro">@b.yatirim.yatiriminAmaci</textarea></label>
-                <h3 class="subhead mt-4">Adreslerden Birleştirilen Yatırım Bilgileri</h3>
-                <label class="wide-label">@L["Basvuru.Field.YatirimTuru"]<textarea id="adresOzetYatirimTurleri" readonly>@YatirimTurleriMetni()</textarea></label>
-                <label class="wide-label">Talep edilen harcama türleri<textarea id="adresOzetHarcamaTurleri" readonly>@HarcamaTurleriMetni()</textarea></label>
-                <label class="wide-label">@L["Basvuru.Field.YatirimFaaliyetleri"]<textarea id="adresOzetFaaliyetler" readonly>@b.yatirim.yatirimFaaliyetleri</textarea></label>
-                <label class="wide-label">@L["Basvuru.Field.YatirimGirdileri"]<textarea id="adresOzetGirdiler" readonly>@b.yatirim.yatirimGirdileri</textarea></label>
-                <label class="wide-label">@L["Basvuru.Field.YatirimCiktilari"]<textarea id="adresOzetCiktilar" readonly>@b.yatirim.yatirimCiktilari</textarea></label>
-                <p class="section-description">Bu alanlar aşağıdaki adres kayıtlarından otomatik olarak birleştirilir.</p>
                 <h3 class="subhead mt-4">Yatırım Adresleri</h3>
                 <div class="adres-toolbar">
                     @if (!ro)
@@ -50,6 +43,14 @@
                         <tbody id="uygulamaAdresListesi"></tbody>
                     </table>
                 </div>
-                <p class="section-description">@L["Basvuru.InvestmentPurpose.Help"]</p>
+                <details class="company-details">
+                    <summary>Adreslerden Birleştirilen Yatırım Bilgileri</summary>
+                    <label class="wide-label">@L["Basvuru.Field.YatirimTuru"]<textarea id="adresOzetYatirimTurleri" readonly>@YatirimTurleriMetni()</textarea></label>
+                    <label class="wide-label">Talep edilen harcama türleri<textarea id="adresOzetHarcamaTurleri" readonly>@HarcamaTurleriMetni()</textarea></label>
+                    <label class="wide-label">@L["Basvuru.Field.YatirimFaaliyetleri"]<textarea id="adresOzetFaaliyetler" readonly>@b.yatirim.yatirimFaaliyetleri</textarea></label>
+                    <label class="wide-label">@L["Basvuru.Field.YatirimGirdileri"]<textarea id="adresOzetGirdiler" readonly>@b.yatirim.yatirimGirdileri</textarea></label>
+                    <label class="wide-label">@L["Basvuru.Field.YatirimCiktilari"]<textarea id="adresOzetCiktilar" readonly>@b.yatirim.yatirimCiktilari</textarea></label>
+                    <p class="section-description">Bu alanlar yukarıdaki adres kayıtlarından otomatik olarak birleştirilir.</p>
+                </details>
             </section>
 

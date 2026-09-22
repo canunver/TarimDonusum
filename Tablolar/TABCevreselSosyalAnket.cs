@@ -15,7 +15,8 @@ public sealed class TABCevreselSosyalAnket : TABTablo
     public async Task<CevreselSosyalAnketSurumu?> YayindakiSurumuOkuAsync()
     {
         const string sql = @"
-            SELECT TOP (1) Id,SurumNo,Durum,ISNULL(Aciklama,N''),YayinTarihi
+            SELECT TOP (1) Id,SurumNo,Durum,ISNULL(Aciklama,N''),YayinTarihi,
+                   ISNULL(KapsamDisiFaaliyetlerBaslik,N''),ISNULL(KapsamDisiFaaliyetlerHtml,N'')
             FROM dbo.CevreselSosyalAnketSurum
             WHERE Durum=1
             ORDER BY SurumNo DESC;";
@@ -28,7 +29,9 @@ public sealed class TABCevreselSosyalAnket : TABTablo
             surumNo = reader.GetInt32(1),
             durum = (enumCevreselSosyalAnketSurumDurumu)OrtakFonksiyonlar.Int32Yap(reader.GetValue(2)),
             aciklama = reader.GetString(3),
-            yayinTarihi = reader.IsDBNull(4) ? null : reader.GetDateTime(4)
+            yayinTarihi = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+            kapsamDisiFaaliyetlerBaslik = reader.GetString(5),
+            kapsamDisiFaaliyetlerHtml = reader.GetString(6)
         };
         await reader.CloseAsync();
         surum.gruplar = await GruplariOkuAsync(surum.id);
@@ -59,15 +62,16 @@ public sealed class TABCevreselSosyalAnket : TABTablo
     {
         const string sql = @"
             SELECT Id,Anahtar,GorunumKodu,Baslik,Metin,CevapTuru,CevapBaglami,YapimIsindeGoster,GuncellemeIsindeGoster,
-                   ZorunluMu,MaksimumUzunluk,NotMetni,BilgiMetni,YerTutucu,KapsamDisiBirakirMi,HerZamanAciklamaIste,OtomatikKaynakKodu
+                   ZorunluMu,MaksimumUzunluk,NotMetni,BilgiMetni,YerTutucu,KapsamDisiBirakirMi,HerZamanAciklamaIste,OtomatikKaynakKodu,
+                   KapsamDisiFaaliyetlerListesiniGosterMi
             FROM dbo.CevreselSosyalAnketSoru
             WHERE BolumId=@BolumId AND Aktif=1
             ORDER BY SiraNo,Id;";
         await using SqlCommand command = KomutOlustur(sql);
         command.Parameters.AddWithValue("@BolumId", bolumId);
         await using SqlDataReader reader = await command.ExecuteReaderAsync();
-        List<(int Id,string Anahtar,string Kod,string Baslik,string Metin,string Tur,int Baglam,bool Yapim,bool Guncelleme,bool Zorunlu,int? Maksimum,string? Not,string? Bilgi,string? YerTutucu,bool KapsamDisi,bool HerZaman,string? OtomatikKaynak)> satirlar=[];
-        while (await reader.ReadAsync()) satirlar.Add((reader.GetInt32(0),reader.GetString(1),reader.GetString(2),reader.GetString(3),reader.GetString(4),reader.GetString(5),reader.GetInt32(6),reader.GetBoolean(7),reader.GetBoolean(8),reader.GetBoolean(9),reader.IsDBNull(10)?null:reader.GetInt32(10),reader.IsDBNull(11)?null:reader.GetString(11),reader.IsDBNull(12)?null:reader.GetString(12),reader.IsDBNull(13)?null:reader.GetString(13),reader.GetBoolean(14),reader.GetBoolean(15),reader.IsDBNull(16)?null:reader.GetString(16)));
+        List<(int Id,string Anahtar,string Kod,string Baslik,string Metin,string Tur,int Baglam,bool Yapim,bool Guncelleme,bool Zorunlu,int? Maksimum,string? Not,string? Bilgi,string? YerTutucu,bool KapsamDisi,bool HerZaman,string? OtomatikKaynak,bool KapsamListesi)> satirlar=[];
+        while (await reader.ReadAsync()) satirlar.Add((reader.GetInt32(0),reader.GetString(1),reader.GetString(2),reader.GetString(3),reader.GetString(4),reader.GetString(5),reader.GetInt32(6),reader.GetBoolean(7),reader.GetBoolean(8),reader.GetBoolean(9),reader.IsDBNull(10)?null:reader.GetInt32(10),reader.IsDBNull(11)?null:reader.GetString(11),reader.IsDBNull(12)?null:reader.GetString(12),reader.IsDBNull(13)?null:reader.GetString(13),reader.GetBoolean(14),reader.GetBoolean(15),reader.IsDBNull(16)?null:reader.GetString(16),reader.GetBoolean(17)));
         await reader.CloseAsync();
 
         List<CevreselSosyalSoru> sonuc=[];
@@ -78,7 +82,7 @@ public sealed class TABCevreselSosyalAnket : TABTablo
                 x.Yapim&&x.Guncelleme?["existing","planned"]:x.Yapim?["planned"]:["existing"];
             sonuc.Add(new(x.Anahtar,x.Baslik,x.Metin,x.Tur,secenekler,false,x.Zorunlu,x.Maksimum,
                 x.Baglam==(int)enumCevreselSosyalCevapBaglami.Ortak?"global":null,baglamlar,x.Not,x.Bilgi,x.YerTutucu,
-                x.KapsamDisi,aciklama,dosya,x.HerZaman,x.OtomatikKaynak,x.Kod));
+                x.KapsamDisi,aciklama,dosya,x.HerZaman,x.OtomatikKaynak,x.Kod,x.KapsamListesi));
         }
         return sonuc;
     }

@@ -13,10 +13,31 @@ public static class CevreselSosyalAnketAktarici
         if(string.IsNullOrWhiteSpace(connectionString))return;
         await using SqlConnection connection=new(connectionString);await connection.OpenAsync();
         await IlkSurumuAktarAsync(connection,logger);
+        await KapsamDisiFaaliyetleriIlkDegerleAsync(connection);
         CevreselSosyalAnketSurumu? surum=await new TABCevreselSosyalAnket(connection).YayindakiSurumuOkuAsync();
         if(surum==null)throw new InvalidOperationException("Yayındaki çevresel-sosyal anket sürümü bulunamadı.");
         CevreselSosyalAnketTanimSaglayici.Guncelle(surum);
         logger.LogInformation("Çevresel-sosyal anket modeli yüklendi. SurumId: {SurumId}, SurumNo: {SurumNo}, BolumSayisi: {BolumSayisi}",surum.id,surum.surumNo,surum.gruplar.Count);
+    }
+
+    private static async Task KapsamDisiFaaliyetleriIlkDegerleAsync(SqlConnection connection)
+    {
+        await using SqlCommand command=new(@"
+            UPDATE dbo.CevreselSosyalAnketSurum
+            SET KapsamDisiFaaliyetlerBaslik=@Baslik,KapsamDisiFaaliyetlerHtml=@Html
+            WHERE NULLIF(LTRIM(RTRIM(KapsamDisiFaaliyetlerHtml)),N'') IS NULL;
+
+            UPDATE S SET KapsamDisiFaaliyetlerListesiniGosterMi=1
+            FROM dbo.CevreselSosyalAnketSoru S
+            WHERE S.Anahtar=N'2.1';
+
+            DELETE B
+            FROM dbo.CevreselSosyalAnketBilgi B
+            WHERE B.Baslik=N'Kapsam Dışı Faaliyetler Listesi - Bilgilendirme'
+               OR B.Metin LIKE N'Kapsam Dışı Faaliyetler Listesi bu bölümde bilgi amaçlı gösterilir%';",connection);
+        command.Parameters.AddWithValue("@Baslik",CevreselSosyalAnketTanimlari.KapsamDisiFaaliyetlerBaslik);
+        command.Parameters.AddWithValue("@Html",CevreselSosyalAnketTanimlari.KapsamDisiFaaliyetlerHtml);
+        await command.ExecuteNonQueryAsync();
     }
 
     private static async Task IlkSurumuAktarAsync(SqlConnection connection,ILogger logger)
@@ -26,7 +47,9 @@ public static class CevreselSosyalAnketAktarici
         await using SqlTransaction transaction=(SqlTransaction)await connection.BeginTransactionAsync();
         try
         {
-            await using SqlCommand surumKomutu=new("INSERT dbo.CevreselSosyalAnketSurum(SurumNo,Durum,Aciklama,YayinTarihi) OUTPUT INSERTED.Id VALUES(1,1,N'Çevresel-sosyal anketi ilk sürüm',SYSDATETIME());",connection,transaction);
+            await using SqlCommand surumKomutu=new("INSERT dbo.CevreselSosyalAnketSurum(SurumNo,Durum,Aciklama,KapsamDisiFaaliyetlerBaslik,KapsamDisiFaaliyetlerHtml,YayinTarihi) OUTPUT INSERTED.Id VALUES(1,1,N'Çevresel-sosyal anketi ilk sürüm',@KapsamBaslik,@KapsamHtml,SYSDATETIME());",connection,transaction);
+            surumKomutu.Parameters.AddWithValue("@KapsamBaslik",CevreselSosyalAnketTanimlari.KapsamDisiFaaliyetlerBaslik);
+            surumKomutu.Parameters.AddWithValue("@KapsamHtml",CevreselSosyalAnketTanimlari.KapsamDisiFaaliyetlerHtml);
             int surumId=Convert.ToInt32(await surumKomutu.ExecuteScalarAsync());int bolumSira=0;
             foreach(CevreselSosyalSoruGrubu grup in CevreselSosyalAnketTanimlari.Tum)
             {
@@ -42,9 +65,9 @@ public static class CevreselSosyalAnketAktarici
                 foreach(CevreselSosyalSoru soru in grup.Questions)
                 {
                     bool ortak=string.Equals(soru.Scope,"global",StringComparison.OrdinalIgnoreCase);IReadOnlyList<string> baglamlar=soru.Contexts??["existing","planned"];
-                    await using SqlCommand c=new(@"INSERT dbo.CevreselSosyalAnketSoru(BolumId,AnketSurumId,Anahtar,GorunumKodu,Baslik,Metin,CevapTuru,CevapBaglami,YapimIsindeGoster,GuncellemeIsindeGoster,ZorunluMu,MaksimumUzunluk,NotMetni,BilgiMetni,YerTutucu,KapsamDisiBirakirMi,HerZamanAciklamaIste,OtomatikKaynakKodu,SiraNo,Aktif)
-                        OUTPUT INSERTED.Id VALUES(@BolumId,@SurumId,@Anahtar,@Kod,@Baslik,@Metin,@Tur,@Baglam,@Yapim,@Guncelleme,@Zorunlu,@Maksimum,@Not,@Bilgi,@YerTutucu,@KapsamDisi,@HerZaman,@OtomatikKaynak,@SiraNo,1);",connection,transaction);
-                    c.Parameters.AddWithValue("@BolumId",bolumId);c.Parameters.AddWithValue("@SurumId",surumId);c.Parameters.AddWithValue("@Anahtar",soru.Id);c.Parameters.AddWithValue("@Kod",soru.Id);c.Parameters.AddWithValue("@Baslik",soru.Title);c.Parameters.AddWithValue("@Metin",soru.Text);c.Parameters.AddWithValue("@Tur",soru.AnswerType);c.Parameters.AddWithValue("@Baglam",ortak?1:2);c.Parameters.AddWithValue("@Yapim",ortak||baglamlar.Contains("planned")?1:0);c.Parameters.AddWithValue("@Guncelleme",ortak||baglamlar.Contains("existing")?1:0);c.Parameters.AddWithValue("@Zorunlu",soru.Required?1:0);c.Parameters.AddWithValue("@Maksimum",(object?)soru.MaxLength??DBNull.Value);c.Parameters.AddWithValue("@Not",(object?)soru.Note??DBNull.Value);c.Parameters.AddWithValue("@Bilgi",(object?)soru.Info??DBNull.Value);c.Parameters.AddWithValue("@YerTutucu",(object?)soru.Placeholder??DBNull.Value);c.Parameters.AddWithValue("@KapsamDisi",soru.Exclusion?1:0);c.Parameters.AddWithValue("@HerZaman",soru.AlwaysExplain?1:0);c.Parameters.AddWithValue("@OtomatikKaynak",(object?)OtomatikKaynak(soru.Id)??DBNull.Value);c.Parameters.AddWithValue("@SiraNo",++soruSira);
+                    await using SqlCommand c=new(@"INSERT dbo.CevreselSosyalAnketSoru(BolumId,Anahtar,GorunumKodu,Baslik,Metin,CevapTuru,CevapBaglami,YapimIsindeGoster,GuncellemeIsindeGoster,ZorunluMu,MaksimumUzunluk,NotMetni,BilgiMetni,YerTutucu,KapsamDisiBirakirMi,KapsamDisiFaaliyetlerListesiniGosterMi,HerZamanAciklamaIste,OtomatikKaynakKodu,SiraNo,Aktif)
+                        OUTPUT INSERTED.Id VALUES(@BolumId,@Anahtar,@Kod,@Baslik,@Metin,@Tur,@Baglam,@Yapim,@Guncelleme,@Zorunlu,@Maksimum,@Not,@Bilgi,@YerTutucu,@KapsamDisi,@KapsamListesi,@HerZaman,@OtomatikKaynak,@SiraNo,1);",connection,transaction);
+                    c.Parameters.AddWithValue("@BolumId",bolumId);c.Parameters.AddWithValue("@Anahtar",soru.Id);c.Parameters.AddWithValue("@Kod",soru.Id);c.Parameters.AddWithValue("@Baslik",soru.Title);c.Parameters.AddWithValue("@Metin",soru.Text);c.Parameters.AddWithValue("@Tur",soru.AnswerType);c.Parameters.AddWithValue("@Baglam",ortak?1:2);c.Parameters.AddWithValue("@Yapim",ortak||baglamlar.Contains("planned")?1:0);c.Parameters.AddWithValue("@Guncelleme",ortak||baglamlar.Contains("existing")?1:0);c.Parameters.AddWithValue("@Zorunlu",soru.Required?1:0);c.Parameters.AddWithValue("@Maksimum",(object?)soru.MaxLength??DBNull.Value);c.Parameters.AddWithValue("@Not",(object?)soru.Note??DBNull.Value);c.Parameters.AddWithValue("@Bilgi",(object?)soru.Info??DBNull.Value);c.Parameters.AddWithValue("@YerTutucu",(object?)soru.Placeholder??DBNull.Value);c.Parameters.AddWithValue("@KapsamDisi",soru.Exclusion?1:0);c.Parameters.AddWithValue("@KapsamListesi",soru.ShowExclusionList?1:0);c.Parameters.AddWithValue("@HerZaman",soru.AlwaysExplain?1:0);c.Parameters.AddWithValue("@OtomatikKaynak",(object?)OtomatikKaynak(soru.Id)??DBNull.Value);c.Parameters.AddWithValue("@SiraNo",++soruSira);
                     int soruId=Convert.ToInt32(await c.ExecuteScalarAsync());int secenekSira=0;
                     foreach(string secenek in soru.Options??[])
                     {await using SqlCommand sc=new("INSERT dbo.CevreselSosyalAnketSoruSecenek(SoruId,Deger,Metin,SiraNo,Aktif) VALUES(@SoruId,@Deger,@Metin,@SiraNo,1);",connection,transaction);sc.Parameters.AddWithValue("@SoruId",soruId);sc.Parameters.AddWithValue("@Deger",secenek);sc.Parameters.AddWithValue("@Metin",secenek);sc.Parameters.AddWithValue("@SiraNo",++secenekSira);await sc.ExecuteNonQueryAsync();}

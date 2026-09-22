@@ -18,6 +18,7 @@
     <Item type="Url" id="pozSozlugu" text="Poz Sozlugu" url="/Poz" icon="fas fa-book" roles="SistemYoneticisi" />
     <Item type="Url" id="pozDonemFiyatlari" text="Poz Donem Fiyatlari" url="/PozDonemFiyat" icon="fas fa-coins" roles="SistemYoneticisi" />
     <Item type="Url" id="naceKodlari" text="NACE Kodlari" url="/Nace" icon="fas fa-list-ol" roles="SistemYoneticisi" />
-    <Item type="Url" id="cevreselSosyalAnket" text="Çevresel-Sosyal Anket" url="/CevreselSosyalAnket" icon="fas fa-poll-h" roles="SistemYoneticisi" />
+    <Item type="Url" id="uygunlukSorulari" text="Uygunluk Soruları" url="/UygunlukSorusu" icon="fas fa-question-circle" roles="SistemYoneticisi" />
+    <Item type="Url" id="cevreselSosyalAnket" text="Çevresel Sosyal V.F." url="/CevreselSosyalAnket" icon="fas fa-poll-h" roles="SistemYoneticisi" />
   </Item>
 </Menu>

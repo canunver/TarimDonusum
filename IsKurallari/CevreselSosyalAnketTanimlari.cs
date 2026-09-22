@@ -2,6 +2,27 @@ namespace TarimDonusum.IsKurallari
 {
     public static class CevreselSosyalAnketTanimlari
     {
+        public const string KapsamDisiFaaliyetlerBaslik = "Kapsam Dışı Faaliyetler Listesi - Bilgilendirme";
+        public const string KapsamDisiFaaliyetlerHtml = """
+            <p>Aşağıdaki faaliyetler proje kapsamında desteklenmeyecek faaliyetlerdir.</p>
+            <ul>
+              <li>Mayınlar, ateşli silahlar, mühimmat ve patlayıcılar dahil olmak üzere her türlü silahın üretimi, ticareti veya kullanımına ilişkin faaliyetler.</li>
+              <li>Alkol, tütün ürünleri ve kontrol altındaki maddeler dahil olmak üzere tehlikeli malların üretimine yönelik faaliyetler.</li>
+              <li>Ulusal mevzuatta biyolojik çeşitliliğin korunması açısından korunan alan veya öncelikli koruma alanı olarak tanımlanan bölgelerde gerçekleştirilecek inşaat faaliyetleri.</li>
+              <li>Kritik doğal habitatlarda önemli ölçüde kayıp veya bozulmaya neden olabilecek ya da doğal habitatlar üzerinde önemli olumsuz etkiler oluşturabilecek faaliyetler.</li>
+              <li>Orman kaynaklarının büyük ölçekli ticari amaçlarla yoğun biçimde hasadı ve satışı/ticareti.</li>
+              <li>Orman alanlarının tarım arazisine dönüştürülmesi veya birincil ormanlarda kesim faaliyetleri.</li>
+              <li>Ulusal mevzuat kapsamında yasaklanmış/kısıtlanmış pestisit, insektisit, herbisit ve diğer tehlikeli kimyasallar ile WHO Sınıf IA ve IB pestisitlerin kullanımı.</li>
+              <li>Uluslararası su yollarını kullanan faaliyetler.</li>
+              <li>Kültürel mirasın kritik unsurlarında geri döndürülemez değişikliklere veya önemli ölçüde yer değiştirmeye neden olan faaliyetler.</li>
+              <li>Zorla çalıştırma, çocuk istismarı, çocuk işçiliği, insan ticareti veya 14-18 yaş arasındaki çocukların sağlık, güvenlik, eğitim veya gelişimlerini olumsuz etkileyebilecek işlerde çalıştırıldığı faaliyetler.</li>
+              <li>Uluslararası Finans Kuruluşları ile imzalanan finansman anlaşmalarındaki ilave hariç tutma hükümleri kapsamındaki faaliyetler.</li>
+              <li>Türkiye Cumhuriyeti mevzuatı veya Türkiye'nin taraf olduğu uluslararası hukuki düzenlemeler kapsamında yasaklanmış faaliyetler.</li>
+              <li>Türkiye'nin düşük sera gazı emisyonlu ve iklim değişikliğine dayanıklı kalkınma hedefleriyle veya Paris Anlaşması amaçlarıyla uyumlu olmayan faaliyetler.</li>
+              <li>Zorla tahliyeye neden olan faaliyetler.</li>
+              <li>Siyasi veya dini amaç taşıyan yatırımlar; siyasi partilere, sendikalara veya dini kurumlara yönelik idari hizmetler, altyapılar ve tesisler.</li>
+            </ul>
+            """;
         public static IReadOnlyList<CevreselSosyalSoruGrubu> Tum { get; } =
         [
             new(
@@ -18,35 +39,9 @@ namespace TarimDonusum.IsKurallari
             new(
                 Id: "2",
                 Title: "Çevresel ve Sosyal Risklerin Değerlendirilmesi",
-                Descriptions:
-                [
-                    new(Type: "info", Text: "Kapsam Dışı Faaliyetler Listesi bu bölümde bilgi amaçlı gösterilir. Başvuru sahibi 2.1 sorusunda yatırımın bu listede yer alıp almadığını beyan eder."),
-                    new(
-                        Type: "details",
-                        Title: "Kapsam Dışı Faaliyetler Listesi - Bilgilendirme",
-                        Text: "Aşağıdaki faaliyetler proje kapsamında desteklenmeyecek faaliyetlerdir. Başvuru sahibi, 2.1 sorusunda yatırımın bu listede yer alıp almadığını beyan eder.",
-                        Items:
-                        [
-                            "Mayınlar, ateşli silahlar, mühimmat ve patlayıcılar dahil olmak üzere her türlü silahın üretimi, ticareti veya kullanımına ilişkin faaliyetler.",
-                            "Alkol, tütün ürünleri ve kontrol altındaki maddeler dahil olmak üzere tehlikeli malların üretimine yönelik faaliyetler.",
-                            "Ulusal mevzuatta biyolojik çeşitliliğin korunması açısından korunan alan veya öncelikli koruma alanı olarak tanımlanan bölgelerde gerçekleştirilecek inşaat faaliyetleri.",
-                            "Kritik doğal habitatlarda önemli ölçüde kayıp veya bozulmaya neden olabilecek ya da doğal habitatlar üzerinde önemli olumsuz etkiler oluşturabilecek faaliyetler.",
-                            "Orman kaynaklarının büyük ölçekli ticari amaçlarla yoğun biçimde hasadı ve satışı/ticareti.",
-                            "Orman alanlarının tarım arazisine dönüştürülmesi veya birincil ormanlarda kesim faaliyetleri.",
-                            "Ulusal mevzuat kapsamında yasaklanmış/kısıtlanmış pestisit, insektisit, herbisit ve diğer tehlikeli kimyasallar ile WHO Sınıf IA ve IB pestisitlerin kullanımı.",
-                            "Uluslararası su yollarını kullanan faaliyetler.",
-                            "Kültürel mirasın kritik unsurlarında geri döndürülemez değişikliklere veya önemli ölçüde yer değiştirmeye neden olan faaliyetler.",
-                            "Zorla çalıştırma, çocuk istismarı, çocuk işçiliği, insan ticareti veya 14-18 yaş arasındaki çocukların sağlık, güvenlik, eğitim veya gelişimlerini olumsuz etkileyebilecek işlerde çalıştırıldığı faaliyetler.",
-                            "Uluslararası Finans Kuruluşları ile imzalanan finansman anlaşmalarındaki ilave hariç tutma hükümleri kapsamındaki faaliyetler.",
-                            "Türkiye Cumhuriyeti mevzuatı veya Türkiye'nin taraf olduğu uluslararası hukuki düzenlemeler kapsamında yasaklanmış faaliyetler.",
-                            "Türkiye'nin düşük sera gazı emisyonlu ve iklim değişikliğine dayanıklı kalkınma hedefleriyle veya Paris Anlaşması amaçlarıyla uyumlu olmayan faaliyetler.",
-                            "Zorla tahliyeye neden olan faaliyetler.",
-                            "Siyasi veya dini amaç taşıyan yatırımlar; siyasi partilere, sendikalara veya dini kurumlara yönelik idari hizmetler, altyapılar ve tesisler."
-                        ])
-                ],
                 Questions:
                 [
-                    new(Id: "2.1", Title: "", Text: "Projeniz, Çevresel ve Sosyal Yönetim Sistemi (ÇSYS) Kapsam Dışı Faaliyetler Listesinde veya TKDK ile Uluslararası Finans Kuruluşları arasında imzalanan Hukuki Anlaşmadaki hariç tutulan faaliyetler listesinde yer alıyor mu?", AnswerType: "yesno", Scope: "global", Exclusion: true, ExplainOn: ["Evet"]),
+                    new(Id: "2.1", Title: "", Text: "Projeniz, Çevresel ve Sosyal Yönetim Sistemi (ÇSYS) Kapsam Dışı Faaliyetler Listesinde veya TKDK ile Uluslararası Finans Kuruluşları arasında imzalanan Hukuki Anlaşmadaki hariç tutulan faaliyetler listesinde yer alıyor mu?", AnswerType: "yesno", Scope: "global", Exclusion: true, ExplainOn: ["Evet"], ShowExclusionList: true),
                     new(Id: "2.2", Title: "", Text: "Yatırım kapsamında talep edilen harcama türleri nelerdir?", AnswerType: "select", Scope: "global", Options: ["Yapım işi", "Makine Ekipman", "Her ikisi"], Note: "Harcama kalemlerini kısaca açıklayınız.", AlwaysExplain: true),
                     new(Id: "2.3", Title: "", Text: "İşletmeniz ve yatırımınız Çevresel Etki Değerlendirme (ÇED) Yönetmeliği kapsamında değerlendiriliyor mu?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["ÇED kapsamına tabi değil", "ÇED Olumlu Kararı alındı", "ÇED Gerekli Değildir Kararı alındı", "ÇED Muafiyet Yazısı mevcut", "Başvuru süreci devam ediyor"], Note: "ÇED Kararı / ÇED Gerekli Değildir Kararı / Muafiyet Yazısını yükleyiniz. Başvuru süreci devam ediyorsa açıklayınız.", ExplainOn: ["Başvuru süreci devam ediyor"], DocOn: ["ÇED Olumlu Kararı alındı", "ÇED Gerekli Değildir Kararı alındı", "ÇED Muafiyet Yazısı mevcut"]),
                     new(Id: "2.4", Title: "", Text: "İşletmeniz ve yatırımınız için ulusal mevzuat kapsamında Çevre İzin Belgesi veya Çevre İzin ve Lisans Belgesi var mı?", AnswerType: "select", Contexts: ["existing", "planned"], Options: ["Var", "Yok"], ExplainOn: ["Var", "Yok"], DocOn: ["Var"]),
@@ -152,7 +147,8 @@ namespace TarimDonusum.IsKurallari
         IReadOnlyList<string>? DocOn = null,
         bool AlwaysExplain = false,
         string? AutoSource = null,
-        string? Code = null);
+        string? Code = null,
+        bool ShowExclusionList = false);
 
     public sealed record CevreselSosyalAciklama(
         string Type,

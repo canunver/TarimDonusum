@@ -21,6 +21,8 @@ public sealed class CevreselSosyalAnketSurumu
     public int surumNo { get; set; }
     public enumCevreselSosyalAnketSurumDurumu durum { get; set; }
     public string aciklama { get; set; } = "";
+    public string kapsamDisiFaaliyetlerBaslik { get; set; } = "Kapsam Dışı Faaliyetler Listesi - Bilgilendirme";
+    public string kapsamDisiFaaliyetlerHtml { get; set; } = "";
     public DateTime? yayinTarihi { get; set; }
     public List<CevreselSosyalSoruGrubu> gruplar { get; set; } = [];
 }
@@ -30,6 +32,8 @@ public sealed class CevreselSosyalAnketDuzenlemeModeli
     public int id { get; set; }
     public int surumNo { get; set; }
     public string aciklama { get; set; } = "";
+    public string kapsamDisiFaaliyetlerBaslik { get; set; } = "Kapsam Dışı Faaliyetler Listesi - Bilgilendirme";
+    public string kapsamDisiFaaliyetlerHtml { get; set; } = "";
     public int durum { get; set; }
     public List<CevreselSosyalBolumDuzenlemeModeli> bolumler { get; set; } = [];
 }
@@ -56,6 +60,7 @@ public sealed class CevreselSosyalBilgiDuzenlemeModeli
 public sealed class CevreselSosyalSoruDuzenlemeModeli
 {
     public int id { get; set; }
+    public int bolumId { get; set; }
     public string anahtar { get; set; } = "";
     public string gorunumKodu { get; set; } = "";
     public string baslik { get; set; } = "";
@@ -70,6 +75,7 @@ public sealed class CevreselSosyalSoruDuzenlemeModeli
     public string? bilgiMetni { get; set; }
     public string? yerTutucu { get; set; }
     public bool kapsamDisiBirakir { get; set; }
+    public bool kapsamDisiFaaliyetlerListesiniGoster { get; set; }
     public bool herZamanAciklamaIste { get; set; }
     public string? otomatikKaynakKodu { get; set; }
     public bool aktif { get; set; } = true;
@@ -77,4 +83,32 @@ public sealed class CevreselSosyalSoruDuzenlemeModeli
     public List<string> secenekler { get; set; } = [];
     public List<string> aciklamaKosullari { get; set; } = [];
     public List<string> dosyaKosullari { get; set; } = [];
+}
+
+public sealed class CevreselSosyalAnketAdiModeli
+{
+    public int id { get; set; }
+    public string aciklama { get; set; } = "";
+}
+
+public sealed class CevreselSosyalKapsamDisiModeli
+{
+    public int id { get; set; }
+    public string baslik { get; set; } = "";
+    public string html { get; set; } = "";
+}
+
+public sealed class CevreselSosyalBolumKayitModeli
+{
+    public int id { get; set; }
+    public int anketSurumId { get; set; }
+    public string kod { get; set; } = "";
+    public string baslik { get; set; } = "";
+}
+
+public sealed class CevreselSosyalSoruKayitModeli
+{
+    public int anketSurumId { get; set; }
+    public int bolumId { get; set; }
+    public CevreselSosyalSoruDuzenlemeModeli soru { get; set; } = new();
 }

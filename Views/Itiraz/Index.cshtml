@@ -20,7 +20,7 @@
         else { foreach(var x in Model.Tarihce){
             string baslik=x.IslemTuru switch { enumOnBasvuruItirazIslemTuru.ItirazEdildi=>"Başvuran İtirazı",enumOnBasvuruItirazIslemTuru.ItirazReddedildi=>"İtiraz Reddedildi",_=>"Revizyona Gönderildi"};
             string renk=x.IslemTuru==enumOnBasvuruItirazIslemTuru.ItirazEdildi?"border-info":x.IslemTuru==enumOnBasvuruItirazIslemTuru.ItirazReddedildi?"border-danger":"border-success";
-            <div class="border-left @renk pl-3 py-2 mb-3"><div class="d-flex justify-content-between"><strong>@baslik</strong><span class="text-muted">@x.IslemTarihi.ToString("dd.MM.yyyy HH:mm")</span></div><div class="small text-muted mb-2">@x.KullaniciAdi</div><div style="white-space:pre-wrap">@x.Metin</div></div>
+            <div class="border-left @renk pl-3 py-2 mb-3"><div class="d-flex justify-content-between"><strong>@baslik</strong><span class="text-muted">@x.IslemTarihi.ToString("dd.MM.yyyy HH:mm")</span></div><div class="small text-muted mb-2">@x.KullaniciAdi</div>@if(!string.IsNullOrWhiteSpace(x.YaziNo)){<div class="mb-2"><strong>Yazı No:</strong> @x.YaziNo <span class="ml-3"><strong>Yazı Tarihi:</strong> @x.YaziTarihi?.ToString("dd.MM.yyyy")</span>@if(x.YaziDosyaId.HasValue){<a class="btn btn-sm btn-outline-primary ml-3" href="@Url.Action("DosyaIndir","Basvuru",new{id=x.YaziDosyaId})" target="_blank"><i class="fas fa-download mr-1"></i>@(string.IsNullOrWhiteSpace(x.YaziDosyaAdi)?"Taranmış yazıyı indir":x.YaziDosyaAdi)</a>}</div>}<div style="white-space:pre-wrap">@x.Metin</div></div>
         }}
     </div></div>
     @if(basvuranYazabilir){
@@ -31,6 +31,8 @@
         </div></div>
     } else if(uzmanYazabilir){
         <div class="card"><div class="card-header font-weight-bold">Uzman Kararı</div><div class="card-body">
+            <div class="form-row mb-3"><div class="col-md-6"><label for="yaziNo">Yazı No <span class="text-danger">*</span></label><input id="yaziNo" class="form-control" maxlength="100"></div><div class="col-md-6"><label for="yaziTarihi">Yazı Tarihi <span class="text-danger">*</span></label><input id="yaziTarihi" class="form-control" type="date"></div></div>
+            <div class="form-group"><label for="taranmisYazi">Taranmış Yazı <span class="text-muted">(isteğe bağlı)</span></label><input id="taranmisYazi" class="form-control-file" type="file"></div>
             <label for="kararGerekcesi">Karar gerekçesi</label><textarea id="kararGerekcesi" class="form-control" rows="6" maxlength="4000"></textarea>
             <div class="mt-3"><button id="itirazReddet" class="btn btn-danger mr-2">İtirazı Reddet</button><button id="revizyonaGonder" class="btn btn-success">Revizyona Gönder</button></div>
             <div class="alert alert-info mt-3 mb-0">İtiraz üzerinden doğrudan kabul verilemez. Başvuran revizyonu tamamlayıp yeniden sunduktan sonra normal inceleme süreci işletilir.</div>
@@ -42,6 +44,6 @@
 (()=>{const token=document.querySelector('#tokenForm input')?.value;const mesaj=(m,ok)=>PopupMesajGoster(m,ok);
 const post=(url,data)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json','RequestVerificationToken':token},body:JSON.stringify(data)}).then(r=>r.json()).then(x=>{mesaj(x.mesaj||(x.hatalar||[]).join(' '),!!x.basarili);if(x.basarili)setTimeout(()=>location.reload(),800);}).catch(()=>mesaj('İşlem tamamlanamadı.',false));
 document.getElementById('itirazGonder')?.addEventListener('click',()=>{const metin=document.getElementById('itirazMetni').value.trim();if(!metin)return mesaj('İtiraz metni girilmelidir.',false);post('/Itiraz/Gonder',{basvuruId:@b.Id,metin});});
-const karar=revizyonaGonder=>{const metin=document.getElementById('kararGerekcesi').value.trim();if(!metin)return mesaj('Karar gerekçesi girilmelidir.',false);if(!confirm(revizyonaGonder?'Ön başvuru revizyona gönderilsin mi?':'İtiraz reddedilsin mi?'))return;post('/Itiraz/Karar',{basvuruId:@b.Id,metin,revizyonaGonder});};
+const karar=revizyonaGonder=>{const metin=document.getElementById('kararGerekcesi').value.trim(),yaziNo=document.getElementById('yaziNo').value.trim(),yaziTarihi=document.getElementById('yaziTarihi').value;if(!yaziNo||!yaziTarihi)return mesaj('Yazı no ve yazı tarihi girilmelidir.',false);if(!metin)return mesaj('Karar gerekçesi girilmelidir.',false);if(!confirm(revizyonaGonder?'Ön başvuru revizyona gönderilsin mi?':'İtiraz reddedilsin mi?'))return;const d=new FormData();d.append('BasvuruId','@b.Id');d.append('Metin',metin);d.append('RevizyonaGonder',String(revizyonaGonder));d.append('YaziNo',yaziNo);d.append('YaziTarihi',yaziTarihi);const f=document.getElementById('taranmisYazi').files[0];if(f)d.append('taranmisYazi',f);fetch('/Itiraz/Karar',{method:'POST',headers:{'RequestVerificationToken':token},body:d}).then(r=>r.json()).then(x=>{mesaj(x.mesaj||(x.hatalar||[]).join(' '),!!x.basarili);if(x.basarili)setTimeout(()=>location.reload(),800);}).catch(()=>mesaj('İşlem tamamlanamadı.',false));};
 document.getElementById('itirazReddet')?.addEventListener('click',()=>karar(false));document.getElementById('revizyonaGonder')?.addEventListener('click',()=>karar(true));})();
 </script>}

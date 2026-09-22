@@ -5,6 +5,7 @@ namespace TarimDonusum.Models
         public int id { get; set; }
         public string birimAdi { get; set; } = "";
         public enumBirimTuru birimTuru { get; set; } = enumBirimTuru.Merkez;
+        public string uzmanBirimTuru { get; set; } = "";
         public List<int> ilKodlari { get; set; } = new();
         public List<Il> iller { get; set; } = new();
         public string ilKodlariMetni => string.Join(", ", ilKodlari.OrderBy(x => x));

@@ -77,6 +77,15 @@
                             <select id="birimIlKodlari" multiple size="8"></select>
                             <small class="text-muted">Birime bağlanacak bir veya daha fazla ili seçiniz.</small>
                         </label>
+                        <label>
+                            Uzman sonuçları birim türü
+                            <select id="uzmanBirimTuru">
+                                <option value="">Seçilmedi</option>
+                                <option value="PIK">Proje İzleme ve Kontrol</option>
+                                <option value="PYK">Proje Yönetim</option>
+                                <option value="CS">Çevre Sosyal</option>
+                            </select>
+                        </label>
                     </div>
                     <div class="birim-form-row birim-status-row">
                         <label>
@@ -176,6 +185,7 @@
         $('#birimId').val(birim.id || 0);
         $('#birimAdi').val(birim.birimAdi || '');
         $('#birimTuru').val(String(birim.birimTuru || 1));
+        $('#uzmanBirimTuru').val(birim.uzmanBirimTuru || '');
         $('#birimIlKodlari').val((birim.ilKodlari || []).map(String));
         $('#birimSiraNo').val(birim.siraNo || 1);
         $('#birimAktif').val(String(birim.aktif !== false));
@@ -195,6 +205,7 @@
             id: Number($('#birimId').val() || 0),
             birimAdi: $('#birimAdi').val(),
             birimTuru: Number($('#birimTuru').val() || 1),
+            uzmanBirimTuru: $('#uzmanBirimTuru').val() || '',
             ilKodlari: ($('#birimIlKodlari').val() || []).map(Number),
             siraNo: Number($('#birimSiraNo').val() || 0),
             aktif: $('#birimAktif').val() === 'true'

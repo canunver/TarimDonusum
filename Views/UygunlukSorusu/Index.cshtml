@@ -1,0 +1,26 @@
+@using System.Text.Json
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+@{ ViewData["Title"]="Uygunluk Soruları"; }
+<div class="basvuru-page">
+ <div class="basvuru-titlebar"><div><h1>Uygunluk Soruları</h1><p>Evet ve Hayır cevaplarının doğuracağı sonucu tanımlayın.</p></div><button class="btn btn-primary" onclick="ac()">Yeni soru</button></div>
+ @Html.AntiForgeryToken()
+ <div class="table-responsive basvuru-card"><table class="table table-hover"><thead><tr><th>No</th><th>Konu</th><th>Soru</th><th>Belgeler</th><th>Birim</th><th>Evet ise</th><th>Hayır ise</th><th>Durum</th><th></th></tr></thead><tbody id="liste"></tbody></table></div>
+</div>
+<div class="modal fade" id="modal"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5>Soru tanımı</h5><button class="close" data-dismiss="modal">&times;</button></div><div class="modal-body">
+ <input id="id" type="hidden"><div class="form-grid"><label>Sıra no<input id="sira" type="number" min="1"></label><label>Konu<input id="konu" maxlength="250"></label><label>Birim türü<select id="birim"><option value="">Boş (herkes)</option><option value="PIK">Proje İzleme ve Kontrol</option><option value="PYK">Proje Yönetim</option><option value="CS">Çevre Sosyal</option></select></label><label>Durum<select id="aktif"><option value="true">Aktif</option><option value="false">Pasif</option></select></label></div>
+ <label class="wide-label">Soru<textarea id="soru" maxlength="2000"></textarea></label><label class="wide-label">Beklenen belge / kaynak<textarea id="kaynak" maxlength="1000"></textarea></label>
+ <div class="form-group mt-3">
+  <label for="belgeler" class="d-block mb-2 font-weight-bold">Bağlı zorunlu belgeler</label>
+  <select id="belgeler" class="form-control" multiple size="7" aria-describedby="belgelerYardim">@for(int no=1;no<=11;no++){<option value="@no">@no - @L[$"Basvuru.Documents.Required.{no}"]</option>}</select>
+  <small id="belgelerYardim" class="form-text text-muted mt-2">Birden fazla belge seçilebilir. Seçimi kaldırmak için Ctrl tuşunu kullanabilirsiniz.</small>
+ </div>
+ <div class="form-grid"><label>Evet ise<select id="evet"><option>Kabul</option><option>Ret</option><option>Düzeltme</option></select></label><label>Hayır ise<select id="hayir"><option>Kabul</option><option selected>Ret</option><option>Düzeltme</option></select></label></div>
+</div><div class="modal-footer"><button class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button><button class="btn btn-primary" onclick="kaydet()">Kaydet</button></div></div></div></div>
+@section Scripts {<script>
+let veriler=[]; const esc=x=>$('<div>').text(x??'').html(); const belgeAdlari=@Html.Raw(JsonSerializer.Serialize(Enumerable.Range(1,11).ToDictionary(x=>x,x=>L[$"Basvuru.Documents.Required.{x}"].Value)));
+const birimAdlari={PIK:'Proje İzleme ve Kontrol',PYK:'Proje Yönetim',CS:'Çevre Sosyal'};
+function listele(){AjaxGet('/UygunlukSorusu/Listele',null,s=>{if(!s?.basarili)return PopupMesajGoster(s?.hataStr||'',false);veriler=s.nesne||[];$('#liste').html(veriler.map(x=>`<tr><td>${x.siraNo}</td><td>${esc(x.konu)}</td><td>${esc(x.soru)}</td><td>${esc((x.zorunluBelgeNolari||[]).map(n=>`${n} - ${belgeAdlari[n]||''}`).join(', ')||'-')}</td><td>${esc(birimAdlari[x.birimTuru]||x.birimTuru||'Tümü')}</td><td>${esc(x.evetSonucu)}</td><td>${esc(x.hayirSonucu)}</td><td>${x.aktif?'Aktif':'Pasif'}</td><td><button class="btn btn-sm btn-outline-primary" onclick="ac(${x.id})">Düzenle</button></td></tr>`).join(''));});}
+function ac(id){const x=veriler.find(y=>y.id===id)||{id:0,siraNo:veriler.length+1,konu:'',soru:'',kaynak:'',birimTuru:'',evetSonucu:'Kabul',hayirSonucu:'Ret',zorunluBelgeNolari:[],aktif:true};$('#id').val(x.id);$('#sira').val(x.siraNo);$('#konu').val(x.konu);$('#soru').val(x.soru);$('#kaynak').val(x.kaynak);$('#birim').val(x.birimTuru||'');$('#belgeler').val((x.zorunluBelgeNolari||[]).map(String));$('#evet').val(x.evetSonucu);$('#hayir').val(x.hayirSonucu);$('#aktif').val(String(x.aktif));$('#modal').modal('show');}
+function kaydet(){const evet=$('#evet').val(),hayir=$('#hayir').val();if((evet==='Kabul')===(hayir==='Kabul'))return PopupMesajGoster('Evet ve Hayır sonuçlarından yalnızca biri Kabul olmalıdır.',false);AjaxPost('/UygunlukSorusu/Kaydet',{id:+$('#id').val(),siraNo:+$('#sira').val(),konu:$('#konu').val(),soru:$('#soru').val(),kaynak:$('#kaynak').val(),birimTuru:$('#birim').val(),zorunluBelgeNolari:($('#belgeler').val()||[]).map(Number),evetSonucu:evet,hayirSonucu:hayir,aktif:$('#aktif').val()==='true'},s=>{if(!s?.basarili)return PopupMesajGoster(s?.hataStr||'',false);$('#modal').modal('hide');listele();});}
+$(listele);
+</script>}

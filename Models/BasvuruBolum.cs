@@ -76,7 +76,7 @@ namespace TarimDonusum.Models
             new(enumBasvuruBolum.BasvuruIstihdam, 26, "Basvuru.Step.Istihdam", "Basvuru/_Istihdam"),
             new(enumBasvuruBolum.BasvuruTedarikciEntegrasyonu, 27, "Tedarikçi Entegrasyonu", "Basvuru/_TedarikciEntegrasyonu"),
             new(enumBasvuruBolum.BasvuruTaahhutBeyan, 28, "Taahhüt / Beyan", "Basvuru/_TaahhutBeyan"),
-            new(enumBasvuruBolum.BasvuruCevreselSosyal, 29, "Çevresel ve Sosyal Veri Formu", "Basvuru/_CevreselSosyalVeriFormu"),
+            new(enumBasvuruBolum.BasvuruCevreselSosyal, 29, "Çevresel ve Sosyal V.F.", "Basvuru/_CevreselSosyalVeriFormu"),
             new(enumBasvuruBolum.BasvuruZorunluBelgeler, 30, "Zorunlu Belgeler", "Basvuru/_ZorunluBelgeler"),
             new(enumBasvuruBolum.BasvuruOzeti, 31, "Başvuru Özeti", "Basvuru/_BasvuruOzeti"),
             new(enumBasvuruBolum.BasvuruIzlemeGostergeleri, 32, "İzleme Göstergeleri", "Basvuru/_IzlemeGostergeleri"),

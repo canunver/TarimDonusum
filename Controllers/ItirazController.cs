@@ -34,10 +34,12 @@ public class ItirazController : BMYController
     }
 
     [OturumKontrol][HttpPost][ValidateAntiForgeryToken]
-    public async Task<IActionResult> Karar([FromBody] OnBasvuruItirazKayitModel model)
+    public async Task<IActionResult> Karar([FromForm] OnBasvuruItirazKayitModel model, IFormFile? taranmisYazi)
     {
         Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuru); if(kullanici==null)return Unauthorized(); if(BasvuruKullanicisiMi(kullanici))return Forbid();
-        Sonuc<int> sonuc=await _basvuru.OnBasvuruItirazKarariKaydetAsync(model,kullanici);
+        byte[] icerik=[];
+        if(taranmisYazi is { Length:>0 }) { await using MemoryStream ms=new(); await taranmisYazi.CopyToAsync(ms); icerik=ms.ToArray(); }
+        Sonuc<int> sonuc=await _basvuru.OnBasvuruItirazKarariKaydetAsync(model,kullanici,taranmisYazi?.FileName??"",icerik);
         if(sonuc.basarili) await MailAtAsync(model,false,model.RevizyonaGonder);
         return Json(sonuc);
     }

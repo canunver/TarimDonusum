@@ -47,6 +47,37 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<List<UygunlukSorusu>>> UygunlukSorulariniListeleAsync(Kullanici? kullanici)
+        {
+            Sonuc<List<UygunlukSorusu>> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            try { await using SqlConnection c=new(_connectionString); await c.OpenAsync(); sonuc.nesne=await new TABUygunlukSorusu(c,_localizer).ListeleAsync(); }
+            catch(Exception ex){_logger.LogError(ex,"Uygunluk soruları okunamadı.");sonuc.HataEkle("Uygunluk soruları okunamadı.");}
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> UygunlukSorusuKaydetAsync(UygunlukSorusu soru, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc=new(); if(!SistemYoneticisiMi(kullanici,sonuc))return sonuc;
+            soru.konu=(soru.konu??"").Trim(); soru.soru=(soru.soru??"").Trim(); soru.kaynak=(soru.kaynak??"").Trim();
+            soru.birimTuru=(soru.birimTuru??"").Trim().ToUpperInvariant();
+            soru.zorunluBelgeNolari=(soru.zorunluBelgeNolari??[]).Distinct().OrderBy(x=>x).ToList();
+            string[] sonuclar=["Kabul","Ret","Düzeltme"];
+            if(soru.siraNo<=0)sonuc.HataEkle("Sıra numarası zorunludur.");
+            if(string.IsNullOrWhiteSpace(soru.konu))sonuc.HataEkle("Konu zorunludur.");
+            if(string.IsNullOrWhiteSpace(soru.soru))sonuc.HataEkle("Soru zorunludur.");
+            if(!sonuclar.Contains(soru.evetSonucu))sonuc.HataEkle("Evet sonucu geçersizdir.");
+            if(!sonuclar.Contains(soru.hayirSonucu))sonuc.HataEkle("Hayır sonucu geçersizdir.");
+            if ((soru.evetSonucu == "Kabul") == (soru.hayirSonucu == "Kabul"))
+                sonuc.HataEkle("Evet ve Hayır sonuçlarından yalnızca biri Kabul olmalıdır.");
+            if(soru.birimTuru is not ("" or "PIK" or "PYK" or "CS"))sonuc.HataEkle("Birim türü geçersizdir.");
+            if(soru.zorunluBelgeNolari.Any(x=>x<1||x>11))sonuc.HataEkle("Zorunlu belge seçimi geçersizdir.");
+            if(!sonuc.basarili)return sonuc;
+            try { await using SqlConnection c=new(_connectionString);await c.OpenAsync();sonuc.nesne=await new TABUygunlukSorusu(c,_localizer).KaydetAsync(soru);sonuc.mesaj="Uygunluk sorusu kaydedildi."; }
+            catch(Exception ex){_logger.LogError(ex,"Uygunluk sorusu kaydedilemedi.");sonuc.HataEkle("Uygunluk sorusu kaydedilemedi.");}
+            return sonuc;
+        }
+
         public async Task<Sonuc<List<Nace>>> NaceAraAsync(string? metin, Kullanici? kullanici, bool yonetim = false)
         {
             Sonuc<List<Nace>> sonuc=new();
@@ -200,9 +231,13 @@ namespace TarimDonusum.IsKurallari
                     sonuc.HataEkle("Geçerli bir dönem yılı girilmelidir.");
                 if (string.IsNullOrWhiteSpace(donem.ad))
                     sonuc.HataEkle("Dönem adı zorunludur.");
+                if (donem.basvuruBaslangicTarihi.HasValue != donem.basvuruBitisTarihi.HasValue)
+                    sonuc.HataEkle("Başvuru başlangıç ve bitiş tarihleri birlikte girilmelidir.");
                 if (donem.basvuruBaslangicTarihi.HasValue && donem.basvuruBitisTarihi.HasValue &&
                     donem.basvuruBaslangicTarihi.Value.Date > donem.basvuruBitisTarihi.Value.Date)
                     sonuc.HataEkle("Başvuru başlangıç tarihi bitiş tarihinden sonra olamaz.");
+                if (donem.onBasvuruBaslangicTarihi.HasValue != donem.onBasvuruBitisTarihi.HasValue)
+                    sonuc.HataEkle("Ön başvuru başlangıç ve bitiş tarihleri birlikte girilmelidir.");
                 if (donem.onBasvuruBaslangicTarihi.HasValue && donem.onBasvuruBitisTarihi.HasValue &&
                     donem.onBasvuruBaslangicTarihi.Value.Date > donem.onBasvuruBitisTarihi.Value.Date)
                     sonuc.HataEkle("Ön başvuru başlangıç tarihi bitiş tarihinden sonra olamaz.");
@@ -216,6 +251,8 @@ namespace TarimDonusum.IsKurallari
                     sonuc.HataEkle("İstisna kredi oranı 0 ile 100 arasında olmalıdır.");
                 if (donem.istisnaIlceIds.Count > 0 && !donem.istisnaDestekOrani.HasValue)
                     sonuc.HataEkle("İstisna ilçeler seçildiğinde istisna kredi oranı girilmelidir.");
+                if (donem.uygulamaAdresiSinirliMi < 0)
+                    sonuc.HataEkle("Maksimum uygulama adresi sayısı negatif olamaz.");
                 if (!sonuc.basarili)
                     return sonuc;
 
@@ -419,6 +456,10 @@ namespace TarimDonusum.IsKurallari
 
             if (!Enum.IsDefined(typeof(enumBirimTuru), birim.birimTuru))
                 sonuc.HataEkle(Metin("Business.Unit.TypeRequired"));
+
+            birim.uzmanBirimTuru = birim.uzmanBirimTuru?.Trim().ToUpperInvariant() ?? "";
+            if (birim.uzmanBirimTuru.Length > 0 && birim.uzmanBirimTuru is not ("PIK" or "PYK" or "CS"))
+                sonuc.HataEkle("Uzman sonuçları birim türü geçersizdir.");
 
             if (birim.siraNo <= 0)
                 sonuc.HataEkle(Metin("Business.Unit.OrderRequired"));

@@ -32,6 +32,13 @@
     <script type="application/json" id="cevreselSosyalSoruTanimlariJson">
         @Html.Raw(JsonSerializer.Serialize(CevreselSosyalAnketTanimSaglayici.Tum, jsonOptions))
     </script>
+    <script type="application/json" id="cevreselSosyalKapsamDisiJson">
+        @Html.Raw(JsonSerializer.Serialize(new
+        {
+            baslik = CevreselSosyalAnketTanimSaglayici.YayindakiSurum.kapsamDisiFaaliyetlerBaslik,
+            html = CevreselSosyalAnketTanimSaglayici.YayindakiSurum.kapsamDisiFaaliyetlerHtml
+        }, jsonOptions))
+    </script>
     <script type="application/json" id="cevreselSosyalOtomatikCevaplarJson">
         @Html.Raw(JsonSerializer.Serialize(CevreselSosyalVeriFormuTanimlari.OtomatikCevaplar(b, CevreselSosyalAnketTanimSaglayici.Tum), jsonOptions))
     </script>

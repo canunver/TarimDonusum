@@ -495,7 +495,7 @@
     const bolumOnBasvuruItiraz = @((int)enumBasvuruBolum.OnBasvuruItiraz);
     const basvuruReadonly = @(ro ? "true" : "false");
     const ortaklikReadonly = @(ro ? "true" : "false");
-    const uygulamaAdresiSinirli = @(b.basvuruFirma.donem.uygulamaAdresiSinirliMi ? "true" : "false");
+    const uygulamaAdresiSiniri = @b.basvuruFirma.donem.uygulamaAdresiSinirliMi;
     const tekUygulamaAdresiId = @(b.YatirimAdresleri.Count == 1 ? b.YatirimAdresleri[0].id : 0);
     const uygulamaAdresiSecimAlanlari = new Set([
         'cevreselSosyalAdresId', 'yeAdres', 'dbCtpGirdiUygulamaAdresiId',
@@ -970,10 +970,11 @@
             if (buton) buton.disabled = true;
             const token = document.querySelector('#basvuruForm input[name="__RequestVerificationToken"]')?.value || '';
             try {
+                const formVerisi = veri instanceof FormData;
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
-                    body: JSON.stringify(veri)
+                    headers: formVerisi ? { 'RequestVerificationToken': token } : { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                    body: formVerisi ? veri : JSON.stringify(veri)
                 });
                 const sonuc = await response.json();
                 const mesaj = sonuc?.mesaj || (sonuc?.hatalar || []).join(' ') || panel.dataset.failedMessage || '';
@@ -985,7 +986,8 @@
 
                 window.setTimeout(function () {
                     const yeniBasvuruId = Number(sonuc?.nesne || 0);
-                    if (veri.revizyonaGonder && yeniBasvuruId > 0 && yeniBasvuruId !== BasvuruId())
+                    const revizyonaGonder = formVerisi ? veri.get('RevizyonaGonder') === 'true' : veri.revizyonaGonder;
+                    if (revizyonaGonder && yeniBasvuruId > 0 && yeniBasvuruId !== BasvuruId())
                         window.location.href = `/Basvuru/Duzenle?id=${yeniBasvuruId}`;
                     else
                         window.location.reload();
@@ -1004,10 +1006,17 @@
 
         const kararVer = (revizyonaGonder, buton) => {
             const metin = (document.getElementById('onBasvuruItirazKararGerekcesi')?.value || '').trim();
+            const yaziNo = (document.getElementById('onBasvuruItirazYaziNo')?.value || '').trim();
+            const yaziTarihi = document.getElementById('onBasvuruItirazYaziTarihi')?.value || '';
+            if (!yaziNo || !yaziTarihi) { PopupMesajGoster('Yazı no ve yazı tarihi girilmelidir.', false); return; }
             if (!metin) { PopupMesajGoster(panel.dataset.reasonRequired || '', false); return; }
             const onay = revizyonaGonder ? panel.dataset.revisionConfirm : panel.dataset.rejectConfirm;
             if (!window.confirm(onay || '')) return;
-            istekGonder('/Itiraz/Karar', { basvuruId: BasvuruId(), metin: metin, revizyonaGonder: revizyonaGonder }, buton);
+            const veri = new FormData();
+            veri.append('BasvuruId', String(BasvuruId())); veri.append('Metin', metin); veri.append('RevizyonaGonder', String(revizyonaGonder));
+            veri.append('YaziNo', yaziNo); veri.append('YaziTarihi', yaziTarihi);
+            const dosya = document.getElementById('onBasvuruItirazTaranmisYazi')?.files?.[0]; if (dosya) veri.append('taranmisYazi', dosya);
+            istekGonder('/Itiraz/Karar', veri, buton);
         };
 
         document.getElementById('onBasvuruItirazReddet')?.addEventListener('click', function () { kararVer(false, this); });
@@ -1028,12 +1037,20 @@
                 <td><textarea class="form-control denetim-liste-aciklama" maxlength="1000">${htmlEncode(x.aciklama || '')}</textarea></td></tr>`).join('');
         } else {
             tbody.innerHTML = satirlar.map((x, i) => `<tr data-index="${i}">
-                <td>${htmlEncode(x.no || '')}</td><td>${htmlEncode(x.konu || '')}</td><td>${htmlEncode(x.soru || '')}</td><td>${htmlEncode(x.kaynak || '')}</td>
-                <td><select class="form-control denetim-liste-sonuc"><option value="">Seçiniz</option><option value="E" ${x.sonuc === 'E' ? 'selected' : ''}>Evet</option><option value="H" ${x.sonuc === 'H' ? 'selected' : ''}>Hayır</option><option value="UD" ${x.sonuc === 'UD' ? 'selected' : ''}>Uygulanabilir Değil</option></select></td>
-                <td><textarea class="form-control denetim-liste-aciklama" maxlength="1000">${htmlEncode(x.aciklama || '')}</textarea></td></tr>`).join('');
+                <td>${htmlEncode(x.no || '')}</td><td>${htmlEncode(x.konu || '')}${x.birimTuru ? ` <strong>(${htmlEncode(({PIK:'Proje İzleme ve Kontrol',PYK:'Proje Yönetim',CS:'Çevre Sosyal'})[x.birimTuru]||x.birimTuru)})</strong>` : ''}</td><td>${htmlEncode(x.soru || '')}</td><td><div>${htmlEncode(x.kaynak || '')}</div>${(x.belgeler||[]).map(b=>b.dosyaId?`<div class="mt-1"><a class="btn btn-sm btn-outline-primary" href="/Basvuru/DosyaIndir/${Number(b.dosyaId)}" target="_blank" rel="noopener"><i class="fas fa-download mr-1"></i>${htmlEncode(b.dosyaAdi||b.dosyaTuru||'Belgeyi indir')}</a></div>`:`<div class="small text-muted mt-1"><i class="fas fa-paperclip mr-1"></i>${htmlEncode(b.dosyaTuru||('Zorunlu belge '+b.dosyaNo))}: Yüklenmedi</div>`).join('')}</td>
+                <td><select class="form-control denetim-liste-cevap" data-evet-sonucu="${htmlEncode(x.evetSonucu || 'Kabul')}" data-hayir-sonucu="${htmlEncode(x.hayirSonucu || 'Ret')}"><option value="">Seçiniz</option><option value="Evet" ${x.cevap === 'Evet' ? 'selected' : ''}>Evet</option><option value="Hayır" ${x.cevap === 'Hayır' ? 'selected' : ''}>Hayır</option></select><div class="mt-2 small">Sonuç: <span class="denetim-liste-hesaplanan-sonuc badge ${x.sonuc === 'Kabul' ? 'badge-success' : x.sonuc === 'Ret' ? 'badge-danger' : x.sonuc === 'Düzeltme' ? 'badge-warning' : 'badge-secondary'}">${htmlEncode(x.sonuc || '-')}</span></div></td>
+                <td><textarea class="form-control denetim-liste-duzeltme ${x.sonuc === 'Düzeltme' ? '' : 'd-none'}" maxlength="1000" placeholder="Düzeltilecek bilgiyi yazınız">${htmlEncode(x.duzeltilecekBilgi || '')}</textarea></td></tr>`).join('');
         }
         if (panel.dataset.editable !== 'true') tbody.querySelectorAll('select,textarea').forEach(x => x.disabled = true);
         tbody.querySelectorAll('select,textarea').forEach(x => x.addEventListener('input', () => dirty = true));
+        if (!sistemListesi) tbody.querySelectorAll('.denetim-liste-cevap').forEach(select => select.addEventListener('change', function () {
+            const alan = this.closest('tr')?.querySelector('.denetim-liste-duzeltme');
+            const sonucAlani = this.closest('tr')?.querySelector('.denetim-liste-hesaplanan-sonuc');
+            const hesaplanan = this.value === 'Evet' ? this.dataset.evetSonucu : this.value === 'Hayır' ? this.dataset.hayirSonucu : '';
+            if (sonucAlani) { sonucAlani.textContent = hesaplanan || '-'; sonucAlani.className = `denetim-liste-hesaplanan-sonuc badge ${hesaplanan === 'Kabul' ? 'badge-success' : hesaplanan === 'Ret' ? 'badge-danger' : hesaplanan === 'Düzeltme' ? 'badge-warning' : 'badge-secondary'}`; }
+            if (!alan) return; alan.classList.toggle('d-none', hesaplanan !== 'Düzeltme');
+            if (hesaplanan !== 'Düzeltme') alan.value = '';
+        }));
         document.getElementById('sistemSonuclariYenidenUretBtn')?.addEventListener('click', function () {
             if (!window.confirm('Kayıtlı sistem sonuçları güncel başvuru verilerine göre yeniden oluşturulacaktır. Devam edilsin mi?')) return;
             const button = this;
@@ -1052,11 +1069,17 @@
             const guncel = satirlar.map((x, i) => {
                 const tr = tbody.querySelector(`tr[data-index="${i}"]`);
                 const sonuc = tr?.querySelector('.denetim-liste-sonuc')?.value || '';
+                const cevap = tr?.querySelector('.denetim-liste-cevap')?.value || '';
                 const aciklama = tr?.querySelector('.denetim-liste-aciklama')?.value || '';
+                const duzeltilecekBilgi = tr?.querySelector('.denetim-liste-duzeltme')?.value.trim() || '';
                 return sistemListesi
                     ? { no:x.no, konu:x.konu, soru:x.soru, kaynak:x.kaynak, sonuc, aciklama }
-                    : { no:x.no, konu:x.konu, soru:x.soru, kaynak:x.kaynak, sonuc, aciklama };
+                    : { soruId:x.soruId, no:x.no, cevap, duzeltilecekBilgi };
             });
+            if (!sistemListesi) {
+                const eksik = guncel.find((x,i) => { const t=satirlar[i]; const sonuc=x.cevap==='Evet'?t.evetSonucu:x.cevap==='Hayır'?t.hayirSonucu:''; return sonuc==='Düzeltme'&&!x.duzeltilecekBilgi; });
+                if (eksik) { PopupMesajGoster(`${eksik.no}. soru için düzeltilecek bilgi girilmelidir.`, false); return; }
+            }
             button.disabled = true;
             AjaxPost('/Denetleme/DenetimListesiKaydet', { basvuruId: BasvuruId(), listeTuru: panel.dataset.listType, json: JSON.stringify(guncel) }, sonuc => {
                 SonucGoster(sonuc);
@@ -1070,12 +1093,33 @@
         document.getElementById('revizyonKarsilastirBtn')?.addEventListener('click', RevizyonKarsilastir);
         const sonucAlani = document.getElementById('denetimSonucu');
         const gerekceAlani = document.getElementById('denetimGerekcesi');
+        const krediLimitiAlani = document.getElementById('bankaKrediLimiti');
+        const aylikOdemeAlani = document.getElementById('bankaMaksimumAylikOdeme');
+        const bankaParaFormatla = function (alan) {
+            if (!alan) return;
+            const temizDeger = paraTamsayiDegeri(alan.value);
+            alan.value = temizDeger
+                ? Number(temizDeger).toLocaleString('en-US', { maximumFractionDigits: 0 })
+                : '';
+        };
+        const vadeHesapla = function () {
+            const krediLimiti = Number(paraTamsayiDegeri(krediLimitiAlani?.value || '')) || 0;
+            const aylikOdeme = Number(paraTamsayiDegeri(aylikOdemeAlani?.value || '')) || 0;
+            const vade = krediLimiti > 0 && aylikOdeme > 0 ? Math.ceil(krediLimiti / aylikOdeme) : 0;
+            const vadeAlani = document.getElementById('tahminiVadeSuresiAy');
+            if (vadeAlani) vadeAlani.value = String(vade);
+        };
         const degisti = function () {
             dirty = true;
             DenetimSonuclandirButonuGuncelle(false);
         };
         sonucAlani?.addEventListener('change', degisti);
         gerekceAlani?.addEventListener('input', degisti);
+        krediLimitiAlani?.addEventListener('input', function () { bankaParaFormatla(this); vadeHesapla(); degisti(); });
+        aylikOdemeAlani?.addEventListener('input', function () { bankaParaFormatla(this); vadeHesapla(); degisti(); });
+        bankaParaFormatla(krediLimitiAlani);
+        bankaParaFormatla(aylikOdemeAlani);
+        vadeHesapla();
 
         document.getElementById('denetimKaydetBtn')?.addEventListener('click', function () {
             DenetimKaydet(this, false);
@@ -1095,6 +1139,8 @@
     function DenetimKaydet(button, sonuclandir, afterSuccess) {
         const sonuc = Number(document.getElementById('denetimSonucu')?.value || 0);
         const gerekce = (document.getElementById('denetimGerekcesi')?.value || '').trim();
+        const bankaKrediLimiti = Number(paraTamsayiDegeri(document.getElementById('bankaKrediLimiti')?.value || '')) || 0;
+        const bankaMaksimumAylikOdeme = Number(paraTamsayiDegeri(document.getElementById('bankaMaksimumAylikOdeme')?.value || '')) || 0;
         if (!sonuc || !gerekce) {
             const panel = document.querySelector('[data-panel="' + bolumKarar + '"]');
             PopupMesajGoster(panel?.dataset.fieldsRequired || '', false);
@@ -1110,7 +1156,9 @@
         AjaxPost(`/Denetleme/OnBasvuruDenetimiKaydet?sonuclandir=${sonuclandir}`, {
             id: BasvuruId(),
             denetimGerekcesi: gerekce,
-            denetimSonucu: sonuc || null
+            denetimSonucu: sonuc || null,
+            bankaKrediLimiti,
+            bankaMaksimumAylikOdeme
         }, function (response) {
             SonucGoster(response);
             if (response?.basarili && sonuclandir) {
@@ -1527,10 +1575,15 @@
     var cevreselSosyalCevaplar = { mode: '', answers: {}, declaration: false };
     var cevreselSosyalOtomatikCevaplar = {};
     var cevreselSosyalAdresleri = [];
+    var cevreselSosyalKapsamDisi = { baslik: '', html: '' };
 
     function CevreselSosyalBolumuIlklendir() {
         CevreselSosyalTanimlariOku();
         CevreselSosyalOtomatikCevaplariOku();
+        try {
+            const kapsamDisi = JSON.parse(document.getElementById('cevreselSosyalKapsamDisiJson')?.textContent || '{}');
+            cevreselSosyalKapsamDisi = { baslik: kapsamDisi.baslik || '', html: kapsamDisi.html || '' };
+        } catch { cevreselSosyalKapsamDisi = { baslik: '', html: '' }; }
         try {
             const parsed = JSON.parse(document.getElementById('cevreselSosyalAdresleriJson')?.textContent || '[]');
             cevreselSosyalAdresleri = Array.isArray(parsed) ? parsed : [];
@@ -1725,6 +1778,9 @@
         const contexts = CevreselSosyalSoruBaglamlari(question);
         const plannedOnly = Array.isArray(question.contexts) && question.contexts.length === 1 && question.contexts[0] === 'planned' && CevreselSosyalBaglamlari().includes('existing');
         let html = `<div class="esf-question"><div class="esf-question-title">${htmlEncode(question.code || question.id)} ${htmlEncode(question.text || '')}${question.note ? `<small>${htmlEncode(question.note)}</small>` : ''}</div>`;
+        if (question.showExclusionList && cevreselSosyalKapsamDisi.html) {
+            html += `<div class="esf-info"><details><summary>${htmlEncode(cevreselSosyalKapsamDisi.baslik || 'Kapsam Dışı Faaliyetler Listesi - Bilgilendirme')}</summary><div class="mt-2">${cevreselSosyalKapsamDisi.html}</div></details></div>`;
+        }
         if (question.info) html += `<div class="esf-info"><strong>${htmlEncode(cevreselSosyalMetinleri.informativeNote)}</strong> ${htmlEncode(question.info)}</div>`;
         if (plannedOnly) html += `<div class="esf-hidden-note">${htmlEncode(cevreselSosyalMetinleri.plannedOnlyNote)}</div>`;
         html += `<div class="esf-cols ${contexts.length === 1 ? 'single' : ''}">`;
@@ -2411,6 +2467,7 @@
             ...BasvuruKimlikleri(),
             bagliOrtakIsletmeVarMi: bagliOrtakVarMi,
             ozelSektorPayi: sayiOkuId('privateShareCalculated'),
+            halkaAciklikOrani: sayiOkuId('publicFloatRate'),
             ortaklar: basvuruOrtaklari,
             bagliOrtakUnvani: '',
             bagliOrtakKimlikNo: '',
@@ -2436,6 +2493,7 @@
         const model = {
             basvuruId: ortak.basvuruId,
             ozelSektorPayi: sayiOkuId('privateShareCalculated'),
+            halkaAciklikOrani: sayiOkuId('publicFloatRate'),
             ortaklar: [ortak],
             degisenOrtakSiraNo: ortak.siraNo || null
         };
@@ -2715,14 +2773,20 @@
             PopupMesajGoster(mesaj.replace("{0}", String(azamiOran)), false);
             return;
         }
+        const yatirimSuresiAy = degerInt('Basvuru.finans.YatirimSuresiAy') || 0;
+        const geriOdemesizDonemAy = degerInt('Basvuru.finans.OdemeSuresiAy') || 0;
+        if (yatirimSuresiAy + geriOdemesizDonemAy > 24) {
+            PopupMesajGoster('Yatırım süresi ile geri ödemesiz dönem toplamı 24 ayı geçemez.', false);
+            return;
+        }
         const model = {
             ...BasvuruKimlikleri(),
             talepEdilenFinansmanOrani: oran,
             basvuruSahibiKatkisi: degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
             onBasvuruSahibiKatkisi: degerDec('Basvuru.finans.BasvuruSahibiKatkisi'),
             talepEdilenVadeSuresiAy: degerInt('Basvuru.finans.TalepEdilenVadeSuresiAy'),
-            yatirimSuresiAy: degerInt('Basvuru.finans.YatirimSuresiAy'),
-            odemeSuresiAy: degerInt('Basvuru.finans.OdemeSuresiAy'),
+            yatirimSuresiAy,
+            odemeSuresiAy: geriOdemesizDonemAy,
             finansmanParaBirimi: degerStr('Basvuru.finans.FinansmanParaBirimi'),
             digerFinansmanKaynaklari: degerStr('Basvuru.finans.DigerFinansmanKaynaklari'),
             oncekiRffOnayliTutar: degerDec('Basvuru.finans.OncekiRffOnayliTutar'),
@@ -4435,8 +4499,8 @@
     }
 
     function adresModalAc(index) {
-        if (index < 0 && uygulamaAdresiSinirli && sonUygulamaAdresleri.length >= 1) {
-            PopupMesajGoster('Bu dönemde yalnızca bir uygulama adresi eklenebilir.', false);
+        if (index < 0 && uygulamaAdresiSiniri > 0 && sonUygulamaAdresleri.length >= uygulamaAdresiSiniri) {
+            PopupMesajGoster(`Bu dönemde en fazla ${uygulamaAdresiSiniri} uygulama adresi eklenebilir.`, false);
             return;
         }
         const adres = index >= 0 ? sonUygulamaAdresleri[index] : {};
@@ -4601,8 +4665,8 @@
         const basvuruYatirimSayfasi = active === bolumBasvuruYatirimBilgileri;
         sonUygulamaAdresleri = uygulamaAdresleri || [];
         const yeniAdresButonu = document.getElementById('adresYeniBtn');
-        if (yeniAdresButonu && uygulamaAdresiSinirli)
-            yeniAdresButonu.classList.toggle('d-none', sonUygulamaAdresleri.length >= 1);
+        if (yeniAdresButonu)
+            yeniAdresButonu.classList.toggle('d-none', uygulamaAdresiSiniri > 0 && sonUygulamaAdresleri.length >= uygulamaAdresiSiniri);
         if (sonUygulamaAdresleri.length > 0) $('#basvuruDegerZinciri').prop('disabled', true);
         AdrestenUretilenYatirimAlanlariniHesapla(sonUygulamaAdresleri);
         tbody.innerHTML = '';
