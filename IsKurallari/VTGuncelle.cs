@@ -1419,6 +1419,22 @@ namespace TarimDonusum.IsKurallari
                   IF NOT EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'CK_BasvuruMakine_DegerZinciriAsamaTuru')
                     EXEC(N'ALTER TABLE dbo.BasvuruMakine WITH CHECK ADD CONSTRAINT CK_BasvuruMakine_DegerZinciriAsamaTuru
                            CHECK(DegerZinciriAsamaTuru IS NULL OR DegerZinciriAsamaTuru IN(1,2,3,4,5,6,7));');"),
+            new(115,
+                @"IF OBJECT_ID(N'dbo.FirmaNace',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.FirmaNace(
+                        FirmaId INT NOT NULL,
+                        NaceKodu NVARCHAR(20) NOT NULL,
+                        SiraNo INT NOT NULL,
+                        CONSTRAINT PK_FirmaNace PRIMARY KEY(FirmaId,NaceKodu),
+                        CONSTRAINT FK_FirmaNace_Firma FOREIGN KEY(FirmaId) REFERENCES dbo.Firma(Id) ON DELETE CASCADE,
+                        CONSTRAINT FK_FirmaNace_Nace FOREIGN KEY(NaceKodu) REFERENCES dbo.Nace(Kod) ON UPDATE CASCADE,
+                        CONSTRAINT CK_FirmaNace_SiraNo CHECK(SiraNo>0)
+                    );
+                    CREATE INDEX IX_FirmaNace_NaceKodu ON dbo.FirmaNace(NaceKodu);
+                    INSERT dbo.FirmaNace(FirmaId,NaceKodu,SiraNo)
+                    SELECT Id,NaceKodu,1 FROM dbo.Firma WHERE NaceKodu IS NOT NULL;
+                  END"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

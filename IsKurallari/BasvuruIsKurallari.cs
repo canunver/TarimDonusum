@@ -1299,6 +1299,7 @@ namespace TarimDonusum.IsKurallari
                 }
                 firma.naceKodu = nace.kod;
                 firma.naceAdi = nace.ad;
+                firma.naceKodlari = [nace];
 
                 TABFirma tabFirma = new TABFirma(connection);
                 Firma? mevcut = await tabFirma.VergiKimlikNoIleOkuAsync(0, vergiKimlikNo);
@@ -1318,6 +1319,7 @@ namespace TarimDonusum.IsKurallari
                 {
                     TABFirma txFirma = new TABFirma(connection, null, transaction);
                     sonuc.nesne = await txFirma.EkleAsync(firma);
+                    await txFirma.NaceKodlariniKaydetAsync(firma);
 
                     TABFirmaKullanici tabFirmaKullanici = new TABFirmaKullanici(connection, null, transaction);
                     await tabFirmaKullanici.EkleYoksaAsync(new FirmaKullanici

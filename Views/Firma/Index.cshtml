@@ -29,7 +29,7 @@
 
 <div class="modal fade" id="firmaModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content firma-modal-content">
     <div class="modal-header"><h5 class="modal-title">Firma bilgileri</h5><button class="close" data-dismiss="modal">&times;</button></div>
-    <div class="modal-body">
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto;">
         <input id="fId" type="hidden" />
         <div class="form-grid">
             <label>Vergi kimlik no<input id="fVergi" maxlength="20" /></label>
@@ -37,12 +37,12 @@
             <label>Ticaret sicil no<input id="fSicil" maxlength="100" /></label>
             <label>Kuruluş tarihi<input id="fKurulus" type="date" required /></label>
             <label>MERSİS no<input id="fMersis" maxlength="50" /></label>
-            <label>NACE kodu<div class="input-group nace-code-group"><input id="fNace" maxlength="20" onblur="NaceKoddanBul()" /><div class="input-group-append"><button type="button" class="btn btn-outline-primary" onclick="NaceAramaAc()" aria-label="NACE kodu ara" title="NACE kodu ara"><i class="fas fa-search"></i></button></div></div><small id="fNaceAdi" class="text-muted"></small></label>
             <label>Web sitesi<input id="fWeb" maxlength="250" /></label>
             <label>Telefon<input id="fTelefon" maxlength="30" /></label>
             <label>KEP adresi<input id="fKep" maxlength="250" /></label>
             <label>E-posta<input id="fEposta" type="email" maxlength="256" /></label>
         </div>
+        <label class="w-100 mt-2">NACE kodları<div id="fNaceSecilenler" class="border rounded p-2 mb-1" style="min-height:42px"></div><button type="button" class="btn btn-sm btn-outline-primary" onclick="NaceAramaAc()"><i class="fas fa-plus mr-1"></i>NACE kodu ekle</button><small class="d-block text-muted mt-1">İlk sıradaki kod ana faaliyet kodudur.</small></label>
         <label class="w-100 mt-2">Faaliyet konusu<textarea id="fFaaliyet" class="form-control" rows="3"></textarea></label>
         <label class="w-100">Adres<textarea id="fAdres" class="form-control" rows="3"></textarea></label>
     </div>
@@ -72,7 +72,7 @@
 
 @section Scripts {
 <script>
-    let firmalar = [];
+    let firmalar = [], seciliNaceler = [];
     const esc = value => $('<div/>').text(value == null ? '' : String(value)).html();
     const hata = sonuc => PopupMesajGoster(sonuc && sonuc.hataStr ? sonuc.hataStr : 'İşlem tamamlanamadı.', false);
 
@@ -99,14 +99,14 @@
     function FirmaFormaYaz(f) {
         $('#fId').val(f.id || 0); $('#fVergi').val(f.vergiKimlikNo || ''); $('#fUnvan').val(f.ticaretUnvani || '');
         $('#fSicil').val(f.ticaretSicilNo || ''); $('#fKurulus').val((f.kurulusTarihi || '').slice(0,10));
-        $('#fMersis').val(f.mersisNo || ''); $('#fNace').val(f.naceKodu || ''); $('#fNaceAdi').text(f.naceAdi || ''); $('#fWeb').val(f.webSitesi || '');
+        $('#fMersis').val(f.mersisNo || ''); seciliNaceler=(f.naceKodlari||[]).map(x=>({kod:x.kod,ad:x.ad}));if(!seciliNaceler.length&&f.naceKodu)seciliNaceler=[{kod:f.naceKodu,ad:f.naceAdi||''}];NaceSecilenleriYaz();$('#fWeb').val(f.webSitesi || '');
         $('#fTelefon').val(f.telefon || ''); $('#fKep').val(f.kepAdresi || ''); $('#fEposta').val(f.eposta || '');
         $('#fFaaliyet').val(f.faaliyetKonusu || ''); $('#fAdres').val(f.adres || ''); $('#firmaModal').modal('show');
     }
     function FirmaKaydet() {
         const model = { id:Number($('#fId').val()), vergiKimlikNo:$('#fVergi').val(), ticaretUnvani:$('#fUnvan').val(),
             ticaretSicilNo:$('#fSicil').val(), kurulusTarihi:$('#fKurulus').val() || null, mersisNo:$('#fMersis').val(),
-            naceKodu:$('#fNace').val(), webSitesi:$('#fWeb').val(), telefon:$('#fTelefon').val(), kepAdresi:$('#fKep').val(),
+            naceKodu:seciliNaceler[0]?.kod||'', naceKodlari:seciliNaceler, webSitesi:$('#fWeb').val(), telefon:$('#fTelefon').val(), kepAdresi:$('#fKep').val(),
             eposta:$('#fEposta').val(), faaliyetKonusu:$('#fFaaliyet').val(), adres:$('#fAdres').val() };
         if (!model.kurulusTarihi) {
             PopupMesajGoster('Firma kuruluş tarihi girilmelidir.', false);
@@ -119,10 +119,12 @@
             if (($('#firmaArama').val() || '').trim()) FirmaAra();
         });
     }
-    function NaceSec(x){$('#fNace').val(x.kod);$('#fNaceAdi').text(x.ad);$('#naceAramaModal').modal('hide');}
-    function NaceAramaAc(){$('#naceAramaMetni').val($('#fNace').val());$('#naceAramaSonuclari').html('<div class="text-muted">Aramak istediğiniz kodu veya açıklamayı yazınız.</div>');$('#naceAramaModal').modal('show');setTimeout(()=>$('#naceAramaMetni').trigger('focus').select(),150);}
-    function NaceAra(){const metin=($('#naceAramaMetni').val()||'').trim();if(!metin){$('#naceAramaSonuclari').html('<div class="text-muted">Arama yapmak için kod veya açıklama giriniz.</div>');return;}AjaxGet('/Nace/Ara',{metin},s=>{if(!s?.basarili)return hata(s);$('#naceAramaSonuclari').html((s.nesne||[]).map(x=>`<button type="button" class="list-group-item list-group-item-action" data-kod="${esc(x.kod)}" data-ad="${esc(x.ad)}" onclick="NaceSec({kod:this.dataset.kod,ad:this.dataset.ad})"><strong>${esc(x.kod)}</strong> - ${esc(x.ad)}</button>`).join('')||'<div class="text-muted">Kayıt bulunamadı.</div>');});}
-    function NaceKoddanBul(){const kod=($('#fNace').val()||'').trim();$('#fNaceAdi').text('');if(!kod)return;AjaxGet('/Nace/Ara',{metin:kod},s=>{const x=(s?.nesne||[]).find(n=>String(n.kod).toLocaleLowerCase('tr-TR')===kod.toLocaleLowerCase('tr-TR'));if(x)NaceSec(x);else $('#fNaceAdi').text('Geçerli bir NACE kodu seçiniz.');});}
+    function NaceSecilenleriYaz(){$('#fNaceSecilenler').html(seciliNaceler.map((x,i)=>`<span class="badge badge-light border mr-1 mb-1 p-2">${i===0?'<strong class="text-primary">Ana · </strong>':''}${esc(x.kod)} - ${esc(x.ad)} ${i>0?`<button type="button" class="btn btn-link btn-sm p-0 ml-1" onclick="NaceAnaYap(${i})">Ana yap</button>`:''}<button type="button" class="close ml-2" style="font-size:1rem" aria-label="Kaldır" onclick="NaceKaldir(${i})">&times;</button></span>`).join('')||'<span class="text-muted">Henüz NACE kodu seçilmedi.</span>');}
+    function NaceAnaYap(index){const [nace]=seciliNaceler.splice(index,1);seciliNaceler.unshift(nace);NaceSecilenleriYaz();}
+    function NaceKaldir(index){seciliNaceler.splice(index,1);NaceSecilenleriYaz();}
+    function NaceSec(x){if(!seciliNaceler.some(n=>String(n.kod).toLocaleLowerCase('tr-TR')===String(x.kod).toLocaleLowerCase('tr-TR')))seciliNaceler.push({kod:x.kod,ad:x.ad});NaceSecilenleriYaz();}
+    function NaceAramaAc(){$('#naceAramaMetni').val('');$('#naceAramaSonuclari').html('<div class="text-muted">Aramak istediğiniz kodu veya açıklamayı yazınız.</div>');$('#naceAramaModal').modal('show');setTimeout(()=>$('#naceAramaMetni').trigger('focus'),150);}
+    function NaceAra(){const metin=($('#naceAramaMetni').val()||'').trim();if(!metin){$('#naceAramaSonuclari').html('<div class="text-muted">Arama yapmak için kod veya açıklama giriniz.</div>');return;}AjaxGet('/Nace/Ara',{metin},s=>{if(!s?.basarili)return hata(s);$('#naceAramaSonuclari').html((s.nesne||[]).map(x=>`<button type="button" class="list-group-item list-group-item-action" data-kod="${esc(x.kod)}" data-ad="${esc(x.ad)}" onclick="NaceSec({kod:this.dataset.kod,ad:this.dataset.ad})"><strong>${esc(x.kod)}</strong> - ${esc(x.ad)} <span class="float-right text-primary">Ekle</span></button>`).join('')||'<div class="text-muted">Kayıt bulunamadı.</div>');});}
 
     function BasvuranlarAc(firmaId) {
         $('#bFirmaId').val(firmaId); $('#basvuranArama').val(''); $('#basvuranAramaSonuc').empty();

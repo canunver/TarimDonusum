@@ -35,6 +35,7 @@ namespace TarimDonusum.Tablolar
                         WHERE fk.FirmaId = f.Id
                         FOR JSON PATH
                     ), N'[]') AS BasvuranlarJson,
+                    ISNULL((SELECT n.Kod,n.Ad,CAST(n.Aktif AS bit) Aktif FROM dbo.FirmaNace fn INNER JOIN dbo.Nace n ON n.Kod=fn.NaceKodu WHERE fn.FirmaId=f.Id ORDER BY fn.SiraNo FOR JSON PATH),N'[]') AS NaceKodlariJson,
                     ISNULL((SELECT N.Ad FROM dbo.Nace N WHERE N.Kod=f.NaceKodu),N'') AS NaceAdi
                 FROM dbo.Firma f WHERE ";
 
@@ -87,6 +88,7 @@ namespace TarimDonusum.Tablolar
                         WHERE fk.FirmaId = f.Id
                         FOR JSON PATH
                     ), N'[]') AS BasvuranlarJson,
+                    ISNULL((SELECT n.Kod,n.Ad,CAST(n.Aktif AS bit) Aktif FROM dbo.FirmaNace fn INNER JOIN dbo.Nace n ON n.Kod=fn.NaceKodu WHERE fn.FirmaId=f.Id ORDER BY fn.SiraNo FOR JSON PATH),N'[]') AS NaceKodlariJson,
                     ISNULL((SELECT N.Ad FROM dbo.Nace N WHERE N.Kod=f.NaceKodu),N'') AS NaceAdi
                 FROM dbo.Firma f
                 WHERE f.Id = @Id;";
@@ -108,6 +110,7 @@ namespace TarimDonusum.Tablolar
                     f.KurulusTarihi, f.MersisNo, f.NaceKodu, f.WebSitesi,
                     f.Telefon, f.KepAdresi, f.Eposta, f.FaaliyetKonusu, f.Adres,
                     N'[]' AS BasvuranlarJson,
+                    ISNULL((SELECT n.Kod,n.Ad,CAST(n.Aktif AS bit) Aktif FROM dbo.FirmaNace fn INNER JOIN dbo.Nace n ON n.Kod=fn.NaceKodu WHERE fn.FirmaId=f.Id ORDER BY fn.SiraNo FOR JSON PATH),N'[]') AS NaceKodlariJson,
                     ISNULL((SELECT N.Ad FROM dbo.Nace N WHERE N.Kod=f.NaceKodu),N'') AS NaceAdi
                 FROM dbo.Firma f ";
             if (kullaniciId.HasValue)
@@ -179,6 +182,22 @@ namespace TarimDonusum.Tablolar
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task NaceKodlariniKaydetAsync(Firma firma)
+        {
+            await using SqlCommand sil = KomutOlustur("DELETE FROM dbo.FirmaNace WHERE FirmaId=@FirmaId;");
+            sil.Parameters.AddWithValue("@FirmaId", firma.id);
+            await sil.ExecuteNonQueryAsync();
+            int siraNo = 1;
+            foreach (Nace nace in firma.naceKodlari)
+            {
+                await using SqlCommand ekle = KomutOlustur("INSERT dbo.FirmaNace(FirmaId,NaceKodu,SiraNo) VALUES(@FirmaId,@NaceKodu,@SiraNo);");
+                ekle.Parameters.AddWithValue("@FirmaId", firma.id);
+                ekle.Parameters.AddWithValue("@NaceKodu", nace.kod);
+                ekle.Parameters.AddWithValue("@SiraNo", siraNo++);
+                await ekle.ExecuteNonQueryAsync();
+            }
+        }
+
         private static void ParametreleriEkle(SqlCommand command, Firma firma)
         {
             command.Parameters.AddWithValue("@VergiKimlikNo", firma.vergiKimlikNo ?? "");
@@ -213,7 +232,8 @@ namespace TarimDonusum.Tablolar
                 faaliyetKonusu = reader.GetString(11),
                 adres = reader.GetString(12),
                 basvuranlar = BasvuranlariOku(reader.GetString(13)),
-                naceAdi = reader.GetString(14)
+                naceKodlari = JsonSerializer.Deserialize<List<Nace>>(reader.GetString(14), JsonOptions) ?? new List<Nace>(),
+                naceAdi = reader.GetString(15)
             };
         }
 

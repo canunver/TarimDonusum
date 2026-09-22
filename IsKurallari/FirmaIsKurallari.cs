@@ -70,13 +70,20 @@ namespace TarimDonusum.IsKurallari
             {
                 await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
-                Nace? nace = string.IsNullOrWhiteSpace(firma.naceKodu) ? null : await new TABNace(connection).OkuAsync(firma.naceKodu);
-                if (nace == null || !nace.aktif)
+                TABNace naceTablosu = new(connection);
+                List<Nace> dogrulanmisNaceler = new();
+                foreach (Nace secilen in firma.naceKodlari)
                 {
-                    sonuc.HataEkle("Geçerli ve aktif bir NACE kodu seçilmelidir."); return sonuc;
+                    Nace? nace = await naceTablosu.OkuAsync(secilen.kod);
+                    if (nace == null || !nace.aktif)
+                    {
+                        sonuc.HataEkle($"'{secilen.kod}' geçerli ve aktif bir NACE kodu değildir."); return sonuc;
+                    }
+                    dogrulanmisNaceler.Add(nace);
                 }
-                firma.naceKodu = nace.kod;
-                firma.naceAdi = nace.ad;
+                firma.naceKodlari = dogrulanmisNaceler;
+                firma.naceKodu = dogrulanmisNaceler[0].kod;
+                firma.naceAdi = dogrulanmisNaceler[0].ad;
                 if (firma.id > 0 && !await FirmaErisimiVarMiAsync(connection, firma.id, mevcutKullanici))
                 {
                     sonuc.HataEkle("Bu firmaya erişim yetkiniz yok."); return sonuc;
@@ -103,6 +110,7 @@ namespace TarimDonusum.IsKurallari
                     }
                 }
                 else await tab.GuncelleAsync(firma);
+                await tab.NaceKodlariniKaydetAsync(firma);
                 await new TABFirmaLog(connection, null, tx).EkleAsync(firma, yeni ? "FirmaEklendi" : "FirmaGuncellendi", mevcutKullanici.Id);
                 await tx.CommitAsync();
                 sonuc.nesne = firma.id;
@@ -207,7 +215,13 @@ namespace TarimDonusum.IsKurallari
         {
             f.vergiKimlikNo = f.vergiKimlikNo?.Trim() ?? ""; f.ticaretUnvani = f.ticaretUnvani?.Trim() ?? "";
             f.ticaretSicilNo = f.ticaretSicilNo?.Trim() ?? ""; f.mersisNo = f.mersisNo?.Trim() ?? "";
-            f.naceKodu = f.naceKodu?.Trim() ?? ""; f.webSitesi = f.webSitesi?.Trim() ?? "";
+            f.naceKodlari = (f.naceKodlari ?? new List<Nace>())
+                .Where(x => !string.IsNullOrWhiteSpace(x.kod))
+                .Select(x => new Nace { kod = x.kod.Trim(), ad = x.ad?.Trim() ?? "", aktif = x.aktif })
+                .GroupBy(x => x.kod, StringComparer.OrdinalIgnoreCase).Select(x => x.First()).ToList();
+            if (f.naceKodlari.Count == 0 && !string.IsNullOrWhiteSpace(f.naceKodu))
+                f.naceKodlari.Add(new Nace { kod = f.naceKodu.Trim() });
+            f.naceKodu = f.naceKodlari.FirstOrDefault()?.kod ?? ""; f.webSitesi = f.webSitesi?.Trim() ?? "";
             f.telefon = f.telefon?.Trim() ?? ""; f.kepAdresi = f.kepAdresi?.Trim() ?? "";
             f.eposta = f.eposta?.Trim() ?? ""; f.faaliyetKonusu = f.faaliyetKonusu?.Trim() ?? ""; f.adres = f.adres?.Trim() ?? "";
         }
