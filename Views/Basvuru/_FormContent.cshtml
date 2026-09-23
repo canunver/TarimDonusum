@@ -3442,12 +3442,27 @@
             .catch(()=>PopupMesajGoster('Excel dosyası yüklenemedi.',false)).finally(()=>{input.value='';});
     }
 
+    const yatirimOzetiGiderGruplari = [
+        { key: 'ilkMadde', group: 'Direkt İlk Madde ve Malzeme', item: 'İlk Madde Kullanımı', unit: '' },
+        { key: 'yardimciMadde', group: 'Direkt İlk Madde ve Malzeme', item: 'Yardımcı Madde', unit: '' },
+        { key: 'isletmeMalzemesi', group: 'Direkt İlk Madde ve Malzeme', item: 'İşletme Malzemesi Kullanımı', unit: '' },
+        { key: 'direktIscilik', group: 'Direkt İşçilik Giderleri', item: 'Direkt İşçilik', unit: 'Kişi/Yıl' }
+    ];
+
+    function YatirimOzetiGiderleriDonustur(rows) {
+        return rows.flatMap(row => {
+            if (!row) return [];
+            if (row.parentExpenseGroup) return [row];
+            const grup = yatirimOzetiGiderGruplari.find(x => x.group === row.group && x.item === row.item);
+            if (!grup) return [row];
+            // Eski ana satırdaki verileri alt satır olarak koru; boş şablon satırını taşıma.
+            if (String(row.qty ?? '').trim() === '' && String(row.unitPrice ?? '').trim() === '') return [];
+            return [{ ...row, group: grup.item, parentExpenseGroup: grup.key }];
+        });
+    }
+
     function YatirimOzetiVarsayilanGiderler() {
         return [
-            { group: 'Direkt İlk Madde ve Malzeme', item: 'İlk Madde Kullanımı', qty: '', unit: '', unitPrice: '', fixedPct: '0', variablePct: '100' },
-            { group: 'Direkt İlk Madde ve Malzeme', item: 'Yardımcı Madde', qty: '', unit: '', unitPrice: '', fixedPct: '0', variablePct: '100' },
-            { group: 'Direkt İlk Madde ve Malzeme', item: 'İşletme Malzemesi Kullanımı', qty: '', unit: '', unitPrice: '', fixedPct: '0', variablePct: '100' },
-            { group: 'Direkt İşçilik Giderleri', item: 'Direkt İşçilik', qty: '', unit: 'Kişi/Yıl', unitPrice: '', fixedPct: '0', variablePct: '100' },
             { group: 'Genel Üretim Giderleri', item: 'Elektrik Giderleri', qty: '', unit: 'kWh', unitPrice: '', fixedPct: '0', variablePct: '100' },
             { group: 'Genel Üretim Giderleri', item: 'Su / Gaz Giderleri', qty: '', unit: '', unitPrice: '', fixedPct: '0', variablePct: '100' },
             { group: 'Genel Üretim Giderleri', item: 'Yakıt Giderleri', qty: '', unit: '', unitPrice: '', fixedPct: '0', variablePct: '100' },
@@ -3480,6 +3495,10 @@
     }
 
     function YatirimOzetiGiderToplamlari() {
+        yatirimOzetiGiderRows.forEach(row => {
+            row.fixedPct = Math.min(100, Math.max(0, YatirimOzetiSayi(row.fixedPct)));
+            row.variablePct = Number((100 - row.fixedPct).toFixed(2));
+        });
         const total = yatirimOzetiGiderRows.reduce((sum, row) => sum + YatirimOzetiGiderToplami(row), 0);
         const fixed = yatirimOzetiGiderRows.reduce((sum, row) => sum + YatirimOzetiGiderToplami(row) * YatirimOzetiSayi(row.fixedPct) / 100, 0);
         const variable = yatirimOzetiGiderRows.reduce((sum, row) => sum + YatirimOzetiGiderToplami(row) * YatirimOzetiSayi(row.variablePct) / 100, 0);
@@ -3489,12 +3508,27 @@
     function YatirimOzetiGiderRender() {
         const container = document.getElementById('operatingExpensesBox');
         if (!container) return;
+        yatirimOzetiGiderRows = YatirimOzetiGiderleriDonustur(yatirimOzetiGiderRows);
         const disabled = basvuruReadonly ? 'disabled' : '';
         const totals = YatirimOzetiGiderToplamlari();
         let html = `<div class="table-responsive"><table class="table table-bordered yatirim-ozeti-expense-table"><thead><tr>
             <th>Gider Grubu</th><th>Gider Unsuru</th><th>Miktar</th><th>Birim</th><th>Birim Fiyat (TL)</th><th>Toplam Tutar (TL)</th><th>Sabit<br>(%)</th><th>Değiş.<br>(%)</th><th>Gider.<br>Pay (%)</th><th>Sabit Tutar</th><th>Değişken Tutar</th><th>İşlem</th>
         </tr></thead><tbody>`;
-        yatirimOzetiGiderRows.forEach((row, index) => {
+        const satirlar = yatirimOzetiGiderRows.map((row, index) => ({ row, index }));
+        const gorunenSatirlar = yatirimOzetiGiderGruplari.flatMap(grup => [
+            { grup }, ...satirlar.filter(x => x.row.parentExpenseGroup === grup.key)
+        ]).concat(satirlar.filter(x => !yatirimOzetiGiderGruplari.some(grup => grup.key === x.row.parentExpenseGroup)));
+        gorunenSatirlar.forEach(({ row, index, grup }) => {
+            if (grup) {
+                html += `<tr class="summary-row">
+                    <td>${htmlEncode(grup.group)}</td>
+                    <th scope="row"><div class="d-flex align-items-center justify-content-between"><span>${htmlEncode(grup.item)}</span><button type="button" class="btn btn-sm btn-outline-primary ml-2" ${disabled} onclick="YatirimOzetiAltGiderEkle('${grup.key}')" aria-label="${htmlEncode(grup.item)} altına gider ekle">+</button></div></th>
+                    <td colspan="3" class="text-muted">Alt satırların toplamı</td>
+                    <td><strong id="gider_grup_toplam_${grup.key}"></strong></td><td></td><td></td>
+                    <td id="gider_grup_pay_${grup.key}"></td><td id="gider_grup_sabit_${grup.key}"></td><td id="gider_grup_degisken_${grup.key}"></td><td></td>
+                </tr>`;
+                return;
+            }
             row = row || {};
             yatirimOzetiGiderRows[index] = row;
             const total = YatirimOzetiGiderToplami(row);
@@ -3502,14 +3536,14 @@
             const variable = total * YatirimOzetiSayi(row.variablePct) / 100;
             const share = totals.total ? total / totals.total * 100 : 0;
             html += `<tr>
-                <td><input value="${htmlEncode(row.group || '')}" ${disabled} oninput="YatirimOzetiGiderGuncelle(${index}, 'group', this.value)" /></td>
-                <td><input value="${htmlEncode(row.item || '')}" ${disabled} oninput="YatirimOzetiGiderGuncelle(${index}, 'item', this.value)" /></td>
+                <td>${row.parentExpenseGroup ? `<span class="text-muted pl-3">↳ ${htmlEncode(row.group || '')}</span>` : `<input value="${htmlEncode(row.group || '')}" ${disabled} oninput="YatirimOzetiGiderGuncelle(${index}, 'group', this.value)" />`}</td>
+                <td><input id="gider_unsur_${index}" aria-label="Gider unsuru" placeholder="Gider unsuru" value="${htmlEncode(row.item || '')}" ${disabled} oninput="YatirimOzetiGiderGuncelle(${index}, 'item', this.value)" /></td>
                 <td><input type="number" step="0.01" value="${htmlEncode(row.qty || '')}" ${disabled} oninput="YatirimOzetiGiderGuncelle(${index}, 'qty', this.value)" /></td>
                 <td><select ${disabled} onchange="YatirimOzetiGiderGuncelle(${index}, 'unit', this.value)">${YatirimOzetiBirimSecenekleriHtml(row.unit)}</select></td>
                 <td><input type="text" inputmode="decimal" value="${htmlEncode(row.unitPrice ? YatirimOzetiParaKuruslu(YatirimOzetiSayi(row.unitPrice)) : '')}" ${disabled} oninput="YatirimOzetiGiderGuncelle(${index}, 'unitPrice', this.value)" onblur="YatirimOzetiBirimFiyatCikis(this, ${index})" /></td>
                 <td><strong id="gider_toplam_${index}">${YatirimOzetiPara(total)}</strong></td>
-                <td><input type="number" min="0" max="100" step="0.01" value="${htmlEncode(row.fixedPct ?? '')}" ${disabled} oninput="YatirimOzetiGiderGuncelle(${index}, 'fixedPct', this.value)" /></td>
-                <td><input type="number" min="0" max="100" step="0.01" value="${htmlEncode(row.variablePct ?? '')}" ${disabled} oninput="YatirimOzetiGiderGuncelle(${index}, 'variablePct', this.value)" /></td>
+                <td><input id="gider_sabit_yuzde_${index}" type="number" min="0" max="100" step="0.01" value="${htmlEncode(row.fixedPct ?? '')}" ${disabled} oninput="YatirimOzetiGiderGuncelle(${index}, 'fixedPct', this.value)" /></td>
+                <td><input id="gider_degisken_yuzde_${index}" type="number" min="0" max="100" step="0.01" value="${htmlEncode(row.variablePct ?? '')}" readonly aria-label="Değişken yüzde" title="100 − Sabit yüzde" /></td>
                 <td id="gider_pay_${index}">${share.toFixed(2)}</td>
                 <td id="gider_sabit_${index}">${YatirimOzetiPara(fixed)}</td>
                 <td id="gider_degisken_${index}">${YatirimOzetiPara(variable)}</td>
@@ -3519,9 +3553,11 @@
         html += `<tr class="summary-row"><th colspan="5">TOPLAM İŞLETME GİDERLERİ</th><th id="gider_genel_toplam">${YatirimOzetiPara(totals.total)}</th><th></th><th></th><th>100.00</th><th id="gider_genel_sabit">${YatirimOzetiPara(totals.fixed)}</th><th id="gider_genel_degisken">${YatirimOzetiPara(totals.variable)}</th><th></th></tr>`;
         html += '</tbody></table></div>';
         container.innerHTML = html;
+        YatirimOzetiGiderHesaplariniGuncelle();
     }
 
     function YatirimOzetiGiderGuncelle(index, field, value) {
+        if (basvuruReadonly || field === 'variablePct' || (field === 'group' && yatirimOzetiGiderRows[index]?.parentExpenseGroup)) return;
         if (!yatirimOzetiGiderRows[index]) yatirimOzetiGiderRows[index] = {};
         yatirimOzetiGiderRows[index][field] = value;
         dirty = true;
@@ -3537,6 +3573,16 @@
 
     function YatirimOzetiGiderHesaplariniGuncelle() {
         const totals = YatirimOzetiGiderToplamlari();
+        yatirimOzetiGiderGruplari.forEach(grup => {
+            const satirlar = yatirimOzetiGiderRows.filter(row => row.parentExpenseGroup === grup.key);
+            const total = satirlar.reduce((sum, row) => sum + YatirimOzetiGiderToplami(row), 0);
+            const fixed = satirlar.reduce((sum, row) => sum + YatirimOzetiGiderToplami(row) * YatirimOzetiSayi(row.fixedPct) / 100, 0);
+            const variable = satirlar.reduce((sum, row) => sum + YatirimOzetiGiderToplami(row) * YatirimOzetiSayi(row.variablePct) / 100, 0);
+            YatirimOzetiText(`gider_grup_toplam_${grup.key}`, YatirimOzetiPara(total));
+            YatirimOzetiText(`gider_grup_pay_${grup.key}`, (totals.total ? total / totals.total * 100 : 0).toFixed(2));
+            YatirimOzetiText(`gider_grup_sabit_${grup.key}`, YatirimOzetiPara(fixed));
+            YatirimOzetiText(`gider_grup_degisken_${grup.key}`, YatirimOzetiPara(variable));
+        });
         yatirimOzetiGiderRows.forEach((row, index) => {
             const total = YatirimOzetiGiderToplami(row);
             const fixed = total * YatirimOzetiSayi(row.fixedPct) / 100;
@@ -3546,10 +3592,31 @@
             YatirimOzetiText(`gider_pay_${index}`, share.toFixed(2));
             YatirimOzetiText(`gider_sabit_${index}`, YatirimOzetiPara(fixed));
             YatirimOzetiText(`gider_degisken_${index}`, YatirimOzetiPara(variable));
+            const degiskenYuzde = document.getElementById(`gider_degisken_yuzde_${index}`);
+            if (degiskenYuzde) degiskenYuzde.value = row.variablePct;
+            const sabitYuzde = document.getElementById(`gider_sabit_yuzde_${index}`);
+            if (sabitYuzde && YatirimOzetiSayi(sabitYuzde.value) !== row.fixedPct) sabitYuzde.value = row.fixedPct;
         });
         YatirimOzetiText('gider_genel_toplam', YatirimOzetiPara(totals.total));
         YatirimOzetiText('gider_genel_sabit', YatirimOzetiPara(totals.fixed));
         YatirimOzetiText('gider_genel_degisken', YatirimOzetiPara(totals.variable));
+    }
+
+    function YatirimOzetiAltGiderEkle(grupKey) {
+        if (basvuruReadonly) return;
+        const grup = yatirimOzetiGiderGruplari.find(x => x.key === grupKey);
+        if (!grup) return;
+        const grupSirasi = yatirimOzetiGiderGruplari.indexOf(grup);
+        const sonrakiIndex = yatirimOzetiGiderRows.findIndex(row => {
+            const sira = yatirimOzetiGiderGruplari.findIndex(x => x.key === row.parentExpenseGroup);
+            return sira < 0 || sira > grupSirasi;
+        });
+        const index = sonrakiIndex < 0 ? yatirimOzetiGiderRows.length : sonrakiIndex;
+        yatirimOzetiGiderRows.splice(index, 0, { group: grup.item, parentExpenseGroup: grup.key, item: '', qty: '', unit: grup.unit, unitPrice: '', fixedPct: '0', variablePct: '100' });
+        dirty = true;
+        YatirimOzetiGiderRender();
+        YatirimOzetiKartlariGuncelle();
+        document.getElementById(`gider_unsur_${index}`)?.focus();
     }
 
     function YatirimOzetiGiderEkle() {
@@ -3560,6 +3627,7 @@
     }
 
     function YatirimOzetiGiderSil(index) {
+        if (basvuruReadonly) return;
         yatirimOzetiGiderRows.splice(index, 1);
         if (yatirimOzetiGiderRows.length === 0) yatirimOzetiGiderRows = YatirimOzetiVarsayilanGiderler();
         dirty = true;

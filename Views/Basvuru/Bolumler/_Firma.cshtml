@@ -146,7 +146,14 @@
         </script>
 
         <div class="section-toolbar mt-4">
-            <h3>@L["Basvuru.Documents.CriminalRecordTitle"]</h3>
+            <h3>
+                @L["Basvuru.Documents.CriminalRecordTitle"]
+                <button type="button" class="btn btn-outline-info btn-sm ml-2"
+                        data-toggle="modal" data-target="#adliSicilBilgiModal"
+                        aria-controls="adliSicilBilgiModal" aria-haspopup="dialog"
+                        aria-label="Kimleri eklemeliyim?"
+                        title="Adli sicil sorgusu yapılacak kişiler hakkında bilgi">Kimleri eklemeliyim?</button>
+            </h3>
             @if (!ro)
             {
                 <button type="button" class="btn btn-outline-primary" id="adliSicilKisiEkleBtn">@L["Basvuru.Documents.AddPerson"]</button>
@@ -156,3 +163,61 @@
 
     </div>
 </section>
+
+<div class="modal fade" id="adliSicilBilgiModal" tabindex="-1" aria-labelledby="adliSicilBilgiBaslik" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adliSicilBilgiBaslik">Adli sicil / arşiv kaydı sorgusu yapılacak kişiler</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="@T("Basvuru.Common.Close")">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped mb-0" aria-labelledby="adliSicilBilgiBaslik">
+                        <thead>
+                            <tr>
+                                <th scope="col">Başvuru sahibi türü</th>
+                                <th scope="col">Adli sicil / arşiv kaydı sorgusu yapılacak kişiler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">Anonim şirket</th>
+                                <td>Yönetim kurulu üyeleri</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Limited şirket</th>
+                                <td>Şirketi temsil ve ilzama yetkili tüm kişiler; başvuru formunda beyan edilmemiş olsa bile temsil ve ilzama yetkili olanlar dâhil</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Limited şirket</th>
+                                <td>Tüzel kişiliğin %50’den fazla hissesine sahip olan hâkim ortak gerçek kişi</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Limited şirkette temsil ve ilzama yetkili kişi bulunmaması hâli</th>
+                                <td>Şirket ortakları (%25 ve daha fazlası)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Kollektif şirket</th>
+                                <td>Şirket ortakları (%25 ve daha fazlası)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Komandit şirket</th>
+                                <td>Şirketi temsil ve ilzama yetkili komanditer ortak ile komandite ortaklar (%25 ve daha fazlası)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Üretici örgütü</th>
+                                <td>Üretici örgütünün yönetim kurulu üyeleri</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">@L["Basvuru.Common.Close"]</button>
+            </div>
+        </div>
+    </div>
+</div>
