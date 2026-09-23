@@ -700,14 +700,6 @@
             if (event.key === 'Enter') { event.preventDefault(); FirmaSecAra(); }
         });
         document.getElementById('adresKaydetBtn')?.addEventListener('click', UygulamaAdresiModalKaydet);
-        $('#basvuruIl').off('change.degerZinciri').on('change.degerZinciri', function () {
-            basvuruDegerZinciriId = 0;
-            BasvuruDegerZincirleriniYukle();
-        });
-        $('#basvuruDegerZinciri').off('change.degerZinciri').on('change.degerZinciri', function () {
-            basvuruDegerZinciriId = Number(this.value || 0);
-        });
-        BasvuruDegerZincirleriniYukle();
         document.querySelectorAll('#finansToplamYatirimTutari, [name="Basvuru.finans.TalepEdilenFinansmanOrani"]').forEach(input => {
             input.addEventListener('input', FinansTutarlariniHesapla);
             input.addEventListener('change', FinansTutarlariniHesapla);
@@ -1239,6 +1231,14 @@
         AdliSicilKisilerRender();
     }
     function FirmaBolumuIlklendir() {
+        $('#basvuruIl').off('change.degerZinciri').on('change.degerZinciri', function () {
+            basvuruDegerZinciriId = 0;
+            BasvuruDegerZincirleriniYukle();
+        });
+        $('#basvuruDegerZinciri').off('change.degerZinciri').on('change.degerZinciri', function () {
+            basvuruDegerZinciriId = Number(this.value || 0);
+        });
+        BasvuruDegerZincirleriniYukle();
         AdliSicilInitialOku();
         document.getElementById('adliSicilKisiEkleBtn')?.addEventListener('click', () => AdliSicilModalAc(-1));
         AdliSicilKisilerRender();
