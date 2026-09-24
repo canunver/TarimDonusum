@@ -1539,7 +1539,11 @@
     <value>Seçime göre Mevcut İşletme ve/veya Planlanan Yatırım alanları açılır. Soru yalnızca planlanan yatırıma ilişkinse mevcut işletme alanı gösterilmez.</value>
   </data>
   <data name="Basvuru.CevreselSosyal.Declaration" xml:space="preserve">
-    <value>İşbu formda sunulan bilgilerin doğru, eksiksiz ve mevcut saha koşullarıyla ve/veya yeni yatırımlar için onaylı proje tasarım parametreleriyle uyumlu olduğunu; yatırımın uygulama ve işletme dönemlerinde Türkiye Cumhuriyeti mevzuatına ve Dünya Bankası Çevresel ve Sosyal Çerçeve standartlarına uyacağımı kabul, beyan ve taahhüt ederim. Gerçeğe aykırı beyan veya uyumsuzluk tespitinde düzeltici faaliyet, kredi desteğinin askıya alınması veya alt projenin sonlandırılması gündeme gelebilir.</value>
+    <value>İşbu formda tarafımdan sunulan tüm bilgilerin tamamen doğru, eksiksiz ve mevcut saha koşullarıyla (ve/veya yeni yatırımlar için onaylı proje tasarım parametreleriyle) tam uyumlu olduğunu; yatırımın uygulama ve işletme dönemlerinde Türkiye Cumhuriyeti mevzuatına ve projeye uygulanabilir Uluslararası Finans Kuruluşu (Dünya Bankası) Çevresel ve Sosyal Çerçeve (ESF) standartlarına tam olarak uyacağımı kabul, beyan ve taahhüt ederim.
+
+Herhangi bir uyumsuzluk veya gerçeğe aykırı beyanın tespit edilmesi halinde (çocuk işçiliği, zorla tahliye, yasaklı kimyasalların kullanımı, resmi kurumlara yanlış beyanda bulunulması vb. dahil) düzeltici faaliyet uygulanabileceğini, kredi desteğinin askıya alınabileceğini veya alt projemin sonlandırılabileceğini kabul ederim.
+
+Alt projem için belirlenecek risk kategorisine bağlı olarak hazırlanması gerekebilecek ilave çevresel ve sosyal raporların hazırlanması ve sahada uygulanmasına ilişkin tüm maliyetlerin tarafıma ait olduğunu peşinen kabul ve taahhüt ederim.</value>
   </data>
   <data name="Basvuru.YatirimOzeti.Description" xml:space="preserve">
     <value>Bu bölüm yatırım bütçesi, üretim-satış bilgileri ve tam kapasitede yıllık işletme giderleri adım adım girilecek şekilde tasarlanmıştır.</value>
@@ -2655,10 +2659,10 @@
     <value>Taahhüt ve beyan bölümündeki tüm beyanlar onaylanmalıdır.</value>
   </data>
   <data name="Basvuru.Step.SystemResults" xml:space="preserve">
-    <value>Tamlık Kontrolü</value>
+    <value>Sistem Kontrolü</value>
   </data>
   <data name="Basvuru.Step.ExpertResults" xml:space="preserve">
-    <value>Uygunluk Cevapları</value>
+    <value>Tamlık-Uygunluk Kontrolü</value>
   </data>
   <data name="Basvuru.Step.Decision" xml:space="preserve">
     <value>Karar</value>

@@ -1764,10 +1764,13 @@
         const baglamlar = CevreselSosyalBaglamlari();
         if (!baglamlar.length) { alan.innerHTML = ''; alan.classList.add('d-none'); return; }
         alan.classList.remove('d-none');
-        alan.innerHTML = `<label class="checkbox-line esf-declaration">
-            <input id="cevreselSosyalDogrulukBeyani" type="checkbox" ${cevreselSosyalCevaplar.declaration ? 'checked' : ''} ${basvuruReadonly ? 'disabled' : ''}>
-            ${htmlEncode(cevreselSosyalMetinleri.declaration)}
-        </label>`;
+        alan.innerHTML = `<div class="esf-info esf-declaration">
+            <div class="esf-declaration-text" id="cevreselSosyalBeyanMetni">${htmlEncode(cevreselSosyalMetinleri.declaration)}</div>
+            <label class="esf-declaration-confirm" for="cevreselSosyalDogrulukBeyani">
+                <span>Kabul ve taahhüt ederim</span>
+                <input id="cevreselSosyalDogrulukBeyani" type="checkbox" aria-describedby="cevreselSosyalBeyanMetni" ${cevreselSosyalCevaplar.declaration ? 'checked' : ''} ${basvuruReadonly ? 'disabled' : ''}>
+            </label>
+        </div>`;
         alan.querySelector('#cevreselSosyalDogrulukBeyani')?.addEventListener('change', function () {
             cevreselSosyalCevaplar.declaration = this.checked;
             dirty = true;
