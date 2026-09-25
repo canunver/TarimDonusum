@@ -51,7 +51,10 @@
                     <label>Değer zinciri aşaması<select id="dbCtpGirdiDegerZinciriAsamaTuru"><option value="">Seçiniz</option>@foreach(TarimDonusum.Models.enumDegerZinciriAsamaTuru tur in Enum.GetValues<TarimDonusum.Models.enumDegerZinciriAsamaTuru>()){<option value="@((int)tur)">@TarimDonusum.Models.DegerZinciriAsamaTuruTanimlari.Ad(tur)</option>}</select></label>
                     <label>Sıra no<input id="dbCtpGirdiSiraNo" type="number" min="1" step="1" /></label>
                     <label>Girdi / Hammadde adı<input id="dbCtpGirdiAdi" maxlength="250" /></label>
-                    <label>Yıllık ihtiyaç<input id="dbCtpGirdiMiktar" type="number" min="0.001" step="0.001" /></label>
+                    <label>Gider türü<select id="dbCtpGirdiGiderTuru"><option value="">Seçiniz</option>@foreach(var tur in Enum.GetValues<TarimDonusum.Models.GirdiGiderTuru>()){<option value="@((int)tur)">@TarimDonusum.Models.GirdiGiderTurleri.Ad(tur)</option>}</select></label>
+                    <label>Sabit oran (%)<input id="dbCtpGirdiSabitOran" type="number" min="0" max="100" step="0.01" /></label>
+                    <label>Birim fiyat (TL)<input id="dbCtpGirdiBirimFiyat" type="number" min="0" step="0.01" /></label>
+                    <label>Miktar<input id="dbCtpGirdiMiktar" type="number" min="0.001" step="0.001" /></label>
                     <label>Birim<select id="dbCtpGirdiBirim">@foreach(var birim in TarimDonusum.Models.OlcuBirimleri.Tum){<option value="@birim">@birim</option>}</select></label>
                 </div>
             </div>

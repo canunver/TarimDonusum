@@ -1435,6 +1435,29 @@ namespace TarimDonusum.IsKurallari
                     INSERT dbo.FirmaNace(FirmaId,NaceKodu,SiraNo)
                     SELECT Id,NaceKodu,1 FROM dbo.Firma WHERE NaceKodu IS NOT NULL;
                   END"),
+            new(116, @"IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi', N'GiderTuru') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD GiderTuru INT NULL CONSTRAINT CK_BasvuruYatirimOnBilgi_GiderTuru CHECK (GiderTuru IN (1,2,3));
+                IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi', N'SabitOran') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD SabitOran DECIMAL(5,2) NULL CONSTRAINT CK_BasvuruYatirimOnBilgi_SabitOran CHECK (SabitOran BETWEEN 0 AND 100);"),
+            new(117, @"IF COL_LENGTH(N'dbo.BasvuruYatirimOnBilgi', N'BirimFiyat') IS NULL
+                    ALTER TABLE dbo.BasvuruYatirimOnBilgi ADD BirimFiyat DECIMAL(18,2) NULL CONSTRAINT CK_BasvuruYatirimOnBilgi_BirimFiyat CHECK (BirimFiyat >= 0);"),
+            new(118, @"IF OBJECT_ID(N'dbo.BasvuruUygulamaAdresiKonum', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE dbo.BasvuruUygulamaAdresiKonum (
+                        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                        AdresId INT NOT NULL REFERENCES dbo.BasvuruUygulamaAdresleri(Id) ON DELETE CASCADE,
+                        SiraNo INT NOT NULL CHECK (SiraNo > 0),
+                        MinEnlem DECIMAL(9,6) NULL CHECK (MinEnlem BETWEEN -90 AND 90),
+                        MaxEnlem DECIMAL(9,6) NULL CHECK (MaxEnlem BETWEEN -90 AND 90),
+                        MinBoylam DECIMAL(9,6) NULL CHECK (MinBoylam BETWEEN -180 AND 180),
+                        MaxBoylam DECIMAL(9,6) NULL CHECK (MaxBoylam BETWEEN -180 AND 180),
+                        Ada NVARCHAR(30) NULL, Parsel NVARCHAR(30) NULL, Mahalle NVARCHAR(200) NULL,
+                        CONSTRAINT UQ_BasvuruUygulamaAdresiKonum_AdresSira UNIQUE (AdresId,SiraNo),
+                        CONSTRAINT CK_BasvuruUygulamaAdresiKonum_Aralik CHECK (MinEnlem <= MaxEnlem AND MinBoylam <= MaxBoylam)
+                    );
+                    INSERT dbo.BasvuruUygulamaAdresiKonum(AdresId,SiraNo,MinEnlem,MaxEnlem,MinBoylam,MaxBoylam,Ada,Parsel)
+                    SELECT Id,1,Enlem,Enlem,Boylam,Boylam,Ada,Parsel FROM dbo.BasvuruUygulamaAdresleri;
+                END"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

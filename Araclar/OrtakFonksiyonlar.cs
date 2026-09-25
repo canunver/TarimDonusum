@@ -12,6 +12,7 @@ namespace TarimDonusum.Araclar
     {
         public static Tablo NewTablo()
         {
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             return new TabloAspose();
         }
 

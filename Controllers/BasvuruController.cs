@@ -905,12 +905,12 @@ namespace TarimDonusum.Controllers
                 tablo.BosDosyaAc(geciciDosya);
                 for (int sutun = 0; sutun < BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari.Count; sutun++)
                     tablo.HucreDegerYaz(0, sutun, BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari[sutun]);
-                tablo.SutunGenislikAyarla(0, 5, 24);
+                tablo.SutunGenislikAyarla(0, BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari.Count - 1, 24);
                 tablo.SutunGenislikAyarla(1, 1, 42);
                 tablo.SatirGercekYukseklikAyarla(0, 0, 180);
                 for (int sutun = 0; sutun < BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari.Count; sutun++)
                     tablo.HucreMetniKaydir(0, sutun, true);
-                tablo.CerceveCiz(0, 0, 0, 5, LineStyle.THIN, TabloRenk.BLACK);
+                tablo.CerceveCiz(0, 0, 0, BasvuruIsKurallari.TeknikProjeGirdisiExcelSablonBasliklari.Count - 1, LineStyle.THIN, TabloRenk.BLACK);
                 tablo.DosyaSaklaTamYol();
                 tablo.DosyaKapat();
                 tablo = null;

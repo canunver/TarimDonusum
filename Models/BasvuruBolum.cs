@@ -44,7 +44,8 @@ namespace TarimDonusum.Models
         ButceGiderler = 39,
         DbCtpMakineEkipman = 40,
         DbCtpBinaListesi = 41,
-        OnBasvuruItiraz = 42
+        OnBasvuruItiraz = 42,
+        Giderler = 43
     }
 
     public sealed record BasvuruBolumTanim(
@@ -66,6 +67,7 @@ namespace TarimDonusum.Models
             new(enumBasvuruBolum.BasvuruYatirimBilgileri, 18, "Basvuru.ApplicationInvestment.Title", "Basvuru/_YatirimBilgileri"),
             new(enumBasvuruBolum.BasvuruDegerZinciri, 19, "Basvuru.ApplicationValueChain.Title", "Basvuru/_DegerZinciri"),
             new(enumBasvuruBolum.ButceGiderler, 70, "Basvuru.Step.ButceGiderler", "Bolumler/_ButceGiderler"),
+            new(enumBasvuruBolum.Giderler, 75, "Basvuru.Step.Giderler", "Bolumler/_Giderler"),
             new(enumBasvuruBolum.BasvuruFinansman, 20, "Basvuru.Step.5", "Basvuru/_Finansman"),
             new(enumBasvuruBolum.BasvuruYatirimOnBilgileri, 21, "Basvuru.Step.YatirimOnBilgileri", "Basvuru/_YatirimOnBilgileri"),
             new(enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar, 22, "Basvuru.Step.YatirimdaKullanilacakEkipmanlar", "Basvuru/_YatirimdaKullanilacakEkipmanlar"),
@@ -104,7 +106,7 @@ namespace TarimDonusum.Models
             if (kayitTuru == enumBasvuruKayitTuru.Basvuru)
             {
                 return Tanimlar
-                    .Where(x => x.Bolum == enumBasvuruBolum.BasvuruSahibi || x.Bolum == enumBasvuruBolum.BasvuruMaliVeriler || x.Bolum == enumBasvuruBolum.BasvuruBilancoGelir || x.Bolum == enumBasvuruBolum.BasvuruOrtaklikYetki || x.Bolum == enumBasvuruBolum.BasvuruYatirimBilgileri || x.Bolum == enumBasvuruBolum.BasvuruDegerZinciri || x.Bolum == enumBasvuruBolum.ButceGiderler || x.Bolum == enumBasvuruBolum.BasvuruFinansman || x.Bolum == enumBasvuruBolum.BasvuruYatirimOnBilgileri || x.Bolum == enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar || x.Bolum == enumBasvuruBolum.BasvuruMakineEkipman || x.Bolum == enumBasvuruBolum.BasvuruUrunSurecMakine || x.Bolum == enumBasvuruBolum.BasvuruBinaListesi || x.Bolum == enumBasvuruBolum.BasvuruMetraj || x.Bolum == enumBasvuruBolum.BasvuruIstihdam || x.Bolum == enumBasvuruBolum.BasvuruTedarikciEntegrasyonu || x.Bolum == enumBasvuruBolum.BasvuruTaahhutBeyan || x.Bolum == enumBasvuruBolum.BasvuruCevreselSosyal || x.Bolum == enumBasvuruBolum.BasvuruZorunluBelgeler || x.Bolum == enumBasvuruBolum.BasvuruOzeti || x.Bolum == enumBasvuruBolum.BasvuruIzlemeGostergeleri || x.Bolum == enumBasvuruBolum.YatirimOzeti)
+                    .Where(x => x.Bolum == enumBasvuruBolum.BasvuruSahibi || x.Bolum == enumBasvuruBolum.BasvuruMaliVeriler || x.Bolum == enumBasvuruBolum.BasvuruBilancoGelir || x.Bolum == enumBasvuruBolum.BasvuruOrtaklikYetki || x.Bolum == enumBasvuruBolum.BasvuruYatirimBilgileri || x.Bolum == enumBasvuruBolum.BasvuruDegerZinciri || x.Bolum == enumBasvuruBolum.ButceGiderler || x.Bolum == enumBasvuruBolum.Giderler || x.Bolum == enumBasvuruBolum.BasvuruFinansman || x.Bolum == enumBasvuruBolum.BasvuruYatirimOnBilgileri || x.Bolum == enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar || x.Bolum == enumBasvuruBolum.BasvuruMakineEkipman || x.Bolum == enumBasvuruBolum.BasvuruUrunSurecMakine || x.Bolum == enumBasvuruBolum.BasvuruBinaListesi || x.Bolum == enumBasvuruBolum.BasvuruMetraj || x.Bolum == enumBasvuruBolum.BasvuruIstihdam || x.Bolum == enumBasvuruBolum.BasvuruTedarikciEntegrasyonu || x.Bolum == enumBasvuruBolum.BasvuruTaahhutBeyan || x.Bolum == enumBasvuruBolum.BasvuruCevreselSosyal || x.Bolum == enumBasvuruBolum.BasvuruZorunluBelgeler || x.Bolum == enumBasvuruBolum.BasvuruOzeti || x.Bolum == enumBasvuruBolum.BasvuruIzlemeGostergeleri || x.Bolum == enumBasvuruBolum.YatirimOzeti)
                     .ToList();
             }
 

@@ -859,6 +859,10 @@ namespace TarimDonusum.Models
 
     public class BasvuruYatirimOnBilgi
     {
+        public GirdiGiderTuru? giderTuru { get; set; }
+        public string giderTuruAdi => giderTuru.HasValue ? GirdiGiderTurleri.Ad(giderTuru.Value) : "";
+        public decimal? sabitOran { get; set; }
+        public decimal? birimFiyat { get; set; }
         public int id { get; set; }
         public int basvuruId { get; set; }
         public int? uygulamaAdresiId { get; set; }
@@ -1349,6 +1353,7 @@ namespace TarimDonusum.Models
 
     public class BasvuruUygulamaAdresi
     {
+        public List<BasvuruUygulamaAdresiKonum> konumlar { get; set; } = new();
         public int id { get; set; }
         public int basvuruId { get; set; }
         public int siraNo { get; set; }
@@ -1397,6 +1402,7 @@ namespace TarimDonusum.Models
 
         public void UygulamaAdresiDogrula(Sonuc sonuc)
         {
+            for (int i = 0; i < konumlar.Count; i++) konumlar[i].Dogrula(sonuc, i + 1);
             if (basvuruId <= 0)
                 sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
 

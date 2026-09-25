@@ -1,0 +1,13 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+<div class="ortak-cevresel-taahhut mt-3">
+    <div class="esf-info esf-declaration">
+        <div class="esf-declaration-text">@L["Basvuru.CevreselSosyal.Declaration"]</div>
+        <label class="esf-declaration-confirm">
+            <span>Kabul ve taahhüt ederim</span>
+            <input class="ortak-cevresel-taahhut-onayi" type="checkbox"
+                   checked="@TarimDonusum.Models.CevreselSosyalTaahhut.OnayliMi(Model.Basvuru)"
+                   disabled="@Model.SaltOkunur" onchange="OrtakCevreselTaahhutDegisti(this.checked)" />
+        </label>
+    </div>
+</div>

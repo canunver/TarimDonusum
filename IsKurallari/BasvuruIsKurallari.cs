@@ -35,7 +35,7 @@ namespace TarimDonusum.IsKurallari
         ];
 
         public static IReadOnlyList<string> TeknikProjeGirdisiExcelBasliklari { get; } =
-            ["Adres No", "Değer Zinciri Aşaması", "Sıra no", "Girdi / Hammadde adı", "Yıllık ihtiyaç", "Birim"];
+            ["Adres No", "Değer Zinciri Aşaması", "Sıra no", "Girdi / Hammadde adı", "Miktar", "Birim", "Gider Türü", "Sabit Oran (%)", "Birim Fiyat (TL)"];
 
         public static IReadOnlyList<string> TeknikProjeGirdisiExcelSablonBasliklari { get; } =
         [
@@ -43,8 +43,11 @@ namespace TarimDonusum.IsKurallari
             "Değer Zinciri Aşaması\n(1 - Birincil Üretim, 2 - Depolama / Soğuk Zincir, 3 - Lojistik, 4 - İşleme, 5 - İleri İşleme, 6 - Tarımsal Bileşen Üretimi, 7 - Atık ve Yan Ürün Değerlendirme)",
             "Sıra no\n(Pozitif, benzersiz tam sayı)",
             "Girdi / Hammadde adı\n(Zorunlu)",
-            "Yıllık ihtiyaç\n(Sıfırdan büyük sayısal değer)",
-            $"Birim\n({string.Join(", ", OlcuBirimleri.Tum)})"
+            "Miktar\n(Sıfırdan büyük sayısal değer)",
+            $"Birim\n({string.Join(", ", OlcuBirimleri.Tum)})",
+            "Gider Türü\n(1 - İlk Madde Kullanımı, 2 - Yardımcı Madde, 3 - İşletme Malzemesi Kullanımı)",
+            "Sabit Oran (%)\n(0-100 arasında sayısal değer; değişken oran 100 - sabit oran olarak hesaplanır)",
+            "Birim Fiyat (TL)\n(Zorunlu; sıfır veya pozitif sayısal değer)"
         ];
 
         public static IReadOnlyList<string> UrunExcelBasliklari { get; } =
@@ -2232,6 +2235,7 @@ namespace TarimDonusum.IsKurallari
                 try
                 {
                     TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
+                    yatirimOzeti.yatirimOzetiJson = TeknikProjeGiderleri.Birlestir(yatirimOzeti.yatirimOzetiJson, mevcut.YatirimOnBilgileri);
                     await tabBasvuru.YatirimOzetiKaydetAsync(yatirimOzeti);
                     TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     await tabBasvuruLog.EkleAsync(yatirimOzeti.basvuruId, kullanici, "KaydetYatirimOzetiAsync", yatirimOzeti);
@@ -2314,6 +2318,79 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        private static bool TeknikProjeOndalikOku(string deger, out decimal sonuc)
+        {
+            // Binlik ayracı kabul etmeden iki ondalık biçimini dene; 12.5, 125 olarak okunmamalı.
+            if (decimal.TryParse(deger, NumberStyles.Float, CultureInfo.GetCultureInfo("tr-TR"), out sonuc)
+                || decimal.TryParse(deger, NumberStyles.Float, CultureInfo.InvariantCulture, out sonuc)) return true;
+            if (!deger.Contains(',') || !deger.Contains('.')) return false;
+            var culture = deger.LastIndexOf(',') > deger.LastIndexOf('.')
+                ? CultureInfo.GetCultureInfo("tr-TR") : CultureInfo.InvariantCulture;
+            return decimal.TryParse(deger, NumberStyles.Number, culture, out sonuc);
+        }
+
+        private static List<BasvuruYatirimOnBilgi> TeknikProjeGirdisiSatirlariniOku(Tablo excel, Basvuru mevcut, int basvuruId, Sonuc sonuc)
+        {
+            List<BasvuruYatirimOnBilgi> girdiler = new();
+            IReadOnlyList<string> beklenenBasliklar = TeknikProjeGirdisiExcelBasliklari;
+            List<string> baslikHatalari = new();
+            for (int sutun = 0; sutun < beklenenBasliklar.Count; sutun++)
+            {
+                string bulunan = excel.HucreDegerAl(0, sutun).Trim();
+                if (!bulunan.StartsWith(beklenenBasliklar[sutun], StringComparison.CurrentCultureIgnoreCase))
+                    baslikHatalari.Add($"{sutun + 1}. sütun başlığı '{beklenenBasliklar[sutun]}' olmalıdır (bulunan: '{bulunan}').");
+            }
+            if (baslikHatalari.Count > 0)
+            {
+                baslikHatalari.ForEach(sonuc.HataEkle);
+                return girdiler;
+            }
+
+            HashSet<int> siraNumaralari = new();
+            for (int satir = 1; satir < 10000; satir++)
+            {
+                string[] hucreler = Enumerable.Range(0, beklenenBasliklar.Count).Select(sutun => excel.HucreDegerAl(satir, sutun).Trim()).ToArray();
+                if (hucreler.All(string.IsNullOrWhiteSpace)) break;
+
+                int excelSatiri = satir + 1;
+                BasvuruUygulamaAdresi? adres = null;
+                if (!int.TryParse(hucreler[0], NumberStyles.Integer, CultureInfo.CurrentCulture, out int adresNo) || adresNo <= 0
+                    || (adres = mevcut.YatirimAdresleri.FirstOrDefault(x => x.siraNo == adresNo)) == null)
+                    sonuc.HataEkle($"{excelSatiri}. satır: Adres No, başvuruda kayıtlı bir yatırım adresinin sıra numarası olmalıdır.");
+                if (!int.TryParse(hucreler[1], NumberStyles.Integer, CultureInfo.CurrentCulture, out int asamaKodu) || !Enum.IsDefined(typeof(enumDegerZinciriAsamaTuru),asamaKodu))
+                    sonuc.HataEkle($"{excelSatiri}. satır: Değer Zinciri Aşaması 1-7 arasında geçerli bir kod olmalıdır.");
+                if (!int.TryParse(hucreler[2], NumberStyles.Integer, CultureInfo.CurrentCulture, out int siraNo) || siraNo <= 0)
+                    sonuc.HataEkle($"{excelSatiri}. satır: Sıra no pozitif tam sayı olmalıdır.");
+                else if (!siraNumaralari.Add(siraNo))
+                    sonuc.HataEkle($"{excelSatiri}. satır: {siraNo} sıra numarası birden fazla kez kullanılmıştır.");
+                if (string.IsNullOrWhiteSpace(hucreler[3]))
+                    sonuc.HataEkle($"{excelSatiri}. satır: Girdi / Hammadde adı zorunludur.");
+                if (!TeknikProjeOndalikOku(hucreler[4], out decimal miktar) || miktar <= 0)
+                    sonuc.HataEkle($"{excelSatiri}. satır: Miktar pozitif sayı olmalıdır.");
+                string? birim = OlcuBirimleri.Standartlastir(hucreler[5]);
+                if (birim == null)
+                    sonuc.HataEkle($"{excelSatiri}. satır: '{hucreler[5]}' tanınmayan birim kodudur.");
+
+                if (!int.TryParse(hucreler[6], out int giderTuru) || !Enum.IsDefined(typeof(GirdiGiderTuru), giderTuru))
+                    sonuc.HataEkle($"{excelSatiri}. satır: Gider Türü 1, 2 veya 3 olmalıdır.");
+                if (!TeknikProjeOndalikOku(hucreler[7], out decimal sabitOran) || sabitOran < 0 || sabitOran > 100)
+                    sonuc.HataEkle($"{excelSatiri}. satır: Sabit oran 0-100 arasında olmalıdır.");
+                if (!TeknikProjeOndalikOku(hucreler[8], out decimal birimFiyat) || birimFiyat < 0 || birimFiyat > 9999999999999999.99m)
+                    sonuc.HataEkle($"{excelSatiri}. satır: Geçerli, sıfır veya pozitif birim fiyat girilmelidir.");
+                if (sonuc.basarili)
+                    girdiler.Add(new BasvuruYatirimOnBilgi { giderTuru = (GirdiGiderTuru)giderTuru, sabitOran = sabitOran, birimFiyat = birimFiyat, basvuruId = basvuruId, tur = enumYatirimOnBilgiTuru.Girdi, degerZinciriAsamaTuru = (enumDegerZinciriAsamaTuru)asamaKodu, siraNo = siraNo, ad = hucreler[3], miktar = miktar, birim = birim, uygulamaAdresiId = adres!.id, uygulamaAdresiAciklama = $"{adres.siraNo}. {adres.ilAdi} / {adres.ilceAdi} - {adres.tamAdres}" });
+            }
+
+            if (!sonuc.basarili) return girdiler;
+            if (girdiler.Count == 0)
+            {
+                sonuc.HataEkle("Excel dosyasında aktarılabilir girdi satırı bulunamadı.");
+                return girdiler;
+            }
+
+            return girdiler;
+        }
+
         public async Task<Sonuc<object>> TeknikProjeGirdileriExcelOkuAsync(int basvuruId, Stream excelStream, Kullanici kullanici)
         {
             Sonuc<object> sonuc = new();
@@ -2331,56 +2408,8 @@ namespace TarimDonusum.IsKurallari
                 if (!sonuc.basarili || mevcut == null) return sonuc;
                 Tablo excel = OrtakFonksiyonlar.NewTablo();
                 excel.DosyaOkuAc(excelStream);
-                IReadOnlyList<string> beklenenBasliklar = TeknikProjeGirdisiExcelBasliklari;
-                List<string> baslikHatalari = new();
-                for (int sutun = 0; sutun < beklenenBasliklar.Count; sutun++)
-                {
-                    string bulunan = excel.HucreDegerAl(0, sutun).Trim();
-                    if (!bulunan.StartsWith(beklenenBasliklar[sutun], StringComparison.CurrentCultureIgnoreCase))
-                        baslikHatalari.Add($"{sutun + 1}. sütun başlığı '{beklenenBasliklar[sutun]}' olmalıdır (bulunan: '{bulunan}').");
-                }
-                if (baslikHatalari.Count > 0)
-                {
-                    baslikHatalari.ForEach(sonuc.HataEkle);
-                    return sonuc;
-                }
-
-                List<BasvuruYatirimOnBilgi> girdiler = new();
-                HashSet<int> siraNumaralari = new();
-                for (int satir = 1; satir < 10000; satir++)
-                {
-                    string[] hucreler = Enumerable.Range(0, 6).Select(sutun => excel.HucreDegerAl(satir, sutun).Trim()).ToArray();
-                    if (hucreler.All(string.IsNullOrWhiteSpace)) break;
-
-                    int excelSatiri = satir + 1;
-                    BasvuruUygulamaAdresi? adres = null;
-                    if (!int.TryParse(hucreler[0], NumberStyles.Integer, CultureInfo.CurrentCulture, out int adresNo) || adresNo <= 0
-                        || (adres = mevcut.YatirimAdresleri.FirstOrDefault(x => x.siraNo == adresNo)) == null)
-                        sonuc.HataEkle($"{excelSatiri}. satır: Adres No, başvuruda kayıtlı bir yatırım adresinin sıra numarası olmalıdır.");
-                    if (!int.TryParse(hucreler[1], NumberStyles.Integer, CultureInfo.CurrentCulture, out int asamaKodu) || !Enum.IsDefined(typeof(enumDegerZinciriAsamaTuru),asamaKodu))
-                        sonuc.HataEkle($"{excelSatiri}. satır: Değer Zinciri Aşaması 1-7 arasında geçerli bir kod olmalıdır.");
-                    if (!int.TryParse(hucreler[2], NumberStyles.Integer, CultureInfo.CurrentCulture, out int siraNo) || siraNo <= 0)
-                        sonuc.HataEkle($"{excelSatiri}. satır: Sıra no pozitif tam sayı olmalıdır.");
-                    else if (!siraNumaralari.Add(siraNo))
-                        sonuc.HataEkle($"{excelSatiri}. satır: {siraNo} sıra numarası birden fazla kez kullanılmıştır.");
-                    if (string.IsNullOrWhiteSpace(hucreler[3]))
-                        sonuc.HataEkle($"{excelSatiri}. satır: Girdi / Hammadde adı zorunludur.");
-                    if (!DecimalOku(hucreler[4], out decimal miktar) || miktar <= 0)
-                        sonuc.HataEkle($"{excelSatiri}. satır: Yıllık ihtiyaç pozitif sayı olmalıdır.");
-                    string? birim = OlcuBirimleri.Standartlastir(hucreler[5]);
-                    if (birim == null)
-                        sonuc.HataEkle($"{excelSatiri}. satır: '{hucreler[5]}' tanınmayan birim kodudur.");
-
-                    if (sonuc.basarili)
-                        girdiler.Add(new BasvuruYatirimOnBilgi { basvuruId = basvuruId, tur = enumYatirimOnBilgiTuru.Girdi, degerZinciriAsamaTuru = (enumDegerZinciriAsamaTuru)asamaKodu, siraNo = siraNo, ad = hucreler[3], miktar = miktar, birim = birim, uygulamaAdresiId = adres!.id, uygulamaAdresiAciklama = $"{adres.siraNo}. {adres.ilAdi} / {adres.ilceAdi} - {adres.tamAdres}" });
-                }
-
+                List<BasvuruYatirimOnBilgi> girdiler = TeknikProjeGirdisiSatirlariniOku(excel, mevcut, basvuruId, sonuc);
                 if (!sonuc.basarili) return sonuc;
-                if (girdiler.Count == 0)
-                {
-                    sonuc.HataEkle("Excel dosyasında aktarılabilir girdi satırı bulunamadı.");
-                    return sonuc;
-                }
 
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try
@@ -2695,6 +2724,11 @@ namespace TarimDonusum.IsKurallari
                         await tabBasvuru.CevreselSosyalKaydetAsync(cevreselSosyal);
                     else
                         await tabBasvuru.CevreselSosyalAdresiKaydetAsync(cevreselSosyal);
+                    if (!cevreselSosyal.basvuruSayfasi)
+                    {
+                        bool onay = CevreselSosyalTaahhut.Oku(cevreselSosyal.cevreselSosyalJson, "declaration") ?? CevreselSosyalTaahhut.OnayliMi(mevcut);
+                        await tabBasvuru.OrtakCevreselTaahhutKaydetAsync(cevreselSosyal.basvuruId, onay);
+                    }
 
                     TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     await tabBasvuruLog.EkleAsync(cevreselSosyal.basvuruId, kullanici, "KaydetCevreselSosyalAsync", cevreselSosyal);
@@ -3039,9 +3073,21 @@ namespace TarimDonusum.IsKurallari
             catch (Exception ex) { BeklenmeyenHata(sonuc, ex, "Ortak silinemedi. BasvuruId: {BasvuruId}", "Ortak silinemedi.", basvuruId); }
             return sonuc;
         }
+        private static void GirdiGiderAlanlariniDogrula(BasvuruYatirimOnBilgi model, Sonuc sonuc)
+        {
+            if (model.tur != enumYatirimOnBilgiTuru.Girdi) return;
+            if (!model.giderTuru.HasValue || !Enum.IsDefined(model.giderTuru.Value))
+                sonuc.HataEkle("Gider türü seçilmelidir.");
+            if (!model.sabitOran.HasValue || model.sabitOran < 0 || model.sabitOran > 100)
+                sonuc.HataEkle("Sabit oran 0-100 arasında olmalıdır.");
+            if (!model.birimFiyat.HasValue || model.birimFiyat < 0 || model.birimFiyat > 9999999999999999.99m)
+                sonuc.HataEkle("Geçerli, sıfır veya pozitif birim fiyat girilmelidir.");
+        }
+
         public async Task<Sonuc<BasvuruYatirimOnBilgi>> BasvuruYatirimOnBilgisiKaydetAsync(BasvuruYatirimOnBilgi model, Kullanici kullanici)
         {
             Sonuc<BasvuruYatirimOnBilgi> sonuc=new();
+            GirdiGiderAlanlariniDogrula(model, sonuc);
             if(model.basvuruId<=0||!Enum.IsDefined(typeof(enumYatirimOnBilgiTuru),model.tur)||model.siraNo<=0||model.siraNo>99||string.IsNullOrWhiteSpace(model.ad)||model.ad.Length>250)sonuc.HataEkle("Bölüm, 1-99 arasında sıra ve en fazla 250 karakterlik ad bilgileri eksiksiz girilmelidir.");
             if(model.mevcutKapasite is < 0||model.mevcutUretimMiktari is < 0||model.birinciYilKapasite is < 0||model.birinciYilUretimMiktari is < 0||model.mevcutSatisMiktari is < 0||model.mevcutBirimSatisFiyati is < 0||model.satisMiktari is < 0||model.birimSatisFiyati is < 0)sonuc.HataEkle("Kapasite, üretim miktarı, satış miktarı ve birim satış fiyatı negatif olamaz.");
             if(model.tur==enumYatirimOnBilgiTuru.UretilecekUrun&&(model.mevcutKapasite.HasValue||model.mevcutUretimMiktari.HasValue||model.mevcutSatisMiktari.HasValue||model.mevcutBirimSatisFiyati.HasValue))sonuc.HataEkle("Yeni ürün için mevcut kapasite, üretim miktarı, satış miktarı ve birim satış fiyatı girilemez.");
@@ -3067,6 +3113,7 @@ namespace TarimDonusum.IsKurallari
             if(model.kayitlar.GroupBy(x=>new{x.tur,x.siraNo}).Any(g=>g.Count()>1))sonuc.HataEkle("Aynı bölümde sıra numaraları tekrarlanamaz.");
             foreach(BasvuruYatirimOnBilgi x in model.kayitlar)
             {
+                GirdiGiderAlanlariniDogrula(x, sonuc);
                 if(x.tur==enumYatirimOnBilgiTuru.EnerjiKullanimi)
                 {
                     if((x.miktar.HasValue&&(x.miktar<=0||!OlcuBirimleri.GecerliMi(x.birim)))||(x.tekPanelGucu.HasValue&&(x.tekPanelGucu<=0||!OlcuBirimleri.GecerliMi(x.tekPanelGucuBirim)))||(x.toplamGuc.HasValue&&(x.toplamGuc<=0||!OlcuBirimleri.GecerliMi(x.toplamGucBirim))))sonuc.HataEkle("Enerji kullanımı değerleri pozitif olmalı ve girilen her değerin birimi seçilmelidir.");
@@ -3676,7 +3723,9 @@ namespace TarimDonusum.IsKurallari
                 try
                 {
                     TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
+                    bool onay = CevreselSosyalTaahhut.Oku(beyanlar.taahhutBeyanlarJson, CevreselSosyalTaahhut.Alan) ?? CevreselSosyalTaahhut.OnayliMi(mevcut);
                     await tabBasvuru.TaahhutBeyanlariKaydetAsync(beyanlar);
+                    await tabBasvuru.OrtakCevreselTaahhutKaydetAsync(beyanlar.basvuruId, onay);
                     if (beyanlar.basvuruSayfasi)
                     {
                         mevcut.TaahhutAciklama = beyanlar.aciklama?.Trim() ?? "";
@@ -4951,6 +5000,19 @@ namespace TarimDonusum.IsKurallari
 
         private static void UygulamaAdresiNormalizeEt(BasvuruUygulamaAdresi adres)
         {
+            adres.konumlar ??= new();
+            if (adres.konumlar.Count == 0)
+                adres.konumlar.Add(new() { minEnlem = adres.enlem, maxEnlem = adres.enlem, minBoylam = adres.boylam, maxBoylam = adres.boylam, ada = adres.ada, parsel = adres.parsel });
+            for (int i = 0; i < adres.konumlar.Count; i++)
+            {
+                var konum = adres.konumlar[i];
+                konum.siraNo = i + 1;
+                konum.ada = konum.ada?.Trim(); konum.parsel = konum.parsel?.Trim(); konum.mahalle = konum.mahalle?.Trim();
+            }
+            // Eski rapor alanları ilk detay satırıyla uyumlu tutulur.
+            var ilkKonum = adres.konumlar[0];
+            adres.enlem = ilkKonum.minEnlem; adres.boylam = ilkKonum.minBoylam;
+            adres.ada = ilkKonum.ada; adres.parsel = ilkKonum.parsel;
             adres.siraNo = adres.siraNo <= 0 ? 1 : adres.siraNo;
             adres.ilceId = adres.ilceId.GetValueOrDefault() > 0 ? adres.ilceId : null;
             adres.tamAdres = adres.tamAdres?.Trim() ?? "";

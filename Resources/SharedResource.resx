@@ -970,7 +970,8 @@
     <value>Yatırım Özeti Tablosu</value>
   </data>
   <data name="Basvuru.Step.Urunler" xml:space="preserve"><value>Ürünler ve Satış Bilgileri</value></data>
-  <data name="Basvuru.Step.ButceGiderler" xml:space="preserve"><value>Bütçe ve Giderler</value></data>
+  <data name="Basvuru.Step.ButceGiderler" xml:space="preserve"><value>Bütçe</value></data>
+  <data name="Basvuru.Step.Giderler" xml:space="preserve"><value>Giderler</value></data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
     <value>7. Yatırım Özeti Tablosu</value>
   </data>

@@ -20,7 +20,7 @@ namespace TarimDonusum.Models
 
         public string hataStr {
             get {
-                return String.Join(';', hatalar);
+                return String.Join('\n', hatalar);
             }
         }
 

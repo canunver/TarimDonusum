@@ -1,0 +1,26 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+@{
+    var b = Model.Basvuru;
+    bool ro = Model.SaltOkunur;
+}
+<section class="basvuru-panel active" data-panel="@((int)TarimDonusum.Models.enumBasvuruBolum.Giderler)">
+    <div class="section-toolbar">
+        <h2 class="mb-0">@L["Basvuru.Step.Giderler"]</h2>
+        <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="IsletmeGideriYazdir" asp-route-id="@b.Id"><i class="fas fa-file-excel mr-1"></i>İşletme Giderlerini Yazdır</a>
+    </div>
+    <input type="hidden" id="yatirimOzetiJson" value="@b.yatirimOzeti.yatirimOzetiJson" />
+    <div class="metric-grid yatirim-ozeti-metrics">
+        <div><span>@L["Basvuru.YatirimOzeti.Card.AnnualOperatingExpense"]</span><strong id="opexTotalCard">0 TL</strong></div>
+    </div>
+    <div class="yatirim-ozeti-section">
+        <div class="section-toolbar">
+            <div><h3 class="butce-gider-baslik">@L["Basvuru.YatirimOzeti.Section.Expense"]</h3><p class="mini">@L["Basvuru.YatirimOzeti.Section.ExpenseNote"]</p></div>
+            <div class="toolbar-actions">
+                <button type="button" class="btn btn-outline-secondary" onclick="YatirimOzetiSabitGiderleriYukle()" disabled="@ro">@L["Basvuru.YatirimOzeti.LoadDefaultExpenses"]</button>
+                <button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiGiderEkle()" disabled="@ro">@L["Basvuru.YatirimOzeti.AddExpense"]</button>
+            </div>
+        </div>
+        <div id="operatingExpensesBox"></div>
+    </div>
+</section>

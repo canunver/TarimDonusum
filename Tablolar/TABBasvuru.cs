@@ -599,6 +599,20 @@ namespace TarimDonusum.Tablolar
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task OrtakCevreselTaahhutKaydetAsync(int basvuruId, bool onay)
+        {
+            const string sql = @"UPDATE dbo.Basvuru
+                SET TaahhutBeyanlarJson=JSON_MODIFY(CASE WHEN ISJSON(TaahhutBeyanlarJson)=1 THEN TaahhutBeyanlarJson ELSE '{}' END, '$.cevreselSosyalTaahhutOnayi', @Onay)
+                WHERE Id=@Id;
+                UPDATE dbo.BasvuruUygulamaAdresleri
+                SET CevreselSosyalJson=JSON_MODIFY(CevreselSosyalJson, '$.declaration', @Onay)
+                WHERE BasvuruId=@Id AND ISJSON(CevreselSosyalJson)=1;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@Id", basvuruId);
+            command.Parameters.Add("@Onay", System.Data.SqlDbType.Bit).Value = onay;
+            await command.ExecuteNonQueryAsync();
+        }
+
         public async Task TaahhutBeyanlariKaydetAsync(BasvuruTaahhutBeyanlar beyanlar)
         {
             const string sql = @"
@@ -830,8 +844,8 @@ namespace TarimDonusum.Tablolar
 
                 DECLARE @UrunEsleme TABLE(EskiId INT NOT NULL,YeniId INT NOT NULL);
                 MERGE dbo.BasvuruYatirimOnBilgi AS hedef
-                USING(SELECT Id,Tur,SiraNo,Ad,Miktar,Birim,TekPanelGucu,TekPanelGucuBirim,ToplamGuc,ToplamGucBirim,MevcutKapasite,MevcutUretimMiktari,BirinciYilKapasite,BirinciYilUretimMiktari,SatisMiktari,BirimSatisFiyati,MevcutSatisMiktari,MevcutBirimSatisFiyati,UygulamaAdresiId,DegerZinciriAsamaTuru FROM dbo.BasvuruYatirimOnBilgi WHERE BasvuruId=@KaynakBasvuruId) AS kaynak ON 1=0
-                WHEN NOT MATCHED THEN INSERT(BasvuruId,Tur,SiraNo,Ad,Miktar,Birim,TekPanelGucu,TekPanelGucuBirim,ToplamGuc,ToplamGucBirim,MevcutKapasite,MevcutUretimMiktari,BirinciYilKapasite,BirinciYilUretimMiktari,SatisMiktari,BirimSatisFiyati,MevcutSatisMiktari,MevcutBirimSatisFiyati,UygulamaAdresiId,DegerZinciriAsamaTuru) VALUES(@YeniBasvuruId,kaynak.Tur,kaynak.SiraNo,kaynak.Ad,kaynak.Miktar,kaynak.Birim,kaynak.TekPanelGucu,kaynak.TekPanelGucuBirim,kaynak.ToplamGuc,kaynak.ToplamGucBirim,kaynak.MevcutKapasite,kaynak.MevcutUretimMiktari,kaynak.BirinciYilKapasite,kaynak.BirinciYilUretimMiktari,kaynak.SatisMiktari,kaynak.BirimSatisFiyati,kaynak.MevcutSatisMiktari,kaynak.MevcutBirimSatisFiyati,NULL,kaynak.DegerZinciriAsamaTuru)
+                USING(SELECT Id,Tur,SiraNo,Ad,Miktar,Birim,TekPanelGucu,TekPanelGucuBirim,ToplamGuc,ToplamGucBirim,MevcutKapasite,MevcutUretimMiktari,BirinciYilKapasite,BirinciYilUretimMiktari,SatisMiktari,BirimSatisFiyati,MevcutSatisMiktari,MevcutBirimSatisFiyati,UygulamaAdresiId,DegerZinciriAsamaTuru,GiderTuru,SabitOran,BirimFiyat FROM dbo.BasvuruYatirimOnBilgi WHERE BasvuruId=@KaynakBasvuruId) AS kaynak ON 1=0
+                WHEN NOT MATCHED THEN INSERT(BasvuruId,Tur,SiraNo,Ad,Miktar,Birim,TekPanelGucu,TekPanelGucuBirim,ToplamGuc,ToplamGucBirim,MevcutKapasite,MevcutUretimMiktari,BirinciYilKapasite,BirinciYilUretimMiktari,SatisMiktari,BirimSatisFiyati,MevcutSatisMiktari,MevcutBirimSatisFiyati,UygulamaAdresiId,DegerZinciriAsamaTuru,GiderTuru,SabitOran,BirimFiyat) VALUES(@YeniBasvuruId,kaynak.Tur,kaynak.SiraNo,kaynak.Ad,kaynak.Miktar,kaynak.Birim,kaynak.TekPanelGucu,kaynak.TekPanelGucuBirim,kaynak.ToplamGuc,kaynak.ToplamGucBirim,kaynak.MevcutKapasite,kaynak.MevcutUretimMiktari,kaynak.BirinciYilKapasite,kaynak.BirinciYilUretimMiktari,kaynak.SatisMiktari,kaynak.BirimSatisFiyati,kaynak.MevcutSatisMiktari,kaynak.MevcutBirimSatisFiyati,NULL,kaynak.DegerZinciriAsamaTuru,kaynak.GiderTuru,kaynak.SabitOran,kaynak.BirimFiyat)
                 OUTPUT kaynak.Id,inserted.Id INTO @UrunEsleme(EskiId,YeniId);
 
                 DECLARE @AdresEsleme TABLE(EskiId INT NOT NULL,YeniId INT NOT NULL);
@@ -848,6 +862,8 @@ namespace TarimDonusum.Tablolar
                 INNER JOIN @UrunEsleme urun ON urun.YeniId=yeniUrun.Id
                 INNER JOIN dbo.BasvuruYatirimOnBilgi eskiUrun ON eskiUrun.Id=urun.EskiId
                 INNER JOIN @AdresEsleme adres ON adres.EskiId=eskiUrun.UygulamaAdresiId;
+                INSERT dbo.BasvuruUygulamaAdresiKonum(AdresId,SiraNo,MinEnlem,MaxEnlem,MinBoylam,MaxBoylam,Ada,Parsel,Mahalle)
+                    SELECT e.YeniId,k.SiraNo,k.MinEnlem,k.MaxEnlem,k.MinBoylam,k.MaxBoylam,k.Ada,k.Parsel,k.Mahalle FROM dbo.BasvuruUygulamaAdresiKonum k INNER JOIN @AdresEsleme e ON e.EskiId=k.AdresId;
                 INSERT dbo.BasvuruUygulamaAdresiYatirimTuru(AdresId,YatirimTuru) SELECT e.YeniId,t.YatirimTuru FROM dbo.BasvuruUygulamaAdresiYatirimTuru t INNER JOIN @AdresEsleme e ON e.EskiId=t.AdresId;
                 INSERT dbo.BasvuruUygulamaAdresiHarcamaTuru(AdresId,HarcamaTuru) SELECT e.YeniId,t.HarcamaTuru FROM dbo.BasvuruUygulamaAdresiHarcamaTuru t INNER JOIN @AdresEsleme e ON e.EskiId=t.AdresId;
                 INSERT INTO dbo.BasvuruDegerZinciriAsama (BasvuruId, UygulamaAdresiId, DegerZinciriAsamaId, YapilacakFaaliyetler)
@@ -1548,7 +1564,9 @@ namespace TarimDonusum.Tablolar
                     bua.YatirimFaaliyetleri, bua.YatirimGirdileri, bua.YatirimCiktilari, bua.CevreselSosyalJson,
                     (SELECT STRING_AGG(CONVERT(nvarchar(max), t.YatirimTuru), ',') FROM dbo.BasvuruUygulamaAdresiYatirimTuru t WHERE t.AdresId=bua.Id) YatirimTurleri,
                     (SELECT STRING_AGG(CONVERT(nvarchar(max), t.HarcamaTuru), ',') FROM dbo.BasvuruUygulamaAdresiHarcamaTuru t WHERE t.AdresId=bua.Id) HarcamaTurleri,
-                    bua.Enlem, bua.Boylam, bua.Ada, bua.Parsel, bua.KumelenmeOrganizeAlanTuru
+                    bua.Enlem, bua.Boylam, bua.Ada, bua.Parsel, bua.KumelenmeOrganizeAlanTuru,
+                    (SELECT k.Id id,k.AdresId adresId,k.SiraNo siraNo,k.MinEnlem minEnlem,k.MaxEnlem maxEnlem,k.MinBoylam minBoylam,k.MaxBoylam maxBoylam,k.Ada ada,k.Parsel parsel,k.Mahalle mahalle
+                     FROM dbo.BasvuruUygulamaAdresiKonum k WHERE k.AdresId=bua.Id ORDER BY k.SiraNo FOR JSON PATH) Konumlar
                 FROM dbo.BasvuruUygulamaAdresleri bua
                 LEFT JOIN dbo.Ilce ilce ON ilce.Id = bua.IlceId
                 LEFT JOIN dbo.Il il ON il.Id = ilce.IlId ";
@@ -1637,6 +1655,7 @@ namespace TarimDonusum.Tablolar
 
             int id = OrtakFonksiyonlar.Int32Yap(await command.ExecuteScalarAsync());
             adres.id = id;
+            await UygulamaAdresiKonumlariniKaydetAsync(adres);
             await UygulamaAdresiTurleriniKaydetAsync(adres);
             await UygulamaAdresiDegerZinciriAsamalariniKaydetAsync(adres);
             return id;
@@ -1664,6 +1683,7 @@ namespace TarimDonusum.Tablolar
             UygulamaAdresiParametreleriEkle(command, adres);
             command.Parameters.AddWithValue("@Id", adres.id);
             await command.ExecuteNonQueryAsync();
+            await UygulamaAdresiKonumlariniKaydetAsync(adres);
             await UygulamaAdresiTurleriniKaydetAsync(adres);
             await UygulamaAdresiDegerZinciriAsamalariniKaydetAsync(adres);
         }
@@ -1764,6 +1784,25 @@ namespace TarimDonusum.Tablolar
             await command.ExecuteNonQueryAsync();
         }
 
+        private async Task UygulamaAdresiKonumlariniKaydetAsync(BasvuruUygulamaAdresi adres)
+        {
+            await using (SqlCommand sil = KomutOlustur("DELETE FROM dbo.BasvuruUygulamaAdresiKonum WHERE AdresId=@AdresId;"))
+            {
+                sil.Parameters.AddWithValue("@AdresId", adres.id);
+                await sil.ExecuteNonQueryAsync();
+            }
+            foreach (var konum in adres.konumlar)
+            {
+                await using SqlCommand ekle = KomutOlustur(@"INSERT dbo.BasvuruUygulamaAdresiKonum(AdresId,SiraNo,MinEnlem,MaxEnlem,MinBoylam,MaxBoylam,Ada,Parsel,Mahalle)
+                    OUTPUT INSERTED.Id VALUES(@AdresId,@SiraNo,@MinEnlem,@MaxEnlem,@MinBoylam,@MaxBoylam,@Ada,@Parsel,@Mahalle);");
+                ekle.Parameters.AddWithValue("@AdresId", adres.id); ekle.Parameters.AddWithValue("@SiraNo", konum.siraNo);
+                ekle.Parameters.AddWithValue("@MinEnlem", DbNull(konum.minEnlem)); ekle.Parameters.AddWithValue("@MaxEnlem", DbNull(konum.maxEnlem));
+                ekle.Parameters.AddWithValue("@MinBoylam", DbNull(konum.minBoylam)); ekle.Parameters.AddWithValue("@MaxBoylam", DbNull(konum.maxBoylam));
+                ekle.Parameters.AddWithValue("@Ada", DbNull(konum.ada)); ekle.Parameters.AddWithValue("@Parsel", DbNull(konum.parsel)); ekle.Parameters.AddWithValue("@Mahalle", DbNull(konum.mahalle));
+                konum.id = Convert.ToInt32(await ekle.ExecuteScalarAsync()); konum.adresId = adres.id;
+            }
+        }
+
         private async Task UygulamaAdresiTurleriniKaydetAsync(BasvuruUygulamaAdresi adres)
         {
             const string silSql = @"DELETE FROM dbo.BasvuruUygulamaAdresiYatirimTuru WHERE AdresId=@AdresId;
@@ -1837,7 +1876,7 @@ namespace TarimDonusum.Tablolar
                 FROM dbo.Basvuru WHERE Id=@BasvuruId;
 
                 SELECT y.Id,y.BasvuruId,y.Tur,y.SiraNo,y.Ad,y.Miktar,y.Birim,y.TekPanelGucu,y.TekPanelGucuBirim,y.ToplamGuc,y.ToplamGucBirim,y.MevcutKapasite,y.MevcutUretimMiktari,y.BirinciYilKapasite,y.BirinciYilUretimMiktari,y.SatisMiktari,y.BirimSatisFiyati,y.MevcutSatisMiktari,y.MevcutBirimSatisFiyati,y.UygulamaAdresiId,y.DegerZinciriAsamaTuru,
-                    CASE WHEN a.Id IS NULL THEN NULL ELSE CONCAT(a.SiraNo,'. ',il.Ad,' / ',ilce.Ad,' - ',a.TamAdres) END
+                    CASE WHEN a.Id IS NULL THEN NULL ELSE CONCAT(a.SiraNo,'. ',il.Ad,' / ',ilce.Ad,' - ',a.TamAdres) END, y.GiderTuru, y.SabitOran, y.BirimFiyat
                 FROM dbo.BasvuruYatirimOnBilgi y LEFT JOIN dbo.BasvuruUygulamaAdresleri a ON a.Id=y.UygulamaAdresiId LEFT JOIN dbo.Ilce ilce ON ilce.Id=a.IlceId LEFT JOIN dbo.Il il ON il.Id=ilce.IlId WHERE y.BasvuruId=@BasvuruId ORDER BY y.Tur,y.SiraNo,y.Id;
 
                 SELECT Id,BasvuruId,SiraNo,Ad,Birim,Miktar,Aciklama,Marka,Model,KapasiteOzellikleri,YerlesimPlaniSiraNo,KullanimAmaci,Durum,KapasiteSecimGerekcesi,UzmanParaBirimi,UzmanKur,UzmanMinimumFiyat,
@@ -1993,7 +2032,7 @@ namespace TarimDonusum.Tablolar
             while (await reader.ReadAsync())
             {
                 int k=0;
-                yatirimOnBilgileri.Add(new BasvuruYatirimOnBilgi { id=NullDuzeltInt(reader,k++), basvuruId=NullDuzeltInt(reader,k++), tur=(enumYatirimOnBilgiTuru)NullDuzeltInt(reader,k++), siraNo=NullDuzeltInt(reader,k++), ad=NullOkuString(reader,k++), miktar=NullOkuDecimal(reader,k++), birim=NullOkuString(reader,k++), tekPanelGucu=NullOkuDecimal(reader,k++), tekPanelGucuBirim=NullOkuString(reader,k++), toplamGuc=NullOkuDecimal(reader,k++), toplamGucBirim=NullOkuString(reader,k++), mevcutKapasite=NullOkuDecimal(reader,k++), mevcutUretimMiktari=NullOkuDecimal(reader,k++), birinciYilKapasite=NullOkuDecimal(reader,k++), birinciYilUretimMiktari=NullOkuDecimal(reader,k++), satisMiktari=NullOkuDecimal(reader,k++), birimSatisFiyati=NullOkuDecimal(reader,k++), mevcutSatisMiktari=NullOkuDecimal(reader,k++), mevcutBirimSatisFiyati=NullOkuDecimal(reader,k++), uygulamaAdresiId=NullOkuInt(reader,k++), degerZinciriAsamaTuru=reader.IsDBNull(k)?null:(enumDegerZinciriAsamaTuru)reader.GetInt32(k), uygulamaAdresiAciklama=NullOkuString(reader,++k) });
+                yatirimOnBilgileri.Add(new BasvuruYatirimOnBilgi { id=NullDuzeltInt(reader,k++), basvuruId=NullDuzeltInt(reader,k++), tur=(enumYatirimOnBilgiTuru)NullDuzeltInt(reader,k++), siraNo=NullDuzeltInt(reader,k++), ad=NullOkuString(reader,k++), miktar=NullOkuDecimal(reader,k++), birim=NullOkuString(reader,k++), tekPanelGucu=NullOkuDecimal(reader,k++), tekPanelGucuBirim=NullOkuString(reader,k++), toplamGuc=NullOkuDecimal(reader,k++), toplamGucBirim=NullOkuString(reader,k++), mevcutKapasite=NullOkuDecimal(reader,k++), mevcutUretimMiktari=NullOkuDecimal(reader,k++), birinciYilKapasite=NullOkuDecimal(reader,k++), birinciYilUretimMiktari=NullOkuDecimal(reader,k++), satisMiktari=NullOkuDecimal(reader,k++), birimSatisFiyati=NullOkuDecimal(reader,k++), mevcutSatisMiktari=NullOkuDecimal(reader,k++), mevcutBirimSatisFiyati=NullOkuDecimal(reader,k++), uygulamaAdresiId=NullOkuInt(reader,k++), degerZinciriAsamaTuru=reader.IsDBNull(k)?null:(enumDegerZinciriAsamaTuru)reader.GetInt32(k), uygulamaAdresiAciklama=NullOkuString(reader,++k), giderTuru=reader.IsDBNull(++k)?null:(GirdiGiderTuru)reader.GetInt32(k), sabitOran=NullOkuDecimal(reader,++k), birimFiyat=NullOkuDecimal(reader,++k) });
             }
 
             await reader.NextResultAsync();
@@ -2083,6 +2122,7 @@ namespace TarimDonusum.Tablolar
             basvuru.ortaklik.ortaklar = ortaklar;
             basvuru.AdliSicilKisileri = adliSicilKisileri;
             basvuru.YatirimOnBilgileri = yatirimOnBilgileri;
+            basvuru.yatirimOzeti.yatirimOzetiJson = TeknikProjeGiderleri.Birlestir(basvuru.yatirimOzeti.yatirimOzetiJson, yatirimOnBilgileri);
             basvuru.yatirimOzeti.urunler = yatirimOnBilgileri
                 .Where(x => x.tur is enumYatirimOnBilgiTuru.MevcutUrun or enumYatirimOnBilgiTuru.UretilecekUrun)
                 .ToList();
@@ -2111,8 +2151,8 @@ namespace TarimDonusum.Tablolar
                 sil.Parameters.AddWithValue("@BasvuruId",basvuruId);
                 await sil.ExecuteNonQueryAsync();
             }
-            const string sql=@"INSERT dbo.BasvuruYatirimOnBilgi(BasvuruId,Tur,SiraNo,Ad,Miktar,Birim,TekPanelGucu,TekPanelGucuBirim,ToplamGuc,ToplamGucBirim,MevcutKapasite,MevcutUretimMiktari,BirinciYilKapasite,BirinciYilUretimMiktari,SatisMiktari,BirimSatisFiyati,MevcutSatisMiktari,MevcutBirimSatisFiyati,UygulamaAdresiId,DegerZinciriAsamaTuru)
-                OUTPUT INSERTED.Id VALUES(@BasvuruId,@Tur,@SiraNo,@Ad,@Miktar,@Birim,@TekPanelGucu,@TekPanelGucuBirim,@ToplamGuc,@ToplamGucBirim,@MevcutKapasite,@MevcutUretimMiktari,@BirinciYilKapasite,@BirinciYilUretimMiktari,@SatisMiktari,@BirimSatisFiyati,@MevcutSatisMiktari,@MevcutBirimSatisFiyati,@UygulamaAdresiId,@DegerZinciriAsamaTuru);";
+            const string sql=@"INSERT dbo.BasvuruYatirimOnBilgi(BasvuruId,Tur,SiraNo,Ad,Miktar,Birim,TekPanelGucu,TekPanelGucuBirim,ToplamGuc,ToplamGucBirim,MevcutKapasite,MevcutUretimMiktari,BirinciYilKapasite,BirinciYilUretimMiktari,SatisMiktari,BirimSatisFiyati,MevcutSatisMiktari,MevcutBirimSatisFiyati,UygulamaAdresiId,DegerZinciriAsamaTuru,GiderTuru,SabitOran,BirimFiyat)
+                OUTPUT INSERTED.Id VALUES(@BasvuruId,@Tur,@SiraNo,@Ad,@Miktar,@Birim,@TekPanelGucu,@TekPanelGucuBirim,@ToplamGuc,@ToplamGucBirim,@MevcutKapasite,@MevcutUretimMiktari,@BirinciYilKapasite,@BirinciYilUretimMiktari,@SatisMiktari,@BirimSatisFiyati,@MevcutSatisMiktari,@MevcutBirimSatisFiyati,@UygulamaAdresiId,@DegerZinciriAsamaTuru,@GiderTuru,@SabitOran,@BirimFiyat);";
             foreach(BasvuruYatirimOnBilgi x in kayitlar)
             {
                 await using SqlCommand c=KomutOlustur(sql);
@@ -2122,20 +2162,26 @@ namespace TarimDonusum.Tablolar
                 c.Parameters.AddWithValue("@MevcutSatisMiktari",DbNull(x.mevcutSatisMiktari));c.Parameters.AddWithValue("@MevcutBirimSatisFiyati",DbNull(x.mevcutBirimSatisFiyati));
                 c.Parameters.AddWithValue("@UygulamaAdresiId",DbNull(x.uygulamaAdresiId));
                 c.Parameters.AddWithValue("@DegerZinciriAsamaTuru",DbNull(x.degerZinciriAsamaTuru.HasValue?(int?)x.degerZinciriAsamaTuru.Value:null));
+                c.Parameters.AddWithValue("@GiderTuru", DbNull(x.giderTuru.HasValue ? (int?)x.giderTuru.Value : null));
+                c.Parameters.AddWithValue("@SabitOran", DbNull(x.sabitOran));
+                c.Parameters.AddWithValue("@BirimFiyat", DbNull(x.birimFiyat));
                 x.id=Convert.ToInt32(await c.ExecuteScalarAsync());x.basvuruId=basvuruId;
             }
         }
 
         public async Task BasvuruYatirimOnBilgisiKaydetAsync(BasvuruYatirimOnBilgi x)
         {
-            const string guncelle=@"UPDATE dbo.BasvuruYatirimOnBilgi SET Tur=@Tur,SiraNo=@SiraNo,Ad=@Ad,Miktar=@Miktar,Birim=@Birim,TekPanelGucu=@TekPanelGucu,TekPanelGucuBirim=@TekPanelGucuBirim,ToplamGuc=@ToplamGuc,ToplamGucBirim=@ToplamGucBirim,MevcutKapasite=@MevcutKapasite,MevcutUretimMiktari=@MevcutUretimMiktari,BirinciYilKapasite=@BirinciYilKapasite,BirinciYilUretimMiktari=@BirinciYilUretimMiktari,SatisMiktari=@SatisMiktari,BirimSatisFiyati=@BirimSatisFiyati,MevcutSatisMiktari=@MevcutSatisMiktari,MevcutBirimSatisFiyati=@MevcutBirimSatisFiyati,UygulamaAdresiId=@UygulamaAdresiId,DegerZinciriAsamaTuru=@DegerZinciriAsamaTuru WHERE Id=@Id AND BasvuruId=@BasvuruId;";
-            const string ekle=@"INSERT dbo.BasvuruYatirimOnBilgi(BasvuruId,Tur,SiraNo,Ad,Miktar,Birim,TekPanelGucu,TekPanelGucuBirim,ToplamGuc,ToplamGucBirim,MevcutKapasite,MevcutUretimMiktari,BirinciYilKapasite,BirinciYilUretimMiktari,SatisMiktari,BirimSatisFiyati,MevcutSatisMiktari,MevcutBirimSatisFiyati,UygulamaAdresiId,DegerZinciriAsamaTuru) OUTPUT INSERTED.Id VALUES(@BasvuruId,@Tur,@SiraNo,@Ad,@Miktar,@Birim,@TekPanelGucu,@TekPanelGucuBirim,@ToplamGuc,@ToplamGucBirim,@MevcutKapasite,@MevcutUretimMiktari,@BirinciYilKapasite,@BirinciYilUretimMiktari,@SatisMiktari,@BirimSatisFiyati,@MevcutSatisMiktari,@MevcutBirimSatisFiyati,@UygulamaAdresiId,@DegerZinciriAsamaTuru);";
+            const string guncelle=@"UPDATE dbo.BasvuruYatirimOnBilgi SET Tur=@Tur,SiraNo=@SiraNo,Ad=@Ad,Miktar=@Miktar,Birim=@Birim,TekPanelGucu=@TekPanelGucu,TekPanelGucuBirim=@TekPanelGucuBirim,ToplamGuc=@ToplamGuc,ToplamGucBirim=@ToplamGucBirim,MevcutKapasite=@MevcutKapasite,MevcutUretimMiktari=@MevcutUretimMiktari,BirinciYilKapasite=@BirinciYilKapasite,BirinciYilUretimMiktari=@BirinciYilUretimMiktari,SatisMiktari=@SatisMiktari,BirimSatisFiyati=@BirimSatisFiyati,MevcutSatisMiktari=@MevcutSatisMiktari,MevcutBirimSatisFiyati=@MevcutBirimSatisFiyati,UygulamaAdresiId=@UygulamaAdresiId,DegerZinciriAsamaTuru=@DegerZinciriAsamaTuru,GiderTuru=@GiderTuru,SabitOran=@SabitOran,BirimFiyat=@BirimFiyat WHERE Id=@Id AND BasvuruId=@BasvuruId;";
+            const string ekle=@"INSERT dbo.BasvuruYatirimOnBilgi(BasvuruId,Tur,SiraNo,Ad,Miktar,Birim,TekPanelGucu,TekPanelGucuBirim,ToplamGuc,ToplamGucBirim,MevcutKapasite,MevcutUretimMiktari,BirinciYilKapasite,BirinciYilUretimMiktari,SatisMiktari,BirimSatisFiyati,MevcutSatisMiktari,MevcutBirimSatisFiyati,UygulamaAdresiId,DegerZinciriAsamaTuru,GiderTuru,SabitOran,BirimFiyat) OUTPUT INSERTED.Id VALUES(@BasvuruId,@Tur,@SiraNo,@Ad,@Miktar,@Birim,@TekPanelGucu,@TekPanelGucuBirim,@ToplamGuc,@ToplamGucBirim,@MevcutKapasite,@MevcutUretimMiktari,@BirinciYilKapasite,@BirinciYilUretimMiktari,@SatisMiktari,@BirimSatisFiyati,@MevcutSatisMiktari,@MevcutBirimSatisFiyati,@UygulamaAdresiId,@DegerZinciriAsamaTuru,@GiderTuru,@SabitOran,@BirimFiyat);";
             await using SqlCommand c=KomutOlustur(x.id>0?guncelle:ekle);
             c.Parameters.AddWithValue("@BasvuruId",x.basvuruId);c.Parameters.AddWithValue("@Tur",(int)x.tur);c.Parameters.AddWithValue("@SiraNo",x.siraNo);c.Parameters.AddWithValue("@Ad",x.ad);c.Parameters.AddWithValue("@Miktar",DbNull(x.miktar));c.Parameters.AddWithValue("@Birim",DbNull(x.birim));c.Parameters.AddWithValue("@TekPanelGucu",DbNull(x.tekPanelGucu));c.Parameters.AddWithValue("@TekPanelGucuBirim",DbNull(x.tekPanelGucuBirim));c.Parameters.AddWithValue("@ToplamGuc",DbNull(x.toplamGuc));c.Parameters.AddWithValue("@ToplamGucBirim",DbNull(x.toplamGucBirim));
             c.Parameters.AddWithValue("@MevcutKapasite",DbNull(x.mevcutKapasite));c.Parameters.AddWithValue("@MevcutUretimMiktari",DbNull(x.mevcutUretimMiktari));c.Parameters.AddWithValue("@BirinciYilKapasite",DbNull(x.birinciYilKapasite));c.Parameters.AddWithValue("@BirinciYilUretimMiktari",DbNull(x.birinciYilUretimMiktari));c.Parameters.AddWithValue("@SatisMiktari",DbNull(x.satisMiktari));c.Parameters.AddWithValue("@BirimSatisFiyati",DbNull(x.birimSatisFiyati));
             c.Parameters.AddWithValue("@MevcutSatisMiktari",DbNull(x.mevcutSatisMiktari));c.Parameters.AddWithValue("@MevcutBirimSatisFiyati",DbNull(x.mevcutBirimSatisFiyati));
             c.Parameters.AddWithValue("@UygulamaAdresiId",DbNull(x.uygulamaAdresiId));
             c.Parameters.AddWithValue("@DegerZinciriAsamaTuru",DbNull(x.degerZinciriAsamaTuru.HasValue?(int?)x.degerZinciriAsamaTuru.Value:null));
+                c.Parameters.AddWithValue("@GiderTuru", DbNull(x.giderTuru.HasValue ? (int?)x.giderTuru.Value : null));
+                c.Parameters.AddWithValue("@SabitOran", DbNull(x.sabitOran));
+                c.Parameters.AddWithValue("@BirimFiyat", DbNull(x.birimFiyat));
             if(x.id>0){c.Parameters.AddWithValue("@Id",x.id);if(await c.ExecuteNonQueryAsync()==0)throw new InvalidOperationException("Yatırım ön bilgisi başvuruya ait değil.");}else x.id=Convert.ToInt32(await c.ExecuteScalarAsync());
         }
 
@@ -2423,7 +2469,8 @@ namespace TarimDonusum.Tablolar
                 yatirimTurleri = VirgulluIntListeOku(NullOkuString(reader, 29)), harcamaTurleri = VirgulluIntListeOku(NullOkuString(reader, 30)),
                 enlem = reader.IsDBNull(31) ? null : reader.GetDecimal(31), boylam = reader.IsDBNull(32) ? null : reader.GetDecimal(32),
                 ada = NullOkuString(reader, 33), parsel = NullOkuString(reader, 34),
-                kumelenmeOrganizeAlanTuru = reader.IsDBNull(35) ? enumKumelenmeOrganizeAlanTuru.Tanimsiz : (enumKumelenmeOrganizeAlanTuru)reader.GetInt32(35)
+                kumelenmeOrganizeAlanTuru = reader.IsDBNull(35) ? enumKumelenmeOrganizeAlanTuru.Tanimsiz : (enumKumelenmeOrganizeAlanTuru)reader.GetInt32(35),
+                konumlar = JsonSerializer.Deserialize<List<BasvuruUygulamaAdresiKonum>>(reader.GetString(36)) ?? new()
             };
             if (l != null)
             {

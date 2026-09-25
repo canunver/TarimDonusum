@@ -256,6 +256,7 @@ body {
 
 .floating-message,
 .floating-message-item {
+  white-space: pre-line;
   max-width: 360px;
   min-width: 260px;
   box-shadow: 0 8px 24px rgba(0,0,0,.18);
@@ -2151,7 +2152,7 @@ body {
   line-height: 18px;
 }
 
-#cevreselSosyalBeyanlari .esf-declaration {
+.ortak-cevresel-taahhut .esf-declaration {
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -2159,12 +2160,12 @@ body {
   padding: 18px;
 }
 
-#cevreselSosyalBeyanlari .esf-declaration-text {
+.ortak-cevresel-taahhut .esf-declaration-text {
   white-space: pre-line;
   line-height: 1.7;
 }
 
-#cevreselSosyalBeyanlari .esf-declaration-confirm {
+.ortak-cevresel-taahhut .esf-declaration-confirm {
   display: flex;
   align-items: center;
   align-self: flex-end;
@@ -2179,7 +2180,7 @@ body {
   cursor: pointer;
 }
 
-#cevreselSosyalBeyanlari .esf-declaration-confirm input[type="checkbox"] {
+.ortak-cevresel-taahhut .esf-declaration-confirm input[type="checkbox"] {
   flex: 0 0 20px;
   width: 20px;
   height: 20px;
@@ -2299,13 +2300,11 @@ body {
     height: 36px;
 }
 /* Uygulama yeri koordinat ve kadastro bilgilerini aynı satırda tutar. */
-.uygulama-konum-satiri {
+.uygulama-konum-tablosu {
     grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
+    min-width: 0;
 }
 
-@media (max-width: 767.98px) {
-    .uygulama-konum-satiri { grid-template-columns: 1fr 1fr; }
-}
+.uygulama-konum-tablosu table { min-width: 920px; }
+.uygulama-konum-tablosu th { white-space: nowrap; }
+.uygulama-konum-tablosu input { min-width: 95px; width: 100%; }

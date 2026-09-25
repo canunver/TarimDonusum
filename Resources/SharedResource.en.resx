@@ -970,7 +970,8 @@
     <value>Investment Summary Table</value>
   </data>
   <data name="Basvuru.Step.Urunler" xml:space="preserve"><value>Products and Sales Information</value></data>
-  <data name="Basvuru.Step.ButceGiderler" xml:space="preserve"><value>Budget and Expenses</value></data>
+  <data name="Basvuru.Step.ButceGiderler" xml:space="preserve"><value>Budget</value></data>
+  <data name="Basvuru.Step.Giderler" xml:space="preserve"><value>Expenses</value></data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
     <value>7. Investment Summary Table</value>
   </data>
