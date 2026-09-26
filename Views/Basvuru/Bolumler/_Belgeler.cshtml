@@ -1,5 +1,6 @@
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+<partial name="_FirmaGecmisYilKurallari" model="Model" />
 
 @{
     var b = Model.Basvuru;
@@ -9,7 +10,7 @@
     {
         string key = $"Basvuru.Documents.Required.{dosyaNo}";
         string value = L[key].Value;
-        return value == key ? varsayilan : value;
+        return FirmaGecmisYilKurallari.BelgeAdi(b, dosyaNo, value == key ? varsayilan : value);
     }
     string dosyaYok = T("Basvuru.Documents.NoFileSelected");
     if (b.ZorunluBelgeler.Count == 0)

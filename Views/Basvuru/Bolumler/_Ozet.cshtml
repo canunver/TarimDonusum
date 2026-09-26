@@ -84,8 +84,6 @@
     {
         donem = Model.Donemler.FirstOrDefault(x => x.id == b.basvuruFirma.donemId);
     }
-    decimal altLimit = donem?.minimumYatirimTutari ?? 0;
-    decimal ustLimit = donem?.maksimumYatirimTutari ?? 0;
     decimal OrtakMaliToplami(Func<BasvuruOrtak, decimal?> alan) => b.ortaklik.ortaklar
         .Where(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase))
         .Sum(x => alan(x).GetValueOrDefault() * BasvuruOrtak.HesabaDahilOranHesapla(x.payOrani) / 100m);
@@ -93,11 +91,7 @@
     decimal kontrolSonYilNetSatis = b.mali.sonYilNetSatis.GetValueOrDefault() + OrtakMaliToplami(x => x.sonYilNetSatis);
     decimal kontrolOncekiYilAktifToplami = b.mali.oncekiYilAktifToplami.GetValueOrDefault() + OrtakMaliToplami(x => x.oncekiYilAktifToplami);
     decimal kontrolSonYilAktifToplami = b.mali.sonYilAktifToplami.GetValueOrDefault() + OrtakMaliToplami(x => x.sonYilAktifToplami);
-    bool MaliDegerUygun(decimal? value) => value.HasValue && (altLimit <= 0 || value.Value >= altLimit) && (ustLimit <= 0 || value.Value <= ustLimit);
-    bool maliOlcekUygun = MaliDegerUygun(kontrolOncekiYilNetSatis)
-        || MaliDegerUygun(kontrolSonYilNetSatis)
-        || MaliDegerUygun(kontrolOncekiYilAktifToplami)
-        || MaliDegerUygun(kontrolSonYilAktifToplami);
+
 
     decimal ortaklikPayToplami = b.ortaklik.ortaklar.Sum(x => x.payOrani.GetValueOrDefault());
     decimal ozelSektorPayi = b.ortaklik.ozelSektorPayi.GetValueOrDefault();
@@ -169,7 +163,6 @@
     Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari), R("Basvuru.Summary.Error.InvestmentOutputsRequired"));
     Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, R("Basvuru.Summary.Error.ValueChainRequired"));
     Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, R("Basvuru.Summary.Error.ValueChainStageRequired"));
-    Eksikse(!maliOlcekUygun, R("Basvuru.Summary.Error.FinancialScaleRequired"));
     decimal azamiFinansmanOrani = b.basvuruFirma.donem.AzamiDestekOrani(b.YatirimAdresleri.Select(x => x.ilceId));
     Eksikse(azamiFinansmanOrani > 0
         && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > azamiFinansmanOrani, R("Basvuru.Finance.RateLimitError").Replace("{0}", azamiFinansmanOrani.ToString("0.##")));
@@ -189,7 +182,7 @@
     Eksikse(string.IsNullOrWhiteSpace(b.TaahhutBeyanlarJson), R("Basvuru.Summary.Error.DeclarationsRequired"));
     Eksikse(string.IsNullOrWhiteSpace(rawYatirimOzeti), R("Basvuru.Summary.Error.InvestmentSummaryRequired"));
     bool merkeziTuzukBelgesiVar = b.TumBasvuruDosyalari.Any(x => x.FormAd == "Basvuru_ZorunluBelgeMerkezi" && x.DosyaNo == ZorunluBelgeTanimlari.GuncelTuzukBelgeNo);
-    Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue && !(x.dosyaNo == 8 && merkeziTuzukBelgesiVar)), R("Basvuru.Summary.Error.RequiredDocumentsRequired"));
+    Eksikse(b.ZorunluBelgeler.Any(x => !FirmaGecmisYilKurallari.BelgeEngelli(b, "Basvuru_ZorunluBelge", x.dosyaNo) && !x.dosyaId.HasValue && !(x.dosyaNo == 8 && merkeziTuzukBelgesiVar)), R("Basvuru.Summary.Error.RequiredDocumentsRequired"));
     Eksikse(b.ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "T\u00FCzel Ki\u015Fi", StringComparison.OrdinalIgnoreCase)
         && x.zorunluBelgeler.Any(d => !d.dosyaId.HasValue)), R("Basvuru.Summary.Error.LegalPartnerDocumentsRequired"));
     Eksikse(b.AdliSicilKisileri.Count == 0, R("Basvuru.Summary.Error.CriminalPeopleRequired"));
@@ -207,7 +200,6 @@
         <div class="summary-card"><span>@L["Basvuru.Summary.Card.TradeTitle"]</span><strong>@YoksaTire(b.basvuruFirma.firma.ticaretUnvani)</strong></div>
         <div class="summary-card"><span>@L["Basvuru.Summary.Card.Investment"]</span><strong>@YoksaTire(b.yatirim.yatirimAdi)</strong></div>
         <div class="summary-card"><span>@L["Basvuru.Summary.Card.ValueChain"]</span><strong>@degerZinciriAdi</strong></div>
-        <div class="summary-card"><span>@L["Basvuru.Summary.Card.FinancialScale"]</span><strong class="@(maliOlcekUygun ? "text-success" : "text-danger")">@(maliOlcekUygun ? L["Basvuru.Summary.Suitable"] : L["Basvuru.Summary.NotSuitable"])</strong></div>
     </div>
 
     <div class="summary-check-panel">

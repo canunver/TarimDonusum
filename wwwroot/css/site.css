@@ -597,6 +597,11 @@ body {
   background: #fff;
 }
 
+#basvuruNaceAramaModal {
+  z-index: 1060;
+  background: rgba(0, 0, 0, .35);
+}
+
 .nace-search-modal .modal-body {
   display: flex;
   flex-direction: column;

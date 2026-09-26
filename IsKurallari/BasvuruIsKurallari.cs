@@ -687,7 +687,7 @@ namespace TarimDonusum.IsKurallari
             List<BasvuruUygulamaAdresi> cevreselAdresler = b.YatirimAdresleri
                 .Where(x => x.yatirimTurleri.Any(t => t >= 1 && t <= 4)).ToList();
             bool cevresel = cevreselAdresler.Count > 0 && cevreselAdresler.All(x => !string.IsNullOrWhiteSpace(x.cevreselSosyalJson));
-            bool belgeler = b.ZorunluBelgeler.Count > 0 && b.ZorunluBelgeler.All(x => x.dosyaId.HasValue);
+            bool belgeler = b.ZorunluBelgeler.Count > 0 && b.ZorunluBelgeler.All(x => FirmaGecmisYilKurallari.BelgeEngelli(b, BasvuruZorunluBelgeFormAd, x.dosyaNo) || x.dosyaId.HasValue);
             bool teknik = !string.IsNullOrWhiteSpace(b.dbCtpTeknikProje.dbCtpTeknikProjeJson);
             bool tamlik = temelBilgiler && sahipTuru && temsilYetki && yatirim && yatirimOzeti && yatirimYeri && degerZinciri
                 && finans && mali && ortaklik && faaliyet && beyanlar && cevresel && belgeler && teknik;
@@ -961,27 +961,11 @@ namespace TarimDonusum.IsKurallari
         }
         private void IncelemeyeGonderimEksikleriniDogrula(Basvuru b, Sonuc sonuc)
         {
+            Donem? donem = b.basvuruFirma.donem;
             void Eksikse(bool kosul, string kaynak)
             {
                 if (kosul) HataEkle(sonuc, kaynak);
             }
-
-            Donem? donem = b.basvuruFirma.donem;
-            decimal altLimit = donem?.minimumYatirimTutari ?? 0;
-            decimal ustLimit = donem?.maksimumYatirimTutari ?? 0;
-            decimal OrtakMaliToplami(Func<BasvuruOrtak, decimal?> alan) => b.ortaklik.ortaklar
-                .Where(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase))
-                .Sum(x => alan(x).GetValueOrDefault() * BasvuruOrtak.HesabaDahilOranHesapla(x.payOrani) / 100m);
-            decimal kontrolOncekiYilNetSatis = b.mali.oncekiYilNetSatis.GetValueOrDefault() + OrtakMaliToplami(x => x.oncekiYilNetSatis);
-            decimal kontrolSonYilNetSatis = b.mali.sonYilNetSatis.GetValueOrDefault() + OrtakMaliToplami(x => x.sonYilNetSatis);
-            decimal kontrolOncekiYilAktifToplami = b.mali.oncekiYilAktifToplami.GetValueOrDefault() + OrtakMaliToplami(x => x.oncekiYilAktifToplami);
-            decimal kontrolSonYilAktifToplami = b.mali.sonYilAktifToplami.GetValueOrDefault() + OrtakMaliToplami(x => x.sonYilAktifToplami);
-            bool MaliDegerUygun(decimal? deger) =>
-                deger.HasValue && (altLimit <= 0 || deger.Value >= altLimit) && (ustLimit <= 0 || deger.Value <= ustLimit);
-            bool maliOlcekUygun = MaliDegerUygun(kontrolOncekiYilNetSatis)
-                || MaliDegerUygun(kontrolSonYilNetSatis)
-                || MaliDegerUygun(kontrolOncekiYilAktifToplami)
-                || MaliDegerUygun(kontrolSonYilAktifToplami);
 
             bool cevreselKapsamDisi = false;
             foreach (string json in b.YatirimAdresleri.Select(x => x.cevreselSosyalJson).Where(x => !string.IsNullOrWhiteSpace(x))!)
@@ -1024,7 +1008,6 @@ namespace TarimDonusum.IsKurallari
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari), "Basvuru.Summary.Error.InvestmentOutputsRequired");
             Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, "Basvuru.Summary.Error.ValueChainRequired");
             Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, "Basvuru.Summary.Error.ValueChainStageRequired");
-            Eksikse(!maliOlcekUygun, "Basvuru.Summary.Error.FinancialScaleRequired");
             decimal azamiFinansmanOrani = b.basvuruFirma.donem.AzamiDestekOrani(b.YatirimAdresleri.Select(x => x.ilceId));
             Eksikse(azamiFinansmanOrani > 0
                 && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > azamiFinansmanOrani, "Basvuru.Finance.RateLimitExceeded");
@@ -1040,7 +1023,7 @@ namespace TarimDonusum.IsKurallari
             bool merkeziTuzukBelgesiVar = b.TumBasvuruDosyalari.Any(x =>
                 string.Equals(x.FormAd, BasvuruZorunluBelgeMerkeziFormAd, StringComparison.OrdinalIgnoreCase)
                 && x.DosyaNo == ZorunluBelgeTanimlari.GuncelTuzukBelgeNo);
-            Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue
+            Eksikse(b.ZorunluBelgeler.Any(x => !FirmaGecmisYilKurallari.BelgeEngelli(b, BasvuruZorunluBelgeFormAd, x.dosyaNo) && !x.dosyaId.HasValue
                 && !(x.dosyaNo == 8 && merkeziTuzukBelgesiVar)), "Basvuru.Summary.Error.RequiredDocumentsRequired");
             Eksikse(b.ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase)
                 && x.zorunluBelgeler.Any(d => !d.dosyaId.HasValue)), "Basvuru.Summary.Error.LegalPartnerDocumentsRequired");
@@ -1142,16 +1125,6 @@ namespace TarimDonusum.IsKurallari
                 if (kosul) HataEkle(sonuc, kaynak);
             }
 
-            Donem? donem = b.basvuruFirma.donem;
-            decimal altLimit = donem?.minimumYatirimTutari ?? 0;
-            decimal ustLimit = donem?.maksimumYatirimTutari ?? 0;
-            bool MaliDegerUygun(decimal? deger) =>
-                deger.HasValue && (altLimit <= 0 || deger.Value >= altLimit) && (ustLimit <= 0 || deger.Value <= ustLimit);
-            bool maliOlcekUygun = MaliDegerUygun(b.mali.oncekiYilNetSatis)
-                || MaliDegerUygun(b.mali.sonYilNetSatis)
-                || MaliDegerUygun(b.mali.oncekiYilAktifToplami)
-                || MaliDegerUygun(b.mali.sonYilAktifToplami);
-
             bool cevreselKapsamDisi = false;
             if (!string.IsNullOrWhiteSpace(b.cevreselSosyal.cevreselSosyalJson))
             {
@@ -1189,7 +1162,6 @@ namespace TarimDonusum.IsKurallari
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari), "Basvuru.Summary.Error.InvestmentOutputsRequired");
             Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, "Basvuru.Summary.Error.ValueChainRequired");
             Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, "Basvuru.Summary.Error.ValueChainStageRequired");
-            Eksikse(!maliOlcekUygun, "Basvuru.Summary.Error.FinancialScaleRequired");
             Eksikse(b.basvuruFirma.donem.destekOrani.GetValueOrDefault() > 0
                 && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > b.basvuruFirma.donem.destekOrani.GetValueOrDefault(), "Basvuru.Finance.RateLimitExceeded");
             decimal guncelTalepTutari = GuncelTalepEdilenFinansmanTutariHesapla(b);
@@ -1201,7 +1173,7 @@ namespace TarimDonusum.IsKurallari
             Eksikse(b.mali.bagimsizDenetimeTabiMi == true && !b.mali.denetimDosyaId.HasValue, "Basvuru.Summary.Error.AuditFileRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirimOzeti.yatirimOzetiJson), "Basvuru.Summary.Error.InvestmentSummaryRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.dbCtpTeknikProje.dbCtpTeknikProjeJson), "Basvuru.Summary.Error.DbCtpRequired");
-            Eksikse(b.ZorunluBelgeler.Any(x => !x.dosyaId.HasValue), "Basvuru.Summary.Error.RequiredDocumentsRequired");
+            Eksikse(b.ZorunluBelgeler.Any(x => !FirmaGecmisYilKurallari.BelgeEngelli(b, BasvuruZorunluBelgeFormAd, x.dosyaNo) && !x.dosyaId.HasValue), "Basvuru.Summary.Error.RequiredDocumentsRequired");
             Eksikse(b.ortaklik.ortaklar.Any(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase)
                 && x.zorunluBelgeler.Any(d => !d.dosyaId.HasValue)), "Basvuru.Summary.Error.LegalPartnerDocumentsRequired");
             Eksikse(b.AdliSicilKisileri.Count == 0, "Basvuru.Summary.Error.CriminalPeopleRequired");
@@ -2791,11 +2763,6 @@ namespace TarimDonusum.IsKurallari
             }
             try
             {
-                mali.Dogrula(sonuc);
-
-                if (!sonuc.basarili)
-                    return sonuc;
-
                 await using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
@@ -2806,6 +2773,11 @@ namespace TarimDonusum.IsKurallari
                     if (!sonuc.basarili || mevcut == null)
                         return sonuc;
                 }
+
+                if (mevcut == null) { sonuc.HataEkle("Başvuru bulunamadı."); return sonuc; }
+                FirmaGecmisYilKurallari.Dogrula(mevcut, mali, sonuc);
+                mali.Dogrula(sonuc, FirmaGecmisYilKurallari.Girilebilir(mevcut, 2), FirmaGecmisYilKurallari.Girilebilir(mevcut, 1));
+                if (!sonuc.basarili) return sonuc;
 
                 decimal girilenOzelOrtakPayi = mevcut?.ortaklik.ortaklar
                     .Where(x => string.Equals(x.ozelKamuNiteligi, "Özel", StringComparison.OrdinalIgnoreCase))
@@ -3330,6 +3302,12 @@ namespace TarimDonusum.IsKurallari
                     && !await BasvuruAdliSicilKisiVarMiAsync(connection, basvuruId, dosyaNo))
                 {
                     HataEkle(sonuc, "Business.Application.CriminalPersonRequiredBeforeUpload");
+                    return sonuc;
+                }
+
+                if (FirmaGecmisYilKurallari.BelgeEngelli(mevcut, formAd, dosyaNo))
+                {
+                    sonuc.HataEkle(FirmaGecmisYilKurallari.Hata(mevcut));
                     return sonuc;
                 }
 

@@ -1,0 +1,5 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+<span hidden data-firma-gecmis-yil
+      data-onceki="@((!FirmaGecmisYilKurallari.Girilebilir(Model.Basvuru, 2)).ToString().ToLowerInvariant())"
+      data-son="@((!FirmaGecmisYilKurallari.Girilebilir(Model.Basvuru, 1)).ToString().ToLowerInvariant())"
+      data-hata="@FirmaGecmisYilKurallari.Hata(Model.Basvuru)"></span>

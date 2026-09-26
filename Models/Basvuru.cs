@@ -65,7 +65,8 @@ namespace TarimDonusum.Models
         AktifDegil = 0,
         BirYildirAktifOtb = 1,
         BirYildirAktifUygunDegil = 2,
-        EnAzIkiYildirAktif = 3
+        EnAzIkiYildirAktif = 3,
+        YeniKurulanOtb = 4
     }
 
     public enum enumUygulamaAdresiYatirimYeriStatusu : int
@@ -214,6 +215,11 @@ namespace TarimDonusum.Models
         {
             get
             {
+                bool otbAdresiVar = YatirimAdresleri.Any(x =>
+                    x.kumelenmeOrganizeAlanTuru == enumKumelenmeOrganizeAlanTuru.OrganizeTarimBolgesi);
+                if (otbAdresiVar && basvuruFirma.firma.kurulusTarihi?.Year == FirmaGecmisYilKurallari.DonemYili(this))
+                    return enumFaaliyetSuresiDurumu.YeniKurulanOtb;
+
                 bool sonYilVerisiVar = mali.sonYilNetSatis.GetValueOrDefault() > 0
                     || mali.sonYilAktifToplami.GetValueOrDefault() > 0;
                 if (!sonYilVerisiVar)
@@ -224,19 +230,18 @@ namespace TarimDonusum.Models
                 if (oncekiYilVerisiVar)
                     return enumFaaliyetSuresiDurumu.EnAzIkiYildirAktif;
 
-                bool otbAdresiVar = YatirimAdresleri.Any(x =>
-                    x.kumelenmeOrganizeAlanTuru == enumKumelenmeOrganizeAlanTuru.OrganizeTarimBolgesi);
                 return otbAdresiVar
                     ? enumFaaliyetSuresiDurumu.BirYildirAktifOtb
                     : enumFaaliyetSuresiDurumu.BirYildirAktifUygunDegil;
             }
         }
         public bool FaaliyetSuresiUygunMu => FaaliyetSuresiDurumu is
-            enumFaaliyetSuresiDurumu.BirYildirAktifOtb or enumFaaliyetSuresiDurumu.EnAzIkiYildirAktif;
+            enumFaaliyetSuresiDurumu.BirYildirAktifOtb or enumFaaliyetSuresiDurumu.EnAzIkiYildirAktif or enumFaaliyetSuresiDurumu.YeniKurulanOtb;
         public bool IkiYillikFaaliyetSartindanMuaf =>
-            FaaliyetSuresiDurumu == enumFaaliyetSuresiDurumu.BirYildirAktifOtb;
+            FaaliyetSuresiDurumu is enumFaaliyetSuresiDurumu.BirYildirAktifOtb or enumFaaliyetSuresiDurumu.YeniKurulanOtb;
         public string FaaliyetSuresiDurumuMetni => FaaliyetSuresiDurumu switch
         {
+            enumFaaliyetSuresiDurumu.YeniKurulanOtb => "Yeni kurulmuş - OTB",
             enumFaaliyetSuresiDurumu.BirYildirAktifOtb => "1 yıldır aktif - OTB",
             enumFaaliyetSuresiDurumu.BirYildirAktifUygunDegil => "1 yıldır aktif - uygun değil",
             enumFaaliyetSuresiDurumu.EnAzIkiYildirAktif => "En az 2 yıldır aktif",
@@ -590,6 +595,11 @@ namespace TarimDonusum.Models
 
             if (yatirimTurleri == null || yatirimTurleri.Count == 0)
                 sonuc.HataEkle("Yatırım türü seçilmelidir.");
+            if (yatirimTurleri?.Contains((int)enumYatirimTuru.TeknolojiYenileme) == true)
+                sonuc.HataEkle("Teknoloji yenileme yatırım türü artık seçilemez.");
+            if (yatirimTurleri?.Contains((int)enumYatirimTuru.Yeni) == true
+                && yatirimTurleri.Any(x => x == (int)enumYatirimTuru.KapasiteArtirimi || x == (int)enumYatirimTuru.Modernizasyon))
+                sonuc.HataEkle("Yeni yatırım, kapasite artırımı veya modernizasyon ile birlikte seçilemez.");
 
             if (harcamaTurleri == null || harcamaTurleri.Count == 0)
                 sonuc.HataEkle("En az bir talep edilen harcama türü seçilmelidir.");
@@ -1264,7 +1274,7 @@ namespace TarimDonusum.Models
         public string denetimDosyaAdi { get; set; } = "";
         public int? denetimDosyaId { get; set; }
 
-        internal void Dogrula(Sonuc<int> sonuc)
+        internal void Dogrula(Sonuc<int> sonuc, bool oncekiYilGerekli = true, bool sonYilGerekli = true)
         {
             if (basvuruId < 0)
                 sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
@@ -1275,16 +1285,16 @@ namespace TarimDonusum.Models
             if (!ozelSektorPayi.HasValue || ozelSektorPayi < 0 || ozelSektorPayi > 100)
                 sonuc.HataEkle("Özel sektör payı 0 ile 100 arasında girilmelidir.");
 
-            if (oncekiYilNetSatis == null || oncekiYilNetSatis.Value <= 0)
+            if (oncekiYilGerekli && (oncekiYilNetSatis == null || oncekiYilNetSatis.Value <= 0))
                 sonuc.HataEkle("Önceki yıl net satış tutarı verilmelidir.");
 
-            if (sonYilNetSatis == null || sonYilNetSatis.Value <= 0)
+            if (sonYilGerekli && (sonYilNetSatis == null || sonYilNetSatis.Value <= 0))
                 sonuc.HataEkle("Son yıl net satış tutarı verilmelidir.");
 
-            if (oncekiYilAktifToplami == null || oncekiYilAktifToplami.Value <= 0)
+            if (oncekiYilGerekli && (oncekiYilAktifToplami == null || oncekiYilAktifToplami.Value <= 0))
                 sonuc.HataEkle("Önceki yıl aktif toplamı verilmelidir.");
 
-            if (sonYilAktifToplami == null || sonYilAktifToplami.Value <= 0)
+            if (sonYilGerekli && (sonYilAktifToplami == null || sonYilAktifToplami.Value <= 0))
                 sonuc.HataEkle("Son yıl aktif toplamı verilmelidir.");
         }
     }
