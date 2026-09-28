@@ -38,6 +38,7 @@ builder.Services.AddScoped<KullaniciIsKurallari>();
 builder.Services.AddScoped<BasvuruIsKurallari>();
 builder.Services.AddHttpClient<TCKNServisi>();
 builder.Services.AddHttpClient<VKNServisi>();
+builder.Services.AddHttpClient<SMSServisi>();
 builder.Services.AddScoped<TanimIsKurallari>();
 builder.Services.AddScoped<CevreselSosyalAnketYonetimIsKurallari>();
 builder.Services.AddScoped<DosyaYonetimIsKurallari>();

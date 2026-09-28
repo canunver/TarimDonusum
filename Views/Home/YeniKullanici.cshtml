@@ -5,6 +5,7 @@
 @{
     ViewData["Title"] = L["YeniKullanici.Title"];
     bool epostaDogrulandi = ViewData["EpostaDogrulandi"] is bool epostaDogrulandiDegeri && epostaDogrulandiDegeri;
+    bool smsDogrulamaGerekli = ViewData["SmsDogrulamaGerekli"] is true;
     bool telefonDogrulandi = ViewData["TelefonDogrulandi"] is bool telefonDogrulandiDegeri && telefonDogrulandiDegeri;
     int epostaKodKalanSaniye = ViewData["EpostaKodKalanSaniye"] is int epostaKalan ? epostaKalan : 0;
     int telefonKodKalanSaniye = ViewData["TelefonKodKalanSaniye"] is int telefonKalan ? telefonKalan : 0;
@@ -189,7 +190,7 @@
                                        class="form-control"
                                        autocomplete="tel"
                                        readonly="@(telefonDogrulandi ? "readonly" : null)" />
-                                <div class="input-group-append">
+                                <div class="input-group-append @(smsDogrulamaGerekli ? "" : "d-none")">
                                     <button type="button"
                                             id="btnTelefonKoduGonder"
                                             data-url="/Home/TelefonKoduGonder"
@@ -202,7 +203,7 @@
                             <span asp-validation-for="Kullanici.Telefon" class="text-danger"></span>
                         </div>
 
-                        <div class="col-md-6 form-group">
+                        <div class="col-md-6 form-group @(smsDogrulamaGerekli ? "" : "d-none")">
                             <label for="telefonDogrulamaKodu">@L["YeniKullanici.TelefonDogrulamaKodu"]</label>
                             <div class="input-group">
                                 <input id="telefonDogrulamaKodu"
@@ -286,7 +287,7 @@
                                     : L["YeniKullanici.EpostaBekliyor"])
                             </span>
 
-                            <span id="badgeTelefonDogrulama" class="badge @(telefonDogrulandi ? "badge-success" : "badge-secondary") ml-2">
+                            <span id="badgeTelefonDogrulama" class="badge @(smsDogrulamaGerekli ? "" : "d-none") @(telefonDogrulandi ? "badge-success" : "badge-secondary") ml-2">
                                 @(telefonDogrulandi
                                     ? L["YeniKullanici.TelefonDogrulandi"]
                                     : L["YeniKullanici.TelefonBekliyor"])
@@ -318,6 +319,7 @@
         const txtTelefonDogrulandi = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.TelefonDogrulandi"].Value));
         const txtTelefonBekliyor = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["YeniKullanici.TelefonBekliyor"].Value));
         let epostaDogrulandi = @epostaDogrulandi.ToString().ToLowerInvariant();
+        const smsDogrulamaGerekli = @smsDogrulamaGerekli.ToString().ToLowerInvariant();
         let telefonDogrulandi = @telefonDogrulandi.ToString().ToLowerInvariant();
         const txtKodSuresiBitti = "Süre doldu";
         const dogrulamaSayaclari = {};
@@ -526,7 +528,7 @@
 
             $("#btnKaydet").prop(
                 "disabled",
-                !(epostaDogrulandi && telefonDogrulandi && sozlesme && parolalarEsit && captchaGirildi)
+                !(epostaDogrulandi && (!smsDogrulamaGerekli || telefonDogrulandi) && sozlesme && parolalarEsit && captchaGirildi)
             );
         }
 

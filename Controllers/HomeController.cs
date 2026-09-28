@@ -29,6 +29,10 @@ namespace TarimDonusum.Controllers
         private const string TelefonDogrulandiSessionKey = "YeniKullanici.TelefonDogrulandi";
         private static readonly TimeSpan DogrulamaKoduGecerlilikSuresi = TimeSpan.FromMinutes(3);
 
+        private const string SmsGonderildiSessionKey = "YeniKullanici.SmsGonderildi";
+        private const string SmsDenemeSessionKey = "YeniKullanici.SmsDeneme";
+        private const string SmsSonGonderimSessionKey = "YeniKullanici.SmsSonGonderim";
+        private readonly SMSServisi _smsServisi;
         private readonly CaptchaGenerator _captcha;
         private readonly KullaniciIsKurallari _kullaniciIsKurallari;
         private readonly IMailServisi _mailServisi;
@@ -42,9 +46,10 @@ namespace TarimDonusum.Controllers
             KullaniciIsKurallari kullaniciIsKurallari,
             IMailServisi mailServisi,
             IConfiguration configuration,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment, SMSServisi smsServisi)
             : base(loggerFactory, localizer)
         {
+            _smsServisi = smsServisi;
             _captcha = captcha;
             _kullaniciIsKurallari = kullaniciIsKurallari;
             _mailServisi = mailServisi;
@@ -163,11 +168,11 @@ namespace TarimDonusum.Controllers
                 ModelState.AddModelError("epostaDogrulamaKodu", L["YeniKullanici.Hata.EpostaDogrulanmalidir"]);
             }
 
-            if (!TelefonDogrulandiMi())
+            if (SmsServisiVarMi() && !TelefonDogrulandiMi())
             {
                 ModelState.AddModelError("telefonDogrulamaKodu", L["YeniKullanici.Hata.TelefonDogrulanmalidir"]);
             }
-            else if (!TelefonDogrulananDegerIleAyniMi(model.Kullanici.Telefon))
+            else if (SmsServisiVarMi() && !TelefonDogrulananDegerIleAyniMi(model.Kullanici.Telefon))
             {
                 ModelState.AddModelError("telefonDogrulamaKodu", L["YeniKullanici.Hata.TelefonDogrulanmalidir"]);
             }
@@ -322,8 +327,10 @@ namespace TarimDonusum.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult TelefonKoduGonder(YeniKullaniciViewModel model)
+        public async Task<IActionResult> TelefonKoduGonder(YeniKullaniciViewModel model)
         {
+            if (!SmsServisiVarMi())
+                return Json(DogrulamaCevabi(false, "SMS doğrulaması etkin değil.", null, null));
             DogrulamaDurumlariniViewDataYaz();
 
             if (TelefonDogrulandiMi())
@@ -355,7 +362,20 @@ namespace TarimDonusum.Controllers
 
             model.Kullanici.Telefon = telefon;
 
-            string kod = TelefonDogrulamaKoduUret();
+            long simdi = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (long.TryParse(HttpContext.Session.GetString(SmsSonGonderimSessionKey), out long sonGonderim)
+                && simdi - sonGonderim < 60)
+                return Json(DogrulamaCevabi(false, "Yeni SMS kodu istemek için 60 saniye bekleyiniz.", null, null));
+            TelefonDogrulamaSessionTemizle();
+            HttpContext.Session.SetString(SmsSonGonderimSessionKey, simdi.ToString());
+            // Gönderim sürerken aynı oturumun yeniden gönderim yapmasını sınırla.
+            await HttpContext.Session.CommitAsync();
+            string kod = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+            string? smsHatasi = await _smsServisi.KodGonderAsync(telefon, kod, HttpContext.RequestAborted);
+            if (smsHatasi != null)
+                return Json(DogrulamaCevabi(false, smsHatasi, null, null, "telefonDogrulamaKodu"));
+            HttpContext.Session.SetString(SmsGonderildiSessionKey, "true");
+            HttpContext.Session.SetInt32(SmsDenemeSessionKey, 0);
 
             HttpContext.Session.SetString(TelefonKodSessionKey, kod);
             HttpContext.Session.SetString(TelefonKodZamanSessionKey, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString());
@@ -364,10 +384,9 @@ namespace TarimDonusum.Controllers
 
             DogrulamaDurumlariniViewDataYaz();
 
-            // TODO: Gerçek SMS servisi bağlanınca kod burada gönderilecek.
             return Json(DogrulamaCevabi(
                 true,
-                L["YeniKullanici.Bilgi.TelefonKoduOlusturuldu"].ToString(),
+                "Doğrulama kodu telefonunuza SMS ile gönderildi.",
                 null,
                 model.Kullanici.Telefon,
                 kalanSaniye: DogrulamaKoduKalanSaniye(TelefonKodZamanSessionKey)));
@@ -377,6 +396,8 @@ namespace TarimDonusum.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult TelefonDogrula(YeniKullaniciViewModel model, string? telefonDogrulamaKodu)
         {
+            if (!SmsServisiVarMi())
+                return Json(DogrulamaCevabi(false, "SMS doğrulaması etkin değil.", null, null));
             DogrulamaDurumlariniViewDataYaz();
 
             if (TelefonDogrulandiMi())
@@ -399,11 +420,16 @@ namespace TarimDonusum.Controllers
             string? sessionTelefon = HttpContext.Session.GetString(TelefonSessionKey);
             string girilenTelefon = TelefonNormalize(model.Kullanici.Telefon);
 
-            if (TelefonKoduSuresiDolduMu())
+            if (TelefonKoduSuresiDolduMu() || HttpContext.Session.GetString(SmsGonderildiSessionKey) != "true")
             {
                 TelefonDogrulamaSessionTemizle();
                 return Json(DogrulamaCevabi(false, L["YeniKullanici.Hata.TelefonDogrulamaKoduHatali"].ToString(), null, null, nameof(telefonDogrulamaKodu)));
             }
+
+            int deneme = HttpContext.Session.GetInt32(SmsDenemeSessionKey) ?? 0;
+            if (deneme >= 5)
+                return Json(DogrulamaCevabi(false, "Çok fazla hatalı deneme yapıldı. Yeni SMS kodu isteyiniz.", null, null, nameof(telefonDogrulamaKodu)));
+            HttpContext.Session.SetInt32(SmsDenemeSessionKey, deneme + 1);
 
             if (string.IsNullOrWhiteSpace(sessionKod) ||
                 string.IsNullOrWhiteSpace(sessionTelefon) ||
@@ -415,6 +441,7 @@ namespace TarimDonusum.Controllers
 
             model.Kullanici.Telefon = girilenTelefon;
             HttpContext.Session.SetString(TelefonDogrulandiSessionKey, "true");
+            HttpContext.Session.Remove(TelefonKodSessionKey);
             DogrulamaDurumlariniViewDataYaz();
 
             return Json(DogrulamaCevabi(
@@ -480,19 +507,7 @@ namespace TarimDonusum.Controllers
             return Random.Shared.Next(100000, 999999).ToString();
         }
 
-        private string TelefonDogrulamaKoduUret()
-        {
-            if (SmsServisiVarMi())
-                return DogrulamaKoduUret();
-
-            return "111111";
-        }
-
-        private bool SmsServisiVarMi()
-        {
-            return string.Equals(_configuration["Sms:ServisVar"], "true", StringComparison.OrdinalIgnoreCase) ||
-                OrtakFonksiyonlar.Int32Yap(_configuration["Sms:ServisVar"], 0) > 0;
-        }
+        private bool SmsServisiVarMi() => _smsServisi.Etkin;
 
         private bool EpostaDogrulandiMi()
         {
@@ -505,7 +520,8 @@ namespace TarimDonusum.Controllers
         {
             string? telefonDogrulandi = HttpContext.Session.GetString(TelefonDogrulandiSessionKey);
 
-            return string.Equals(telefonDogrulandi, "true", StringComparison.OrdinalIgnoreCase);
+            return SmsServisiVarMi() && HttpContext.Session.GetString(SmsGonderildiSessionKey) == "true"
+                && string.Equals(telefonDogrulandi, "true", StringComparison.OrdinalIgnoreCase);
         }
 
         private bool EpostaDogrulananDegerIleAyniMi(string? eposta)
@@ -526,6 +542,7 @@ namespace TarimDonusum.Controllers
 
         private void DogrulamaDurumlariniViewDataYaz()
         {
+            ViewData["SmsDogrulamaGerekli"] = SmsServisiVarMi();
             ViewData["EpostaDogrulandi"] = EpostaDogrulandiMi();
             ViewData["TelefonDogrulandi"] = TelefonDogrulandiMi();
             ViewData["EpostaKodKalanSaniye"] = DogrulamaKoduKalanSaniye(EpostaKodZamanSessionKey);
@@ -565,6 +582,8 @@ namespace TarimDonusum.Controllers
 
         private void TelefonDogrulamaSessionTemizle()
         {
+            HttpContext.Session.Remove(SmsGonderildiSessionKey);
+            HttpContext.Session.Remove(SmsDenemeSessionKey);
             HttpContext.Session.Remove(TelefonKodSessionKey);
             HttpContext.Session.Remove(TelefonKodZamanSessionKey);
             HttpContext.Session.Remove(TelefonSessionKey);
