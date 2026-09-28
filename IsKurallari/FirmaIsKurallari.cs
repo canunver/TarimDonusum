@@ -3,19 +3,22 @@ using Microsoft.Extensions.Localization;
 using System.Text.Json;
 using TarimDonusum.Models;
 using TarimDonusum.Tablolar;
+using TarimDonusum.Servisler;
 
 namespace TarimDonusum.IsKurallari
 {
     public class FirmaIsKurallari
     {
+        private readonly VKNServisi _vknServisi;
         private readonly string _connectionString;
         private readonly ILogger<FirmaIsKurallari> _logger;
         private readonly IStringLocalizer<SharedResource> _localizer;
 
         public FirmaIsKurallari(IConfiguration configuration, ILogger<FirmaIsKurallari> logger,
-            IStringLocalizer<SharedResource> localizer)
+            IStringLocalizer<SharedResource> localizer, VKNServisi vknServisi)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
+            _vknServisi = vknServisi;
             _logger = logger;
             _localizer = localizer;
         }
@@ -92,6 +95,13 @@ namespace TarimDonusum.IsKurallari
                 if (ayni != null && ayni.id != firma.id)
                 {
                     sonuc.HataEkle("Bu vergi kimlik numarasıyla kayıtlı başka bir firma bulunmaktadır."); return sonuc;
+                }
+                var vknSonucu = await _vknServisi.VKNDogrulaAsync(firma.vergiKimlikNo, firma.ticaretUnvani,
+                    mevcutKullanici.Id, firma.id, "Firmalar");
+                if (vknSonucu.Durum == VKNDogrulamaDurumu.Hatali)
+                {
+                    sonuc.HataEkle(vknSonucu.Hata!);
+                    return sonuc;
                 }
                 await using SqlTransaction tx = (SqlTransaction)await connection.BeginTransactionAsync();
                 TABFirma tab = new(connection, null, tx);

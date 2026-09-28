@@ -36,6 +36,8 @@ builder.Services.AddDataProtection();
 builder.Services.AddSingleton<CaptchaGenerator>();
 builder.Services.AddScoped<KullaniciIsKurallari>();
 builder.Services.AddScoped<BasvuruIsKurallari>();
+builder.Services.AddHttpClient<TCKNServisi>();
+builder.Services.AddHttpClient<VKNServisi>();
 builder.Services.AddScoped<TanimIsKurallari>();
 builder.Services.AddScoped<CevreselSosyalAnketYonetimIsKurallari>();
 builder.Services.AddScoped<DosyaYonetimIsKurallari>();

@@ -905,8 +905,8 @@ namespace TarimDonusum.Tablolar
                     FROM dbo.BasvuruOrtaklar WHERE BasvuruId = @KaynakBasvuruId;
 
                 INSERT INTO dbo.BasvuruAdliSicilKisiler
-                    (BasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId)
-                    SELECT @YeniBasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId
+                    (BasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId, DogumTarihi)
+                    SELECT @YeniBasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId, DogumTarihi
                     FROM dbo.BasvuruAdliSicilKisiler WHERE BasvuruId = @KaynakBasvuruId;
 
                 ;WITH Sirali AS
@@ -1864,7 +1864,7 @@ namespace TarimDonusum.Tablolar
                 WHERE BasvuruId = @BasvuruId
                 ORDER BY SiraNo, Id;
 
-                SELECT Id, BasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId
+                SELECT Id, BasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId, DogumTarihi
                 FROM dbo.BasvuruAdliSicilKisiler
                 WHERE BasvuruId = @BasvuruId
                 ORDER BY SiraNo, Id;
@@ -2302,7 +2302,7 @@ namespace TarimDonusum.Tablolar
         public async Task<List<BasvuruAdliSicilKisi>> BasvuruAdliSicilKisileriOkuAsync(int basvuruId)
         {
             const string sql = @"
-                SELECT Id, BasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId
+                SELECT Id, BasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId, DogumTarihi
                 FROM dbo.BasvuruAdliSicilKisiler
                 WHERE BasvuruId = @BasvuruId
                 ORDER BY SiraNo, Id;";
@@ -2346,10 +2346,10 @@ namespace TarimDonusum.Tablolar
         {
             const string sql = @"
                 INSERT INTO dbo.BasvuruAdliSicilKisiler
-                    (BasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId)
+                    (BasvuruId, SiraNo, Tckn, Ad, Soyad, Gorev, YetkiKapsami, Aciklama, ImzaYetkiDosyaAdi, ImzaYetkiDosyaId, DosyaAdi, DosyaId, DogumTarihi)
                 OUTPUT INSERTED.Id
                 VALUES
-                    (@BasvuruId, @SiraNo, @Tckn, @Ad, @Soyad, @Gorev, @YetkiKapsami, @Aciklama, @ImzaYetkiDosyaAdi, @ImzaYetkiDosyaId, @DosyaAdi, @DosyaId);";
+                    (@BasvuruId, @SiraNo, @Tckn, @Ad, @Soyad, @Gorev, @YetkiKapsami, @Aciklama, @ImzaYetkiDosyaAdi, @ImzaYetkiDosyaId, @DosyaAdi, @DosyaId, @DogumTarihi);";
 
             await using SqlCommand command = KomutOlustur(sql);
             BasvuruAdliSicilKisiParametreleriEkle(command, kisi);
@@ -2364,6 +2364,7 @@ namespace TarimDonusum.Tablolar
                     Tckn = @Tckn,
                     Ad = @Ad,
                     Soyad = @Soyad,
+                    DogumTarihi = @DogumTarihi,
                     Gorev = @Gorev,
                     YetkiKapsami = @YetkiKapsami,
                     Aciklama = @Aciklama,
@@ -2387,6 +2388,7 @@ namespace TarimDonusum.Tablolar
             command.Parameters.AddWithValue("@Tckn", TcknVknNormalizeEt(kisi.tckn));
             command.Parameters.AddWithValue("@Ad", kisi.ad?.Trim() ?? "");
             command.Parameters.AddWithValue("@Soyad", kisi.soyad?.Trim() ?? "");
+            command.Parameters.Add("@DogumTarihi", System.Data.SqlDbType.Date).Value = (object?)kisi.dogumTarihi?.Date ?? DBNull.Value;
             command.Parameters.AddWithValue("@Gorev", kisi.gorev?.Trim() ?? "");
             command.Parameters.AddWithValue("@YetkiKapsami", kisi.yetkiKapsami?.Trim() ?? "");
             command.Parameters.AddWithValue("@Aciklama", kisi.aciklama?.Trim() ?? "");
@@ -2412,7 +2414,8 @@ namespace TarimDonusum.Tablolar
                 imzaYetkiDosyaAdi = NullOkuString(reader, 9) ?? "",
                 imzaYetkiDosyaId = NullOkuInt(reader, 10),
                 dosyaAdi = NullOkuString(reader, 11) ?? "",
-                dosyaId = NullOkuInt(reader, 12)
+                dosyaId = NullOkuInt(reader, 12),
+                dogumTarihi = reader.IsDBNull(13) ? null : reader.GetDateTime(13)
             };
         }
 

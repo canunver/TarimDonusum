@@ -777,7 +777,7 @@ namespace TarimDonusum.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> KaydetOrtaklik([FromBody] BasvuruOrtaklik model)
         {
-            Sonuc<int> sonuc;
+            Sonuc<BasvuruOrtaklik> sonuc;
             try
             {
                 Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
@@ -791,7 +791,7 @@ namespace TarimDonusum.Controllers
             catch (Exception ex)
             {
                 Log(LogLevel.Error, BMYEventID.Yok, ex, "Ortaklık bilgileri kaydet action tamamlanamadı.");
-                sonuc = new Sonuc<int>();
+                sonuc = new Sonuc<BasvuruOrtaklik>();
                 sonuc.HataEkle(L["Basvuru.Message.PartnershipSaveFailed"].ToString());
                 return Json(sonuc);
             }
@@ -804,7 +804,7 @@ namespace TarimDonusum.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> KaydetOrtaklar([FromBody] BasvuruOrtaklik model)
         {
-            Sonuc<int> sonuc;
+            Sonuc<BasvuruOrtak> sonuc;
             try
             {
                 Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
@@ -818,7 +818,7 @@ namespace TarimDonusum.Controllers
             catch (Exception ex)
             {
                 Log(LogLevel.Error, BMYEventID.Yok, ex, "Ortak/pay sahibi bilgileri kaydet action tamamlanamadı.");
-                sonuc = new Sonuc<int>();
+                sonuc = new Sonuc<BasvuruOrtak>();
                 sonuc.HataEkle(L["Basvuru.Message.StakeholderSaveFailed"].ToString());
                 return Json(sonuc);
             }

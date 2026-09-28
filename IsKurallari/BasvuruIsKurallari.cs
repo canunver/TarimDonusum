@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 using TarimDonusum.Araclar;
 using TarimDonusum.Models;
 using TarimDonusum.Tablolar;
+using TarimDonusum.Servisler;
 
 namespace TarimDonusum.IsKurallari
 {
@@ -112,13 +113,17 @@ namespace TarimDonusum.IsKurallari
             [11] = "Basvuru.Documents.Required.11"
         };
 
+        private readonly VKNServisi _vknServisi;
+        private readonly TCKNServisi _tcknServisi;
         private readonly string _connectionString;
         private readonly ILogger<BasvuruIsKurallari> _logger;
         private readonly IStringLocalizer<SharedResource> _localizer;
         private readonly DosyaYonetimIsKurallari _dosyaYonetimIsKurallari;
 
-        public BasvuruIsKurallari(IConfiguration configuration, ILogger<BasvuruIsKurallari> logger, IStringLocalizer<SharedResource> localizer, DosyaYonetimIsKurallari dosyaYonetimIsKurallari)
+        public BasvuruIsKurallari(IConfiguration configuration, ILogger<BasvuruIsKurallari> logger, IStringLocalizer<SharedResource> localizer, DosyaYonetimIsKurallari dosyaYonetimIsKurallari, TCKNServisi tcknServisi, VKNServisi vknServisi)
         {
+            _vknServisi = vknServisi;
+            _tcknServisi = tcknServisi;
             _logger = logger;
             _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
             _localizer = localizer;
@@ -1282,10 +1287,25 @@ namespace TarimDonusum.IsKurallari
                 {
                     TABFirmaKullanici mevcutIliskiTablosu = new TABFirmaKullanici(connection);
                     if (await mevcutIliskiTablosu.IliskiVarMiAsync(mevcut.id, kullaniciId))
-                        sonuc.nesne = mevcut.id;
+                    {
+                        var vknSonucu = await _vknServisi.VKNDogrulaAsync(firma.vergiKimlikNo, firma.ticaretUnvani,
+                            kullaniciId, mevcut.id, "Ön başvuru / Firma bilgileri");
+                        if (vknSonucu.Durum == VKNDogrulamaDurumu.Hatali)
+                            sonuc.HataEkle(vknSonucu.Hata!);
+                        else
+                            sonuc.nesne = mevcut.id;
+                    }
                     else
                         HataEkle(sonuc, "Business.Company.ExistsButUserNotRelated");
 
+                    return sonuc;
+                }
+
+                var yeniVknSonucu = await _vknServisi.VKNDogrulaAsync(firma.vergiKimlikNo, firma.ticaretUnvani,
+                    kullaniciId, firma.id, "Ön başvuru / Firma bilgileri");
+                if (yeniVknSonucu.Durum == VKNDogrulamaDurumu.Hatali)
+                {
+                    sonuc.HataEkle(yeniVknSonucu.Hata!);
                     return sonuc;
                 }
 
@@ -2814,9 +2834,21 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        public async Task<Sonuc<int>> KaydetOrtaklikAsync(BasvuruOrtaklik ortaklik, Kullanici kullanici)
+        private async Task OrtakKimlikDogrulaAsync(BasvuruOrtak ortak, int basvuruId, Kullanici kullanici, Sonuc sonuc)
         {
-            Sonuc<int> sonuc = new Sonuc<int>();
+            if (!string.Equals(ortak.kisiTuru, "Gerçek Kişi", StringComparison.OrdinalIgnoreCase)) return;
+            var kimlik = await _tcknServisi.TCKNDogrulaAsync(ortak.tcknVkn, ortak.adUnvan,
+                ortak.dogumTarihi, kullanici.Id, basvuruId, "Ortak / pay sahibi bilgisi");
+            if (kimlik.Durum == TCKNDogrulamaDurumu.Hatali)
+                sonuc.HataEkle($"{ortak.adUnvan}: {kimlik.Hata}");
+            else if (kimlik.Durum == TCKNDogrulamaDurumu.Dogru)
+                ortak.cinsiyet = kimlik.Cinsiyet;
+            ortak.sahiplikNiteligi = ortak.SahiplikNiteligiHesapla(DateTime.Today);
+        }
+
+        public async Task<Sonuc<BasvuruOrtaklik>> KaydetOrtaklikAsync(BasvuruOrtaklik ortaklik, Kullanici kullanici)
+        {
+            Sonuc<BasvuruOrtaklik> sonuc = new Sonuc<BasvuruOrtaklik>();
             if (kullanici == null)
             {
                 HataEkle(sonuc, "Business.User.InfoMissing");
@@ -2842,6 +2874,9 @@ namespace TarimDonusum.IsKurallari
                 if (!sonuc.basarili || mevcut == null)
                     return sonuc;
 
+                foreach (var ortak in ortaklik.ortaklar)
+                    await OrtakKimlikDogrulaAsync(ortak, ortaklik.basvuruId, kullanici, sonuc);
+                if (!sonuc.basarili) return sonuc;
                 mevcut.ortaklik = ortaklik;
 
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
@@ -2854,7 +2889,7 @@ namespace TarimDonusum.IsKurallari
                     await tabBasvuruLog.EkleAsync(ortaklik.basvuruId, kullanici, "KaydetOrtaklikAsync", ortaklik);
 
                     await transaction.CommitAsync();
-                    sonuc.nesne = ortaklik.basvuruId;
+                    sonuc.nesne = ortaklik;
                 }
                 catch
                 {
@@ -2870,9 +2905,9 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
-        public async Task<Sonuc<int>> KaydetOrtaklarAsync(BasvuruOrtaklik ortaklik, Kullanici kullanici)
+        public async Task<Sonuc<BasvuruOrtak>> KaydetOrtaklarAsync(BasvuruOrtaklik ortaklik, Kullanici kullanici)
         {
-            Sonuc<int> sonuc = new();
+            Sonuc<BasvuruOrtak> sonuc = new();
             if (kullanici == null) { HataEkle(sonuc, "Business.User.InfoMissing"); return sonuc; }
             ortaklik ??= new BasvuruOrtaklik();
             ortaklik.ortaklar ??= new List<BasvuruOrtak>();
@@ -2933,6 +2968,9 @@ namespace TarimDonusum.IsKurallari
                 mevcut.ortaklik.Dogrula(sonuc, ortak.siraNo);
                 if (!sonuc.basarili) return sonuc;
 
+                await OrtakKimlikDogrulaAsync(ortak, ortaklik.basvuruId, kullanici, sonuc);
+                if (!sonuc.basarili) return sonuc;
+
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 TABBasvuru tabBasvuru = new(connection, null, transaction);
                 int ortakId = await tabBasvuru.BasvuruOrtakiKaydetAsync(ortaklik.basvuruId, ortak);
@@ -2940,7 +2978,8 @@ namespace TarimDonusum.IsKurallari
                 await tabBasvuru.OrtaklikKaydetAsync(mevcut, false);
                 await new TABBasvuruLog(connection, null, transaction).EkleAsync(ortaklik.basvuruId, kullanici, "KaydetOrtakAsync", new { OrtakId = ortakId, ortak });
                 await transaction.CommitAsync();
-                sonuc.nesne = ortakId;
+                ortak.id = ortakId;
+                sonuc.nesne = ortak;
             }
             catch (Exception ex)
             {
@@ -3519,6 +3558,15 @@ namespace TarimDonusum.IsKurallari
                 Basvuru? mevcut = await BasvuruOnBasvuruYetkiKontrolAsync(connection, basvuruId, kullanici, sonuc);
                 if (!sonuc.basarili || mevcut == null)
                     return sonuc;
+
+                foreach (var kisi in kisiler)
+                {
+                    var kimlik = await _tcknServisi.TCKNDogrulaAsync(kisi.tckn, $"{kisi.ad} {kisi.soyad}",
+                        kisi.dogumTarihi, kullanici.Id, basvuruId, "Adli sicil kontrol kişisi");
+                    if (kimlik.Durum == TCKNDogrulamaDurumu.Hatali)
+                        sonuc.HataEkle($"{kisi.ad} {kisi.soyad}: {kimlik.Hata}");
+                }
+                if (!sonuc.basarili) return sonuc;
 
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 try

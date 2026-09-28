@@ -321,7 +321,7 @@
                                 </select>
                             </div>
                             <div class="form-group col-md-4"><label for="ortakPayOrani">@L["Basvuru.Ortaklik.ShareRate"]</label><input id="ortakPayOrani" class="form-control" type="number" min="0.01" max="100" step="0.01" /></div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-4" id="ortakOzelKamuNiteligiLabel">
                                 <label for="ortakOzelKamuNiteligi">@L["Basvuru.Ortaklik.PrivatePublicType"]</label>
                                 <select id="ortakOzelKamuNiteligi" class="form-control">
                                     <option value="Özel">@L["Basvuru.Ortaklik.PrivateSector"]</option>
@@ -388,6 +388,7 @@
                             <label>@L["Basvuru.Field.Tckn"]<input id="adliSicilTckn" inputmode="numeric" maxlength="11" /></label>
                             <label>@L["Basvuru.Field.Ad"]<input id="adliSicilAd" /></label>
                             <label>@L["Basvuru.Field.Soyad"]<input id="adliSicilSoyad" /></label>
+                            <label>Doğum tarihi<input id="adliSicilDogumTarihi" type="date" max="@DateTime.Today.ToString("yyyy-MM-dd")" /></label>
                             <label>
                                 @L["Basvuru.Criminal.Role"]
                                 <select id="adliSicilGorev">
@@ -1362,6 +1363,7 @@
         modalSet('adliSicilTckn', kisi.tckn);
         modalSet('adliSicilAd', kisi.ad);
         modalSet('adliSicilSoyad', kisi.soyad);
+        modalSet('adliSicilDogumTarihi', kisi.dogumTarihi ? String(kisi.dogumTarihi).substring(0, 10) : '');
         modalSet('adliSicilGorev', kisi.gorev);
         modalSet('adliSicilYetkiKapsami', kisi.yetkiKapsami);
         modalSet('adliSicilAciklama', kisi.aciklama);
@@ -1381,6 +1383,7 @@
             tckn: modalValue('adliSicilTckn').trim(),
             ad: modalValue('adliSicilAd').trim(),
             soyad: modalValue('adliSicilSoyad').trim(),
+            dogumTarihi: modalValue('adliSicilDogumTarihi') || null,
             gorev: modalValue('adliSicilGorev'),
             yetkiKapsami: modalValue('adliSicilYetkiKapsami').trim(),
             aciklama: modalValue('adliSicilAciklama').trim(),
@@ -1396,6 +1399,8 @@
             kisi.dosyaAdi = '';
             kisi.dosyaId = null;
         }
+
+        if (!document.getElementById('adliSicilDogumTarihi').reportValidity()) return;
 
         if (!kisi.tckn || !kisi.ad || !kisi.soyad || !kisi.gorev) {
             const hata = document.getElementById('adliSicilModalHata');
@@ -1450,11 +1455,11 @@
         if (!container) return;
 
         let html = `<div class="table-responsive"><table class="table table-bordered ortak-table"><thead><tr>
-            <th>İşlemler</th><th>No</th><th>TCKN</th><th>Ad soyad</th><th>Görev/unvan</th><th>Yetki kapsamı</th><th>İmza/Yetki belgesi</th><th>Adli sicil belgesi</th><th>Açıklama</th>
+            <th>İşlemler</th><th>No</th><th>TCKN</th><th>Ad soyad</th><th>Doğum tarihi</th><th>Görev/unvan</th><th>Yetki kapsamı</th><th>İmza/Yetki belgesi</th><th>Adli sicil belgesi</th><th>Açıklama</th>
         </tr></thead><tbody>`;
 
         if (basvuruAdliSicilKisileri.length === 0) {
-            html += `<tr><td colspan="9" class="text-muted text-center">${htmlEncode(adliSicilMetinleri.empty)}</td></tr>`;
+            html += `<tr><td colspan="10" class="text-muted text-center">${htmlEncode(adliSicilMetinleri.empty)}</td></tr>`;
         }
         else {
             basvuruAdliSicilKisileri.forEach((kisi, index) => {
@@ -1470,6 +1475,7 @@
                     <td>${index + 1}</td>
                     <td>${htmlEncode(kisi.tckn)}</td>
                     <td>${htmlEncode((kisi.ad || '') + ' ' + (kisi.soyad || ''))}</td>
+                    <td>${htmlEncode(tarihGorunum(kisi.dogumTarihi))}</td>
                     <td>${htmlEncode(kisi.gorev)}</td>
                     <td>${htmlEncode(kisi.yetkiKapsami || '')}</td>
                     <td><span class="adli-sicil-file-name">${htmlEncode(imzaYetkiYuklu ? kisi.imzaYetkiDosyaAdi : 'Dosya seçilmedi')}</span>${imzaYetkiYuklu ? `<br><a class="btn btn-sm btn-outline-primary mt-1" href="${imzaYetkiHref}" target="_blank" rel="noopener">İmza/Yetki Belgesi İndir</a>` : ''}</td>
@@ -2098,6 +2104,8 @@
     function OrtakModalTuzelAlanGuncelle() {
         const tuzelMi = modalValue('ortakKisiTuru') === 'Tüzel Kişi';
         document.getElementById('ortakTuzelMaliAlanlari')?.classList.toggle('d-none', !tuzelMi);
+        document.getElementById('ortakOzelKamuNiteligiLabel')?.classList.toggle('d-none', !tuzelMi);
+        if (!tuzelMi) modalSet('ortakOzelKamuNiteligi', 'Özel');
         const kimlikAlani = document.getElementById('ortakTcknVkn');
         if (kimlikAlani) {
             kimlikAlani.maxLength = tuzelMi ? 10 : 11;
@@ -2500,6 +2508,10 @@
         };
         AjaxPost('/Basvuru/KaydetOrtaklik', model, function (sonuc) {
             if (sonuc?.basarili) {
+                if (sonuc.nesne?.ortaklar) {
+                    basvuruOrtaklari = sonuc.nesne.ortaklar;
+                    OrtaklarRender();
+                }
                 dirty = false;
                 if (afterSuccess) afterSuccess(sonuc);
             }
@@ -2521,7 +2533,12 @@
         };
         AjaxPost('/Basvuru/KaydetOrtaklar', model, function (sonuc) {
             if (sonuc?.basarili) {
-                if (sonuc.nesne) ortak.id = sonuc.nesne;
+                if (sonuc.nesne) {
+                    Object.assign(ortak, sonuc.nesne);
+                    modalSet('ortakCinsiyet', ortak.cinsiyet || '');
+                    OrtakSahiplikNiteligiGuncelle();
+                    OrtaklarRender();
+                }
                 dirty = false;
                 if (afterSuccess) afterSuccess(sonuc);
             }

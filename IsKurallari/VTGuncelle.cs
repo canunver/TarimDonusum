@@ -1458,6 +1458,8 @@ namespace TarimDonusum.IsKurallari
                     INSERT dbo.BasvuruUygulamaAdresiKonum(AdresId,SiraNo,MinEnlem,MaxEnlem,MinBoylam,MaxBoylam,Ada,Parsel)
                     SELECT Id,1,Enlem,Enlem,Boylam,Boylam,Ada,Parsel FROM dbo.BasvuruUygulamaAdresleri;
                 END"),
+            new(119, @"IF COL_LENGTH(N'dbo.BasvuruAdliSicilKisiler', N'DogumTarihi') IS NULL
+                ALTER TABLE dbo.BasvuruAdliSicilKisiler ADD DogumTarihi DATE NULL;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

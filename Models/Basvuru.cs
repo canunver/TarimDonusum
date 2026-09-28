@@ -691,6 +691,8 @@ namespace TarimDonusum.Models
             if (basvuruId <= 0)
                 sonuc.HataEkle("Başvuru kaydı seçilmelidir.");
 
+            foreach (var ortak in ortaklar.Where(x => string.Equals(x.kisiTuru, "Gerçek Kişi", StringComparison.OrdinalIgnoreCase)))
+                ortak.ozelKamuNiteligi = "Özel";
             OrtaklariDogrula(sonuc, dogrulanacakSiraNo);
             decimal girilenOzelOrtakPayi = ortaklar
                 .Where(x => string.Equals(x.ozelKamuNiteligi, "Özel", StringComparison.OrdinalIgnoreCase))
@@ -827,6 +829,7 @@ namespace TarimDonusum.Models
         public string? tckn { get; set; } = "";
         public string? ad { get; set; } = "";
         public string? soyad { get; set; } = "";
+        public DateTime? dogumTarihi { get; set; }
         public string? gorev { get; set; } = "";
         public string? yetkiKapsami { get; set; } = "";
         public string? aciklama { get; set; } = "";
@@ -847,6 +850,8 @@ namespace TarimDonusum.Models
                 sonuc.HataEkle("Ad girilmelidir.");
             if (string.IsNullOrWhiteSpace(soyad))
                 sonuc.HataEkle("Soyad girilmelidir.");
+            if (dogumTarihi?.Date > DateTime.Today)
+                sonuc.HataEkle("Doğum tarihi bugünden ileri olamaz.");
             if (string.IsNullOrWhiteSpace(gorev))
                 sonuc.HataEkle("Görev seçilmelidir.");
         }
