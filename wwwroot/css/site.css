@@ -2310,6 +2310,8 @@ body {
     min-width: 0;
 }
 
-.uygulama-konum-tablosu table { min-width: 920px; }
+.uygulama-konum-tablosu table { min-width: 1120px; }
 .uygulama-konum-tablosu th { white-space: nowrap; }
 .uygulama-konum-tablosu input { min-width: 95px; width: 100%; }
+.uygulama-konum-tablosu select { min-width: 110px; width: 100%; }
+.uygulama-konum-tablosu .konum-mahalle { min-width: 190px; }

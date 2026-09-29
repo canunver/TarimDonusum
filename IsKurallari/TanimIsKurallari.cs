@@ -506,17 +506,7 @@ namespace TarimDonusum.IsKurallari
             if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
             model.ad = model.ad?.Trim() ?? "";
             model.aciklama = model.aciklama?.Trim() ?? "";
-            model.asamalar ??= new();
-            foreach (DegerZinciriAsama asama in model.asamalar)
-            {
-                asama.ad = asama.ad?.Trim() ?? "";
-                asama.aciklama = asama.aciklama?.Trim() ?? "";
-            }
             if (string.IsNullOrWhiteSpace(model.ad)) sonuc.HataEkle("Değer zinciri adı zorunludur.");
-            if (model.asamalar.Any(x => x.siraNo <= 0)) sonuc.HataEkle("Aşama sıra numarası sıfırdan büyük olmalıdır.");
-            if (model.asamalar.Any(x => x.asamaTuru.HasValue && !Enum.IsDefined(x.asamaTuru.Value))) sonuc.HataEkle("Değer zinciri aşama türü geçersizdir.");
-            if (model.asamalar.Any(x => string.IsNullOrWhiteSpace(x.ad))) sonuc.HataEkle("Aşama adı boş bırakılamaz.");
-            if (model.asamalar.GroupBy(x => x.siraNo).Any(x => x.Count() > 1)) sonuc.HataEkle("Aynı sıra numarası birden fazla aşamada kullanılamaz.");
             if (!sonuc.basarili) return sonuc;
             try
             {
@@ -524,7 +514,6 @@ namespace TarimDonusum.IsKurallari
                 await connection.OpenAsync();
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 TABDegerZinciri tablo = new(connection, _localizer, transaction);
-                TABDegerZinciriAsama asamaTablo = new(connection, _localizer, transaction);
                 if (model.id > 0)
                 {
                     if (!await tablo.GuncelleAsync(model))
@@ -536,27 +525,13 @@ namespace TarimDonusum.IsKurallari
                 }
                 else model.id = await tablo.EkleAsync(model);
 
-                foreach (DegerZinciriAsama asama in model.asamalar)
-                {
-                    asama.degerZinciriId = model.id;
-                    if (asama.id > 0)
-                    {
-                        if (!await asamaTablo.GuncelleAsync(asama))
-                        {
-                            sonuc.HataEkle($"Aşama bulunamadı: {asama.ad}");
-                            await transaction.RollbackAsync();
-                            return sonuc;
-                        }
-                    }
-                    else asama.id = await asamaTablo.EkleAsync(asama);
-                }
                 await transaction.CommitAsync();
                 sonuc.nesne = model.id;
-                sonuc.mesaj = "Değer zinciri ve aşamaları kaydedildi.";
+                sonuc.mesaj = "Değer zinciri kaydedildi.";
             }
             catch (SqlException ex) when (ex.Number is 2601 or 2627)
             {
-                sonuc.HataEkle("Aynı ad veya aşama sıra numarası zaten kullanılıyor.");
+                sonuc.HataEkle("Aynı ad zaten kullanılıyor.");
             }
             catch (Exception ex)
             {

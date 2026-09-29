@@ -1460,6 +1460,72 @@ namespace TarimDonusum.IsKurallari
                 END"),
             new(119, @"IF COL_LENGTH(N'dbo.BasvuruAdliSicilKisiler', N'DogumTarihi') IS NULL
                 ALTER TABLE dbo.BasvuruAdliSicilKisiler ADD DogumTarihi DATE NULL;"),
+            new(120, @"IF OBJECT_ID(N'dbo.BasvuruDegerZinciriAsama',N'U') IS NOT NULL
+                  BEGIN
+                    DECLARE @Fk sysname;
+                    SELECT TOP(1) @Fk=fk.name FROM sys.foreign_keys fk
+                    INNER JOIN sys.foreign_key_columns fkc ON fkc.constraint_object_id=fk.object_id
+                    INNER JOIN sys.columns c ON c.object_id=fkc.parent_object_id AND c.column_id=fkc.parent_column_id
+                    WHERE fk.parent_object_id=OBJECT_ID(N'dbo.BasvuruDegerZinciriAsama') AND c.name=N'DegerZinciriAsamaId';
+                    IF @Fk IS NOT NULL EXEC(N'ALTER TABLE dbo.BasvuruDegerZinciriAsama DROP CONSTRAINT ['+@Fk+N']');
+                    UPDATE dbo.BasvuruDegerZinciriAsama SET DegerZinciriAsamaId=(ISNULL(DegerZinciriAsamaId,0) % 3)+1;
+                    ALTER TABLE dbo.BasvuruDegerZinciriAsama ALTER COLUMN DegerZinciriAsamaId INT NOT NULL;
+                    IF NOT EXISTS(SELECT 1 FROM sys.check_constraints WHERE name=N'CK_BasvuruDegerZinciriAsama_AsamaTuru')
+                      ALTER TABLE dbo.BasvuruDegerZinciriAsama WITH CHECK ADD CONSTRAINT CK_BasvuruDegerZinciriAsama_AsamaTuru CHECK(DegerZinciriAsamaId IN(1,2,3));
+                  END;
+                  IF OBJECT_ID(N'dbo.CK_BasvuruYatirimOnBilgi_DegerZinciriAsamaTuru',N'C') IS NOT NULL ALTER TABLE dbo.BasvuruYatirimOnBilgi DROP CONSTRAINT CK_BasvuruYatirimOnBilgi_DegerZinciriAsamaTuru;
+                  UPDATE dbo.BasvuruYatirimOnBilgi SET DegerZinciriAsamaTuru=(ISNULL(DegerZinciriAsamaTuru,0) % 3)+1;
+                  ALTER TABLE dbo.BasvuruYatirimOnBilgi ALTER COLUMN DegerZinciriAsamaTuru INT NOT NULL;
+                  ALTER TABLE dbo.BasvuruYatirimOnBilgi WITH CHECK ADD CONSTRAINT CK_BasvuruYatirimOnBilgi_DegerZinciriAsamaTuru CHECK(DegerZinciriAsamaTuru IN(1,2,3));
+                  IF OBJECT_ID(N'dbo.CK_BasvuruMakine_DegerZinciriAsamaTuru',N'C') IS NOT NULL ALTER TABLE dbo.BasvuruMakine DROP CONSTRAINT CK_BasvuruMakine_DegerZinciriAsamaTuru;
+                  UPDATE dbo.BasvuruMakine SET DegerZinciriAsamaTuru=(ISNULL(DegerZinciriAsamaTuru,0) % 3)+1;
+                  ALTER TABLE dbo.BasvuruMakine ALTER COLUMN DegerZinciriAsamaTuru INT NOT NULL;
+                  ALTER TABLE dbo.BasvuruMakine WITH CHECK ADD CONSTRAINT CK_BasvuruMakine_DegerZinciriAsamaTuru CHECK(DegerZinciriAsamaTuru IN(1,2,3));"),
+            new(121, @"IF COL_LENGTH(N'dbo.BasvuruBina',N'DegerZinciriAsamaTuru') IS NULL
+                  BEGIN
+                    ALTER TABLE dbo.BasvuruBina ADD DegerZinciriAsamaTuru INT NOT NULL
+                      CONSTRAINT DF_BasvuruBina_DegerZinciriAsamaTuru DEFAULT 1;
+                    ALTER TABLE dbo.BasvuruBina WITH CHECK ADD CONSTRAINT CK_BasvuruBina_DegerZinciriAsamaTuru
+                      CHECK(DegerZinciriAsamaTuru IN(1,2,3));
+                  END;"),
+            new(122, @"IF OBJECT_ID(N'dbo.BasvuruDegerZinciriAsama',N'U') IS NOT NULL
+                  BEGIN
+                    DECLARE @Fk122 sysname;
+                    SELECT TOP(1) @Fk122=fk.name FROM sys.foreign_keys fk
+                    INNER JOIN sys.foreign_key_columns fkc ON fkc.constraint_object_id=fk.object_id
+                    INNER JOIN sys.columns c ON c.object_id=fkc.parent_object_id AND c.column_id=fkc.parent_column_id
+                    WHERE fk.parent_object_id=OBJECT_ID(N'dbo.BasvuruDegerZinciriAsama') AND c.name=N'DegerZinciriAsamaId';
+                    IF @Fk122 IS NOT NULL EXEC(N'ALTER TABLE dbo.BasvuruDegerZinciriAsama DROP CONSTRAINT ['+@Fk122+N']');
+                    IF EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.BasvuruDegerZinciriAsama') AND name=N'IX_BasvuruDegerZinciriAsama_DegerZinciriAsamaId')
+                      DROP INDEX IX_BasvuruDegerZinciriAsama_DegerZinciriAsamaId ON dbo.BasvuruDegerZinciriAsama;
+                    IF EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.BasvuruDegerZinciriAsama') AND name=N'IX_BasvuruDegerZinciriAsama_UygulamaAdresiId')
+                      DROP INDEX IX_BasvuruDegerZinciriAsama_UygulamaAdresiId ON dbo.BasvuruDegerZinciriAsama;
+                    IF OBJECT_ID(N'dbo.CK_BasvuruDegerZinciriAsama_AsamaTuru',N'C') IS NOT NULL
+                      ALTER TABLE dbo.BasvuruDegerZinciriAsama DROP CONSTRAINT CK_BasvuruDegerZinciriAsama_AsamaTuru;
+                    UPDATE dbo.BasvuruDegerZinciriAsama SET DegerZinciriAsamaId=(ISNULL(DegerZinciriAsamaId,0)%3)+1;
+                    ALTER TABLE dbo.BasvuruDegerZinciriAsama ALTER COLUMN DegerZinciriAsamaId INT NOT NULL;
+                    ALTER TABLE dbo.BasvuruDegerZinciriAsama WITH CHECK ADD CONSTRAINT CK_BasvuruDegerZinciriAsama_AsamaTuru CHECK(DegerZinciriAsamaId IN(1,2,3));
+                    CREATE INDEX IX_BasvuruDegerZinciriAsama_DegerZinciriAsamaId ON dbo.BasvuruDegerZinciriAsama(DegerZinciriAsamaId);
+                    CREATE INDEX IX_BasvuruDegerZinciriAsama_UygulamaAdresiId ON dbo.BasvuruDegerZinciriAsama(UygulamaAdresiId,DegerZinciriAsamaId);
+                  END;
+                  IF OBJECT_ID(N'dbo.CK_BasvuruYatirimOnBilgi_DegerZinciriAsamaTuru',N'C') IS NOT NULL ALTER TABLE dbo.BasvuruYatirimOnBilgi DROP CONSTRAINT CK_BasvuruYatirimOnBilgi_DegerZinciriAsamaTuru;
+                  UPDATE dbo.BasvuruYatirimOnBilgi SET DegerZinciriAsamaTuru=(ISNULL(DegerZinciriAsamaTuru,0)%3)+1;
+                  ALTER TABLE dbo.BasvuruYatirimOnBilgi ALTER COLUMN DegerZinciriAsamaTuru INT NOT NULL;
+                  ALTER TABLE dbo.BasvuruYatirimOnBilgi WITH CHECK ADD CONSTRAINT CK_BasvuruYatirimOnBilgi_DegerZinciriAsamaTuru CHECK(DegerZinciriAsamaTuru IN(1,2,3));
+                  IF OBJECT_ID(N'dbo.CK_BasvuruMakine_DegerZinciriAsamaTuru',N'C') IS NOT NULL ALTER TABLE dbo.BasvuruMakine DROP CONSTRAINT CK_BasvuruMakine_DegerZinciriAsamaTuru;
+                  UPDATE dbo.BasvuruMakine SET DegerZinciriAsamaTuru=(ISNULL(DegerZinciriAsamaTuru,0)%3)+1;
+                  ALTER TABLE dbo.BasvuruMakine ALTER COLUMN DegerZinciriAsamaTuru INT NOT NULL;
+                  ALTER TABLE dbo.BasvuruMakine WITH CHECK ADD CONSTRAINT CK_BasvuruMakine_DegerZinciriAsamaTuru CHECK(DegerZinciriAsamaTuru IN(1,2,3));
+                  IF COL_LENGTH(N'dbo.BasvuruBina',N'DegerZinciriAsamaTuru') IS NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruBina ADD DegerZinciriAsamaTuru INT NOT NULL CONSTRAINT DF_BasvuruBina_DegerZinciriAsamaTuru DEFAULT 1');
+                  IF OBJECT_ID(N'dbo.CK_BasvuruBina_DegerZinciriAsamaTuru',N'C') IS NOT NULL ALTER TABLE dbo.BasvuruBina DROP CONSTRAINT CK_BasvuruBina_DegerZinciriAsamaTuru;
+                  EXEC(N'UPDATE dbo.BasvuruBina SET DegerZinciriAsamaTuru=ISNULL(DegerZinciriAsamaTuru,1);
+                         ALTER TABLE dbo.BasvuruBina ALTER COLUMN DegerZinciriAsamaTuru INT NOT NULL;
+                         ALTER TABLE dbo.BasvuruBina WITH CHECK ADD CONSTRAINT CK_BasvuruBina_DegerZinciriAsamaTuru CHECK(DegerZinciriAsamaTuru IN(1,2,3));');"),
+            new(123, @"IF COL_LENGTH(N'dbo.BasvuruUygulamaAdresiKonum',N'KoordinatTuru') IS NULL
+                  EXEC(N'ALTER TABLE dbo.BasvuruUygulamaAdresiKonum ADD KoordinatTuru INT NOT NULL CONSTRAINT DF_BasvuruUygulamaAdresiKonum_KoordinatTuru DEFAULT 1');
+                  IF OBJECT_ID(N'dbo.CK_BasvuruUygulamaAdresiKonum_KoordinatTuru',N'C') IS NULL
+                    EXEC(N'ALTER TABLE dbo.BasvuruUygulamaAdresiKonum WITH CHECK ADD CONSTRAINT CK_BasvuruUygulamaAdresiKonum_KoordinatTuru CHECK(KoordinatTuru IN(1,2))');"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

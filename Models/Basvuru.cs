@@ -1118,6 +1118,8 @@ namespace TarimDonusum.Models
         public int basvuruId { get; set; }
         public int? uygulamaAdresiId { get; set; }
         public string uygulamaAdresiAciklama { get; set; } = "";
+        public enumDegerZinciriAsamaTuru degerZinciriAsamaTuru { get; set; } = enumDegerZinciriAsamaTuru.Uretim;
+        public string degerZinciriAsamaTuruAdi => DegerZinciriAsamaTuruTanimlari.Ad(degerZinciriAsamaTuru);
         public int siraNo { get; set; }
         public string ad { get; set; } = "";
         public string mevcutYeni { get; set; } = "";
