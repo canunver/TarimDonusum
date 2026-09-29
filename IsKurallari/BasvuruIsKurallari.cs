@@ -178,6 +178,50 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<List<Basvuru>>> BankayaGonderilecekOnBasvurularAsync(Kullanici kullanici)
+        {
+            Sonuc<List<Basvuru>> sonuc = new();
+            // Firma ilişkileri ve kurum/il yetkileri liste ekranıyla aynı kaynaktan uygulanır.
+            var liste = await KullaniciBasvuruVersiyonlariniListeleAsync(kullanici);
+            if (!liste.basarili)
+            {
+                sonuc.hatalar.AddRange(liste.hatalar);
+                return sonuc;
+            }
+            var secilenler = Raporlar.OnBasvuruBankaExcel.SonIncelemedekiSurumler(liste.nesne ?? []);
+            if (secilenler.Count == 0)
+            {
+                sonuc.HataEkle("Yazdırılacak, son sürümü incelemede olan ön başvuru bulunamadı.");
+                return sonuc;
+            }
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                TABBasvuru tablo = new(connection, _localizer);
+                foreach (var secilen in secilenler)
+                {
+                    Basvuru? detay = await tablo.OkuAsync(secilen.Id);
+                    if (detay == null || detay.basvuruFirma.siraNo != 0
+                        || detay.kayitTuru != enumBasvuruKayitTuru.OnBasvuru
+                        || detay.durum != enumBasvuruDurum.OnBasvuruIncelemeDurumu)
+                    {
+                        sonuc.HataEkle("Başvuru listesi işlem sırasında değişti. Sayfayı yenileyerek tekrar yazdırınız.");
+                        sonuc.nesne.Clear();
+                        return sonuc;
+                    }
+                    sonuc.nesne.Add(detay);
+                }
+            }
+            catch (Exception ex)
+            {
+                sonuc.nesne.Clear();
+                BeklenmeyenHata(sonuc, ex, "Banka Excel başvuruları okunamadı. KullaniciId: {KullaniciId}",
+                    "Banka Excel dosyası için başvurular okunamadı.", kullanici.Id);
+            }
+            return sonuc;
+        }
+
         public async Task<Sonuc<Kullanici>> KullaniciOkuAsync(int kullaniciId)
         {
             Sonuc<Kullanici> sonuc = new Sonuc<Kullanici>();

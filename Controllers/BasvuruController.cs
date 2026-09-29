@@ -64,6 +64,37 @@ namespace TarimDonusum.Controllers
 
         [OturumKontrol]
         [HttpGet]
+        public async Task<IActionResult> OnBasvurularBankaYazdir()
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return RedirectToAction("Index", "Home");
+            try
+            {
+                var sonuc = await _basvuruIsKurallari.BankayaGonderilecekOnBasvurularAsync(kullanici);
+                if (!sonuc.basarili)
+                {
+                    TempData["Mesaj"] = sonuc.hataStr;
+                    return RedirectToAction(nameof(Index), new { tur = "on-basvuru" });
+                }
+                byte[] dosya = OnBasvuruBankaExcel.Olustur(
+                    Path.Combine(_environment.ContentRootPath, "Sablonlar", "OnBasvuruBankaV2.xlsx"), sonuc.nesne);
+                return File(dosya, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"On_Basvurular_Banka_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Mesaj"] = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Ön başvurular banka Excel dosyası oluşturulamadı.");
+                TempData["Mesaj"] = "Excel dosyası oluşturulamadı. Lütfen tekrar deneyiniz.";
+            }
+            return RedirectToAction(nameof(Index), new { tur = "on-basvuru" });
+        }
+
+        [OturumKontrol]
+        [HttpGet]
         public async Task<IActionResult> Yeni()
         {
             try

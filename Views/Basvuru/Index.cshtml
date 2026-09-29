@@ -12,10 +12,18 @@
             <h1>@L["Basvuru.Index.Heading"]</h1>
             <p>@L["Basvuru.Index.Description"]</p>
         </div>
+        <div class="d-flex align-items-center">
+        @if (listeTuru == enumBasvuruKayitTuru.OnBasvuru)
+        {
+            <a class="btn btn-outline-primary mr-2" asp-action="OnBasvurularBankaYazdir" title="İncelemedeki ön başvuruların son sürümlerini Excel'e aktar">
+                <i class="fas fa-print" aria-hidden="true"></i> Yazdır
+            </a>
+        }
         @if (ViewBag.YeniBasvuruYetkisi == true)
         {
             <a class="btn btn-primary" asp-controller="Basvuru" asp-action="Yeni">@L["Basvuru.Index.New"]</a>
         }
+        </div>
     </div>
 
     <div class="nav nav-pills mb-3" role="navigation" aria-label="Başvuru listeleri">
