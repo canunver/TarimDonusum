@@ -28,6 +28,7 @@ namespace TarimDonusum.Controllers
         private const string TelefonSessionKey = "YeniKullanici.Telefon";
         private const string TelefonDogrulandiSessionKey = "YeniKullanici.TelefonDogrulandi";
         private static readonly TimeSpan DogrulamaKoduGecerlilikSuresi = TimeSpan.FromMinutes(3);
+        private static readonly TimeSpan EpostaKoduGecerlilikSuresi = TimeSpan.FromMinutes(5);
 
         private const string SmsGonderildiSessionKey = "YeniKullanici.SmsGonderildi";
         private const string SmsDenemeSessionKey = "YeniKullanici.SmsDeneme";
@@ -620,7 +621,10 @@ namespace TarimDonusum.Controllers
                 return 0;
 
             DateTimeOffset kodZamani = DateTimeOffset.FromUnixTimeSeconds(unixZaman);
-            TimeSpan kalanSure = DogrulamaKoduGecerlilikSuresi - (DateTimeOffset.UtcNow - kodZamani);
+            TimeSpan gecerlilikSuresi = zamanSessionKey == EpostaKodZamanSessionKey
+                ? EpostaKoduGecerlilikSuresi
+                : DogrulamaKoduGecerlilikSuresi;
+            TimeSpan kalanSure = gecerlilikSuresi - (DateTimeOffset.UtcNow - kodZamani);
             if (kalanSure <= TimeSpan.Zero)
                 return 0;
 
@@ -663,7 +667,7 @@ namespace TarimDonusum.Controllers
 
             HttpContext.Session.SetString("LOGIN_KULKOD", kulKod);
             HttpContext.Session.SetString("LOGIN_VERIFY_CODE", kod);
-            HttpContext.Session.SetString("LOGIN_VERIFY_EXPIRE", DateTime.Now.AddMinutes(5).ToString("O"));
+            HttpContext.Session.SetString("LOGIN_VERIFY_EXPIRE", DateTime.Now.Add(EpostaKoduGecerlilikSuresi).ToString("O"));
 
 
             string mailHatasi = await _mailServisi.MailAtAsync(
@@ -679,8 +683,8 @@ namespace TarimDonusum.Controllers
                 return Json(DogrulamaCevabi(false, mailHatasi, null, null, "Kullanici.Eposta"));
             }
 
-            HttpContext.Session.SetString("LOGIN_VERIFY_EXPIRE", DateTime.Now.AddMinutes(3).ToString("O"));
-            return Json(LoginCevabi(true, L["Home.Bilgi.DogrulamaKoduGonderildi"].ToString(), kalanSaniye: 180));
+            HttpContext.Session.SetString("LOGIN_VERIFY_EXPIRE", DateTime.Now.Add(EpostaKoduGecerlilikSuresi).ToString("O"));
+            return Json(LoginCevabi(true, L["Home.Bilgi.DogrulamaKoduGonderildi"].ToString(), kalanSaniye: (int)EpostaKoduGecerlilikSuresi.TotalSeconds));
         }
 
         [HttpGet]
