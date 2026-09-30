@@ -3931,8 +3931,14 @@
             PopupMesajGoster('Sıfır veya pozitif birim fiyat girilmelidir.', false);
             return;
         }
-        if (![1, 2, 3].includes(giderTuru) || sabitOranMetni === '' || !Number.isFinite(sabitOran) || sabitOran < 0 || sabitOran > 100) {
-            PopupMesajGoster('Gider türü ve 0-100 arasında sabit oran girilmelidir.', false);
+        if (![1, 2, 3].includes(giderTuru)) {
+            PopupMesajGoster('Gider türü seçilmelidir.', false);
+            document.getElementById('dbCtpGirdiGiderTuru').focus();
+            return;
+        }
+        if (sabitOranMetni === '' || !Number.isFinite(sabitOran) || sabitOran < 0 || sabitOran > 100) {
+            PopupMesajGoster('Sabit oran 0-100 arasında olmalıdır.', false);
+            document.getElementById('dbCtpGirdiSabitOran').focus();
             return;
         }
         const birim = document.getElementById('dbCtpGirdiBirim').value;
