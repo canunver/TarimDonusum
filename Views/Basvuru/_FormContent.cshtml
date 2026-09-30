@@ -269,7 +269,7 @@
                                     <button type="button" class="btn btn-sm btn-outline-primary" onclick="AdresKonumSatiriEkle()" disabled="@ro">+ Satır ekle</button>
                                 </div>
                                 <div class="table-responsive"><table class="table table-bordered mb-0">
-                                    <thead><tr><th>Min Enlem</th><th>Max Enlem</th><th>Min Boylam</th><th>Max Boylam</th><th>Ada</th><th>Parsel</th><th>Mahalle</th><th>İşlem</th></tr></thead>
+                                    <thead><tr><th>Sil</th><th class="konum-mahalle-baslik">Mahalle</th><th>Ada</th><th>Parsel</th><th>Koordinat türü</th><th>Min Enlem</th><th>Max Enlem</th><th>Min Boylam</th><th>Max Boylam</th></tr></thead>
                                     <tbody id="adresModalKonumlar"></tbody>
                                 </table></div>
                             </div>
@@ -3893,9 +3893,9 @@
             container.innerHTML = '<div class="alert alert-info">Henüz girdi kaydı eklenmedi.</div>';
             return;
         }
-        container.innerHTML = `<div class="table-responsive"><table class="table table-striped db-ctp-table"><thead><tr><th>Sıra no</th><th>Adres</th><th>Değer zinciri aşaması</th><th>Girdi / Hammadde adı</th><th>Gider türü</th><th>Sabit oran (%)</th><th>Birim fiyat (TL)</th><th>Miktar</th><th>Birim</th>${duzenlenebilir ? '<th>İşlem</th>' : ''}</tr></thead><tbody>${satirlar.map(x => {
+        container.innerHTML = `<div class="table-responsive"><table class="table table-striped db-ctp-table"><thead><tr><th>Sıra</th><th>Adres</th><th>Değer zinciri aşaması</th><th>Girdi / Hammadde adı</th><th>Gider türü</th><th>Sabit oran (%)</th><th>Birim fiyat (TL)</th><th>Miktar</th><th>Birim</th>${duzenlenebilir ? '<th>İşlem</th>' : ''}</tr></thead><tbody>${satirlar.map(x => {
             const index = dbCtpData.inputs.indexOf(x);
-            return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${htmlEncode(x.uygulamaAdresiAciklama || '-')}</td><td>${htmlEncode(x.degerZinciriAsamaTuruAdi || '-')}</td><td>${htmlEncode(x.ad)}</td><td>${htmlEncode(x.giderTuruAdi || '-')}</td><td>${htmlEncode(x.sabitOran ?? '')}</td><td>${x.birimFiyat == null ? '-' : YatirimOzetiParaKuruslu(x.birimFiyat)}</td><td>${htmlEncode(x.miktar)}</td><td>${htmlEncode(x.birim)}</td>${duzenlenebilir ? `<td><div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="DbCtpGirdiModalAc(${index})">Düzenle</button><button type="button" class="btn btn-outline-danger" onclick="DbCtpGirdiSil(${index})">Sil</button></div></td>` : ''}</tr>`;
+            return `<tr><td>${htmlEncode(x.siraNo)}</td><td>${htmlEncode(x.uygulamaAdresiAciklama || '-')}</td><td>${htmlEncode(x.degerZinciriAsamaTuruAdi || '-')}</td><td>${htmlEncode(x.ad)}</td><td>${htmlEncode(x.giderTuruAdi || '-')}</td><td>${htmlEncode(x.sabitOran ?? '')}</td><td class="text-right">${x.birimFiyat == null ? '-' : YatirimOzetiParaKuruslu(x.birimFiyat)}</td><td class="text-right">${x.miktar == null ? '-' : YatirimOzetiMiktar(x.miktar)}</td><td>${htmlEncode(x.birim)}</td>${duzenlenebilir ? `<td><div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="DbCtpGirdiModalAc(${index})">Düzenle</button><button type="button" class="btn btn-outline-danger" onclick="DbCtpGirdiSil(${index})">Sil</button></div></td>` : ''}</tr>`;
         }).join('')}</tbody></table></div>`;
     }
 
@@ -4189,20 +4189,20 @@
     function UrunSurecSil(index){const s=urunSurecleri[index];if(!s||!confirm('Ürün sürecini ve makine satırlarını silmek istediğinize emin misiniz?'))return;AjaxPost('/Basvuru/UrunSureciSil',{id:s.id,basvuruId:BasvuruId()},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){urunSurecleri.splice(index,1);UrunSurecListeRender();dirty=false;}});}
 
     let basvuruBinalari=[];
-    function BinaBolumuIlklendir(){try{basvuruBinalari=JSON.parse(document.getElementById('binaListeJson')?.textContent||'[]');const kaynak=JSON.parse(document.getElementById('binaKaynakJson')?.textContent||'{}'),onKaynak=JSON.parse(document.getElementById('binaOnKaynakJson')?.textContent||'{}'),satirlar=Array.isArray(kaynak.buildingRows)&&kaynak.buildingRows.length?kaynak.buildingRows:(Array.isArray(onKaynak.constructionRows)?onKaynak.constructionRows:[]);satirlar.forEach((x,i)=>{if(!basvuruBinalari.some(b=>b.siraNo===i+1))basvuruBinalari.push({id:0,basvuruId:BasvuruId(),siraNo:i+1,ad:x.name||'',mevcutYeni:x.assetStatus||'',yatirimSekli:x.investmentType||x.purpose||'',destekTalebi:x.supportRequested||'',vaziyetPlaniNo:'',mahaller:[]});});basvuruBinalari.sort((a,b)=>a.siraNo-b.siraNo);}catch{basvuruBinalari=[];}BinaListeRender();}
+    function BinaBolumuIlklendir(){try{basvuruBinalari=JSON.parse(document.getElementById('binaListeJson')?.textContent||'[]');const kaynak=JSON.parse(document.getElementById('binaKaynakJson')?.textContent||'{}'),onKaynak=JSON.parse(document.getElementById('binaOnKaynakJson')?.textContent||'{}'),satirlar=Array.isArray(kaynak.buildingRows)&&kaynak.buildingRows.length?kaynak.buildingRows:(Array.isArray(onKaynak.constructionRows)?onKaynak.constructionRows:[]);satirlar.forEach((x,i)=>{if(!basvuruBinalari.some(b=>b.siraNo===i+1))basvuruBinalari.push({id:0,basvuruId:BasvuruId(),degerZinciriAsamaTuru:1,degerZinciriAsamaTuruAdi:'ÜRETİM',siraNo:i+1,ad:x.name||'',mevcutYeni:x.assetStatus||'',yatirimSekli:x.investmentType||x.purpose||'',destekTalebi:x.supportRequested||'',vaziyetPlaniNo:'',mahaller:[]});});basvuruBinalari.sort((a,b)=>a.siraNo-b.siraNo);}catch{basvuruBinalari=[];}BinaListeRender();}
     function BinaListeRender(){
         const a=document.getElementById('binaListeAlani');
         if(!a)return;
         if(!basvuruBinalari.length){a.innerHTML='<div class="alert alert-light border">Henüz bina/yapı kaydı bulunamadı.</div>';return;}
         const edit=!!document.getElementById('binaModal'),mahal=a.closest('[data-mahal-etkin]')?.dataset.mahalEtkin==='true';
         if(!mahal){
-            a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover"><thead><tr><th>Bina No</th><th>Adı</th><th>Adresi</th><th>Mevcut / Yeni</th><th>Yatırım şekli</th>${edit?'<th>İşlemler</th>':''}</tr></thead><tbody>${basvuruBinalari.map((b,i)=>`<tr><td>${htmlEncode(b.siraNo)}</td><td><strong>${htmlEncode(b.ad)}</strong></td><td>${htmlEncode(b.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(b.mevcutYeni||'')}</td><td>${htmlEncode(b.yatirimSekli||'')}</td>${edit?`<td><button type="button" class="btn btn-sm btn-outline-primary" onclick="BinaModalAc(${i})">Düzenle</button></td>`:''}</tr>`).join('')}</tbody></table></div>`;
+            a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover"><thead><tr><th>Bina No</th><th>Adı</th><th>Adresi</th><th>Değer zinciri aşaması</th><th>Mevcut / Yeni</th><th>Yatırım şekli</th></tr></thead><tbody>${basvuruBinalari.map((b,i)=>`<tr><td><span class="d-inline-flex align-items-center"><span>${htmlEncode(b.siraNo)}</span>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2" title="Binayı düzenle" aria-label="${htmlEncode(b.siraNo)} numaralı binayı düzenle" onclick="BinaModalAc(${i})"><i class="fas fa-pencil-alt"></i></button>`:''}</span></td><td><strong>${htmlEncode(b.ad)}</strong></td><td>${htmlEncode(b.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(b.degerZinciriAsamaTuruAdi||'')}</td><td>${htmlEncode(b.mevcutYeni||'')}</td><td>${htmlEncode(b.yatirimSekli||'')}</td></tr>`).join('')}</tbody></table></div>`;
             return;
         }
-        a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover"><thead><tr><th>Kullanılacağı adres</th><th>Bina / Yapı</th><th>Vaziyet Planındaki No</th><th>Bölüm / Mahaller</th>${edit?'<th style="width:190px">İşlemler</th>':''}</tr></thead><tbody>${basvuruBinalari.map((b,i)=>`<tr><td>${htmlEncode(b.uygulamaAdresiAciklama||'')}</td><td><strong>${htmlEncode(b.siraNo)}. ${htmlEncode(b.ad)}</strong><br><small class="text-muted">${htmlEncode(b.mevcutYeni||'')} ${b.yatirimSekli?'— '+htmlEncode(b.yatirimSekli):''}</small></td><td>${htmlEncode(b.vaziyetPlaniNo||'')}</td><td>${(b.mahaller||[]).length?(b.mahaller||[]).map((m,j)=>`<div class="d-flex justify-content-between align-items-center border-bottom py-1"><span>${htmlEncode(m.siraNo)}. ${htmlEncode(m.mahalAdi)} — <strong>${htmlEncode(m.alanM2)} m²</strong></span>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2" onclick="BinaMahalModalAc(${i},${j})">Düzenle</button>`:''}</div>`).join(''):'<span class="text-muted">Bölüm/mahal eklenmedi</span>'}</td>${edit?`<td><button type="button" class="btn btn-sm btn-outline-success mb-1" onclick="BinaMahalModalAc(${i},-1)">Bölüm/mahal ekle</button><br><button type="button" class="btn btn-sm btn-outline-primary" onclick="BinaModalAc(${i})">Bina düzenle</button></td>`:''}</tr>`).join('')}</tbody></table></div>`;
+        a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover"><thead><tr><th>Kullanılacağı adres</th><th>Değer zinciri aşaması</th><th>Bina / Yapı</th><th>Vaziyet Planındaki No</th><th>Bölüm / Mahaller</th></tr></thead><tbody>${basvuruBinalari.map((b,i)=>`<tr><td>${htmlEncode(b.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(b.degerZinciriAsamaTuruAdi||'')}</td><td><strong><span class="d-inline-flex align-items-center"><span>${htmlEncode(b.siraNo)}. ${htmlEncode(b.ad)}</span>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2" title="Binayı düzenle" aria-label="${htmlEncode(b.siraNo)} numaralı binayı düzenle" onclick="BinaModalAc(${i})"><i class="fas fa-pencil-alt"></i></button>`:''}</span></strong><br><small class="text-muted">${htmlEncode(b.mevcutYeni||'')} ${b.yatirimSekli?'— '+htmlEncode(b.yatirimSekli):''}</small></td><td>${htmlEncode(b.vaziyetPlaniNo||'')}</td><td>${(b.mahaller||[]).length?(b.mahaller||[]).map((m,j)=>`<div class="d-flex justify-content-between align-items-center border-bottom py-1"><span>${htmlEncode(m.siraNo)}. ${htmlEncode(m.mahalAdi)} — <strong>${htmlEncode(m.alanM2)} m²</strong></span>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2" onclick="BinaMahalModalAc(${i},${j})">Düzenle</button>`:''}</div>`).join(''):'<span class="text-muted">Bölüm/mahal eklenmedi</span>'}${edit?`<div class="mt-2"><button type="button" class="btn btn-sm btn-outline-success" onclick="BinaMahalModalAc(${i},-1)"><i class="fas fa-plus mr-1"></i>Bölüm/mahal ekle</button></div>`:''}</td></tr>`).join('')}</tbody></table></div>`;
     }
-    function BinaModalAc(i){const yeni=i<0,b=yeni?{id:0,basvuruId:BasvuruId(),siraNo:Math.max(0,...basvuruBinalari.map(x=>Number(x.siraNo)||0))+1,ad:'',mevcutYeni:'',yatirimSekli:'',destekTalebi:'',vaziyetPlaniNo:'',mahaller:[]}:basvuruBinalari[i];document.getElementById('binaIndex').value=i;document.getElementById('binaId').value=b.id||0;document.getElementById('binaAdres').value=b.uygulamaAdresiId||'';document.getElementById('binaSira').value=b.siraNo;document.getElementById('binaAd').value=b.ad||'';document.getElementById('binaDurum').value=b.mevcutYeni||'';document.getElementById('binaYatirimSekli').value=b.yatirimSekli||'';document.getElementById('binaDestekTalebi').value=b.destekTalebi||'';document.getElementById('binaVaziyetNo').value=b.vaziyetPlaniNo||'';document.getElementById('binaSilBtn').style.display=yeni?'none':'';$('#binaModal').modal('show');}
-    function BinaKaydet(){let i=Number(document.getElementById('binaIndex').value),b=i>=0?basvuruBinalari[i]:{id:0,basvuruId:BasvuruId(),mahaller:[]},adres=document.getElementById('binaAdres');b.uygulamaAdresiId=Number(adres.value)||null;b.uygulamaAdresiAciklama=adres.selectedOptions?.[0]?.textContent||'';b.siraNo=Number(document.getElementById('binaSira').value);b.ad=document.getElementById('binaAd').value;b.mevcutYeni=document.getElementById('binaDurum').value;b.yatirimSekli=document.getElementById('binaYatirimSekli').value;b.destekTalebi=document.getElementById('binaDestekTalebi').value;b.vaziyetPlaniNo=document.getElementById('binaVaziyetNo').value;if(i<0){basvuruBinalari.push(b);i=basvuruBinalari.length-1;}BinaKaydetIndex(i,()=>{$('#binaModal').modal('hide');});}
+    function BinaModalAc(i){const yeni=i<0,b=yeni?{id:0,basvuruId:BasvuruId(),degerZinciriAsamaTuru:1,siraNo:Math.max(0,...basvuruBinalari.map(x=>Number(x.siraNo)||0))+1,ad:'',mevcutYeni:'',yatirimSekli:'',destekTalebi:'',vaziyetPlaniNo:'',mahaller:[]}:basvuruBinalari[i];document.getElementById('binaIndex').value=i;document.getElementById('binaId').value=b.id||0;document.getElementById('binaAdres').value=b.uygulamaAdresiId||'';document.getElementById('binaDegerZinciriAsamaTuru').value=b.degerZinciriAsamaTuru||1;document.getElementById('binaSira').value=b.siraNo;document.getElementById('binaAd').value=b.ad||'';document.getElementById('binaDurum').value=b.mevcutYeni||'';document.getElementById('binaYatirimSekli').value=b.yatirimSekli||'';document.getElementById('binaDestekTalebi').value=b.destekTalebi||'';document.getElementById('binaVaziyetNo').value=b.vaziyetPlaniNo||'';document.getElementById('binaSilBtn').style.display=yeni?'none':'';$('#binaModal').modal('show');}
+    function BinaKaydet(){let i=Number(document.getElementById('binaIndex').value),b=i>=0?basvuruBinalari[i]:{id:0,basvuruId:BasvuruId(),mahaller:[]},adres=document.getElementById('binaAdres'),asama=document.getElementById('binaDegerZinciriAsamaTuru');b.uygulamaAdresiId=Number(adres.value)||null;b.uygulamaAdresiAciklama=adres.selectedOptions?.[0]?.textContent||'';b.degerZinciriAsamaTuru=Number(asama.value)||0;b.degerZinciriAsamaTuruAdi=asama.selectedOptions?.[0]?.textContent||'';b.siraNo=Number(document.getElementById('binaSira').value);b.ad=document.getElementById('binaAd').value;b.mevcutYeni=document.getElementById('binaDurum').value;b.yatirimSekli=document.getElementById('binaYatirimSekli').value;b.destekTalebi=document.getElementById('binaDestekTalebi').value;b.vaziyetPlaniNo=document.getElementById('binaVaziyetNo').value;if(i<0){basvuruBinalari.push(b);i=basvuruBinalari.length-1;}BinaKaydetIndex(i,()=>{$('#binaModal').modal('hide');});}
     function BinaSil(){const i=Number(document.getElementById('binaIndex').value),b=basvuruBinalari[i];if(!b||!confirm('Bu binayı ve bağlı bütün bölüm/mahal kayıtlarını silmek istediğinize emin misiniz?'))return;if(!b.id){basvuruBinalari.splice(i,1);$('#binaModal').modal('hide');BinaListeRender();return;}AjaxPost('/Basvuru/BinaSil',{id:b.id,basvuruId:BasvuruId()},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){basvuruBinalari.splice(i,1);$('#binaModal').modal('hide');BinaListeRender();dirty=false;}});}
     function BinaKaydetIndex(i,devam){const b=basvuruBinalari[i],model={...b,basvuruId:BasvuruId(),mahaller:[]};AjaxPost('/Basvuru/BinaKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){sonuc.nesne.mahaller=b.mahaller||[];basvuruBinalari[i]=sonuc.nesne;BinaListeRender();dirty=false;if(devam)devam();}});}
     function BinaMahalModalAc(bi,mi){const ac=()=>{const b=basvuruBinalari[bi],m=mi>=0?b.mahaller[mi]:{id:0,binaId:b.id,siraNo:(b.mahaller?.length||0)+1,mahalAdi:'',alanM2:null};document.getElementById('binaMahalBinaIndex').value=bi;document.getElementById('binaMahalIndex').value=mi;document.getElementById('binaMahalId').value=m.id||0;document.getElementById('binaMahalBaslik').textContent=(mi>=0?'Bölüm/Mahal Düzenle':'Bölüm/Mahal Ekle')+' — '+b.ad;document.getElementById('binaMahalSira').value=m.siraNo||1;document.getElementById('binaMahalAd').value=m.mahalAdi||'';document.getElementById('binaMahalAlan').value=m.alanM2??'';document.getElementById('binaMahalSilBtn').style.display=mi>=0?'':'none';$('#binaMahalModal').modal('show');};if(!basvuruBinalari[bi].id)BinaKaydetIndex(bi,ac);else ac();}
@@ -4590,28 +4590,40 @@
     }
 
     let adresKonumSatirlari = [{}];
-    const adresKonumAlanlari = ['minEnlem', 'maxEnlem', 'minBoylam', 'maxBoylam', 'ada', 'parsel', 'mahalle'];
+    const adresKonumSayisalAlanlari = ['minEnlem', 'maxEnlem', 'minBoylam', 'maxBoylam'];
+    const turkiyeKoordinatSinirlari = {
+        1: { ad: 'ITRF 96', minEnlem: 35.80, maxEnlem: 42.20, minBoylam: 25.50, maxBoylam: 45.00 },
+        2: { ad: 'ED50', minEnlem: 35.80, maxEnlem: 42.20, minBoylam: 25.50, maxBoylam: 45.00 }
+    };
 
     function AdresKonumTablosuRender() {
         if (!adresKonumSatirlari.length) adresKonumSatirlari = [{}];
         const body = document.getElementById('adresModalKonumlar');
         if (!body) return;
-        body.innerHTML = adresKonumSatirlari.map((satir, index) => `<tr>${adresKonumAlanlari.map((alan, i) => {
-            const sayisal = i < 4, sinir = i < 2 ? 90 : 180;
-            return `<td><input aria-label="${['Min Enlem','Max Enlem','Min Boylam','Max Boylam','Ada','Parsel','Mahalle'][i]} ${index + 1}" ${sayisal ? `type="number" min="-${sinir}" max="${sinir}" step="0.000001"` : `maxlength="${alan === 'mahalle' ? 200 : 30}"`} value="${htmlEncode(satir[alan] ?? '')}" ${basvuruReadonly ? 'disabled' : ''} oninput="AdresKonumDegistir(${index}, '${alan}', this)" /></td>`;
-        }).join('')}<td>${index > 0 && !basvuruReadonly ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="AdresKonumSatiriSil(${index})">Sil</button>` : ''}</td></tr>`).join('');
+        body.innerHTML = adresKonumSatirlari.map((satir, index) => {
+            const sil = index > 0 && !basvuruReadonly ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="AdresKonumSatiriSil(${index})">Sil</button>` : '';
+            const metin = (alan, etiket, uzunluk, css = '') => `<td class="${css}"><input aria-label="${etiket} ${index + 1}" maxlength="${uzunluk}" value="${htmlEncode(satir[alan] ?? '')}" ${basvuruReadonly ? 'disabled' : ''} oninput="AdresKonumDegistir(${index}, '${alan}', this)" /></td>`;
+            const pozitifTamSayi = (alan, etiket) => `<td><input aria-label="${etiket} ${index + 1}" type="number" min="1" step="1" value="${htmlEncode(satir[alan] ?? '')}" ${basvuruReadonly ? 'disabled' : ''} oninput="AdresKonumDegistir(${index}, '${alan}', this)" /></td>`;
+            const sinirlar = turkiyeKoordinatSinirlari[Number(satir.koordinatTuru || 1)];
+            const sayi = (alan, etiket, min, max) => `<td><input aria-label="${etiket} ${index + 1}" type="number" min="${min}" max="${max}" step="0.000001" value="${htmlEncode(satir[alan] ?? '')}" ${basvuruReadonly ? 'disabled' : ''} oninput="AdresKonumDegistir(${index}, '${alan}', this)" /></td>`;
+            return `<tr><td>${sil}</td>${metin('mahalle','Mahalle',200,'konum-mahalle')}${pozitifTamSayi('ada','Ada')}${pozitifTamSayi('parsel','Parsel')}<td><select aria-label="Koordinat türü ${index + 1}" ${basvuruReadonly ? 'disabled' : ''} onchange="AdresKonumDegistir(${index}, 'koordinatTuru', this)"><option value="1" ${Number(satir.koordinatTuru || 1) === 1 ? 'selected' : ''}>ITRF 96</option><option value="2" ${Number(satir.koordinatTuru) === 2 ? 'selected' : ''}>ED50</option></select></td>${sayi('minEnlem','Min Enlem',sinirlar.minEnlem,sinirlar.maxEnlem)}${sayi('maxEnlem','Max Enlem',sinirlar.minEnlem,sinirlar.maxEnlem)}${sayi('minBoylam','Min Boylam',sinirlar.minBoylam,sinirlar.maxBoylam)}${sayi('maxBoylam','Max Boylam',sinirlar.minBoylam,sinirlar.maxBoylam)}</tr>`;
+        }).join('');
     }
 
     function AdresKonumDegistir(index, alan, input) {
-        if (basvuruReadonly || !adresKonumSatirlari[index] || !adresKonumAlanlari.includes(alan)) return;
-        adresKonumSatirlari[index][alan] = adresKonumAlanlari.indexOf(alan) < 4
+        const alanlar = [...adresKonumSayisalAlanlari, 'ada', 'parsel', 'mahalle', 'koordinatTuru'];
+        if (basvuruReadonly || !adresKonumSatirlari[index] || !alanlar.includes(alan)) return;
+        adresKonumSatirlari[index][alan] = adresKonumSayisalAlanlari.includes(alan)
             ? (input.validity?.badInput ? NaN : input.value === '' ? null : Number(input.value.replace(',', '.')))
-            : input.value;
+            : alan === 'koordinatTuru' ? Number(input.value) : input.value;
+        if (alan === 'koordinatTuru') AdresKonumTablosuRender();
     }
 
     function AdresKonumSatiriEkle() {
         if (basvuruReadonly) return;
-        adresKonumSatirlari.push({}); AdresKonumTablosuRender();
+        const ilkSatir = adresKonumSatirlari[0] || {};
+        adresKonumSatirlari.push({ mahalle: ilkSatir.mahalle || '', ada: ilkSatir.ada || '', koordinatTuru: Number(ilkSatir.koordinatTuru || 1) });
+        AdresKonumTablosuRender();
     }
 
     function AdresKonumSatiriSil(index) {
@@ -4622,11 +4634,32 @@
     function AdresKonumlariGecerliMi() {
         for (let i = 0; i < adresKonumSatirlari.length; i++) {
             const satir = adresKonumSatirlari[i];
-            const hatali = adresKonumAlanlari.slice(0,4).some((alan, n) => satir[alan] != null &&
-                (!Number.isFinite(satir[alan]) || Math.abs(satir[alan]) > (n < 2 ? 90 : 180)));
-            if (hatali || (satir.minEnlem != null && satir.maxEnlem != null && satir.minEnlem > satir.maxEnlem)
+            if (!String(satir.mahalle || '').trim()) {
+                PopupMesajGoster(`Konum tablosu ${i + 1}. satır: Mahalle boş olamaz.`, false);
+                return false;
+            }
+            if (!/^\d+$/.test(String(satir.ada || '')) || Number(satir.ada) <= 0) {
+                PopupMesajGoster(`Konum tablosu ${i + 1}. satır: Ada sıfırdan büyük bir tam sayı olmalıdır.`, false);
+                return false;
+            }
+            if (!/^\d+$/.test(String(satir.parsel || '')) || Number(satir.parsel) <= 0) {
+                PopupMesajGoster(`Konum tablosu ${i + 1}. satır: Parsel sıfırdan büyük bir tam sayı olmalıdır.`, false);
+                return false;
+            }
+            const sinirlar = turkiyeKoordinatSinirlari[Number(satir.koordinatTuru)];
+            if (!sinirlar) {
+                PopupMesajGoster(`Konum tablosu ${i + 1}. satır: Geçerli bir koordinat türü seçiniz.`, false);
+                return false;
+            }
+            const enlemHatali = ['minEnlem','maxEnlem'].some(alan => satir[alan] != null && (!Number.isFinite(satir[alan]) || satir[alan] < sinirlar.minEnlem || satir[alan] > sinirlar.maxEnlem));
+            const boylamHatali = ['minBoylam','maxBoylam'].some(alan => satir[alan] != null && (!Number.isFinite(satir[alan]) || satir[alan] < sinirlar.minBoylam || satir[alan] > sinirlar.maxBoylam));
+            if (enlemHatali || boylamHatali) {
+                PopupMesajGoster(`Konum tablosu ${i + 1}. satır (${sinirlar.ad}): Türkiye için enlem ${sinirlar.minEnlem.toFixed(2)}–${sinirlar.maxEnlem.toFixed(2)}, boylam ${sinirlar.minBoylam.toFixed(2)}–${sinirlar.maxBoylam.toFixed(2)} arasında olmalıdır.`, false);
+                return false;
+            }
+            if ((satir.minEnlem != null && satir.maxEnlem != null && satir.minEnlem > satir.maxEnlem)
                 || (satir.minBoylam != null && satir.maxBoylam != null && satir.minBoylam > satir.maxBoylam)) {
-                PopupMesajGoster(`Konum tablosu ${i + 1}. satır: Enlem -90 ile 90, boylam -180 ile 180 arasında olmalı; minimum değer maksimumu aşmamalıdır.`, false);
+                PopupMesajGoster(`Konum tablosu ${i + 1}. satır: Minimum değer maksimum değerden büyük olamaz.`, false);
                 return false;
             }
         }
@@ -4750,7 +4783,7 @@
         adresKonumSatirlari = adres.konumlar?.length ? adres.konumlar.map(x => ({ ...x })) : [{
             minEnlem: adres.enlem ?? null, maxEnlem: adres.enlem ?? null,
             minBoylam: adres.boylam ?? null, maxBoylam: adres.boylam ?? null,
-            ada: adres.ada || '', parsel: adres.parsel || '', mahalle: ''
+            ada: adres.ada || '', parsel: adres.parsel || '', mahalle: '', koordinatTuru: 1
         }];
         AdresKonumTablosuRender();
         modalSet('adresModalKumelenmeOrganizeAlanTuru', adres.kumelenmeOrganizeAlanTuru || 0);

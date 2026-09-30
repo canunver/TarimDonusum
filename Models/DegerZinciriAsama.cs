@@ -2,26 +2,18 @@ namespace TarimDonusum.Models
 {
     public enum enumDegerZinciriAsamaTuru
     {
-        BirincilUretim = 1,
-        DepolamaSogukZincir = 2,
-        Lojistik = 3,
-        Isleme = 4,
-        IleriIsleme = 5,
-        TarimsalBilesenUretimi = 6,
-        AtikVeYanUrunDegerlendirme = 7
+        Uretim = 1,
+        IslemeIleriIsleme = 2,
+        DepolamaSogukZincirVeDiger = 3
     }
 
     public static class DegerZinciriAsamaTuruTanimlari
     {
         public static string Ad(enumDegerZinciriAsamaTuru tur) => tur switch
         {
-            enumDegerZinciriAsamaTuru.BirincilUretim => "Birincil Üretim",
-            enumDegerZinciriAsamaTuru.DepolamaSogukZincir => "Depolama / Soğuk Zincir",
-            enumDegerZinciriAsamaTuru.Lojistik => "Lojistik",
-            enumDegerZinciriAsamaTuru.Isleme => "İşleme",
-            enumDegerZinciriAsamaTuru.IleriIsleme => "İleri İşleme",
-            enumDegerZinciriAsamaTuru.TarimsalBilesenUretimi => "Tarımsal Bileşen Üretimi",
-            enumDegerZinciriAsamaTuru.AtikVeYanUrunDegerlendirme => "Atık ve Yan Ürün Değerlendirme",
+            enumDegerZinciriAsamaTuru.Uretim => "Üretim",
+            enumDegerZinciriAsamaTuru.IslemeIleriIsleme => "İşleme/İleri İşleme",
+            enumDegerZinciriAsamaTuru.DepolamaSogukZincirVeDiger => "Depolama, Soğuk Zincir ve Diğer",
             _ => ""
         };
     }
@@ -40,5 +32,12 @@ namespace TarimDonusum.Models
         public string? yapilacakFaaliyetler { get; set; }
         public bool aktif { get; set; } = true;
         public bool secili { get; set; } = false;
+    }
+
+    public static class DegerZinciriAsamalari
+    {
+        public static List<DegerZinciriAsama> SabitListe() => Enum.GetValues<enumDegerZinciriAsamaTuru>()
+            .Select(tur => new DegerZinciriAsama { id = (int)tur, siraNo = (int)tur, asamaTuru = tur, ad = DegerZinciriAsamaTuruTanimlari.Ad(tur) })
+            .ToList();
     }
 }

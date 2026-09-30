@@ -23,7 +23,7 @@ namespace TarimDonusum.IsKurallari
         public static IReadOnlyList<string> YatirimEkipmaniExcelSablonBasliklari { get; } =
         [
             "Adres No\n(Başvurudaki yatırım adresinin sıra no)",
-            "Değer Zinciri Aşaması\n(1 - Birincil Üretim, 2 - Depolama / Soğuk Zincir, 3 - Lojistik, 4 - İşleme, 5 - İleri İşleme, 6 - Tarımsal Bileşen Üretimi, 7 - Atık ve Yan Ürün Değerlendirme)",
+            "Değer Zinciri Aşaması\n(1 - ÜRETİM, 2 - İŞLEME/İLERİ İŞLEME, 3 - DEPOLAMA, SOĞUK ZİNCİR VE DİĞER)",
             "Makine-ekipmanın adı\n(Zorunlu)",
             "Markası\n(En fazla 150 karakter)",
             "Modeli\n(En fazla 150 karakter)",
@@ -41,7 +41,7 @@ namespace TarimDonusum.IsKurallari
         public static IReadOnlyList<string> TeknikProjeGirdisiExcelSablonBasliklari { get; } =
         [
             "Adres No\n(Başvurudaki yatırım adresinin sıra no)",
-            "Değer Zinciri Aşaması\n(1 - Birincil Üretim, 2 - Depolama / Soğuk Zincir, 3 - Lojistik, 4 - İşleme, 5 - İleri İşleme, 6 - Tarımsal Bileşen Üretimi, 7 - Atık ve Yan Ürün Değerlendirme)",
+            "Değer Zinciri Aşaması\n(1 - ÜRETİM, 2 - İŞLEME/İLERİ İŞLEME, 3 - DEPOLAMA, SOĞUK ZİNCİR VE DİĞER)",
             "Sıra no\n(Pozitif, benzersiz tam sayı)",
             "Girdi / Hammadde adı\n(Zorunlu)",
             "Miktar\n(Sıfırdan büyük sayısal değer)",
@@ -61,7 +61,7 @@ namespace TarimDonusum.IsKurallari
         public static IReadOnlyList<string> UrunExcelSablonBasliklari { get; } =
         [
             "Adres No",
-            "Değer Zinciri Aşaması\n(1 - Birincil Üretim, 2 - Depolama / Soğuk Zincir, 3 - Lojistik, 4 - İşleme, 5 - İleri İşleme, 6 - Tarımsal Bileşen Üretimi, 7 - Atık ve Yan Ürün Değerlendirme)",
+            "Değer Zinciri Aşaması\n(1 - ÜRETİM, 2 - İŞLEME/İLERİ İŞLEME, 3 - DEPOLAMA, SOĞUK ZİNCİR VE DİĞER)",
             "Ürün Durumu\n(1 - Mevcut, 2 - Yeni)", "Ürün / Ürün Grubu", $"Birim\n({string.Join(", ", OlcuBirimleri.Tum)})",
             "Mevcut Kapasite", "Mevcut Üretim Miktarı", "Mevcut Satış Miktarı", "Mevcut Birim Satış Fiyatı (TL)",
             "1. Yıl Kapasite", "1. Yıl Üretim Miktarı", "1. Yıl Satış Miktarı", "1. Yıl Birim Satış Fiyatı (TL)"
@@ -2430,7 +2430,7 @@ namespace TarimDonusum.IsKurallari
                     || (adres = mevcut.YatirimAdresleri.FirstOrDefault(x => x.siraNo == adresNo)) == null)
                     sonuc.HataEkle($"{excelSatiri}. satır: Adres No, başvuruda kayıtlı bir yatırım adresinin sıra numarası olmalıdır.");
                 if (!int.TryParse(hucreler[1], NumberStyles.Integer, CultureInfo.CurrentCulture, out int asamaKodu) || !Enum.IsDefined(typeof(enumDegerZinciriAsamaTuru),asamaKodu))
-                    sonuc.HataEkle($"{excelSatiri}. satır: Değer Zinciri Aşaması 1-7 arasında geçerli bir kod olmalıdır.");
+                    sonuc.HataEkle($"{excelSatiri}. satır: Değer Zinciri Aşaması 1-3 arasında geçerli bir kod olmalıdır.");
                 if (!int.TryParse(hucreler[2], NumberStyles.Integer, CultureInfo.CurrentCulture, out int siraNo) || siraNo <= 0)
                     sonuc.HataEkle($"{excelSatiri}. satır: Sıra no pozitif tam sayı olmalıdır.");
                 else if (!siraNumaralari.Add(siraNo))
@@ -2547,7 +2547,7 @@ namespace TarimDonusum.IsKurallari
                     int hataSayisi = sonuc.hatalar.Count, excelSatiri = satir + 1;
                     BasvuruUygulamaAdresi? adres = null;
                     if (!int.TryParse(h[0], out int adresNo) || !adresler.TryGetValue(adresNo, out adres)) sonuc.HataEkle($"{excelSatiri}. satır: Geçerli bir Adres No girilmelidir.");
-                    if (!int.TryParse(h[1], out int asamaKodu) || !Enum.IsDefined(typeof(enumDegerZinciriAsamaTuru),asamaKodu)) sonuc.HataEkle($"{excelSatiri}. satır: Değer Zinciri Aşaması 1-7 arasında geçerli bir kod olmalıdır.");
+                    if (!int.TryParse(h[1], out int asamaKodu) || !Enum.IsDefined(typeof(enumDegerZinciriAsamaTuru),asamaKodu)) sonuc.HataEkle($"{excelSatiri}. satır: Değer Zinciri Aşaması 1-3 arasında geçerli bir kod olmalıdır.");
                     if (!int.TryParse(h[2], out int turKodu) || turKodu is < 1 or > 2) sonuc.HataEkle($"{excelSatiri}. satır: Ürün Durumu 1 (Mevcut) veya 2 (Yeni) olmalıdır.");
                     if (string.IsNullOrWhiteSpace(h[3]) || h[3].Length > 250) sonuc.HataEkle($"{excelSatiri}. satır: Ürün adı zorunlu ve en fazla 250 karakter olmalıdır.");
                     string? birim = OlcuBirimleri.Tum.FirstOrDefault(x => string.Equals(x, h[4], StringComparison.OrdinalIgnoreCase));
@@ -3277,6 +3277,7 @@ namespace TarimDonusum.IsKurallari
         public async Task<Sonuc<BasvuruBina>> BasvuruBinasiKaydetAsync(BasvuruBina model,Kullanici kullanici)
         {
             Sonuc<BasvuruBina> sonuc=new();model.ad=model.ad?.Trim()??"";model.mevcutYeni=model.mevcutYeni?.Trim()??"";model.yatirimSekli=model.yatirimSekli?.Trim()??"";model.destekTalebi=model.destekTalebi?.Trim()??"";model.vaziyetPlaniNo=model.vaziyetPlaniNo?.Trim()??"";if(!model.uygulamaAdresiId.HasValue||model.uygulamaAdresiId<=0)sonuc.HataEkle("Binanın kullanılacağı yatırım adresi seçilmelidir.");
+            if(!Enum.IsDefined(model.degerZinciriAsamaTuru))sonuc.HataEkle("Binanın kullanılacağı değer zinciri aşaması seçilmelidir.");
             if(model.basvuruId<=0||model.siraNo<=0||string.IsNullOrWhiteSpace(model.ad)||model.ad.Length>250||model.vaziyetPlaniNo.Length>100)sonuc.HataEkle("Bina sıra numarası, bina adı ve geçerli vaziyet planı numarası girilmelidir.");if(!sonuc.basarili)return sonuc;
             try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}if(mevcut.Binalar.Any(x=>x.id!=model.id&&x.siraNo==model.siraNo)){sonuc.HataEkle("Bu bina sıra numarası zaten kayıtlıdır.");return sonuc;}model.mahaller=mevcut.Binalar.FirstOrDefault(x=>x.id==model.id)?.mahaller??[];await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{await new TABBasvuru(connection,null,tr).BasvuruBinasiKaydetAsync(model);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruBinasiKaydet",model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj="Bina bilgileri kaydedildi.";}catch{await tr.RollbackAsync();throw;}}
             catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Bina kaydedilemedi. BasvuruId: {BasvuruId}","Bina kaydedilemedi.",model.basvuruId);}return sonuc;
