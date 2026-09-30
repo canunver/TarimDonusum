@@ -1417,11 +1417,9 @@
             return;
         }
 
-        if (indexText === '') basvuruAdliSicilKisileri.push(kisi);
-        else basvuruAdliSicilKisileri[Number(indexText)] = kisi;
-        basvuruAdliSicilKisileri.forEach((item, index) => item.siraNo = index + 1);
-        dirty = true;
-        AdliSicilKisilerRender();
+        const kaydedilecekKisiler = basvuruAdliSicilKisileri.map(item => ({ ...item }));
+        if (indexText === '') kaydedilecekKisiler.push(kisi);
+        else kaydedilecekKisiler[Number(indexText)] = kisi;
         AdliSicilKisileriKaydet(function (sonuc) {
             const kayitliListe = sonuc?.nesne || sonuc?.Nesne || basvuruAdliSicilKisileri;
             basvuruAdliSicilKisileri = Array.isArray(kayitliListe) ? kayitliListe : basvuruAdliSicilKisileri;
@@ -1430,7 +1428,7 @@
             AdliSicilKisilerRender();
             AdliSicilDosyaDurumGuncelle();
             ImzaYetkiDosyaDurumGuncelle();
-        });
+        }, kaydedilecekKisiler);
     }
 
     function AyniAdliSicilTcknVarMi(tckn, mevcutIndexText) {
@@ -1443,11 +1441,7 @@
 
     function AdliSicilSil(index) {
         if (basvuruReadonly) return;
-        basvuruAdliSicilKisileri.splice(index, 1);
-        basvuruAdliSicilKisileri.forEach((item, itemIndex) => item.siraNo = itemIndex + 1);
-        dirty = true;
-        AdliSicilKisilerRender();
-        AdliSicilKisileriKaydet();
+        AdliSicilKisileriKaydet(null, basvuruAdliSicilKisileri.filter((item, itemIndex) => itemIndex !== index));
     }
 
     function AdliSicilKisilerRender() {
@@ -1579,13 +1573,21 @@
         });
     }
 
-    function AdliSicilKisileriKaydet(afterSuccess) {
+    function AdliSicilKisileriKaydet(afterSuccess, kisiler = basvuruAdliSicilKisileri) {
+        if (BasvuruId() <= 0) {
+            BasvuruSahibiKaydet(() => {
+                if (BasvuruId() > 0) AdliSicilKisileriKaydet(afterSuccess, kisiler);
+            });
+            return;
+        }
         const model = {
             basvuruId: BasvuruId(),
-            kisiler: basvuruAdliSicilKisileri
+            kisiler: kisiler.map((kisi, index) => ({ ...kisi, basvuruId: BasvuruId(), siraNo: index + 1 }))
         };
         AjaxPost('/Basvuru/KaydetAdliSicilKisileri', model, function (sonuc) {
             if (sonuc && sonuc.basarili) {
+                basvuruAdliSicilKisileri = sonuc.nesne;
+                AdliSicilKisilerRender();
                 dirty = false;
                 if (afterSuccess) afterSuccess(sonuc);
             }

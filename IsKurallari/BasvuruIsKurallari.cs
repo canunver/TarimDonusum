@@ -3607,7 +3607,10 @@ namespace TarimDonusum.IsKurallari
             kisiler ??= new List<BasvuruAdliSicilKisi>();
 
             if (basvuruId <= 0)
+            {
                 HataEkle(sonuc, "Business.Application.RecordRequired");
+                return sonuc;
+            }
 
             foreach (BasvuruAdliSicilKisi kisi in kisiler)
             {
