@@ -1327,6 +1327,20 @@ namespace TarimDonusum.IsKurallari
 
                 TABFirma tabFirma = new TABFirma(connection);
                 Firma? mevcut = await tabFirma.VergiKimlikNoIleOkuAsync(0, vergiKimlikNo);
+                if (firma.id > 0)
+                {
+                    if (mevcut != null && mevcut.id != firma.id)
+                    {
+                        sonuc.HataEkle("Bu vergi kimlik numarasıyla kayıtlı başka bir firma bulunmaktadır.");
+                        return sonuc;
+                    }
+                    mevcut = await tabFirma.OkuAsync(firma.id);
+                    if (mevcut == null)
+                    {
+                        sonuc.HataEkle("Firma bulunamadı.");
+                        return sonuc;
+                    }
+                }
                 if (mevcut != null)
                 {
                     TABFirmaKullanici mevcutIliskiTablosu = new TABFirmaKullanici(connection);
@@ -1337,7 +1351,29 @@ namespace TarimDonusum.IsKurallari
                         if (vknSonucu.Durum == VKNDogrulamaDurumu.Hatali)
                             sonuc.HataEkle(vknSonucu.Hata!);
                         else
-                            sonuc.nesne = mevcut.id;
+                        {
+                            firma.id = mevcut.id;
+                            // Tek NACE alanı değişmediyse firmanın diğer NACE kodlarını koru.
+                            if (mevcut.naceKodu == firma.naceKodu && mevcut.naceKodlari.Count > 0)
+                                firma.naceKodlari = mevcut.naceKodlari;
+
+                            await using SqlTransaction guncelleme = (SqlTransaction)await connection.BeginTransactionAsync();
+                            try
+                            {
+                                TABFirma txFirma = new TABFirma(connection, null, guncelleme);
+                                await txFirma.GuncelleAsync(firma);
+                                await txFirma.NaceKodlariniKaydetAsync(firma);
+                                await new TABFirmaLog(connection, null, guncelleme)
+                                    .EkleAsync(firma, "FirmaGuncellendi", kullaniciId);
+                                await guncelleme.CommitAsync();
+                                sonuc.nesne = firma.id;
+                            }
+                            catch
+                            {
+                                await guncelleme.RollbackAsync();
+                                throw;
+                            }
+                        }
                     }
                     else
                         HataEkle(sonuc, "Business.Company.ExistsButUserNotRelated");
@@ -2858,7 +2894,7 @@ namespace TarimDonusum.IsKurallari
                 {
                     TABBasvuru tabBasvuru = new TABBasvuru(connection, null, transaction);
                     await tabBasvuru.BasvuruMaliGuncelleAsync(mali);
-                    await tabBasvuru.BasvuruOzelSektorPayiGuncelleAsync(mali.basvuruId, mali.ozelSektorPayi.Value);
+                    await tabBasvuru.BasvuruOrtaklikOranlariGuncelleAsync(mali.basvuruId, mali.ozelSektorPayi.Value, mali.halkaAciklikOrani);
 
                     TABBasvuruLog tabBasvuruLog = new TABBasvuruLog(connection, null, transaction);
                     await tabBasvuruLog.EkleAsync(mali.basvuruId, kullanici, "KaydetMaliAsync", mali);

@@ -34,7 +34,7 @@ public static class OnBasvuruBankaExcel
             XElement oldHeader = data.Element(X + "row")!;
             int headerStyle = (int?)oldHeader.Element(X + "c")?.Attribute("s") ?? textStyle;
             data.RemoveNodes();
-            string[] headings = ["VKN", "REF", "KREDI_TUTAR", "HISSE_ORAN", "HISSE_KIMLIK"];
+            string[] headings = ["VKN", "REF", "KREDİ TUTAR", "HİSSE ORAN", "HİSSE KİMLİK"];
             data.Add(new XElement(X + "row", new XAttribute("r", 1), new XAttribute("ht", 30), new XAttribute("customHeight", 1),
                 headings.Select((h, i) => Metin($"{(char)('A' + i)}1", h, headerStyle))));
             XElement columns = new(X + "cols");

@@ -2888,6 +2888,7 @@
         const model = {
             ...BasvuruKimlikleri(),
             ozelSektorPayi: sayiOkuId('privateShareCalculated'),
+            halkaAciklikOrani: sayiOkuId('publicFloatRate'),
             oncekiYilNetSatis: degerStr('Basvuru.mali.OncekiYilNetSatis').trim() === '' ? null : degerDec('Basvuru.mali.OncekiYilNetSatis'),
             sonYilNetSatis: degerStr('Basvuru.mali.SonYilNetSatis').trim() === '' ? null : degerDec('Basvuru.mali.SonYilNetSatis'),
             oncekiYilAktifToplami: degerStr('Basvuru.mali.OncekiYilAktifToplami').trim() === '' ? null : degerDec('Basvuru.mali.OncekiYilAktifToplami'),

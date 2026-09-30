@@ -447,14 +447,16 @@ namespace TarimDonusum.Tablolar
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task BasvuruOzelSektorPayiGuncelleAsync(int basvuruId, decimal ozelSektorPayi)
+        public async Task BasvuruOrtaklikOranlariGuncelleAsync(int basvuruId, decimal ozelSektorPayi, decimal? halkaAciklikOrani)
         {
             const string sql = @"UPDATE dbo.Basvuru
-                SET OzelSektorPayi = @OzelSektorPayi
+                SET OzelSektorPayi = @OzelSektorPayi,
+                    HalkaAciklikOrani = @HalkaAciklikOrani
                 WHERE Id = @Id;";
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@OzelSektorPayi", ozelSektorPayi);
+            command.Parameters.AddWithValue("@HalkaAciklikOrani", DbNull(halkaAciklikOrani));
             command.Parameters.AddWithValue("@Id", basvuruId);
             await command.ExecuteNonQueryAsync();
         }

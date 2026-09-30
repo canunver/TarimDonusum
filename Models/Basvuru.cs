@@ -1265,6 +1265,7 @@ namespace TarimDonusum.Models
     {
         public int basvuruId { get; set; }
         public decimal? ozelSektorPayi { get; set; }
+        public decimal? halkaAciklikOrani { get; set; }
         public decimal? oncekiYilNetSatis { get; set; }
         public decimal? sonYilNetSatis { get; set; }
         public decimal? oncekiYilAktifToplami { get; set; }
@@ -1286,6 +1287,9 @@ namespace TarimDonusum.Models
 
             if (!bagimsizDenetimeTabiMi.HasValue)
                 sonuc.HataEkle("Bağımsız denetime tabi mi seçilmelidir.");
+
+            if (halkaAciklikOrani is < 0 or > 100)
+                sonuc.HataEkle("Halka açıklık oranı 0 ile 100 arasında girilmelidir.");
 
             if (!ozelSektorPayi.HasValue || ozelSektorPayi < 0 || ozelSektorPayi > 100)
                 sonuc.HataEkle("Özel sektör payı 0 ile 100 arasında girilmelidir.");
