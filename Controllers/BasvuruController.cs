@@ -636,12 +636,33 @@ namespace TarimDonusum.Controllers
         }
 
         [OturumKontrol][HttpPost][ValidateAntiForgeryToken]
-        public async Task<IActionResult> KaydetBilancoGelir([FromBody] BasvuruBilancoGelir model)
+        public async Task<IActionResult> KaydetBilancoGelir([FromBody] BasvuruBilancoGelir? model)
         {
-            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
-            if(kullanici==null)return Unauthorized();
-            Sonuc<int> sonuc=await _basvuruIsKurallari.KaydetBilancoGelirAsync(model,kullanici);
-            if(sonuc.basarili)sonuc.mesaj=L["kayitBasarili"];
+            Sonuc<int> sonuc = new();
+            try
+            {
+                if (!ModelState.IsValid || model == null || model.satirlar == null || model.satirlar.Any(x => x == null))
+                {
+                    Log(LogLevel.Warning, BMYEventID.Yok, null,
+                        "Bilanço/gelir kayıt modeli okunamadı. Hatalı alanlar: {Alanlar}",
+                        string.Join(", ", ModelState.Where(x => x.Value?.Errors.Count > 0).Select(x => x.Key)));
+                    sonuc.HataEkle("Bilanço ve gelir tablosu bilgileri okunamadı. Girilen tutarların geçerli sayılar olduğunu kontrol ediniz.");
+                    return Json(sonuc);
+                }
+                Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+                if (kullanici == null)
+                {
+                    sonuc.HataEkle("Oturumunuz sona ermiş. Lütfen tekrar giriş yapınız.");
+                    return Json(sonuc);
+                }
+                sonuc = await _basvuruIsKurallari.KaydetBilancoGelirAsync(model, kullanici);
+                if (sonuc.basarili) sonuc.mesaj = L["kayitBasarili"];
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevel.Error, BMYEventID.Yok, ex, "Bilanço/gelir kaydet action tamamlanamadı.");
+                sonuc.HataEkle("Bilanço ve gelir tablosu kaydedilemedi. Lütfen tekrar deneyiniz.");
+            }
             return Json(sonuc);
         }
 

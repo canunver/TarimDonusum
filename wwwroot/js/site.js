@@ -119,7 +119,20 @@ window.AjaxPost = function (url, data, success) {
         })
         .fail(function (xhr, status, error) {
             console.error("AjaxPost Hatası:", xhr);
-            alert("İşlem sırasında bir hata oluştu.");
+            if (xhr.responseJSON && typeof xhr.responseJSON.basarili === 'boolean') {
+                if (success) success(xhr.responseJSON);
+                return;
+            }
+            const mesaj = xhr.status === 401 || xhr.status === 403
+                ? 'Oturumunuz sona ermiş veya bu işlem için yetkiniz bulunmuyor. Lütfen tekrar giriş yapınız.'
+                : xhr.status === 400
+                    ? 'Kayıt isteği doğrulanamadı. Sayfayı yenileyip tekrar deneyiniz. (HTTP 400)'
+                    : xhr.status === 404
+                        ? 'Kayıt işlemi sunucuda bulunamadı. Uygulamanın güncel sürümünü çalıştırdığınızdan emin olunuz. (HTTP 404)'
+                        : xhr.status === 0
+                            ? 'Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyiniz.'
+                            : `Kayıt işlemi tamamlanamadı. Lütfen tekrar deneyiniz. (HTTP ${xhr.status})`;
+            PopupMesajGoster(mesaj, false);
         });
 };
 
