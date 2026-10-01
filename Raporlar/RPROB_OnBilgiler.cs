@@ -15,7 +15,9 @@ public sealed class RPROB_OnBilgiler(string uygulamaRootPath) : RPROBTemel(uygul
         tablo.HucreAdBulYaz("YatrimAd", basvuru.yatirim.yatirimAdi ?? "");
         tablo.HucreAdBulYaz("SahipAd", basvuru.basvuruFirma.firma.ticaretUnvani ?? "");
         tablo.HucreAdBulYaz("YatirimAmaci", basvuru.yatirim.yatiriminAmaci ?? "");
-        using JsonDocument belge = JsonDocument.Parse(string.IsNullOrWhiteSpace(basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson) ? "{}" : basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson);
+        var veri = System.Text.Json.Nodes.JsonNode.Parse(string.IsNullOrWhiteSpace(basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson) ? "{}" : basvuru.dbCtpTeknikProje.dbCtpTeknikProjeJson) as System.Text.Json.Nodes.JsonObject ?? new();
+        veri["inputs"] = JsonSerializer.SerializeToNode(basvuru.YatirimOnBilgileri.Where(x => x.tur == enumYatirimOnBilgiTuru.Girdi).OrderBy(x => x.siraNo).Select(x => new { input = x.ad, need = x.miktar }));
+        using JsonDocument belge = JsonDocument.Parse(veri.ToJsonString());
         JsonElement kok = belge.RootElement;
         ListeYaz(tablo, kok, "existingProducts", "BaslaSatirMevcut", ["product", "capacity"]);
         ListeYaz(tablo, kok, "plannedProducts", "BaslaSatirUretilecek", ["product", "capacity"]);

@@ -1,0 +1,19 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+<div class="modal fade" id="yatirimEkipmanModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
+ <div class="modal-header"><h5 class="modal-title">Yatırımda Kullanılacak Ekipman</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+ <div class="modal-body" style="max-height:calc(100vh - 180px);overflow-y:auto">
+  <input type="hidden" id="yatirimEkipmanIndex" />
+  <div class="form-grid">
+   <label>Kullanılacağı adres<select id="yeAdres"><option value="">Seçiniz</option>@foreach(var a in Model.Basvuru.YatirimAdresleri.OrderBy(x=>x.siraNo)){<option value="@a.id">@a.siraNo. @a.ilAdi / @a.ilceAdi - @a.tamAdres</option>}</select></label>
+   <label>Değer zinciri aşaması<select id="yeDegerZinciriAsamaTuru"><option value="">Seçiniz</option>@foreach(enumDegerZinciriAsamaTuru asama in Enum.GetValues<enumDegerZinciriAsamaTuru>()){<option value="@((int)asama)">@DegerZinciriAsamaTuruTanimlari.Ad(asama)</option>}</select></label>
+   <label>Makine-ekipmanın adı<input id="yeAd" maxlength="250" /></label><label>Markası<input id="yeMarka" maxlength="150" /></label><label>Modeli<input id="yeModel" maxlength="150" /></label>
+   <label>Adedi<input id="yeAdet" type="number" min="0.001" step="0.001" /></label><label>Yerleşim planı ve listesindeki sıra numarası<input id="yePlanSira" type="number" min="1" max="9999" /></label>
+   <label>Durum<select id="yeDurum" onchange="YatirimEkipmanDurumAlanlariGuncelle()"><option value="">Seçiniz</option><option>YENİ DESTEK İSTENİYOR</option><option>YENİ DESTEK İSTEMİYOR</option><option>MEVCUT KULLANILACAK</option><option>MEVCUT KULLANILMAYACAK</option></select></label>
+  </div>
+  <label class="wide-label">İşleme kapasitesi veya kapasite belirleyici özellikleri<textarea id="yeKapasite" maxlength="2000"></textarea></label>
+  <label class="wide-label">Kullanım amacı<textarea id="yeKullanimAmaci" maxlength="2000"></textarea></label>
+  <label class="wide-label">Makine-ekipman kapasitesi seçim gerekçesi ve kapasiteyi belirleyen hususlar<textarea id="yeKapasiteGerekcesi" maxlength="4000"></textarea></label>
+ </div>
+ <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="YatirimEkipmanKaydet()">Kaydet</button></div>
+</div></div></div>

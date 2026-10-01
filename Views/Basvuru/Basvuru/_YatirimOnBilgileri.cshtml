@@ -5,42 +5,19 @@
     bool duzenlenebilir = !Model.DenetciGorunumu && !Model.SaltOkunur;
 }
 <section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruYatirimOnBilgileri)">
-    <div class="section-toolbar"><h2 class="mb-0">Yatırım Ön Bilgileri</h2><a id="yobiYazdirBtn" class="btn btn-outline-primary" href="@Url.Action("YatirimOnBilgileriYazdir", "Basvuru", new { id = Model.Basvuru.Id })" data-base-url="@Url.Action("YatirimOnBilgileriYazdir", "Basvuru", new { id = Model.Basvuru.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div>
+    <div class="section-toolbar"><h2 class="mb-0">Ürünler ve Satış Bilgileri</h2><a id="yobiYazdirBtn" data-adres-asama-yazdir class="btn btn-outline-primary" href="@Url.Action("YatirimOnBilgileriYazdir", "Basvuru", new { id = Model.Basvuru.Id })" data-base-url="@Url.Action("YatirimOnBilgileriYazdir", "Basvuru", new { id = Model.Basvuru.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div>
     <script type="application/json" id="yatirimOnBilgiJson">@Html.Raw(JsonSerializer.Serialize(Model.Basvuru.YatirimOnBilgileri))</script>
     <input type="hidden" id="yatirimOzetiJson" value="@Model.Basvuru.yatirimOzeti.yatirimOzetiJson" />
     <script type="application/json" id="yatirimOzetiUrunJson">@Html.Raw(JsonSerializer.Serialize(Model.Basvuru.YatirimOnBilgileri.Where(x => x.tur == enumYatirimOnBilgiTuru.MevcutUrun || x.tur == enumYatirimOnBilgiTuru.UretilecekUrun)))</script>
     @if(duzenlenebilir){<span id="yobiDuzenlenebilir" hidden></span>}
-    <div class="alert alert-info">Ürünler, Girdiler ve Enerji kullanımı girişi</div>
-    <div class="form-grid mb-3"><label>Yatırım adresi<select id="yobiAdresFiltresi" onchange="YobiAdresFiltresiDegisti()"><option value="">Tüm yatırım adresleri</option>@foreach(var adres in Model.Basvuru.YatirimAdresleri.OrderBy(x=>x.siraNo)){<option value="@adres.id">@adres.siraNo. @adres.ilAdi / @adres.ilceAdi - @adres.tamAdres</option>}</select></label></div>
+    <div class="alert alert-info">Ürünler ve satış bilgileri girişi</div>
+
 
     <div class="section-toolbar mt-3">
-        <h3>1- Ürünler ve Satış Bilgileri</h3>
-        @if(duzenlenebilir){<div class="d-flex align-items-center" style="gap:8px"><a class="btn btn-outline-success" asp-controller="Basvuru" asp-action="UrunlerExcelSablonuIndir"><i class="fas fa-download mr-1"></i>Excel Şablonu</a><label class="btn btn-outline-success mb-0" for="urunlerExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label><input id="urunlerExcelDosya" type="file" accept=".xlsx,.xls" class="d-none" /><button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunModalAc(-1)">Ürün ekle</button></div>}
+        <h3>Ürünler ve Satış Bilgileri</h3>
+        <div class="d-flex align-items-center justify-content-end flex-wrap ml-auto" style="gap:8px"><partial name="_AdresAsamaFiltresi" model="Model" />@if(duzenlenebilir){<a class="btn btn-outline-success" asp-controller="Basvuru" asp-action="UrunlerExcelSablonuIndir"><i class="fas fa-download mr-1"></i>Excel Şablonu</a><label class="btn btn-outline-success mb-0" for="urunlerExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label><input id="urunlerExcelDosya" type="file" accept=".xlsx,.xls" class="d-none" /><button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunModalAc(-1)">Ürün ekle</button>}</div>
     </div>
     <div id="productionInfoBox"></div>
-
-    <div class="section-toolbar mt-4">
-        <h3>3- Girdiler</h3>
-        @if(duzenlenebilir){<div class="d-flex align-items-center" style="gap:8px"><a class="btn btn-outline-success" asp-controller="Basvuru" asp-action="TeknikProjeGirdileriExcelSablonuIndir"><i class="fas fa-download mr-1"></i>Excel Şablonu</a><label class="btn btn-outline-success mb-0" for="yobiGirdiExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label><input id="yobiGirdiExcelDosya" type="file" accept=".xlsx,.xls" class="d-none" /><button type="button" class="btn btn-outline-primary" onclick="YatirimOnBilgiModalAc(3,-1)">Girdi ekle</button></div>}
-    </div>
-        <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Sıra</th><th>Adres</th><th>Girdi / Hammadde</th><th>Miktar</th><th>Birim</th><th>İşlem</th></tr></thead><tbody id="yobi-3"></tbody></table></div>
-
-    <div class="yatirim-ozeti-section mt-4">
-        <h3>Yenilenebilir Enerji Bilgileri</h3>
-        <h4>Güneş enerjisi</h4>
-        <div class="form-grid">
-            <label>Panel sayısı (adet)<input id="yobiSolarPanels" inputmode="decimal" disabled="@(!duzenlenebilir)" oninput="dirty=true" /></label>
-            <label>Bir panelin gücü (W)<input id="yobiSolarPanelPower" inputmode="decimal" disabled="@(!duzenlenebilir)" oninput="dirty=true" /></label>
-            <label>Toplam güç (kWp)<input id="yobiSolarTotalPower" inputmode="decimal" disabled="@(!duzenlenebilir)" oninput="dirty=true" /></label>
-        </div>
-        <h4 class="mt-4">Kurulu güç</h4>
-        <div class="form-grid db-ctp-energy-grid">
-            <label>Güneş enerjisi kurulu gücü (kWe)<input id="yobiInstalledSolar" inputmode="decimal" disabled="@(!duzenlenebilir)" oninput="dirty=true" /></label>
-            <label>Biyogaz kurulu gücü (kWe)<input id="yobiInstalledBiogas" inputmode="decimal" disabled="@(!duzenlenebilir)" oninput="dirty=true" /></label>
-            <label>Biyokütle kurulu gücü (kWe)<input id="yobiInstalledBiomass" inputmode="decimal" disabled="@(!duzenlenebilir)" oninput="dirty=true" /></label>
-        </div>
-        @if(duzenlenebilir){<div class="text-right mt-3"><button type="button" class="btn btn-primary" id="yobiEnerjiKaydetBtn" onclick="YobiEnerjiBilgileriniKaydet()"><i class="fas fa-save mr-1"></i>Enerji bilgilerini kaydet</button></div>}
-    </div>
 
 </section>
 @if(duzenlenebilir)
@@ -70,16 +47,4 @@
     <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="YatirimOzetiTekUrunKaydet()">Kaydet</button></div>
 </div></div></div>
 
-<div class="modal fade" id="yatirimOnBilgiModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title" id="yobiModalBaslik">Yatırım Ön Bilgisi</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
-    <div class="modal-body">
-        <input type="hidden" id="yobiIndex"><input type="hidden" id="yobiTur"><input type="hidden" id="yobiId">
-        <div class="form-grid"><label id="yobiAdresAlani">Girdinin kullanılacağı adres<select id="yobiUygulamaAdresiId"><option value="">Seçiniz</option>@foreach(var adres in Model.Basvuru.YatirimAdresleri.OrderBy(x=>x.siraNo)){<option value="@adres.id">@adres.siraNo. @adres.ilAdi / @adres.ilceAdi - @adres.tamAdres</option>}</select></label><label>Sıra no<input id="yobiSira" type="number" min="1" max="99"></label><label id="yobiUrunTuruAlani">Ürün durumu<select id="yobiUrunTuru"><option value="1">Mevcut</option><option value="2">Yeni</option></select></label><label id="yobiAdLabel">Ad<input id="yobiAd" maxlength="250"></label><label id="yobiMiktarLabel">Miktar<input id="yobiMiktar" type="number" min="0" step="0.001"></label><label>Birim<select id="yobiBirim">@foreach(var x in OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label></div>
-        <div id="yobiGiderAlanlari" class="form-grid mt-3"><label>Gider türü<select id="yobiGiderTuru"><option value="">Seçiniz</option>@foreach(var tur in Enum.GetValues<GirdiGiderTuru>()){<option value="@((int)tur)">@GirdiGiderTurleri.Ad(tur)</option>}</select></label><label>Sabit oran (%)<input id="yobiSabitOran" type="number" min="0" max="100" step="0.01" /></label>
-                    <label>Birim fiyat (TL)<input id="yobiBirimFiyat" type="number" min="0" step="0.01" /></label></div>
-        <div id="yobiUrunAlanlari" class="form-grid mt-3"><label>Mevcut kapasite<input id="yobiMevcutKapasite" type="number" min="0" step="0.001"></label><label>1. yıl kapasitesi<input id="yobiBirinciYilKapasite" type="number" min="0" step="0.001"></label><label>Satış miktarı<input id="yobiSatisMiktari" type="number" min="0" step="0.001" oninput="YobiSatisBedeliGuncelle()"></label><label>Birim satış fiyatı (TL)<input id="yobiBirimSatisFiyati" type="number" min="0" step="0.01" oninput="YobiSatisBedeliGuncelle()"></label><label>Satış bedeli (TL)<input id="yobiSatisBedeli" readonly></label></div>
-        <div id="yobiEnerjiAlanlari" class="form-grid mt-3"><label>Tek panel gücü<input id="yobiTekPanelGucu" type="number" min="0" step="0.001"></label><label>Birim<select id="yobiTekPanelGucuBirim">@foreach(var x in OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label><label>Toplam güç<input id="yobiToplamGuc" type="number" min="0" step="0.001"></label><label>Birim<select id="yobiToplamGucBirim">@foreach(var x in OlcuBirimleri.Tum){<option value="@x">@x</option>}</select></label></div>
-    </div>
-    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="YatirimOnBilgisiKaydet()">Kaydet</button></div>
-</div></div></div>
 }

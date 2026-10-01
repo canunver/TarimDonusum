@@ -168,12 +168,12 @@ namespace TarimDonusum.Controllers
             RaporYazdirAsync(id, new RPROB_Finansman(_environment.ContentRootPath), "Finansman bilgileri yazdırılmadan önce kaydedilmelidir.");
         [OturumKontrol]
         [HttpGet]
-        public Task<IActionResult> YatirimOnBilgileriYazdir(int id, int? uygulamaAdresiId) =>
-            RaporYazdirAsync(id, new RPROB_YatirimOnBilgileri(_environment.ContentRootPath, uygulamaAdresiId), "Yatırım ön bilgileri yazdırılmadan önce kaydedilmelidir.");
+        public Task<IActionResult> YatirimOnBilgileriYazdir(int id, int? uygulamaAdresiId, int? filtreAdresId, int? filtreAsama) =>
+            RaporYazdirAsync(id, new RPROB_YatirimOnBilgileri(_environment.ContentRootPath, uygulamaAdresiId), "Yatırım ön bilgileri yazdırılmadan önce kaydedilmelidir.", filtreAdresId: filtreAdresId, filtreAsama: filtreAsama);
         [OturumKontrol]
         [HttpGet]
-        public Task<IActionResult> YatirimMakineEkipmanListesiYazdir(int id, int? uygulamaAdresiId) =>
-            RaporYazdirAsync(id, new RPROB_YatirimMakineEkipmanListesi(_environment.ContentRootPath, uygulamaAdresiId), "Makine-ekipman listesi yazdırılmadan önce başvuru kaydedilmelidir.");
+        public Task<IActionResult> YatirimMakineEkipmanListesiYazdir(int id, int? uygulamaAdresiId, int? filtreAdresId, int? filtreAsama) =>
+            RaporYazdirAsync(id, new RPROB_YatirimMakineEkipmanListesi(_environment.ContentRootPath, uygulamaAdresiId), "Makine-ekipman listesi yazdırılmadan önce başvuru kaydedilmelidir.", filtreAdresId: filtreAdresId, filtreAsama: filtreAsama);
         [OturumKontrol]
         [HttpGet]
         public Task<IActionResult> OnBasvuruSahibiYazdir(int id) =>
@@ -200,8 +200,8 @@ namespace TarimDonusum.Controllers
             RaporYazdirAsync(id, new RPROB_OnBasvuruUygunluk(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.OnBasvuruUygunluk"].ToString(), true);
         [OturumKontrol]
         [HttpGet]
-        public Task<IActionResult> OnBilgilerYazdir(int id) =>
-            RaporYazdirAsync(id, new RPROB_OnBilgiler(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.OnBilgiler"].ToString());
+        public Task<IActionResult> OnBilgilerYazdir(int id, int? filtreAdresId, int? filtreAsama) =>
+            RaporYazdirAsync(id, new RPROB_OnBilgiler(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.OnBilgiler"].ToString(), filtreAdresId: filtreAdresId, filtreAsama: filtreAsama);
         [OturumKontrol]
         [HttpGet]
         public Task<IActionResult> MakineEkipmanYazdir(int id) =>
@@ -210,10 +210,10 @@ namespace TarimDonusum.Controllers
         public Task<IActionResult> UrunSurecMakineYazdir(int id)=>RaporYazdirAsync(id,new RPROB_UrunSurecMakine(_environment.ContentRootPath),"Ürün süreçleri yazdırılmadan önce başvuru kaydedilmelidir.");
         [OturumKontrol]
         [HttpGet]
-        public Task<IActionResult> BinaListesiYazdir(int id) =>
-            RaporYazdirAsync(id, new RPROB_BinaListesi(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.BinaListesi"].ToString());
+        public Task<IActionResult> BinaListesiYazdir(int id, int? filtreAdresId, int? filtreAsama) =>
+            RaporYazdirAsync(id, new RPROB_BinaListesi(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.BinaListesi"].ToString(), filtreAdresId: filtreAdresId, filtreAsama: filtreAsama);
         [OturumKontrol][HttpGet]
-        public Task<IActionResult> BinaBolumListesiYazdir(int id)=>RaporYazdirAsync(id,new RPROB_BinaBolumListesi(_environment.ContentRootPath),"Bina bölüm/mahal listesi yazdırılmadan önce başvuru kaydedilmelidir.");
+        public Task<IActionResult> BinaBolumListesiYazdir(int id, int? filtreAdresId, int? filtreAsama)=>RaporYazdirAsync(id,new RPROB_BinaBolumListesi(_environment.ContentRootPath),"Bina bölüm/mahal listesi yazdırılmadan önce başvuru kaydedilmelidir.", filtreAdresId: filtreAdresId, filtreAsama: filtreAsama);
         [OturumKontrol][HttpGet]
         public Task<IActionResult> IstihdamYazdir(int id)=>RaporYazdirAsync(id,new RPROB_Istihdam(_environment.ContentRootPath),"İstihdam bilgileri yazdırılmadan önce başvuru kaydedilmelidir.");
         public Task<IActionResult> TedarikciEntegrasyonuYazdir(int id)=>RaporYazdirAsync(id,new RPROB_TedarikciEntegrasyonu(_environment.ContentRootPath),"Tedarikçi entegrasyonu yazdırılmadan önce başvuru kaydedilmelidir.");
@@ -237,7 +237,7 @@ namespace TarimDonusum.Controllers
             ? Task.FromResult<IActionResult>(BadRequest("Yazdırılacak bina seçilmelidir."))
             : RaporYazdirAsync(id,new RPROB_MetrajCetveli(_environment.ContentRootPath,binaId),"Metraj cetveli yazdırılmadan önce başvuru kaydedilmelidir.");
 
-        private async Task<IActionResult> RaporYazdirAsync(int id, IRPROB rapor, string kayitUyarisi, bool denetciRaporu = false, bool tumDegerZinciriAsamalariniYukle = false)
+        private async Task<IActionResult> RaporYazdirAsync(int id, IRPROB rapor, string kayitUyarisi, bool denetciRaporu = false, bool tumDegerZinciriAsamalariniYukle = false, int? filtreAdresId = null, int? filtreAsama = null)
         {
             if (id <= 0) return BadRequest(kayitUyarisi);
             Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
@@ -251,6 +251,14 @@ namespace TarimDonusum.Controllers
             Sonuc<Basvuru> sonuc = await _basvuruIsKurallari.OkuAsync(id, kullanici);
             if (!sonuc.basarili || sonuc.nesne == null)
                 return NotFound(sonuc.hatalar.Count > 0 ? string.Join(" ", sonuc.hatalar) : L["Basvuru.Message.NotFound"].ToString());
+
+            if (filtreAdresId.HasValue || filtreAsama.HasValue)
+            {
+                if (filtreAdresId is not > 0 || filtreAsama is not >= 1 or > 3 ||
+                    !sonuc.nesne.YatirimAdresleri.Any(x => x.id == filtreAdresId))
+                    return BadRequest("Geçerli adres ve değer zinciri aşaması seçilmelidir.");
+                BasvuruAdresAsamaFiltresi.Uygula(sonuc.nesne, filtreAdresId.Value, (enumDegerZinciriAsamaTuru)filtreAsama.Value);
+            }
 
             if (rapor is RPROB_MetrajCetveli metrajRaporu)
             {

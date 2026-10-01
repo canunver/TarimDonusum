@@ -487,6 +487,7 @@
     const bolumYatirimOzeti = @((int)enumBasvuruBolum.YatirimOzeti);
     const bolumButceGiderler = @((int)enumBasvuruBolum.ButceGiderler);
     const bolumGiderler = @((int)enumBasvuruBolum.Giderler);
+    const bolumBasvuruTeknikProjeGirdiler = @((int)enumBasvuruBolum.BasvuruTeknikProjeGirdiler);
     const bolumDbCtpTeknikProje = @((int)enumBasvuruBolum.DbCtpTeknikProje);
     const bolumDbCtpMakineEkipman = @((int)enumBasvuruBolum.DbCtpMakineEkipman);
     const bolumDbCtpBinaListesi = @((int)enumBasvuruBolum.DbCtpBinaListesi);
@@ -751,6 +752,34 @@
         };
     }
 
+    function AdresAsamaSecimi() {
+        const secim = (document.getElementById('adresAsamaFiltresi')?.value || '').split('|');
+        return { adres: Number(secim[0]) || 0, asama: Number(secim[1]) || 0 };
+    }
+
+    function AdresAsamaKaydiGorunur(kayit) {
+        const secim = AdresAsamaSecimi();
+        return !secim.adres || (Number(kayit.uygulamaAdresiId) === secim.adres && Number(kayit.degerZinciriAsamaTuru) === secim.asama);
+    }
+
+    function AdresAsamaFiltresiGuncelle() {
+        YatirimOzetiUrunRender();
+        YatirimEkipmanListeRender();
+        BinaListeRender();
+        const girdiler = document.getElementById('dbCtpInputs');
+        if (girdiler) DbCtpGirdiTabloRender(girdiler);
+        const secim = AdresAsamaSecimi();
+        document.querySelectorAll('[data-adres-asama-yazdir]').forEach(link => {
+            link.dataset.filtreTemelUrl ||= link.href;
+            const url = new URL(link.dataset.filtreTemelUrl, window.location.href);
+            if (secim.adres) {
+                url.searchParams.set('filtreAdresId', secim.adres);
+                url.searchParams.set('filtreAsama', secim.asama);
+            }
+            link.href = url.toString();
+        });
+    }
+
     function modalSet(id, value) {
         const el = document.getElementById(id);
         if (!el) return;
@@ -857,6 +886,7 @@
             bolumBasvuruTaahhutBeyan,
             bolumBasvuruCevreselSosyal,
             bolumDbCtpTeknikProje,
+            bolumBasvuruTeknikProjeGirdiler,
             bolumTaahhutBeyan,
             bolumMali,
             bolumOrtaklik,
@@ -893,7 +923,7 @@
         const container = document.getElementById('basvuruBolumContainer');
         if (BolumKayitGerektirir(bolum)) {
             container?.querySelectorAll('input, select, textarea').forEach(el => {
-                if (el.dataset.autoSave === 'true' || uygulamaAdresiSecimAlanlari.has(el.id)) return;
+                if (el.dataset.autoSave === 'true' || el.dataset.kayitDisinda === 'true' || uygulamaAdresiSecimAlanlari.has(el.id)) return;
                 el.addEventListener('change', () => dirty = true);
                 el.addEventListener('input', () => dirty = true);
             });
@@ -935,7 +965,7 @@
         if (bolum === bolumOrtaklik) OrtaklikBolumuIlklendir();
         if (bolum === bolumUygunHarcama) UygunHarcamaBolumuIlklendir();
         if (bolum === bolumYatirimOzeti || bolum === bolumButceGiderler || bolum === bolumGiderler) YatirimOzetiBolumuIlklendir();
-        if (bolum === bolumDbCtpTeknikProje) DbCtpBolumuIlklendir();
+        if (bolum === bolumDbCtpTeknikProje || bolum === bolumBasvuruTeknikProjeGirdiler) DbCtpBolumuIlklendir();
         if (bolum === bolumCevreselSosyal) CevreselSosyalBolumuIlklendir();
         if (bolum === bolumTaahhutBeyan) TaahhutBeyanBolumuIlklendir();
         if (bolum === bolumBelgeler || bolum === bolumTaahhutBeyan || bolum === bolumBasvuruTaahhutBeyan) BelgelerBolumuIlklendir();
@@ -3432,7 +3462,7 @@
         const container = document.getElementById('productionInfoBox');
         if (!container) return;
         const adresId = YobiSeciliAdresId();
-        const gorunenUrunler = yatirimOzetiUrunRows.map((row,index)=>({row,index})).filter(x=>!adresId||Number(x.row.uygulamaAdresiId)===adresId);
+        const gorunenUrunler = yatirimOzetiUrunRows.map((row,index)=>({row,index})).filter(x=>(!adresId||Number(x.row.uygulamaAdresiId)===adresId) && AdresAsamaKaydiGorunur(x.row));
         if (!gorunenUrunler.length) { container.innerHTML = '<div class="alert alert-info">Seçilen yatırım adresinde ürün bulunamadı.</div>'; return; }
         let html = `<div class="table-responsive"><table class="table table-bordered yatirim-ozeti-production-table urun-liste-table"><colgroup><col class="urun-col-sira"><col class="urun-col-islem"><col class="urun-col-adres"><col class="urun-col-asama"><col class="urun-col-durum"><col class="urun-col-urun"><col class="urun-col-donem"><col class="urun-col-miktar"><col class="urun-col-miktar"><col class="urun-col-miktar"><col class="urun-col-fiyat"><col class="urun-col-bedel"></colgroup><thead><tr>
             <th>Sıra</th><th>İşlem</th><th>Adres</th><th>Değer zinciri aşaması</th><th>Ürün<br>durumu</th><th>Ürün / Ürün Grubu</th><th>Dönem</th><th>Kapasite</th><th>Üretim<br>miktarı</th><th>Satış<br>miktarı</th><th>Birim satış<br>fiyatı (TL)</th><th>Satış<br>bedeli (TL)</th>
@@ -3828,6 +3858,21 @@
         const kuruluBiyokutle = (dbCtpData.installedRows || []).find(x => String(x?.type || '').includes('Biyokütle')) || {};
         dbCtpData.solarRows = [{ ...solar, type: 'Güneş Enerjisi' }];
         dbCtpData.installedRows = [{ ...kuruluGunes, type: 'Güneş Enerjisi' }, { ...kuruluBiyogaz, type: 'Biyogaz' }, { ...kuruluBiyokutle, type: 'Biyokütle' }];
+        // Önceki başvuru ekranında tabloya kaydedilen enerji verilerini de oku.
+        const enerjiKayitlari = JSON.parse(document.getElementById('dbCtpEnerjiKayitlariJson')?.textContent || '[]');
+        const solarKaydi = enerjiKayitlari.find(x => Number(x.tur) === 4);
+        const bos = value => value == null || value === '';
+        if (solarKaydi && ['panels', 'panelPower', 'totalPower'].every(k => bos(dbCtpData.solarRows[0][k]))) {
+            Object.assign(dbCtpData.solarRows[0], {
+                panels: solarKaydi.miktar,
+                panelPower: solarKaydi.tekPanelGucu == null ? null : solarKaydi.tekPanelGucu * (solarKaydi.tekPanelGucuBirim === 'kW' ? 1000 : 1),
+                totalPower: solarKaydi.toplamGuc == null ? null : solarKaydi.toplamGuc / (solarKaydi.toplamGucBirim === 'W' ? 1000 : 1)
+            });
+        }
+        dbCtpData.installedRows.forEach(row => {
+            const kayit = enerjiKayitlari.find(x => Number(x.tur) === 5 && String(x.ad || '').includes(row.type));
+            if (kayit && bos(row.power)) row.power = kayit.miktar;
+        });
         const alanAta = (id, value) => { const alan = document.getElementById(id); if (alan) alan.value = value || ''; };
         alanAta('dbCtpInvestmentName', document.getElementById('dbCtpAnaYatirimAdi')?.value);
         alanAta('dbCtpApplicantName', document.getElementById('dbCtpAnaBasvuruSahibi')?.value);
@@ -3890,7 +3935,7 @@
 
     function DbCtpGirdiTabloRender(container) {
         const duzenlenebilir = !basvuruReadonly;
-        const satirlar = [...(dbCtpData.inputs || [])].sort((a, b) => Number(a.siraNo) - Number(b.siraNo));
+        const satirlar = [...(dbCtpData.inputs || [])].filter(AdresAsamaKaydiGorunur).sort((a, b) => Number(a.siraNo) - Number(b.siraNo));
         if (!satirlar.length) {
             container.innerHTML = '<div class="alert alert-info">Henüz girdi kaydı eklenmedi.</div>';
             return;
@@ -4143,7 +4188,7 @@
     function YatirimEkipmanBolumuIlklendir(){try{yatirimEkipmanlari=JSON.parse(document.getElementById('yatirimEkipmanJson')?.textContent||'[]');}catch{yatirimEkipmanlari=[];}YatirimEkipmanAdresFiltresiDegisti();document.getElementById('yatirimEkipmanYeniBtn')?.addEventListener('click',()=>YatirimEkipmanModalAc(-1));document.getElementById('yatirimEkipmanExcelDosya')?.addEventListener('change',function(){YatirimEkipmanExcelYukle(this);});}
     function YatirimEkipmanSeciliAdresId(){return Number(document.getElementById('yatirimEkipmanAdresFiltresi')?.value)||0;}
     function YatirimEkipmanAdresFiltresiDegisti(){YatirimEkipmanListeRender();const button=document.getElementById('yatirimEkipmanYazdirBtn');if(button){const adresId=YatirimEkipmanSeciliAdresId(),baseUrl=button.dataset.baseUrl||'';button.href=baseUrl+(adresId?`${baseUrl.includes('?')?'&':'?'}uygulamaAdresiId=${adresId}`:'');}}
-    function YatirimEkipmanListeRender(){const alan=document.getElementById('yatirimEkipmanListeAlani');if(!alan)return;const adresId=YatirimEkipmanSeciliAdresId(),gorunen=yatirimEkipmanlari.map((m,i)=>({m,i})).filter(x=>!adresId||Number(x.m.uygulamaAdresiId)===adresId);if(!gorunen.length){alan.innerHTML='<div class="alert alert-info">Seçilen yatırım adresinde makine/ekipman bulunamadı.</div>';return;}const edit=!!document.getElementById('yatirimEkipmanYeniBtn');alan.innerHTML=`<div class="table-responsive"><table class="table table-striped" style="min-width:1800px"><thead><tr><th>Kullanılacağı adres</th><th>Değer zinciri aşaması</th><th>Adı</th><th>Markası</th><th>Modeli</th><th>Adedi</th><th>Kapasite / özellikler</th><th>Plan sıra no</th><th>Kullanım amacı</th><th>Durum</th><th>Kapasite seçim gerekçesi</th><th></th></tr></thead><tbody>${gorunen.map(({m,i})=>`<tr><td>${htmlEncode(m.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(m.degerZinciriAsamaTuruAdi||'')}</td><td>${htmlEncode(m.ad||'')}</td><td>${htmlEncode(m.marka||'')}</td><td>${htmlEncode(m.model||'')}</td><td>${htmlEncode(m.miktar??'')}</td><td>${htmlEncode(m.kapasiteOzellikleri||'')}</td><td>${htmlEncode(m.yerlesimPlaniSiraNo??'')}</td><td>${htmlEncode(m.kullanimAmaci||'')}</td><td>${htmlEncode(m.durum||'')}</td><td>${htmlEncode(m.kapasiteSecimGerekcesi||'')}</td><td>${edit?`<button type="button" class="btn btn-sm btn-outline-primary" onclick="YatirimEkipmanModalAc(${i})">Düzenle</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;}
+    function YatirimEkipmanListeRender(){const alan=document.getElementById('yatirimEkipmanListeAlani');if(!alan)return;const adresId=YatirimEkipmanSeciliAdresId(),gorunen=yatirimEkipmanlari.map((m,i)=>({m,i})).filter(x=>(!adresId||Number(x.m.uygulamaAdresiId)===adresId) && AdresAsamaKaydiGorunur(x.m));if(!gorunen.length){alan.innerHTML='<div class="alert alert-info">Seçilen yatırım adresinde makine/ekipman bulunamadı.</div>';return;}const edit=!!document.getElementById('yatirimEkipmanYeniBtn');alan.innerHTML=`<div class="table-responsive"><table class="table table-striped" style="min-width:1800px"><thead><tr><th>Kullanılacağı adres</th><th>Değer zinciri aşaması</th><th>Adı</th><th>Markası</th><th>Modeli</th><th>Adedi</th><th>Kapasite / özellikler</th><th>Plan sıra no</th><th>Kullanım amacı</th><th>Durum</th><th>Kapasite seçim gerekçesi</th><th></th></tr></thead><tbody>${gorunen.map(({m,i})=>`<tr><td>${htmlEncode(m.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(m.degerZinciriAsamaTuruAdi||'')}</td><td>${htmlEncode(m.ad||'')}</td><td>${htmlEncode(m.marka||'')}</td><td>${htmlEncode(m.model||'')}</td><td>${htmlEncode(m.miktar??'')}</td><td>${htmlEncode(m.kapasiteOzellikleri||'')}</td><td>${htmlEncode(m.yerlesimPlaniSiraNo??'')}</td><td>${htmlEncode(m.kullanimAmaci||'')}</td><td>${htmlEncode(m.durum||'')}</td><td>${htmlEncode(m.kapasiteSecimGerekcesi||'')}</td><td>${edit?`<button type="button" class="btn btn-sm btn-outline-primary" onclick="YatirimEkipmanModalAc(${i})">Düzenle</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;}
     function YatirimEkipmanModalAc(index){const m=index>=0?yatirimEkipmanlari[index]:{id:0,basvuruId:BasvuruId(),siraNo:yatirimEkipmanlari.length+1,ad:'',birim:'Adet',miktar:1,aciklama:'',teknikOzellikler:[],teklifler:[]};document.getElementById('yatirimEkipmanIndex').value=index;document.getElementById('yatirimEkipmanIndex').dataset.model=JSON.stringify(m);modalSet('yeAdres',m.uygulamaAdresiId||tekUygulamaAdresiId);modalSet('yeDegerZinciriAsamaTuru',m.degerZinciriAsamaTuru);modalSet('yeAd',m.ad);modalSet('yeMarka',m.marka);modalSet('yeModel',m.model);modalSet('yeAdet',m.miktar);modalSet('yePlanSira',m.yerlesimPlaniSiraNo);modalSet('yeDurum',m.durum);modalSet('yeKapasite',m.kapasiteOzellikleri);modalSet('yeKullanimAmaci',m.kullanimAmaci);modalSet('yeKapasiteGerekcesi',m.kapasiteSecimGerekcesi);YatirimEkipmanDurumAlanlariGuncelle();$('#yatirimEkipmanModal').modal('show');}
     function YatirimEkipmanDurumAlanlariGuncelle(){['yeMarka','yeModel'].forEach(id=>{const alan=document.getElementById(id);if(!alan)return;alan.disabled=false;alan.placeholder='';});}
     function YatirimEkipmanKaydet(){const index=Number(document.getElementById('yatirimEkipmanIndex').value),eski=JSON.parse(document.getElementById('yatirimEkipmanIndex').dataset.model||'{}'),adres=document.getElementById('yeAdres');const model={...eski,basvuruId:BasvuruId(),uygulamaAdresiId:Number(adres?.value)||null,uygulamaAdresiAciklama:adres?.selectedOptions?.[0]?.textContent||'',degerZinciriAsamaTuru:Number(modalValue('yeDegerZinciriAsamaTuru'))||null,siraNo:eski.siraNo||yatirimEkipmanlari.length+1,ad:modalValue('yeAd'),birim:'Adet',miktar:Number(modalValue('yeAdet')),marka:modalValue('yeMarka'),model:modalValue('yeModel'),kapasiteOzellikleri:modalValue('yeKapasite'),yerlesimPlaniSiraNo:Number(modalValue('yePlanSira'))||null,kullanimAmaci:modalValue('yeKullanimAmaci'),durum:modalValue('yeDurum'),kapasiteSecimGerekcesi:modalValue('yeKapasiteGerekcesi')};AjaxPost('/Basvuru/MakineKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){if(index>=0)yatirimEkipmanlari[index]=sonuc.nesne;else yatirimEkipmanlari.push(sonuc.nesne);$('#yatirimEkipmanModal').modal('hide');YatirimEkipmanListeRender();dirty=false;}});}
@@ -4204,10 +4249,10 @@
         if(!basvuruBinalari.length){a.innerHTML='<div class="alert alert-light border">Henüz bina/yapı kaydı bulunamadı.</div>';return;}
         const edit=!!document.getElementById('binaModal'),mahal=a.closest('[data-mahal-etkin]')?.dataset.mahalEtkin==='true';
         if(!mahal){
-            a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover"><thead><tr><th>Bina No</th><th>Adı</th><th>Adresi</th><th>Değer zinciri aşaması</th><th>Mevcut / Yeni</th><th>Yatırım şekli</th></tr></thead><tbody>${basvuruBinalari.map((b,i)=>`<tr><td><span class="d-inline-flex align-items-center"><span>${htmlEncode(b.siraNo)}</span>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2" title="Binayı düzenle" aria-label="${htmlEncode(b.siraNo)} numaralı binayı düzenle" onclick="BinaModalAc(${i})"><i class="fas fa-pencil-alt"></i></button>`:''}</span></td><td><strong>${htmlEncode(b.ad)}</strong></td><td>${htmlEncode(b.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(b.degerZinciriAsamaTuruAdi||'')}</td><td>${htmlEncode(b.mevcutYeni||'')}</td><td>${htmlEncode(b.yatirimSekli||'')}</td></tr>`).join('')}</tbody></table></div>`;
+            a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover"><thead><tr><th>Bina No</th><th>Adı</th><th>Adresi</th><th>Değer zinciri aşaması</th><th>Mevcut / Yeni</th><th>Yatırım şekli</th></tr></thead><tbody>${basvuruBinalari.map((b,i)=>({b,i})).filter(x=>AdresAsamaKaydiGorunur(x.b)).map(({b,i})=>`<tr><td><span class="d-inline-flex align-items-center"><span>${htmlEncode(b.siraNo)}</span>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2" title="Binayı düzenle" aria-label="${htmlEncode(b.siraNo)} numaralı binayı düzenle" onclick="BinaModalAc(${i})"><i class="fas fa-pencil-alt"></i></button>`:''}</span></td><td><strong>${htmlEncode(b.ad)}</strong></td><td>${htmlEncode(b.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(b.degerZinciriAsamaTuruAdi||'')}</td><td>${htmlEncode(b.mevcutYeni||'')}</td><td>${htmlEncode(b.yatirimSekli||'')}</td></tr>`).join('')}</tbody></table></div>`;
             return;
         }
-        a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover"><thead><tr><th>Kullanılacağı adres</th><th>Değer zinciri aşaması</th><th>Bina / Yapı</th><th>Vaziyet Planındaki No</th><th>Bölüm / Mahaller</th></tr></thead><tbody>${basvuruBinalari.map((b,i)=>`<tr><td>${htmlEncode(b.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(b.degerZinciriAsamaTuruAdi||'')}</td><td><strong><span class="d-inline-flex align-items-center"><span>${htmlEncode(b.siraNo)}. ${htmlEncode(b.ad)}</span>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2" title="Binayı düzenle" aria-label="${htmlEncode(b.siraNo)} numaralı binayı düzenle" onclick="BinaModalAc(${i})"><i class="fas fa-pencil-alt"></i></button>`:''}</span></strong><br><small class="text-muted">${htmlEncode(b.mevcutYeni||'')} ${b.yatirimSekli?'— '+htmlEncode(b.yatirimSekli):''}</small></td><td>${htmlEncode(b.vaziyetPlaniNo||'')}</td><td>${(b.mahaller||[]).length?(b.mahaller||[]).map((m,j)=>`<div class="d-flex justify-content-between align-items-center border-bottom py-1"><span>${htmlEncode(m.siraNo)}. ${htmlEncode(m.mahalAdi)} — <strong>${htmlEncode(m.alanM2)} m²</strong></span>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2" onclick="BinaMahalModalAc(${i},${j})">Düzenle</button>`:''}</div>`).join(''):'<span class="text-muted">Bölüm/mahal eklenmedi</span>'}${edit?`<div class="mt-2"><button type="button" class="btn btn-sm btn-outline-success" onclick="BinaMahalModalAc(${i},-1)"><i class="fas fa-plus mr-1"></i>Bölüm/mahal ekle</button></div>`:''}</td></tr>`).join('')}</tbody></table></div>`;
+        a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover"><thead><tr><th>Kullanılacağı adres</th><th>Değer zinciri aşaması</th><th>Bina / Yapı</th><th>Vaziyet Planındaki No</th><th>Bölüm / Mahaller</th></tr></thead><tbody>${basvuruBinalari.map((b,i)=>({b,i})).filter(x=>AdresAsamaKaydiGorunur(x.b)).map(({b,i})=>`<tr><td>${htmlEncode(b.uygulamaAdresiAciklama||'')}</td><td>${htmlEncode(b.degerZinciriAsamaTuruAdi||'')}</td><td><strong><span class="d-inline-flex align-items-center"><span>${htmlEncode(b.siraNo)}. ${htmlEncode(b.ad)}</span>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2" title="Binayı düzenle" aria-label="${htmlEncode(b.siraNo)} numaralı binayı düzenle" onclick="BinaModalAc(${i})"><i class="fas fa-pencil-alt"></i></button>`:''}</span></strong><br><small class="text-muted">${htmlEncode(b.mevcutYeni||'')} ${b.yatirimSekli?'— '+htmlEncode(b.yatirimSekli):''}</small></td><td>${htmlEncode(b.vaziyetPlaniNo||'')}</td><td>${(b.mahaller||[]).length?(b.mahaller||[]).map((m,j)=>`<div class="d-flex justify-content-between align-items-center border-bottom py-1"><span>${htmlEncode(m.siraNo)}. ${htmlEncode(m.mahalAdi)} — <strong>${htmlEncode(m.alanM2)} m²</strong></span>${edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-2" onclick="BinaMahalModalAc(${i},${j})">Düzenle</button>`:''}</div>`).join(''):'<span class="text-muted">Bölüm/mahal eklenmedi</span>'}${edit?`<div class="mt-2"><button type="button" class="btn btn-sm btn-outline-success" onclick="BinaMahalModalAc(${i},-1)"><i class="fas fa-plus mr-1"></i>Bölüm/mahal ekle</button></div>`:''}</td></tr>`).join('')}</tbody></table></div>`;
     }
     function BinaModalAc(i){const yeni=i<0,b=yeni?{id:0,basvuruId:BasvuruId(),degerZinciriAsamaTuru:1,siraNo:Math.max(0,...basvuruBinalari.map(x=>Number(x.siraNo)||0))+1,ad:'',mevcutYeni:'',yatirimSekli:'',destekTalebi:'',vaziyetPlaniNo:'',mahaller:[]}:basvuruBinalari[i];document.getElementById('binaIndex').value=i;document.getElementById('binaId').value=b.id||0;document.getElementById('binaAdres').value=b.uygulamaAdresiId||'';document.getElementById('binaDegerZinciriAsamaTuru').value=b.degerZinciriAsamaTuru||1;document.getElementById('binaSira').value=b.siraNo;document.getElementById('binaAd').value=b.ad||'';document.getElementById('binaDurum').value=b.mevcutYeni||'';document.getElementById('binaYatirimSekli').value=b.yatirimSekli||'';document.getElementById('binaDestekTalebi').value=b.destekTalebi||'';document.getElementById('binaVaziyetNo').value=b.vaziyetPlaniNo||'';document.getElementById('binaSilBtn').style.display=yeni?'none':'';$('#binaModal').modal('show');}
     function BinaKaydet(){let i=Number(document.getElementById('binaIndex').value),b=i>=0?basvuruBinalari[i]:{id:0,basvuruId:BasvuruId(),mahaller:[]},adres=document.getElementById('binaAdres'),asama=document.getElementById('binaDegerZinciriAsamaTuru');b.uygulamaAdresiId=Number(adres.value)||null;b.uygulamaAdresiAciklama=adres.selectedOptions?.[0]?.textContent||'';b.degerZinciriAsamaTuru=Number(asama.value)||0;b.degerZinciriAsamaTuruAdi=asama.selectedOptions?.[0]?.textContent||'';b.siraNo=Number(document.getElementById('binaSira').value);b.ad=document.getElementById('binaAd').value;b.mevcutYeni=document.getElementById('binaDurum').value;b.yatirimSekli=document.getElementById('binaYatirimSekli').value;b.destekTalebi=document.getElementById('binaDestekTalebi').value;b.vaziyetPlaniNo=document.getElementById('binaVaziyetNo').value;if(i<0){basvuruBinalari.push(b);i=basvuruBinalari.length-1;}BinaKaydetIndex(i,()=>{$('#binaModal').modal('hide');});}
@@ -4513,7 +4558,7 @@
         else if (active === bolumUygunHarcama) UygunHarcamaKaydet(afterSuccess);
         else if (active === bolumFinans || active === bolumBasvuruFinansman) FinansKaydet(afterSuccess);
         else if (active === bolumButceGiderler || active === bolumGiderler) YatirimOzetiKaydet(afterSuccess);
-        else if ([bolumDbCtpTeknikProje, bolumDbCtpMakineEkipman, bolumDbCtpBinaListesi].includes(active)) DbCtpKaydet(afterSuccess);
+        else if ([bolumBasvuruTeknikProjeGirdiler, bolumDbCtpTeknikProje, bolumDbCtpMakineEkipman, bolumDbCtpBinaListesi].includes(active)) DbCtpKaydet(afterSuccess);
         else if (active === bolumTaahhutBeyan) TaahhutBeyanlariKaydet(afterSuccess);
         else if (active === bolumBasvuruTaahhutBeyan) BasvuruBeyanKaydet(afterSuccess);
         else if (active === bolumBasvuruCevreselSosyal) BasvuruCevreselSosyalKaydet(afterSuccess);

@@ -1,25 +1,31 @@
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @using System.Text.Json
-@{ var b = Model.Basvuru; bool ro = Model.SaltOkunur; }
-<section class="basvuru-panel active" data-panel="@((int)TarimDonusum.Models.enumBasvuruBolum.DbCtpTeknikProje)">
+@{ var b = Model.Basvuru; bool ro = Model.SaltOkunur || Model.DenetciGorunumu;
+    var panel = b.kayitTuru == TarimDonusum.Models.enumBasvuruKayitTuru.Basvuru
+        ? TarimDonusum.Models.enumBasvuruBolum.BasvuruTeknikProjeGirdiler
+        : TarimDonusum.Models.enumBasvuruBolum.DbCtpTeknikProje; }
+<section class="basvuru-panel active" data-panel="@((int)panel)">
     <div class="section-toolbar">
         <h2 class="mb-0">Teknik Proje (Girdiler)</h2>
-        <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="OnBilgilerYazdir" asp-route-id="@b.Id"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+        <a data-adres-asama-yazdir class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="OnBilgilerYazdir" asp-route-id="@b.Id"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
     </div>
     <input type="hidden" id="dbCtpTeknikProjeJson" value="@b.dbCtpTeknikProje.dbCtpTeknikProjeJson" />
+    <script type="application/json" id="dbCtpEnerjiKayitlariJson">@Html.Raw(JsonSerializer.Serialize(b.YatirimOnBilgileri.Where(x => x.tur is TarimDonusum.Models.enumYatirimOnBilgiTuru.EnerjiKullanimi or TarimDonusum.Models.enumYatirimOnBilgiTuru.KuruluGuc)))</script>
     <script type="application/json" id="dbCtpGirdilerJson">@Html.Raw(JsonSerializer.Serialize(b.YatirimOnBilgileri.Where(x => x.tur == TarimDonusum.Models.enumYatirimOnBilgiTuru.Girdi).OrderBy(x => x.siraNo)))</script>
     <div class="yatirim-ozeti-section">
         <div class="section-toolbar">
             <h3>Yatırım Sonrası Girdi Tedarik İhtiyacı</h3>
+            <div class="d-flex align-items-center justify-content-end flex-wrap ml-auto" style="gap:8px"><partial name="_AdresAsamaFiltresi" model="Model" />
             @if (!ro)
             {
-                <div>
+                <div class="d-flex align-items-center flex-wrap" style="gap:8px">
                     <a class="btn btn-outline-success" href="@Url.Action("TeknikProjeGirdileriExcelSablonuIndir", "Basvuru")"><i class="fas fa-download mr-1"></i>Excel Şablonu</a>
                     <label class="btn btn-outline-success mb-0" for="dbCtpGirdiExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label>
                     <input id="dbCtpGirdiExcelDosya" type="file" accept=".xlsx,.xls" class="d-none" />
                     <button type="button" class="btn btn-outline-primary" onclick="DbCtpGirdiModalAc(-1)"><i class="fas fa-plus mr-1"></i>Girdi ekle</button>
                 </div>
             }
+            </div>
         </div>
         <div id="dbCtpInputs"></div>
     </div>
