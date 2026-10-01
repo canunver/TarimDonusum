@@ -517,7 +517,8 @@
             const select = document.getElementById(id);
             if (!select || !Array.from(select.options).some(x => Number(x.value) === tekUygulamaAdresiId)) return;
             select.value = String(tekUygulamaAdresiId);
-            if (id !== 'yoUrunUygulamaAdresiId') select.closest('label')?.classList.add('d-none');
+            // Ürün ve ekipman pencerelerinde tek adres olsa da adres bilgisini göster.
+            if (id !== 'yoUrunUygulamaAdresiId' && id !== 'yeAdres') select.closest('label')?.classList.add('d-none');
         });
     }
 
