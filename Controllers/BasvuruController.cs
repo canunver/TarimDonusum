@@ -184,8 +184,8 @@ namespace TarimDonusum.Controllers
             RaporYazdirAsync(id, new RPROB_ProjeButcesi(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.ProjeButcesi"].ToString());
         [OturumKontrol]
         [HttpGet]
-        public Task<IActionResult> YatirimOzetiYazdir(int id) =>
-            RaporYazdirAsync(id, new RPROB_YatirimOzetiYonlendirici(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.YatirimOzeti"].ToString());
+        public Task<IActionResult> YatirimOzetiYazdir(int id, int? filtreAdresId, int? filtreAsama) =>
+            RaporYazdirAsync(id, new RPROB_YatirimOzetiYonlendirici(_environment.ContentRootPath), L["Basvuru.Report.SaveFirst.YatirimOzeti"].ToString(), filtreAdresId: filtreAdresId, filtreAsama: filtreAsama);
         [OturumKontrol]
         [HttpGet]
         public Task<IActionResult> IsletmeGideriYazdir(int id) =>

@@ -2,6 +2,11 @@ using TarimDonusum.IsKurallari;
 
 namespace TarimDonusum.Models;
 
+public sealed class CevreselSosyalTaahhutTanimModeli
+{
+    public string? metin { get; set; }
+}
+
 public enum enumCevreselSosyalAnketSurumDurumu
 {
     Taslak = 0,

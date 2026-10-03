@@ -269,9 +269,17 @@
                                     <button type="button" class="btn btn-sm btn-outline-primary" onclick="AdresKonumSatiriEkle()" disabled="@ro">+ Satır ekle</button>
                                 </div>
                                 <div class="table-responsive"><table class="table table-bordered mb-0">
-                                    <thead><tr><th>Sil</th><th class="konum-mahalle-baslik">Mahalle</th><th>Ada</th><th>Parsel</th><th>Koordinat türü</th><th>Min Enlem</th><th>Max Enlem</th><th>Min Boylam</th><th>Max Boylam</th></tr></thead>
+                                    <thead><tr><th>Sil</th><th class="konum-mahalle-baslik">Mahalle</th><th>Ada</th><th>Parsel</th><th>Koordinat X (Boylam)</th><th>Koordinat Y (Enlem)</th><th>Harita</th></tr></thead>
                                     <tbody id="adresModalKonumlar"></tbody>
                                 </table></div>
+                                <div id="adresKonumHaritaPaneli" class="adres-konum-harita d-none">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong id="adresKonumHaritaBaslik"></strong>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="AdresKonumHaritaKapat()">Haritayı kapat</button>
+                                    </div>
+                                    <div id="adresKonumHarita"></div>
+                                    <small id="adresKonumHaritaNot" class="form-text text-muted"></small>
+                                </div>
                             </div>
 
                             <label>Kullanım hakkı başlangıç tarihi<input id="adresModalKullanimHakkiBaslangicTarihi" type="date" /></label>
@@ -283,10 +291,31 @@
                         <label class="wide-label">@L["Basvuru.Field.YatirimGirdileri"]<textarea id="adresModalYatirimGirdileri" placeholder="Virgülle ayırarak giriniz"></textarea></label>
                         <label class="wide-label">@L["Basvuru.Field.YatirimCiktilari"]<textarea id="adresModalYatirimCiktilari" placeholder="Virgülle ayırarak giriniz"></textarea></label>
                         <label class="wide-label">İzin/ruhsat takvimi ve açıklama<textarea id="adresModalIzinTakvimAciklama"></textarea></label>
-                        <div class="form-grid yatirim-yeri-dosyalari">
-                            <label>Adres belge referansı<input id="adresModalAdresBelgeDosya" type="file" /><span id="adresModalAdresBelgeDosyaAdi" class="document-file-name"></span><a id="adresModalAdresBelgeIndir" class="btn btn-sm btn-outline-secondary d-none" target="_blank">İndir</a></label>
-                            <label>Tapu/kira/tahsis referansı<input id="adresModalKullanimHakkiDosya" type="file" /><span id="adresModalKullanimHakkiDosyaAdi" class="document-file-name"></span><a id="adresModalKullanimHakkiIndir" class="btn btn-sm btn-outline-secondary d-none" target="_blank">İndir</a></label>
-                            <label>İzin/ruhsat kanıt referansı<input id="adresModalKanitDosya" type="file" /><span id="adresModalKanitDosyaAdi" class="document-file-name"></span><a id="adresModalKanitIndir" class="btn btn-sm btn-outline-secondary d-none" target="_blank">İndir</a></label>
+                        <div class="yatirim-yeri-dosyalari">
+                            <div class="adres-dosya-satiri">
+                                <div class="adres-dosya-baslik">Adres belge referansı</div>
+                                <div class="adres-dosya-yuklu d-none">
+                                    <i class="fas fa-paperclip"></i><span id="adresModalAdresBelgeDosyaAdi" class="document-file-name"></span>
+                                    <a id="adresModalAdresBelgeIndir" class="btn btn-sm btn-outline-primary" href="#" target="_blank" rel="noopener"><i class="fas fa-download mr-1"></i>İndir</a>
+                                </div>
+                                <input id="adresModalAdresBelgeDosya" type="file" aria-label="Adres belge referansı" />
+                            </div>
+                            <div class="adres-dosya-satiri">
+                                <div class="adres-dosya-baslik">Tapu/kira/tahsis referansı</div>
+                                <div class="adres-dosya-yuklu d-none">
+                                    <i class="fas fa-paperclip"></i><span id="adresModalKullanimHakkiDosyaAdi" class="document-file-name"></span>
+                                    <a id="adresModalKullanimHakkiIndir" class="btn btn-sm btn-outline-primary" href="#" target="_blank" rel="noopener"><i class="fas fa-download mr-1"></i>İndir</a>
+                                </div>
+                                <input id="adresModalKullanimHakkiDosya" type="file" aria-label="Tapu/kira/tahsis referansı" />
+                            </div>
+                            <div class="adres-dosya-satiri">
+                                <div class="adres-dosya-baslik">İzin/ruhsat kanıt referansı</div>
+                                <div class="adres-dosya-yuklu d-none">
+                                    <i class="fas fa-paperclip"></i><span id="adresModalKanitDosyaAdi" class="document-file-name"></span>
+                                    <a id="adresModalKanitIndir" class="btn btn-sm btn-outline-primary" href="#" target="_blank" rel="noopener"><i class="fas fa-download mr-1"></i>İndir</a>
+                                </div>
+                                <input id="adresModalKanitDosya" type="file" aria-label="İzin/ruhsat kanıt referansı" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -753,8 +782,10 @@
         };
     }
 
+    let adresAsamaSeciliDeger = '';
+
     function AdresAsamaSecimi() {
-        const secim = (document.getElementById('adresAsamaFiltresi')?.value || '').split('|');
+        const secim = (adresAsamaSeciliDeger || document.querySelector('.adres-asama-filtresi')?.value || '').split('|');
         return { adres: Number(secim[0]) || 0, asama: Number(secim[1]) || 0 };
     }
 
@@ -763,12 +794,18 @@
         return !secim.adres || (Number(kayit.uygulamaAdresiId) === secim.adres && Number(kayit.degerZinciriAsamaTuru) === secim.asama);
     }
 
-    function AdresAsamaFiltresiGuncelle() {
+    function AdresAsamaFiltresiGuncelle(kaynak) {
+        adresAsamaSeciliDeger = kaynak?.value || '';
+        document.querySelectorAll('.adres-asama-filtresi').forEach(x => { if (x !== kaynak) x.value = adresAsamaSeciliDeger; });
         YatirimOzetiUrunRender();
         YatirimEkipmanListeRender();
         BinaListeRender();
         const girdiler = document.getElementById('dbCtpInputs');
         if (girdiler) DbCtpGirdiTabloRender(girdiler);
+        AdresAsamaYazdirBaglantilariniGuncelle();
+    }
+
+    function AdresAsamaYazdirBaglantilariniGuncelle() {
         const secim = AdresAsamaSecimi();
         document.querySelectorAll('[data-adres-asama-yazdir]').forEach(link => {
             link.dataset.filtreTemelUrl ||= link.href;
@@ -779,6 +816,16 @@
             }
             link.href = url.toString();
         });
+    }
+
+    // Bölüm AJAX ile yeniden yüklendiğinde seçili filtre yeni combobox'a ve Yazdır bağlantılarına taşınır.
+    function AdresAsamaFiltresiEsitle() {
+        const filtreler = [...document.querySelectorAll('.adres-asama-filtresi')];
+        if (!filtreler.length) return;
+        if (adresAsamaSeciliDeger && ![...filtreler[0].options].some(x => x.value === adresAsamaSeciliDeger))
+            adresAsamaSeciliDeger = '';
+        filtreler.forEach(x => x.value = adresAsamaSeciliDeger);
+        AdresAsamaYazdirBaglantilariniGuncelle();
     }
 
     function modalSet(id, value) {
@@ -829,6 +876,7 @@
                 active = bolum;
                 dirty = false;
                 BasvuruStepSec(active);
+                AdresAsamaFiltresiEsitle();
                 BasvuruBolumIlklendir(active);
                 BasvuruAksiyonButonlariGuncelle();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1814,7 +1862,9 @@
     }
 
     function OrtakCevreselTaahhutOnayi() {
-        return !!document.querySelector('.ortak-cevresel-taahhut-onayi')?.checked;
+        // Onay kutusu yalnızca Taahhüt/Beyan sayfasında bulunur; diğer sayfalarda kayıtlı değer korunur.
+        const kutu = document.querySelector('.ortak-cevresel-taahhut-onayi');
+        return kutu ? !!kutu.checked : !!cevreselSosyalCevaplar.declaration;
     }
 
     function OrtakCevreselTaahhutDegisti(onay) {
@@ -3938,7 +3988,7 @@
         const duzenlenebilir = !basvuruReadonly;
         const satirlar = [...(dbCtpData.inputs || [])].filter(AdresAsamaKaydiGorunur).sort((a, b) => Number(a.siraNo) - Number(b.siraNo));
         if (!satirlar.length) {
-            container.innerHTML = '<div class="alert alert-info">Henüz girdi kaydı eklenmedi.</div>';
+            container.innerHTML = `<div class="alert alert-info">${(dbCtpData.inputs || []).length ? 'Seçilen adres ve değer zinciri aşamasında girdi bulunamadı.' : 'Henüz girdi kaydı eklenmedi.'}</div>`;
             return;
         }
         container.innerHTML = `<div class="table-responsive"><table class="table table-striped db-ctp-table"><thead><tr><th>Sıra</th><th>Adres</th><th>Değer zinciri aşaması</th><th>Girdi / Hammadde adı</th><th>Gider türü</th><th>Sabit oran (%)</th><th>Birim fiyat (TL)</th><th>Miktar</th><th>Birim</th>${duzenlenebilir ? '<th>İşlem</th>' : ''}</tr></thead><tbody>${satirlar.map(x => {
@@ -4103,13 +4153,8 @@
     }
 
     function TaahhutBeyanlariKaydet(afterSuccess) {
-        const beyanlar = {
-            cevreselSosyalTaahhutOnayi: OrtakCevreselTaahhutOnayi(),
-            dogrulukBeyani: !!document.getElementById('dogrulukBeyani')?.checked,
-            cifteFinansmanBeyani: !!document.getElementById('cifteFinansmanBeyani')?.checked,
-            bankaVeriPaylasimRizasi: !!document.getElementById('bankaVeriPaylasimRizasi')?.checked,
-            izlemeDenetimKabulu: !!document.getElementById('izlemeDenetimKabulu')?.checked
-        };
+        const beyanlar = {};
+        document.querySelectorAll('.taahhut-beyan-onayi[data-anahtar]').forEach(kutu => beyanlar[kutu.dataset.anahtar] = !!kutu.checked);
         const model = { ...BasvuruKimlikleri(), taahhutBeyanlarJson: JSON.stringify(beyanlar) };
         AjaxPost('/Basvuru/KaydetTaahhutBeyanlari', model, sonuc => SonucGosterVeDirtyTemizle(sonuc, afterSuccess));
     }
@@ -4119,9 +4164,8 @@
         if (!raw) return;
         try {
             const beyanlar = JSON.parse(raw);
-            ['dogrulukBeyani', 'cifteFinansmanBeyani', 'bankaVeriPaylasimRizasi', 'izlemeDenetimKabulu'].forEach(id => {
-                const checkbox = document.getElementById(id);
-                if (checkbox) checkbox.checked = beyanlar[id] === true;
+            document.querySelectorAll('.taahhut-beyan-onayi[data-anahtar]').forEach(kutu => {
+                if (typeof beyanlar[kutu.dataset.anahtar] === 'boolean') kutu.checked = beyanlar[kutu.dataset.anahtar];
             });
         }
         catch { PopupMesajGoster('Taahhüt ve beyan verisi okunamadı.', false); }
@@ -4658,10 +4702,106 @@
             const sil = index > 0 && !basvuruReadonly ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="AdresKonumSatiriSil(${index})">Sil</button>` : '';
             const metin = (alan, etiket, uzunluk, css = '') => `<td class="${css}"><input aria-label="${etiket} ${index + 1}" maxlength="${uzunluk}" value="${htmlEncode(satir[alan] ?? '')}" ${basvuruReadonly ? 'disabled' : ''} oninput="AdresKonumDegistir(${index}, '${alan}', this)" /></td>`;
             const pozitifTamSayi = (alan, etiket) => `<td><input aria-label="${etiket} ${index + 1}" type="number" min="1" step="1" value="${htmlEncode(satir[alan] ?? '')}" ${basvuruReadonly ? 'disabled' : ''} oninput="AdresKonumDegistir(${index}, '${alan}', this)" /></td>`;
-            const sinirlar = turkiyeKoordinatSinirlari[Number(satir.koordinatTuru || 1)];
-            const sayi = (alan, etiket, min, max) => `<td><input aria-label="${etiket} ${index + 1}" type="number" min="${min}" max="${max}" step="0.000001" value="${htmlEncode(satir[alan] ?? '')}" ${basvuruReadonly ? 'disabled' : ''} oninput="AdresKonumDegistir(${index}, '${alan}', this)" /></td>`;
-            return `<tr><td>${sil}</td>${metin('mahalle','Mahalle',200,'konum-mahalle')}${pozitifTamSayi('ada','Ada')}${pozitifTamSayi('parsel','Parsel')}<td><select aria-label="Koordinat türü ${index + 1}" ${basvuruReadonly ? 'disabled' : ''} onchange="AdresKonumDegistir(${index}, 'koordinatTuru', this)"><option value="1" ${Number(satir.koordinatTuru || 1) === 1 ? 'selected' : ''}>ITRF 96</option><option value="2" ${Number(satir.koordinatTuru) === 2 ? 'selected' : ''}>ED50</option></select></td>${sayi('minEnlem','Min Enlem',sinirlar.minEnlem,sinirlar.maxEnlem)}${sayi('maxEnlem','Max Enlem',sinirlar.minEnlem,sinirlar.maxEnlem)}${sayi('minBoylam','Min Boylam',sinirlar.minBoylam,sinirlar.maxBoylam)}${sayi('maxBoylam','Max Boylam',sinirlar.minBoylam,sinirlar.maxBoylam)}</tr>`;
+            if (!satir.koordinatTuru) satir.koordinatTuru = 1;
+            // Koordinatlar elle girilmez; yalnızca haritadan seçilir. X = boylam, Y = enlem.
+            const koordinat = (alan, etiket) => `<td><input aria-label="${etiket} ${index + 1}" value="${htmlEncode(satir[alan] ?? '')}" readonly tabindex="-1" placeholder="${basvuruReadonly ? '' : 'Haritadan seçin'}" /></td>`;
+            const koordinatVar = satir.minEnlem != null && satir.minBoylam != null;
+            const harita = !basvuruReadonly || koordinatVar
+                ? `<button type="button" class="btn btn-sm btn-outline-primary text-nowrap" onclick="AdresKonumHaritaAc(${index})"><i class="fas fa-map-marker-alt mr-1"></i>Harita</button>`
+                : '';
+            return `<tr><td>${sil}</td>${metin('mahalle','Mahalle',200,'konum-mahalle')}${pozitifTamSayi('ada','Ada')}${pozitifTamSayi('parsel','Parsel')}${koordinat('minBoylam','Koordinat X')}${koordinat('minEnlem','Koordinat Y')}<td>${harita}</td></tr>`;
         }).join('');
+    }
+
+    let adresKonumHarita = null, adresKonumHaritaIsareti = null, adresKonumHaritaSatiri = -1, leafletYukleniyor = null;
+
+    // Harita kitaplığı (Leaflet, OpenStreetMap altlığı) yalnızca ilk kullanımda yüklenir.
+    function LeafletYukle() {
+        if (window.L) return Promise.resolve();
+        if (!leafletYukleniyor) {
+            leafletYukleniyor = new Promise((resolve, reject) => {
+                const css = document.createElement('link');
+                css.rel = 'stylesheet';
+                css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                css.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+                css.crossOrigin = '';
+                document.head.appendChild(css);
+                const js = document.createElement('script');
+                js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                js.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+                js.crossOrigin = '';
+                js.onload = () => resolve();
+                js.onerror = () => { leafletYukleniyor = null; reject(new Error('Leaflet yüklenemedi.')); };
+                document.head.appendChild(js);
+            });
+        }
+        return leafletYukleniyor;
+    }
+
+    function AdresKonumHaritaAc(index) {
+        const satir = adresKonumSatirlari[index];
+        if (!satir) return;
+        LeafletYukle().then(() => {
+            const panel = document.getElementById('adresKonumHaritaPaneli');
+            if (!panel) return;
+            adresKonumHaritaSatiri = index;
+            panel.classList.remove('d-none');
+            document.getElementById('adresKonumHaritaBaslik').textContent = `${index + 1}. satır için konum`;
+            document.getElementById('adresKonumHaritaNot').textContent = basvuruReadonly
+                ? 'Kayıtlı konum haritada gösterilmektedir.'
+                : 'Haritayı yakınlaştırıp yatırım yerine tıklayınız; koordinatlar tabloya otomatik yazılır.';
+            if (!adresKonumHarita) {
+                // Harita Türkiye'yi çevreleyen dikdörtgenin dışına kaydırılamaz ve bu alandan daha fazla uzaklaştırılamaz.
+                const sinir = turkiyeKoordinatSinirlari[1];
+                adresKonumHarita = L.map('adresKonumHarita', {
+                    maxBounds: [[sinir.minEnlem, sinir.minBoylam], [sinir.maxEnlem, sinir.maxBoylam]],
+                    maxBoundsViscosity: 1,
+                    minZoom: 6
+                });
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> katkıda bulunanlar'
+                }).addTo(adresKonumHarita);
+                adresKonumHarita.on('click', olay => AdresKonumHaritadanSec(olay.latlng));
+            }
+            const koordinatVar = satir.minEnlem != null && satir.minBoylam != null;
+            const merkez = koordinatVar ? [Number(satir.minEnlem), Number(satir.minBoylam)] : [39.0, 35.2];
+            adresKonumHarita.setView(merkez, koordinatVar ? 16 : 6);
+            AdresKonumHaritaIsaretiniGuncelle(koordinatVar ? merkez : null);
+            setTimeout(() => { adresKonumHarita.invalidateSize(); panel.scrollIntoView({ block: 'nearest' }); }, 60);
+        }).catch(() => PopupMesajGoster('Harita yüklenemedi. İnternet bağlantınızı kontrol ediniz.', false));
+    }
+
+    function AdresKonumHaritaIsaretiniGuncelle(konum) {
+        if (!adresKonumHarita) return;
+        if (!konum) {
+            if (adresKonumHaritaIsareti) { adresKonumHaritaIsareti.remove(); adresKonumHaritaIsareti = null; }
+            return;
+        }
+        if (adresKonumHaritaIsareti) adresKonumHaritaIsareti.setLatLng(konum);
+        else adresKonumHaritaIsareti = L.marker(konum).addTo(adresKonumHarita);
+    }
+
+    function AdresKonumHaritadanSec(latlng) {
+        const satir = adresKonumSatirlari[adresKonumHaritaSatiri];
+        if (basvuruReadonly || !satir || !latlng) return;
+        const enlem = Number(latlng.lat.toFixed(6)), boylam = Number(latlng.lng.toFixed(6));
+        const sinirlar = turkiyeKoordinatSinirlari[1];
+        if (enlem < sinirlar.minEnlem || enlem > sinirlar.maxEnlem || boylam < sinirlar.minBoylam || boylam > sinirlar.maxBoylam) {
+            PopupMesajGoster('Seçilen nokta Türkiye sınırları dışında. Lütfen Türkiye içinde bir konum seçiniz.', false);
+            return;
+        }
+        // Haritadan tek nokta alınır; mevcut min/max alanlarının ikisine de aynı değer yazılır.
+        satir.minEnlem = enlem; satir.maxEnlem = enlem;
+        satir.minBoylam = boylam; satir.maxBoylam = boylam;
+        satir.koordinatTuru = 1;
+        AdresKonumHaritaIsaretiniGuncelle([enlem, boylam]);
+        AdresKonumTablosuRender();
+    }
+
+    function AdresKonumHaritaKapat() {
+        adresKonumHaritaSatiri = -1;
+        document.getElementById('adresKonumHaritaPaneli')?.classList.add('d-none');
     }
 
     function AdresKonumDegistir(index, alan, input) {
@@ -4682,6 +4822,7 @@
 
     function AdresKonumSatiriSil(index) {
         if (basvuruReadonly || index <= 0 || index >= adresKonumSatirlari.length) return;
+        AdresKonumHaritaKapat();
         adresKonumSatirlari.splice(index, 1); AdresKonumTablosuRender();
     }
 
@@ -4839,6 +4980,7 @@
             minBoylam: adres.boylam ?? null, maxBoylam: adres.boylam ?? null,
             ada: adres.ada || '', parsel: adres.parsel || '', mahalle: '', koordinatTuru: 1
         }];
+        AdresKonumHaritaKapat();
         AdresKonumTablosuRender();
         modalSet('adresModalKumelenmeOrganizeAlanTuru', adres.kumelenmeOrganizeAlanTuru || 0);
         modalSet('adresModalSegeKademesi', adres.segeKademesi);
@@ -4908,8 +5050,10 @@
 
     function AdresDosyaGoster(adId, linkId, dosyaAdi, dosyaId) {
         const ad = document.getElementById(adId), link = document.getElementById(linkId);
-        if (ad) ad.textContent = dosyaAdi || 'Dosya seçilmedi';
-        if (link) { link.classList.toggle('d-none', !dosyaId); link.href = dosyaId ? `/Basvuru/DosyaIndir/${dosyaId}` : '#'; }
+        // Yüklü dosya yoksa satırda yalnızca dosya seçme alanı görünür.
+        if (ad) { ad.textContent = dosyaId ? (dosyaAdi || '') : ''; ad.title = dosyaId ? (dosyaAdi || '') : ''; }
+        if (link) link.href = dosyaId ? `/Basvuru/DosyaIndir/${dosyaId}` : '#';
+        (ad || link)?.closest('.adres-dosya-yuklu')?.classList.toggle('d-none', !dosyaId);
     }
     function YapimIsiSecili() {
         return sonUygulamaAdresleri.some(x => (x.harcamaTurleri || []).map(Number).includes(1));

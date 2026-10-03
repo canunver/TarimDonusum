@@ -47,6 +47,50 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<List<TaahhutBeyanTanim>>> TaahhutBeyanlariListeleAsync(Kullanici? kullanici)
+        {
+            Sonuc<List<TaahhutBeyanTanim>> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                sonuc.nesne = await new TABTaahhutBeyanTanim(connection, _localizer).ListeleAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Taahhüt/beyan tanımları okunamadı.");
+                sonuc.HataEkle("Taahhüt/beyan tanımları okunamadı.");
+            }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> TaahhutBeyanKaydetAsync(TaahhutBeyanTanim tanim, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            tanim.metin = (tanim.metin ?? "").Trim();
+            if (tanim.siraNo <= 0) sonuc.HataEkle("Sıra numarası zorunludur.");
+            if (tanim.metin.Length == 0) sonuc.HataEkle("Taahhüt/beyan metni zorunludur.");
+            if (tanim.metin.Length > 10000) sonuc.HataEkle("Taahhüt/beyan metni 10.000 karakteri aşamaz.");
+            if (!sonuc.basarili) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                TABTaahhutBeyanTanim tablo = new TABTaahhutBeyanTanim(connection, _localizer);
+                sonuc.nesne = await tablo.KaydetAsync(tanim);
+                TaahhutBeyanTanimSaglayici.Guncelle(await tablo.ListeleAsync());
+                sonuc.mesaj = "Taahhüt/beyan kaydedildi.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Taahhüt/beyan kaydedilemedi.");
+                sonuc.HataEkle("Taahhüt/beyan kaydedilemedi.");
+            }
+            return sonuc;
+        }
+
         public async Task<Sonuc<List<UygunlukSorusu>>> UygunlukSorulariniListeleAsync(Kullanici? kullanici)
         {
             Sonuc<List<UygunlukSorusu>> sonuc = new();

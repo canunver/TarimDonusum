@@ -10,9 +10,6 @@
 <section class="basvuru-panel active" data-panel="11">
     <div class="section-toolbar">
         <h2 class="mb-0">Ürünler ve Satış Bilgileri</h2>
-        <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="YatirimOzetiYazdir" asp-route-id="@b.Id">
-            <i class="fas fa-file-excel mr-1"></i>Yazdır
-        </a>
     </div>
     <p class="lead">Mevcut ve yatırım sonrasında üretilecek ürün bilgilerini ekleyiniz.</p>
 
@@ -20,17 +17,19 @@
     <script type="application/json" id="yatirimOzetiUrunJson">@Html.Raw(JsonSerializer.Serialize(b.YatirimOnBilgileri.Where(x => x.tur == TarimDonusum.Models.enumYatirimOnBilgiTuru.MevcutUrun || x.tur == TarimDonusum.Models.enumYatirimOnBilgiTuru.UretilecekUrun)))</script>
 
     <div class="yatirim-ozeti-section">
-        @if (!ro)
-        {
-            <div class="section-toolbar justify-content-end">
-                <div class="d-flex align-items-center" style="gap:8px">
+        <div class="section-toolbar justify-content-end">
+            <div class="d-flex align-items-center justify-content-end flex-wrap ml-auto" style="gap:8px">
+                <partial name="_AdresAsamaFiltresi" model="Model" />
+                <a data-adres-asama-yazdir class="btn btn-outline-primary" href="@Url.Action("YatirimOzetiYazdir", "Basvuru", new { id = b.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+                @if (!ro)
+                {
                     <a class="btn btn-outline-success" asp-controller="Basvuru" asp-action="UrunlerExcelSablonuIndir"><i class="fas fa-download mr-1"></i>Excel Şablonu</a>
                     <label class="btn btn-outline-success mb-0" for="urunlerExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label>
                     <input id="urunlerExcelDosya" type="file" accept=".xlsx,.xls" class="d-none" />
                     <button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunModalAc(-1)">@L["Basvuru.YatirimOzeti.AddProduct"]</button>
-                </div>
+                }
             </div>
-        }
+        </div>
         <div id="productionInfoBox"></div>
     </div>
 

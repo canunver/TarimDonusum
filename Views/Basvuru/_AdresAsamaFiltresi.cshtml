@@ -1,18 +1,15 @@
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @using TarimDonusum.Models
-@if (Model.Basvuru.kayitTuru == enumBasvuruKayitTuru.Basvuru)
-{
-    <div style="width:320px;max-width:100%;flex-shrink:1">
-        <label class="sr-only" for="adresAsamaFiltresi">Adres - Değer zinciri aşaması</label>
-            <select class="form-control" id="adresAsamaFiltresi" data-kayit-disinda="true" aria-label="Adres - Değer zinciri aşaması" onchange="AdresAsamaFiltresiGuncelle()">
-                <option value="" selected>Hepsi</option>
-                @foreach (var adres in Model.Basvuru.YatirimAdresleri.OrderBy(x => x.siraNo))
-                {
-                    foreach (var asama in Enum.GetValues<enumDegerZinciriAsamaTuru>())
-                    {
-                        <option value="@adres.id|@((int)asama)">@adres.ilAdi / @adres.ilceAdi (@adres.siraNo) - @DegerZinciriAsamaTuruTanimlari.Ad(asama)</option>
-                    }
-                }
-            </select>
-    </div>
-}
+<div style="width:320px;max-width:100%;flex-shrink:1">
+    <label class="sr-only">Adres - Değer zinciri aşaması</label>
+    <select class="form-control adres-asama-filtresi" data-kayit-disinda="true" aria-label="Adres - Değer zinciri aşaması" onchange="AdresAsamaFiltresiGuncelle(this)">
+        <option value="" selected>Hepsi</option>
+        @foreach (var adres in Model.Basvuru.YatirimAdresleri.OrderBy(x => x.siraNo))
+        {
+            foreach (var asama in Enum.GetValues<enumDegerZinciriAsamaTuru>())
+            {
+                <option value="@adres.id|@((int)asama)">@adres.ilAdi / @adres.ilceAdi (@adres.siraNo) - @DegerZinciriAsamaTuruTanimlari.Ad(asama)</option>
+            }
+        }
+    </select>
+</div>

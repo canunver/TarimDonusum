@@ -64,6 +64,7 @@ WebApplication app = builder.Build();
 
 await VTGuncelle.GuncelleAsync(app.Configuration, app.Logger);
 await CevreselSosyalAnketAktarici.AktarVeYukleAsync(app.Configuration, app.Logger);
+await TaahhutBeyanTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
 
 app.UseExceptionHandler("/Home/Error");
 

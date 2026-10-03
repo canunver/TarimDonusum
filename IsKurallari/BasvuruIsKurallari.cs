@@ -2798,7 +2798,8 @@ namespace TarimDonusum.IsKurallari
                         await tabBasvuru.CevreselSosyalAdresiKaydetAsync(cevreselSosyal);
                     if (!cevreselSosyal.basvuruSayfasi)
                     {
-                        bool onay = CevreselSosyalTaahhut.Oku(cevreselSosyal.cevreselSosyalJson, "declaration") ?? CevreselSosyalTaahhut.OnayliMi(mevcut);
+                        // Onay yalnızca Taahhüt/Beyan sayfasında verilir; anket kaydı mevcut onayı değiştirmez.
+                        bool onay = CevreselSosyalTaahhut.OnayliMi(mevcut);
                         await tabBasvuru.OrtakCevreselTaahhutKaydetAsync(cevreselSosyal.basvuruId, onay);
                     }
 
@@ -3803,10 +3804,11 @@ namespace TarimDonusum.IsKurallari
                             bool Onayli(string alan) => root.ValueKind == JsonValueKind.Object
                                 && root.TryGetProperty(alan, out JsonElement value)
                                 && value.ValueKind == JsonValueKind.True;
-                            if (!Onayli("dogrulukBeyani")) sonuc.HataEkle("Başvuru bilgilerinin doğruluğu ve eksiksizliği beyan edilmelidir.");
-                            if (!Onayli("cifteFinansmanBeyani")) sonuc.HataEkle("Çifte finansman bulunmadığı beyan edilmelidir.");
-                            if (!Onayli("bankaVeriPaylasimRizasi")) sonuc.HataEkle("Banka veri paylaşım rızası verilmelidir.");
-                            if (!Onayli("izlemeDenetimKabulu")) sonuc.HataEkle("İzleme, raporlama ve denetim süreçleri kabul edilmelidir.");
+                            foreach (TaahhutBeyanTanim tanim in TaahhutBeyanTanimSaglayici.Aktifler.Where(x => x.zorunlu))
+                            {
+                                if (!Onayli(tanim.anahtar))
+                                    sonuc.HataEkle($"{tanim.siraNo}. taahhüt/beyan maddesi onaylanmalıdır.");
+                            }
                         }
                     }
                     catch (JsonException)

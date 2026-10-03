@@ -1,8 +1,7 @@
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
-@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 <div class="ortak-cevresel-taahhut mt-3">
     <div class="esf-info esf-declaration">
-        <div class="esf-declaration-text">@L["Basvuru.CevreselSosyal.Declaration"]</div>
+        <div class="esf-declaration-text" style="white-space:pre-line">@TarimDonusum.Models.CevreselSosyalTaahhutTanimSaglayici.Metin</div>
         <label class="esf-declaration-confirm">
             <span>Kabul ve taahhüt ederim</span>
             <input class="ortak-cevresel-taahhut-onayi" type="checkbox"

@@ -12,12 +12,23 @@ public static class CevreselSosyalAnketAktarici
         string connectionString=configuration.GetConnectionString("DefaultConnection")??"";
         if(string.IsNullOrWhiteSpace(connectionString))return;
         await using SqlConnection connection=new(connectionString);await connection.OpenAsync();
+        await TaahhutBeyanMetniniIlkDegerleVeYukleAsync(connection);
         await IlkSurumuAktarAsync(connection,logger);
         await KapsamDisiFaaliyetleriIlkDegerleAsync(connection);
         CevreselSosyalAnketSurumu? surum=await new TABCevreselSosyalAnket(connection).YayindakiSurumuOkuAsync();
         if(surum==null)throw new InvalidOperationException("Yayındaki çevresel-sosyal anket sürümü bulunamadı.");
         CevreselSosyalAnketTanimSaglayici.Guncelle(surum);
         logger.LogInformation("Çevresel-sosyal anket modeli yüklendi. SurumId: {SurumId}, SurumNo: {SurumNo}, BolumSayisi: {BolumSayisi}",surum.id,surum.surumNo,surum.gruplar.Count);
+    }
+
+    private static async Task TaahhutBeyanMetniniIlkDegerleVeYukleAsync(SqlConnection connection)
+    {
+        await using SqlCommand command=new(@"IF NOT EXISTS(SELECT 1 FROM dbo.CevreselSosyalTaahhutTanim WHERE Id=1)
+                INSERT dbo.CevreselSosyalTaahhutTanim(Id,Metin) VALUES(1,@Metin);
+            SELECT Metin FROM dbo.CevreselSosyalTaahhutTanim WHERE Id=1;",connection);
+        command.Parameters.AddWithValue("@Metin",CevreselSosyalTaahhutTanimSaglayici.VarsayilanMetin);
+        object? metin=await command.ExecuteScalarAsync();
+        CevreselSosyalTaahhutTanimSaglayici.Guncelle(metin as string);
     }
 
     private static async Task KapsamDisiFaaliyetleriIlkDegerleAsync(SqlConnection connection)

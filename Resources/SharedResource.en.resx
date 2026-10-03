@@ -2787,4 +2787,5 @@
   <data name="MenuBasvuru.naceKodlari" xml:space="preserve"><value>NACE Codes</value></data>
   <data name="MenuBasvuru.uygunlukSorulari" xml:space="preserve"><value>Eligibility Questions</value></data>
   <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Environmental-Social Questionnaire</value></data>
+  <data name="MenuBasvuru.taahhutBeyanlar" xml:space="preserve"><value>Commitments/Declarations</value></data>
 </root>

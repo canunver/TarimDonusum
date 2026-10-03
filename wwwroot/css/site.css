@@ -2310,8 +2310,28 @@ body {
     min-width: 0;
 }
 
-.uygulama-konum-tablosu table { min-width: 1120px; }
+.uygulama-konum-tablosu table { min-width: 820px; }
 .uygulama-konum-tablosu th { white-space: nowrap; }
 .uygulama-konum-tablosu input { min-width: 95px; width: 100%; }
 .uygulama-konum-tablosu select { min-width: 110px; width: 100%; }
 .uygulama-konum-tablosu .konum-mahalle { min-width: 190px; }
+
+/* Yatırım uygulama adresi penceresi: başlık | yüklü dosya + İndir | yeni dosya seçimi */
+.yatirim-yeri-dosyalari { display: grid; gap: 10px; margin-top: 12px; }
+.adres-dosya-satiri { display: grid; grid-template-columns: minmax(140px, 200px) minmax(0, 1fr) minmax(200px, 250px); gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid #d8e0ea; border-radius: 8px; }
+.adres-dosya-baslik { margin: 0; font-size: .82rem; font-weight: 700; color: #344054; }
+.adres-dosya-yuklu { grid-column: 2; display: flex; align-items: center; gap: 8px; min-width: 0; color: #56637a; }
+.adres-dosya-yuklu .document-file-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adres-dosya-yuklu .btn { flex: 0 0 auto; }
+.adres-dosya-satiri input[type="file"] { grid-column: 3; width: 100%; min-width: 0; margin: 0; padding: 7px 10px; border: 1px solid #d0d5dd; border-radius: 8px; font-size: .9rem; font-weight: 400; background: #fff; }
+/* Salt okunur görünümde dosya seçme alanı gösterilmez. */
+.adres-dosya-satiri input[type="file"]:disabled { display: none; }
+@media (max-width: 767.98px) {
+  .adres-dosya-satiri { grid-template-columns: minmax(0, 1fr); }
+  .adres-dosya-yuklu, .adres-dosya-satiri input[type="file"] { grid-column: 1; }
+}
+
+/* Yatırım uygulama adresi penceresi: koordinat seçme haritası */
+.uygulama-konum-tablosu input[readonly] { background: #f2f4f7; color: #344054; cursor: default; }
+.adres-konum-harita { margin-top: 12px; padding: 12px; border: 1px solid #d8e0ea; border-radius: 8px; }
+#adresKonumHarita { height: 380px; border: 1px solid #d0d5dd; border-radius: 8px; cursor: crosshair; z-index: 0; }

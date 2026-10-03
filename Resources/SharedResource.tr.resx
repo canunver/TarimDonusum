@@ -2796,4 +2796,5 @@ Alt projem için belirlenecek risk kategorisine bağlı olarak hazırlanması ge
   <data name="MenuBasvuru.naceKodlari" xml:space="preserve"><value>NACE Kodları</value></data>
   <data name="MenuBasvuru.uygunlukSorulari" xml:space="preserve"><value>Uygunluk Soruları</value></data>
   <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Çevresel Sosyal V.F.</value></data>
+  <data name="MenuBasvuru.taahhutBeyanlar" xml:space="preserve"><value>Taahhüt/Beyan</value></data>
 </root>

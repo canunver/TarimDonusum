@@ -1526,6 +1526,10 @@ namespace TarimDonusum.IsKurallari
                   EXEC(N'ALTER TABLE dbo.BasvuruUygulamaAdresiKonum ADD KoordinatTuru INT NOT NULL CONSTRAINT DF_BasvuruUygulamaAdresiKonum_KoordinatTuru DEFAULT 1');
                   IF OBJECT_ID(N'dbo.CK_BasvuruUygulamaAdresiKonum_KoordinatTuru',N'C') IS NULL
                     EXEC(N'ALTER TABLE dbo.BasvuruUygulamaAdresiKonum WITH CHECK ADD CONSTRAINT CK_BasvuruUygulamaAdresiKonum_KoordinatTuru CHECK(KoordinatTuru IN(1,2))');"),
+            new(124, @"IF OBJECT_ID(N'dbo.CevreselSosyalTaahhutTanim',N'U') IS NULL
+                  CREATE TABLE dbo.CevreselSosyalTaahhutTanim(Id TINYINT NOT NULL CONSTRAINT PK_CevreselSosyalTaahhutTanim PRIMARY KEY CONSTRAINT CK_CevreselSosyalTaahhutTanim_Id CHECK(Id=1),Metin NVARCHAR(MAX) NOT NULL,GuncellemeTarihi DATETIME2 NOT NULL CONSTRAINT DF_CevreselSosyalTaahhutTanim_GuncellemeTarihi DEFAULT SYSUTCDATETIME());"),
+            new(125, @"IF OBJECT_ID(N'dbo.TaahhutBeyanTanim',N'U') IS NULL
+                  CREATE TABLE dbo.TaahhutBeyanTanim(Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_TaahhutBeyanTanim PRIMARY KEY,Anahtar NVARCHAR(100) NOT NULL CONSTRAINT UX_TaahhutBeyanTanim_Anahtar UNIQUE,SiraNo INT NOT NULL,Metin NVARCHAR(MAX) NOT NULL,Zorunlu INT NOT NULL CONSTRAINT DF_TaahhutBeyanTanim_Zorunlu DEFAULT 1,Aktif INT NOT NULL CONSTRAINT DF_TaahhutBeyanTanim_Aktif DEFAULT 1,GuncellemeTarihi DATETIME2 NOT NULL CONSTRAINT DF_TaahhutBeyanTanim_GuncellemeTarihi DEFAULT SYSUTCDATETIME());"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)
