@@ -1418,6 +1418,17 @@ body {
   max-width: 900px;
 }
 
+.uygulama-adres-modal .modal-dialog {
+  width: 80vw;
+  max-width: 1400px;
+  height: 80vh;
+  margin: 10vh auto;
+}
+
+.uygulama-adres-modal .modal-content { height: 100%; }
+.uygulama-adres-modal .firma-modal-body { overflow: hidden; }
+.uygulama-adres-modal .firma-modal-fields { height: 100%; max-height: none; }
+
 .firma-modal-content {
   border: 2px solid #234b7c;
   border-radius: 8px;
@@ -2310,11 +2321,17 @@ body {
     min-width: 0;
 }
 
-.uygulama-konum-tablosu table { min-width: 820px; }
+.uygulama-konum-tablosu table { min-width: 700px; }
 .uygulama-konum-tablosu th { white-space: nowrap; }
 .uygulama-konum-tablosu input { min-width: 95px; width: 100%; }
 .uygulama-konum-tablosu select { min-width: 110px; width: 100%; }
-.uygulama-konum-tablosu .konum-mahalle { min-width: 190px; }
+.uygulama-konum-tablosu .konum-mahalle { width: 50ch; min-width: 360px; max-width: 50ch; }
+.uygulama-konum-tablosu .konum-mahalle input { min-width: 340px; }
+.uygulama-konum-tablosu .konum-ada,
+.uygulama-konum-tablosu .konum-parsel { width: 7ch; min-width: 7ch; max-width: 7ch; }
+.uygulama-konum-tablosu .konum-ada input,
+.uygulama-konum-tablosu .konum-parsel input { min-width: 5ch; }
+.uygulama-konum-tablosu .konum-koordinat { min-width: 225px; }
 
 /* Yatırım uygulama adresi penceresi: başlık | yüklü dosya + İndir | yeni dosya seçimi */
 .yatirim-yeri-dosyalari { display: grid; gap: 10px; margin-top: 12px; }
@@ -2331,7 +2348,11 @@ body {
   .adres-dosya-yuklu, .adres-dosya-satiri input[type="file"] { grid-column: 1; }
 }
 
-/* Yatırım uygulama adresi penceresi: koordinat seçme haritası */
+/* Yatırım uygulama adresi: koordinat seçme haritası */
 .uygulama-konum-tablosu input[readonly] { background: #f2f4f7; color: #344054; cursor: default; }
-.adres-konum-harita { margin-top: 12px; padding: 12px; border: 1px solid #d8e0ea; border-radius: 8px; }
-#adresKonumHarita { height: 380px; border: 1px solid #d0d5dd; border-radius: 8px; cursor: crosshair; z-index: 0; }
+.konum-harita-modal { z-index: 1060; }
+.konum-harita-modal .modal-dialog { max-width: min(1100px, calc(100vw - 30px)); }
+#adresKonumHarita { height: min(68vh, 650px); min-height: 420px; border: 1px solid #d0d5dd; border-radius: 8px; cursor: crosshair; z-index: 0; }
+@media (max-width: 767.98px) {
+  #adresKonumHarita { height: 58vh; min-height: 320px; }
+}

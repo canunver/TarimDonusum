@@ -269,17 +269,9 @@
                                     <button type="button" class="btn btn-sm btn-outline-primary" onclick="AdresKonumSatiriEkle()" disabled="@ro">+ Satır ekle</button>
                                 </div>
                                 <div class="table-responsive"><table class="table table-bordered mb-0">
-                                    <thead><tr><th>Sil</th><th class="konum-mahalle-baslik">Mahalle</th><th>Ada</th><th>Parsel</th><th>Koordinat X (Boylam)</th><th>Koordinat Y (Enlem)</th><th>Harita</th></tr></thead>
+                                    <thead><tr><th>Sil</th><th class="konum-mahalle-baslik">Mahalle</th><th>Ada</th><th>Parsel</th><th>Koordinat (X, Y)</th><th>Harita</th></tr></thead>
                                     <tbody id="adresModalKonumlar"></tbody>
                                 </table></div>
-                                <div id="adresKonumHaritaPaneli" class="adres-konum-harita d-none">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <strong id="adresKonumHaritaBaslik"></strong>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="AdresKonumHaritaKapat()">Haritayı kapat</button>
-                                    </div>
-                                    <div id="adresKonumHarita"></div>
-                                    <small id="adresKonumHaritaNot" class="form-text text-muted"></small>
-                                </div>
                             </div>
 
                             <label>Kullanım hakkı başlangıç tarihi<input id="adresModalKullanimHakkiBaslangicTarihi" type="date" /></label>
@@ -322,6 +314,25 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary uygulama-adres-modal-kapat" data-dismiss="modal">@L["Basvuru.Common.Cancel"]</button>
                     @if (!ro) { <button type="button" class="btn btn-primary" id="adresKaydetBtn">@L["Basvuru.Common.Save"]</button> }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade konum-harita-modal" id="adresKonumHaritaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adresKonumHaritaBaslik">Haritadan konum seçimi</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Kapat"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <div id="adresKonumHarita"></div>
+                    <small id="adresKonumHaritaNot" class="form-text text-muted mt-2"></small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button>
+                    @if (!ro) { <button type="button" class="btn btn-primary" onclick="AdresKonumHaritaSeciminiAktar()"><i class="fas fa-check mr-1"></i>Seç ve aktar</button> }
                 </div>
             </div>
         </div>
@@ -687,6 +698,7 @@
     let locked = @(kilitli ? "true" : "false");
     let dirty = false;
     var uygulamaAdresModal;
+    var adresKonumHaritaModal;
     var firmaModal;
     var firmaSecModal;
     var ortakModal;
@@ -707,6 +719,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof PopupMesajIlklendir === 'function') PopupMesajIlklendir();
         uygulamaAdresModal = modalOlustur(document.getElementById('uygulamaAdresModal'));
+        adresKonumHaritaModal = modalOlustur(document.getElementById('adresKonumHaritaModal'));
         firmaModal = modalOlustur(document.getElementById('firmaModal'));
         firmaSecModal = modalOlustur(document.getElementById('firmaSecModal'));
         ortakModal = modalOlustur(document.getElementById('ortakModal'));
@@ -718,6 +731,12 @@
         document.querySelectorAll('.uygulama-adres-modal-kapat').forEach(btn => btn.addEventListener('click', () => uygulamaAdresModal?.hide()));
         $('#uygulamaAdresModal').off('hidden.bs.modal.adresAlanlari').on('hidden.bs.modal.adresAlanlari', function () {
             AdrestenUretilenYatirimAlanlariniHesapla();
+        });
+        $('#adresKonumHaritaModal').off('hidden.bs.modal.konumHarita').on('hidden.bs.modal.konumHarita', function () {
+            adresKonumHaritaSatiri = -1;
+            adresKonumHaritaSecimi = null;
+            // Alttaki uygulama adresi modalı açık kaldığından sayfa kaydırma kilidini koru.
+            if ($('#uygulamaAdresModal').hasClass('show')) document.body.classList.add('modal-open');
         });
         document.querySelectorAll('.ortak-modal-kapat').forEach(btn => btn.addEventListener('click', () => ortakModal?.hide()));
         document.querySelectorAll('.adli-sicil-modal-kapat').forEach(btn => btn.addEventListener('click', () => adliSicilModal?.hide()));
@@ -4701,21 +4720,23 @@
         body.innerHTML = adresKonumSatirlari.map((satir, index) => {
             const sil = index > 0 && !basvuruReadonly ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="AdresKonumSatiriSil(${index})">Sil</button>` : '';
             const metin = (alan, etiket, uzunluk, css = '') => `<td class="${css}"><input aria-label="${etiket} ${index + 1}" maxlength="${uzunluk}" value="${htmlEncode(satir[alan] ?? '')}" ${basvuruReadonly ? 'disabled' : ''} oninput="AdresKonumDegistir(${index}, '${alan}', this)" /></td>`;
-            const pozitifTamSayi = (alan, etiket) => `<td><input aria-label="${etiket} ${index + 1}" type="number" min="1" step="1" value="${htmlEncode(satir[alan] ?? '')}" ${basvuruReadonly ? 'disabled' : ''} oninput="AdresKonumDegistir(${index}, '${alan}', this)" /></td>`;
+            const pozitifTamSayi = (alan, etiket, css = '') => `<td class="${css}"><input aria-label="${etiket} ${index + 1}" type="number" min="1" step="1" value="${htmlEncode(satir[alan] ?? '')}" ${basvuruReadonly ? 'disabled' : ''} oninput="AdresKonumDegistir(${index}, '${alan}', this)" /></td>`;
             if (!satir.koordinatTuru) satir.koordinatTuru = 1;
-            // Koordinatlar elle girilmez; yalnızca haritadan seçilir. X = boylam, Y = enlem.
-            const koordinat = (alan, etiket) => `<td><input aria-label="${etiket} ${index + 1}" value="${htmlEncode(satir[alan] ?? '')}" readonly tabindex="-1" placeholder="${basvuruReadonly ? '' : 'Haritadan seçin'}" /></td>`;
             const koordinatVar = satir.minEnlem != null && satir.minBoylam != null;
+            // X ve Y ayrı değerler olarak saklanır; yer kazanmak için tabloda tek alanda gösterilir.
+            const koordinatMetni = koordinatVar ? `${satir.minBoylam}, ${satir.minEnlem}` : '';
+            const koordinat = `<td class="konum-koordinat"><input aria-label="Koordinat X ve Y ${index + 1}" value="${htmlEncode(koordinatMetni)}" readonly tabindex="-1" placeholder="${basvuruReadonly ? '' : 'Haritadan seçin'}" /></td>`;
             const harita = !basvuruReadonly || koordinatVar
                 ? `<button type="button" class="btn btn-sm btn-outline-primary text-nowrap" onclick="AdresKonumHaritaAc(${index})"><i class="fas fa-map-marker-alt mr-1"></i>Harita</button>`
                 : '';
-            return `<tr><td>${sil}</td>${metin('mahalle','Mahalle',200,'konum-mahalle')}${pozitifTamSayi('ada','Ada')}${pozitifTamSayi('parsel','Parsel')}${koordinat('minBoylam','Koordinat X')}${koordinat('minEnlem','Koordinat Y')}<td>${harita}</td></tr>`;
+            return `<tr><td>${sil}</td>${metin('mahalle','Mahalle',200,'konum-mahalle')}${pozitifTamSayi('ada','Ada','konum-ada')}${pozitifTamSayi('parsel','Parsel','konum-parsel')}${koordinat}<td>${harita}</td></tr>`;
         }).join('');
     }
 
-    let adresKonumHarita = null, adresKonumHaritaIsareti = null, adresKonumHaritaSatiri = -1, leafletYukleniyor = null;
+    let adresKonumHarita = null, adresKonumHaritaIsareti = null, adresKonumHaritaSatiri = -1,
+        adresKonumHaritaSecimi = null, leafletYukleniyor = null;
 
-    // Harita kitaplığı (Leaflet, OpenStreetMap altlığı) yalnızca ilk kullanımda yüklenir.
+    // Harita kitaplığı (Leaflet) yalnızca ilk kullanımda yüklenir.
     function LeafletYukle() {
         if (window.L) return Promise.resolve();
         if (!leafletYukleniyor) {
@@ -4742,14 +4763,11 @@
         const satir = adresKonumSatirlari[index];
         if (!satir) return;
         LeafletYukle().then(() => {
-            const panel = document.getElementById('adresKonumHaritaPaneli');
-            if (!panel) return;
             adresKonumHaritaSatiri = index;
-            panel.classList.remove('d-none');
             document.getElementById('adresKonumHaritaBaslik').textContent = `${index + 1}. satır için konum`;
             document.getElementById('adresKonumHaritaNot').textContent = basvuruReadonly
                 ? 'Kayıtlı konum haritada gösterilmektedir.'
-                : 'Haritayı yakınlaştırıp yatırım yerine tıklayınız; koordinatlar tabloya otomatik yazılır.';
+                : 'Haritayı yakınlaştırıp yatırım yerine tıklayınız, ardından “Seç ve aktar” düğmesine basınız.';
             if (!adresKonumHarita) {
                 // Harita Türkiye'yi çevreleyen dikdörtgenin dışına kaydırılamaz ve bu alandan daha fazla uzaklaştırılamaz.
                 const sinir = turkiyeKoordinatSinirlari[1];
@@ -4758,17 +4776,36 @@
                     maxBoundsViscosity: 1,
                     minZoom: 6
                 });
-                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                const sokakKatmani = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> katkıda bulunanlar'
-                }).addTo(adresKonumHarita);
+                });
+                const uyduGoruntuKatmani = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics ve GIS kullanıcı topluluğu'
+                });
+                // Uydu görüntüsünün üzerinde yol, sınır ve yer adlarını şeffaf referans katmanlarıyla göster.
+                const uyduUlasimKatmani = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19
+                });
+                const uyduEtiketKatmani = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19
+                });
+                const uyduKatmani = L.layerGroup([uyduGoruntuKatmani, uyduUlasimKatmani, uyduEtiketKatmani]);
+                sokakKatmani.addTo(adresKonumHarita);
+                L.control.layers({
+                    'Sokak haritası': sokakKatmani,
+                    'Uydu + yol ve yer adları': uyduKatmani
+                }, null, { collapsed: false, position: 'topright' }).addTo(adresKonumHarita);
                 adresKonumHarita.on('click', olay => AdresKonumHaritadanSec(olay.latlng));
             }
             const koordinatVar = satir.minEnlem != null && satir.minBoylam != null;
             const merkez = koordinatVar ? [Number(satir.minEnlem), Number(satir.minBoylam)] : [39.0, 35.2];
+            adresKonumHaritaSecimi = koordinatVar ? { enlem: merkez[0], boylam: merkez[1] } : null;
             adresKonumHarita.setView(merkez, koordinatVar ? 16 : 6);
             AdresKonumHaritaIsaretiniGuncelle(koordinatVar ? merkez : null);
-            setTimeout(() => { adresKonumHarita.invalidateSize(); panel.scrollIntoView({ block: 'nearest' }); }, 60);
+            adresKonumHaritaModal?.show();
+            setTimeout(() => adresKonumHarita.invalidateSize(), 250);
         }).catch(() => PopupMesajGoster('Harita yüklenemedi. İnternet bağlantınızı kontrol ediniz.', false));
     }
 
@@ -4783,25 +4820,37 @@
     }
 
     function AdresKonumHaritadanSec(latlng) {
-        const satir = adresKonumSatirlari[adresKonumHaritaSatiri];
-        if (basvuruReadonly || !satir || !latlng) return;
+        if (basvuruReadonly || !latlng) return;
         const enlem = Number(latlng.lat.toFixed(6)), boylam = Number(latlng.lng.toFixed(6));
         const sinirlar = turkiyeKoordinatSinirlari[1];
         if (enlem < sinirlar.minEnlem || enlem > sinirlar.maxEnlem || boylam < sinirlar.minBoylam || boylam > sinirlar.maxBoylam) {
             PopupMesajGoster('Seçilen nokta Türkiye sınırları dışında. Lütfen Türkiye içinde bir konum seçiniz.', false);
             return;
         }
+        adresKonumHaritaSecimi = { enlem, boylam };
+        AdresKonumHaritaIsaretiniGuncelle([enlem, boylam]);
+    }
+
+    function AdresKonumHaritaSeciminiAktar() {
+        const satir = adresKonumSatirlari[adresKonumHaritaSatiri];
+        if (basvuruReadonly || !satir) return;
+        if (!adresKonumHaritaSecimi) {
+            PopupMesajGoster('Lütfen harita üzerinden bir konum seçiniz.', false);
+            return;
+        }
+        const { enlem, boylam } = adresKonumHaritaSecimi;
         // Haritadan tek nokta alınır; mevcut min/max alanlarının ikisine de aynı değer yazılır.
         satir.minEnlem = enlem; satir.maxEnlem = enlem;
         satir.minBoylam = boylam; satir.maxBoylam = boylam;
         satir.koordinatTuru = 1;
-        AdresKonumHaritaIsaretiniGuncelle([enlem, boylam]);
         AdresKonumTablosuRender();
+        adresKonumHaritaModal?.hide();
     }
 
     function AdresKonumHaritaKapat() {
         adresKonumHaritaSatiri = -1;
-        document.getElementById('adresKonumHaritaPaneli')?.classList.add('d-none');
+        adresKonumHaritaSecimi = null;
+        adresKonumHaritaModal?.hide();
     }
 
     function AdresKonumDegistir(index, alan, input) {
