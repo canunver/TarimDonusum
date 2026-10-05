@@ -1,14 +1,43 @@
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @using TarimDonusum.Models
+@{
+    // Yalnızca bu sayfanın listesinde kaydı bulunan adres - aşama seçenekleri gösterilir.
+    // Sayfa, filtreyi eklemeden önce ViewData["AdresAsamaKaynak"] ile hangi listeye bakılacağını bildirir.
+    string kaynak = ViewData["AdresAsamaKaynak"] as string ?? "";
+    int Sayi(object? deger) => deger == null ? 0 : Convert.ToInt32(deger);
+    var veriOlanlar = new HashSet<string>();
+    if (kaynak == "urun" || kaynak == "girdi" || kaynak == "")
+    {
+        foreach (var x in Model.Basvuru.YatirimOnBilgileri)
+        {
+            bool urun = x.tur == enumYatirimOnBilgiTuru.MevcutUrun || x.tur == enumYatirimOnBilgiTuru.UretilecekUrun;
+            bool girdi = x.tur == enumYatirimOnBilgiTuru.Girdi;
+            if (kaynak == "" || (kaynak == "urun" && urun) || (kaynak == "girdi" && girdi))
+            {
+                veriOlanlar.Add($"{Sayi(x.uygulamaAdresiId)}|{Sayi(x.degerZinciriAsamaTuru)}");
+            }
+        }
+    }
+    if (kaynak == "makine" || kaynak == "")
+    {
+        foreach (var x in Model.Basvuru.Makineler) { veriOlanlar.Add($"{Sayi(x.uygulamaAdresiId)}|{Sayi(x.degerZinciriAsamaTuru)}"); }
+    }
+    if (kaynak == "bina" || kaynak == "")
+    {
+        foreach (var x in Model.Basvuru.Binalar) { veriOlanlar.Add($"{Sayi(x.uygulamaAdresiId)}|{Sayi(x.degerZinciriAsamaTuru)}"); }
+    }
+}
 <div style="width:320px;max-width:100%;flex-shrink:1">
     <label class="sr-only">Adres - Değer zinciri aşaması</label>
-    <select class="form-control adres-asama-filtresi" data-kayit-disinda="true" aria-label="Adres - Değer zinciri aşaması" onchange="AdresAsamaFiltresiGuncelle(this)">
+    <select class="form-control adres-asama-filtresi" data-kaynak="@kaynak" data-kayit-disinda="true" aria-label="Adres - Değer zinciri aşaması" onchange="AdresAsamaFiltresiGuncelle(this)" onfocus="AdresAsamaSecenekleriniGuncelle()" onmousedown="AdresAsamaSecenekleriniGuncelle()">
         <option value="" selected>Hepsi</option>
         @foreach (var adres in Model.Basvuru.YatirimAdresleri.OrderBy(x => x.siraNo))
         {
             foreach (var asama in Enum.GetValues<enumDegerZinciriAsamaTuru>())
             {
-                <option value="@adres.id|@((int)asama)">@adres.ilAdi / @adres.ilceAdi (@adres.siraNo) - @DegerZinciriAsamaTuruTanimlari.Ad(asama)</option>
+                string deger = $"{adres.id}|{(int)asama}";
+                bool bos = !veriOlanlar.Contains(deger);
+                <option value="@deger" data-bos="@(bos ? "true" : "false")" hidden="@bos" disabled="@bos">@adres.ilAdi / @adres.ilceAdi (@adres.siraNo) - @DegerZinciriAsamaTuruTanimlari.Ad(asama)</option>
             }
         }
     </select>

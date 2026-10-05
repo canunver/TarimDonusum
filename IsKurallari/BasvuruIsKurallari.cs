@@ -716,13 +716,10 @@ namespace TarimDonusum.IsKurallari
             bool temsilYetki = !string.IsNullOrWhiteSpace(b.irtibat.yetkiliKisiler) || b.AdliSicilKisileri.Count > 0;
             bool yatirim = !string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi)
                 && !string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci)
-                && !string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri)
-                && !string.IsNullOrWhiteSpace(b.yatirim.yatirimGirdileri)
-                && !string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari);
+                && !string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri);
             bool yatirimOzeti = !string.IsNullOrWhiteSpace(b.yatirimOzeti.yatirimOzetiJson);
             bool yatirimYeri = b.YatirimAdresleri.Count > 0 && b.YatirimAdresleri.All(x => x.ilId.HasValue && x.ilceId.HasValue && !string.IsNullOrWhiteSpace(x.tamAdres)
-                && x.yatirimTurleri.Count > 0 && x.harcamaTurleri.Count > 0 && !string.IsNullOrWhiteSpace(x.yatirimFaaliyetleri)
-                && !string.IsNullOrWhiteSpace(x.yatirimGirdileri) && !string.IsNullOrWhiteSpace(x.yatirimCiktilari));
+                && x.yatirimTurleri.Count > 0 && x.harcamaTurleri.Count > 0 && !string.IsNullOrWhiteSpace(x.yatirimFaaliyetleri));
             bool degerZinciri = b.basvuruFirma.ilId > 0 && b.yatirim.degerZinciriId.GetValueOrDefault() > 0 && b.yatirim.degerZinciriAsamalari.Count > 0;
             bool finans = b.HesaplananToplamYatirimTutariEur.GetValueOrDefault() > 0 && b.finans.talepEdilenFinansmanOrani.GetValueOrDefault() > 0
                 && b.finans.talepEdilenVadeSuresiAy.GetValueOrDefault() > 0
@@ -1053,8 +1050,8 @@ namespace TarimDonusum.IsKurallari
             Eksikse(b.YatirimAdresleri.Any(x => x.harcamaTurleri.Count == 0), "Basvuru.Summary.Error.ExpenseTypeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatiriminAmaci), "Basvuru.Summary.Error.InvestmentPurposeRequired");
             Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimFaaliyetleri), "Basvuru.Summary.Error.InvestmentActivitiesRequired");
-            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimGirdileri), "Basvuru.Summary.Error.InvestmentInputsRequired");
-            Eksikse(string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari), "Basvuru.Summary.Error.InvestmentOutputsRequired");
+            Eksikse(b.kayitTuru == enumBasvuruKayitTuru.Basvuru && string.IsNullOrWhiteSpace(b.yatirim.yatirimGirdileri), "Basvuru.Summary.Error.InvestmentInputsRequired");
+            Eksikse(b.kayitTuru == enumBasvuruKayitTuru.Basvuru && string.IsNullOrWhiteSpace(b.yatirim.yatirimCiktilari), "Basvuru.Summary.Error.InvestmentOutputsRequired");
             Eksikse(!b.yatirim.degerZinciriId.HasValue || b.yatirim.degerZinciriId <= 0, "Basvuru.Summary.Error.ValueChainRequired");
             Eksikse(b.yatirim.degerZinciriAsamalari.Count == 0, "Basvuru.Summary.Error.ValueChainStageRequired");
             decimal azamiFinansmanOrani = b.basvuruFirma.donem.AzamiDestekOrani(b.YatirimAdresleri.Select(x => x.ilceId));
@@ -4804,9 +4801,11 @@ namespace TarimDonusum.IsKurallari
                 return;
 
             bool tuzukGerekli = basvuru.basvuruFirma.basvuruSahibiTuru is enumBasvuruSahibiTuru.UreticiOrgutu or enumBasvuruSahibiTuru.Kooperatif;
-            IReadOnlyDictionary<int, string> belgeTurleri = tuzukGerekli
-                ? ZorunluBelgeTurleri
-                : ZorunluBelgeTurleri.Where(x => x.Key != 8).ToDictionary(x => x.Key, x => x.Value);
+            // Ön başvuruda noter onaylı imza sirküleri (7 numaralı belge) istenmez.
+            bool imzaSirkuleriGerekli = basvuru.kayitTuru != enumBasvuruKayitTuru.OnBasvuru;
+            IReadOnlyDictionary<int, string> belgeTurleri = ZorunluBelgeTurleri
+                .Where(x => (tuzukGerekli || x.Key != 8) && (imzaSirkuleriGerekli || x.Key != 7))
+                .ToDictionary(x => x.Key, x => x.Value);
             basvuru.ZorunluBelgeler = await BasvuruDosyaListesiOlusturAsync(basvuru.Id, BasvuruZorunluBelgeFormAd, belgeTurleri);
             foreach (BasvuruOrtak ortak in basvuru.ortaklik.ortaklar.Where(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase)))
             {

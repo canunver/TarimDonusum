@@ -15,7 +15,7 @@
     <div class="yatirim-ozeti-section">
         <div class="section-toolbar">
             <h3>Yatırım Sonrası Girdi Tedarik İhtiyacı</h3>
-            <div class="d-flex align-items-center justify-content-end flex-wrap ml-auto" style="gap:8px"><partial name="_AdresAsamaFiltresi" model="Model" />
+            <div class="d-flex align-items-center justify-content-end flex-wrap ml-auto" style="gap:8px">@{ ViewData["AdresAsamaKaynak"] = "girdi"; }<partial name="_AdresAsamaFiltresi" model="Model" />
             @if (!ro)
             {
                 <div class="d-flex align-items-center flex-wrap" style="gap:8px">
@@ -48,7 +48,7 @@
 @if (!ro)
 {
     <div class="modal fade" id="dbCtpGirdiModal" tabindex="-1">
-        <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-dialog modal-lg"><div class="modal-content">
             <div class="modal-header"><h5 class="modal-title" id="dbCtpGirdiModalBaslik">Teknik Proje Girdisi</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
             <div class="modal-body">
                 <input id="dbCtpGirdiIndex" type="hidden" />

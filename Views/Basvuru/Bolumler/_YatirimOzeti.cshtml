@@ -19,7 +19,7 @@
     <div class="yatirim-ozeti-section">
         <div class="section-toolbar justify-content-end">
             <div class="d-flex align-items-center justify-content-end flex-wrap ml-auto" style="gap:8px">
-                <partial name="_AdresAsamaFiltresi" model="Model" />
+                @{ ViewData["AdresAsamaKaynak"] = "urun"; }<partial name="_AdresAsamaFiltresi" model="Model" />
                 <a data-adres-asama-yazdir class="btn btn-outline-primary" href="@Url.Action("YatirimOzetiYazdir", "Basvuru", new { id = b.Id })"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
                 @if (!ro)
                 {

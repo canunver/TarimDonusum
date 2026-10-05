@@ -194,7 +194,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content firma-modal-content">
                 <div class="modal-header firma-modal-header">
-                    <h5 class="modal-title">@L["Basvuru.Address.ModalTitle"]</h5>
+                    <h5 class="modal-title">@(basvuruKaydi ? T("Basvuru.Address.ModalTitle") : "Yatırım Uygulama Bilgileri")</h5>
                     <button type="button" class="close uygulama-adres-modal-kapat" data-dismiss="modal" aria-label="@T("Basvuru.Common.Close")">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -252,7 +252,7 @@
                                 </select>
                             </label>
                             <label>@L["Basvuru.Field.KiraVeyaTahsisSuresi"]<input id="adresModalKiraVeyaTahsisSuresi" type="number" min="0" step="1" /></label>
-                            <label>@L["Basvuru.Field.KiraTahsisBitisTarihi"]<input id="adresModalKiraTahsisBitisTarihi" type="date" /></label>
+                            @if (basvuruKaydi) { <label>@L["Basvuru.Field.KiraTahsisBitisTarihi"]<input id="adresModalKiraTahsisBitisTarihi" type="date" /></label> }
                             <label id="adresModalYapiRuhsatiAlani">
                                 @L["Basvuru.Field.YapiRuhsatiDurumu"]
                                 <select id="adresModalYapiRuhsatiDurumu">
@@ -275,13 +275,13 @@
                             </div>
 
                             <label>Kullanım hakkı başlangıç tarihi<input id="adresModalKullanimHakkiBaslangicTarihi" type="date" /></label>
-                            <label>Uygulama ve geri ödeme dönemini kapsıyor mu?<select id="adresModalDonemleriKapsiyorMu"><option value="">Seçiniz</option><option value="true">Evet</option><option value="false">Hayır</option></select></label>
+                            @if (basvuruKaydi) { <label>Uygulama ve geri ödeme dönemini kapsıyor mu?<select id="adresModalDonemleriKapsiyorMu"><option value="">Seçiniz</option><option value="true">Evet</option><option value="false">Hayır</option></select></label> } else { <label>@L["Basvuru.Field.KiraTahsisBitisTarihi"]<input id="adresModalKiraTahsisBitisTarihi" type="date" /></label> }
                         </div>
                         <label class="wide-label">@L["Basvuru.Field.TamAdres"]<textarea id="adresModalTamAdres"></textarea></label>
-                        <p class="section-description">Faaliyetleri, girdileri ve çıktıları virgülle ayırarak giriniz.</p>
+                        <p class="section-description">@(basvuruKaydi ? "Faaliyetleri, girdileri ve çıktıları virgülle ayırarak giriniz." : "Faaliyetleri virgülle ayırarak giriniz.")</p>
                         <label class="wide-label">@L["Basvuru.Field.YatirimFaaliyetleri"] <span class="required-mark">*</span><textarea id="adresModalYatirimFaaliyetleri" placeholder="Virgülle ayırarak giriniz"></textarea></label>
-                        <label class="wide-label">@L["Basvuru.Field.YatirimGirdileri"]<textarea id="adresModalYatirimGirdileri" placeholder="Virgülle ayırarak giriniz"></textarea></label>
-                        <label class="wide-label">@L["Basvuru.Field.YatirimCiktilari"]<textarea id="adresModalYatirimCiktilari" placeholder="Virgülle ayırarak giriniz"></textarea></label>
+                        @if (basvuruKaydi) { <label class="wide-label">@L["Basvuru.Field.YatirimGirdileri"]<textarea id="adresModalYatirimGirdileri" placeholder="Virgülle ayırarak giriniz"></textarea></label> }
+                        @if (basvuruKaydi) { <label class="wide-label">@L["Basvuru.Field.YatirimCiktilari"]<textarea id="adresModalYatirimCiktilari" placeholder="Virgülle ayırarak giriniz"></textarea></label> }
                         <label class="wide-label">İzin/ruhsat takvimi ve açıklama<textarea id="adresModalIzinTakvimAciklama"></textarea></label>
                         <div class="yatirim-yeri-dosyalari">
                             <div class="adres-dosya-satiri">
@@ -551,14 +551,16 @@
         'yatirimEkipmanAdresFiltresi', 'yobiAdresFiltresi', 'degerZinciriAdresSelect'
     ]);
 
+    const adresiHerZamanGorunenAlanlar = new Set(['yoUrunUygulamaAdresiId', 'dbCtpGirdiUygulamaAdresiId', 'yeAdres', 'binaAdres']);
+
     function TekUygulamaAdresiSecimleriniUygula() {
         if (tekUygulamaAdresiId <= 0) return;
         uygulamaAdresiSecimAlanlari.forEach(id => {
             const select = document.getElementById(id);
             if (!select || !Array.from(select.options).some(x => Number(x.value) === tekUygulamaAdresiId)) return;
             select.value = String(tekUygulamaAdresiId);
-            // Ürün ve ekipman pencerelerinde tek adres olsa da adres bilgisini göster.
-            if (id !== 'yoUrunUygulamaAdresiId' && id !== 'yeAdres') select.closest('label')?.classList.add('d-none');
+            // Ürün, girdi, ekipman ve bina ekleme pencerelerinde tek adres olsa da adres alanı görünür kalır.
+            if (!adresiHerZamanGorunenAlanlar.has(id)) select.closest('label')?.classList.add('d-none');
         });
     }
 
@@ -837,12 +839,35 @@
         });
     }
 
+    // Combobox'ta sunucu yalnızca o sayfanın listesinde verisi olan adres - aşama seçeneklerini açık gönderir.
+    // Sayfada yeni eklenen kayıtların ve o an seçili filtrenin seçeneği burada görünür yapılır.
+    function AdresAsamaSecenekleriniGuncelle() {
+        const listeler = {
+            urun: () => yatirimOzetiUrunRows,
+            girdi: () => dbCtpData?.inputs,
+            makine: () => yatirimEkipmanlari,
+            bina: () => basvuruBinalari
+        };
+        document.querySelectorAll('.adres-asama-filtresi').forEach(filtre => {
+            const liste = listeler[filtre.dataset.kaynak]?.();
+            const kayitlar = Array.isArray(liste) ? liste : [];
+            const veriOlanlar = new Set(kayitlar.map(x => `${Number(x?.uygulamaAdresiId) || 0}|${Number(x?.degerZinciriAsamaTuru) || 0}`));
+            filtre.querySelectorAll('option[data-bos="true"]').forEach(secenek => {
+                if (!veriOlanlar.has(secenek.value) && secenek.value !== adresAsamaSeciliDeger) return;
+                secenek.hidden = false;
+                secenek.disabled = false;
+                secenek.dataset.bos = 'false';
+            });
+        });
+    }
+
     // Bölüm AJAX ile yeniden yüklendiğinde seçili filtre yeni combobox'a ve Yazdır bağlantılarına taşınır.
     function AdresAsamaFiltresiEsitle() {
         const filtreler = [...document.querySelectorAll('.adres-asama-filtresi')];
         if (!filtreler.length) return;
         if (adresAsamaSeciliDeger && ![...filtreler[0].options].some(x => x.value === adresAsamaSeciliDeger))
             adresAsamaSeciliDeger = '';
+        AdresAsamaSecenekleriniGuncelle();
         filtreler.forEach(x => x.value = adresAsamaSeciliDeger);
         AdresAsamaYazdirBaglantilariniGuncelle();
     }
@@ -897,6 +922,8 @@
                 BasvuruStepSec(active);
                 AdresAsamaFiltresiEsitle();
                 BasvuruBolumIlklendir(active);
+                // Bazı sayfalar açılışta Yazdır bağlantısını yeniden yazar; filtre parametreleri en son eklenir.
+                AdresAsamaYazdirBaglantilariniGuncelle();
                 BasvuruAksiyonButonlariGuncelle();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             })
@@ -4947,14 +4974,14 @@
             kumelenmeOrganizeAlanTuru: Number(modalValue('adresModalKumelenmeOrganizeAlanTuru') || 0),
             segeKademesi: modalValue('adresModalSegeKademesi'),
             kullanimHakkiBaslangicTarihi: modalValue('adresModalKullanimHakkiBaslangicTarihi') || null,
-            donemleriKapsiyorMu: modalValue('adresModalDonemleriKapsiyorMu') === '' ? null : modalValue('adresModalDonemleriKapsiyorMu') === 'true',
+            donemleriKapsiyorMu: !document.getElementById('adresModalDonemleriKapsiyorMu') ? (mevcutAdres?.donemleriKapsiyorMu ?? null) : modalValue('adresModalDonemleriKapsiyorMu') === '' ? null : modalValue('adresModalDonemleriKapsiyorMu') === 'true',
             izinTakvimAciklama: modalValue('adresModalIzinTakvimAciklama')
             ,degerZinciriAsamalari: $('#adresModalDegerZinciriAsamalari input:checked').map(function () { return { id: Number(this.value) }; }).get()
             ,yatirimTurleri: $('#adresModalYatirimTurleri input:checked').map(function () { return Number(this.value); }).get()
             ,harcamaTurleri: $('#adresModalHarcamaTurleri input:checked').map(function () { return Number(this.value); }).get()
             ,yatirimFaaliyetleri: modalValue('adresModalYatirimFaaliyetleri')
-            ,yatirimGirdileri: modalValue('adresModalYatirimGirdileri')
-            ,yatirimCiktilari: modalValue('adresModalYatirimCiktilari')
+            ,yatirimGirdileri: document.getElementById('adresModalYatirimGirdileri') ? modalValue('adresModalYatirimGirdileri') : (mevcutAdres?.yatirimGirdileri || '')
+            ,yatirimCiktilari: document.getElementById('adresModalYatirimCiktilari') ? modalValue('adresModalYatirimCiktilari') : (mevcutAdres?.yatirimCiktilari || '')
         };
         adresKaydet(adres);
     }

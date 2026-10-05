@@ -15,7 +15,7 @@
 
     <div class="section-toolbar mt-3">
         <h3>Ürünler ve Satış Bilgileri</h3>
-        <div class="d-flex align-items-center justify-content-end flex-wrap ml-auto" style="gap:8px"><partial name="_AdresAsamaFiltresi" model="Model" />@if(duzenlenebilir){<a class="btn btn-outline-success" asp-controller="Basvuru" asp-action="UrunlerExcelSablonuIndir"><i class="fas fa-download mr-1"></i>Excel Şablonu</a><label class="btn btn-outline-success mb-0" for="urunlerExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label><input id="urunlerExcelDosya" type="file" accept=".xlsx,.xls" class="d-none" /><button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunModalAc(-1)">Ürün ekle</button>}</div>
+        <div class="d-flex align-items-center justify-content-end flex-wrap ml-auto" style="gap:8px">@{ ViewData["AdresAsamaKaynak"] = "urun"; }<partial name="_AdresAsamaFiltresi" model="Model" />@if(duzenlenebilir){<a class="btn btn-outline-success" asp-controller="Basvuru" asp-action="UrunlerExcelSablonuIndir"><i class="fas fa-download mr-1"></i>Excel Şablonu</a><label class="btn btn-outline-success mb-0" for="urunlerExcelDosya"><i class="fas fa-file-excel mr-1"></i>Excel'den yükle</label><input id="urunlerExcelDosya" type="file" accept=".xlsx,.xls" class="d-none" /><button type="button" class="btn btn-outline-primary" onclick="YatirimOzetiUrunModalAc(-1)">Ürün ekle</button>}</div>
     </div>
     <div id="productionInfoBox"></div>
 
