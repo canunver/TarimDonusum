@@ -10,7 +10,7 @@ public sealed record BasvuruAlanDegisikligi(string Bolum, string Alan, string On
 
 public static class BasvuruRevizyonKarsilastirici
 {
-    public static readonly string[] Bolumler = ["1. Başvuru Sahibi ve İletişim","2. Ortaklık Yapısı","3. Yatırım Bilgileri ve Adresler","4. Değer Zinciri","5. Ürünler","6. Bütçe ve Giderler","7. Finansman","8. Malzemeler ve Enerji Kullanımı","9. Makine ve Ekipman","10. Bina Listesi","11. Belgeler","12. Çevresel ve Sosyal Anket"];
+    public static readonly string[] Bolumler = ["Başvuru Sahibi ve İletişim","Ortaklık Yapısı","Yatırım Bilgileri ve Adresler","Değer Zinciri","Ürünler","Bütçe ve Giderler","Finansman","Malzemeler ve Enerji Kullanımı","Makine ve Ekipman","Bina Listesi","Belgeler","Çevresel ve Sosyal Anket"];
 
     public static List<BasvuruAlanDegisikligi> Karsilastir(Basvuru e, Basvuru y)
     {

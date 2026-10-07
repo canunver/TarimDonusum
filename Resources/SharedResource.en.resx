@@ -595,7 +595,7 @@
     <value>Applicant Info - Identity/contact</value>
   </data>
   <data name="Basvuru.Step.2" xml:space="preserve">
-    <value>2. Contact</value>
+    <value>Contact</value>
   </data>
   <data name="Basvuru.Step.3" xml:space="preserve">
     <value>Value Chain - Province-based selection and stages</value>
@@ -616,28 +616,28 @@
     <value>Financial and Partnership Data</value>
   </data>
   <data name="Basvuru.Section1.Title" xml:space="preserve">
-    <value>1. Pre-application Information</value>
+    <value>Pre-application Information</value>
   </data>
   <data name="Basvuru.Section1.Description" xml:space="preserve">
     <value>Application period, application subject, company and application-specific contact information.</value>
   </data>
   <data name="Basvuru.Section2.Title" xml:space="preserve">
-    <value>2. Contact Information</value>
+    <value>Contact Information</value>
   </data>
   <data name="Basvuru.Section2.PartnershipTitle" xml:space="preserve">
     <value>Partnership and Authorization Information</value>
   </data>
   <data name="Basvuru.Section3.Title" xml:space="preserve">
-    <value>5. Value Chain</value>
+    <value>Value Chain</value>
   </data>
   <data name="Basvuru.Section4.Title" xml:space="preserve">
-    <value>4. Investment Information</value>
+    <value>Investment Information</value>
   </data>
   <data name="Basvuru.Section5.Title" xml:space="preserve">
-    <value>6. Financing</value>
+    <value>Financing</value>
   </data>
   <data name="Basvuru.Section6.Title" xml:space="preserve">
-    <value>2. Applicant's Own Financial Data and Scale Check</value>
+    <value>Applicant's Own Financial Data and Scale Check</value>
   </data>
   <data name="Basvuru.Field.TicaretUnvani" xml:space="preserve">
     <value>Trade title</value>
@@ -910,13 +910,13 @@
     <value>Required Documents - Document upload</value>
   </data>
   <data name="Basvuru.Section7.Title" xml:space="preserve">
-    <value>9. Required Documents</value>
+    <value>Required Documents</value>
   </data>
   <data name="Basvuru.Step.UygunHarcama" xml:space="preserve">
     <value>Eligible Expense Preliminary List</value>
   </data>
   <data name="Basvuru.Section.UygunHarcama.Title" xml:space="preserve">
-    <value>6. Eligible Expense Preliminary List</value>
+    <value>Eligible Expense Preliminary List</value>
   </data>
   <data name="Basvuru.Pikk.Description" xml:space="preserve">
     <value>If machinery-equipment or construction work is requested, the related preliminary list must be completed before submitting the application. For construction works, only the building/construction preliminary list is collected.</value>
@@ -973,19 +973,19 @@
   <data name="Basvuru.Step.ButceGiderler" xml:space="preserve"><value>Budget</value></data>
   <data name="Basvuru.Step.Giderler" xml:space="preserve"><value>Expenses</value></data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
-    <value>7. Investment Summary Table</value>
+    <value>Investment Summary Table</value>
   </data>
   <data name="Basvuru.Step.CevreselSosyal" xml:space="preserve">
     <value>Environmental and Social D.F.</value>
   </data>
   <data name="Basvuru.Section.CevreselSosyal.Title" xml:space="preserve">
-    <value>10. Environmental-Social</value>
+    <value>Environmental-Social</value>
   </data>
   <data name="Basvuru.Step.TaahhutBeyan" xml:space="preserve">
     <value>Commitment/Declaration - Declaration document</value>
   </data>
   <data name="Basvuru.Section.TaahhutBeyan.Title" xml:space="preserve">
-    <value>11. Commitment/Declaration</value>
+    <value>Commitment/Declaration</value>
   </data>
   <data name="Basvuru.Section.TaahhutBeyan.Description" xml:space="preserve">
     <value>The declaration and commitment document from the application guide annex is uploaded in this section.</value>
@@ -994,7 +994,7 @@
     <value>Summary - Pre-check</value>
   </data>
   <data name="Basvuru.Section.Ozet.Title" xml:space="preserve">
-    <value>12. Summary</value>
+    <value>Summary</value>
   </data>
   <data name="Basvuru.Section.Placeholder" xml:space="preserve">
     <value>This section has been separated according to the new form flow; field details will be added.</value>
@@ -2596,7 +2596,7 @@
   <data name="Basvuru.Step.DbCtpMakineEkipman" xml:space="preserve"><value>Technical Project (Machinery and Equipment)</value></data>
   <data name="Basvuru.Step.DbCtpBinaListesi" xml:space="preserve"><value>Technical Project (Building List)</value></data>
   <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve">
-    <value>8. Technical Project</value>
+    <value>Technical Project</value>
   </data>
   <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve">
     <value>Enter the investment's technical overview, production and capacity data, input requirements, renewable energy, machinery-equipment, and building/structure lists.</value>
@@ -2766,7 +2766,7 @@
   <data name="Basvuru.ApplicationFinancial.Title" xml:space="preserve">
     <value>Financial Data and Scale Check</value>
   </data>
-  <data name="Basvuru.ApplicationPartnershipAuthority.Title" xml:space="preserve"><value>3 Partnership and Authority</value></data>
+  <data name="Basvuru.ApplicationPartnershipAuthority.Title" xml:space="preserve"><value>Partnership and Authority</value></data>
   <data name="Basvuru.ApplicationInvestment.Title" xml:space="preserve"><value>Investment Information</value></data>
   <data name="Basvuru.Step.MakineEkipman" xml:space="preserve"><value>New Machinery Equipment List</value></data>
   <data name="Basvuru.Step.YatirimdaKullanilacakEkipmanlar" xml:space="preserve"><value>Equipment to Be Used in the Investment</value></data>

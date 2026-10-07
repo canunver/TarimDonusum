@@ -12,6 +12,9 @@ public sealed class RPROB_BilancoGelir(string uygulamaRootPath) : RPROBTemel(uyg
     {
         int yil = basvuru.basvuruFirma.donem?.yil ?? 0;
         for (int c=0;c<3;c++) tablo.HucreDegerYaz(2,c+1,yil>0 ? (yil-(c+1)).ToString() : "");
+        // Şablonda boş olan 34. satır ihracat satış tutarı için amortisman satırının biçimiyle doldurulur.
+        tablo.HucreKopyala(32,0,32,3,33,0);
+        tablo.HucreDegerYaz(33,0,"İHRACAT (YURT DIŞI) SATIŞ TUTARI");
         Dictionary<string,BasvuruBilancoGelirSatiri> degerler=basvuru.bilancoGelir.satirlar.ToDictionary(x=>x.kod,StringComparer.OrdinalIgnoreCase);
         foreach(var t in BilancoGelirTanimlari.GirisSatirlari)
         {

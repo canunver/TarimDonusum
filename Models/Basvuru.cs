@@ -1073,13 +1073,25 @@ namespace TarimDonusum.Models
         public int? segeKademesi { get; set; }
         public string birim { get; set; } = "";
         public decimal mevcutYillikMiktar { get; set; }
+        public decimal mevcutBirimFiyat { get; set; }
         public decimal hedefYillikMiktar { get; set; }
+        public decimal hedefBirimFiyat { get; set; }
+        public decimal hedefYillikTedarikDegeri => hedefYillikMiktar * hedefBirimFiyat;
         public int mevcutKayitliCiftci { get; set; }
         public int eklenecekKayitliCiftci { get; set; }
         public int tedarikSekli { get; set; }
         public int? dayanakBelgeDosyaId { get; set; }
         public string dayanakBelgeDosyaAdi { get; set; } = "";
         public string kisaAciklama { get; set; } = "";
+
+        public static readonly IReadOnlyList<string> Birimler = ["Ton", "Litre", "m³", "Adet", "Baş"];
+
+        public static string? BirimStandartlastir(string? birim)
+        {
+            string deger = (birim ?? "").Trim();
+            if (deger is "m3" or "M3") return "m³";
+            return Birimler.FirstOrDefault(x => string.Equals(x, deger, StringComparison.OrdinalIgnoreCase));
+        }
     }
 
     public class BasvuruIstihdam
@@ -1282,7 +1294,7 @@ namespace TarimDonusum.Models
         public string denetimDosyaAdi { get; set; } = "";
         public int? denetimDosyaId { get; set; }
 
-        internal void Dogrula(Sonuc<int> sonuc, bool oncekiYilGerekli = true, bool sonYilGerekli = true)
+        internal void Dogrula(Sonuc<int> sonuc, bool oncekiYilGerekli = true, bool sonYilGerekli = true, bool ortaklikOranlariGerekli = true)
         {
             if (basvuruId < 0)
                 sonuc.HataEkle("Başvuru bilgisi verilmelidir.");
@@ -1290,10 +1302,10 @@ namespace TarimDonusum.Models
             if (!bagimsizDenetimeTabiMi.HasValue)
                 sonuc.HataEkle("Bağımsız denetime tabi mi seçilmelidir.");
 
-            if (halkaAciklikOrani is < 0 or > 100)
+            if (ortaklikOranlariGerekli && halkaAciklikOrani is < 0 or > 100)
                 sonuc.HataEkle("Halka açıklık oranı 0 ile 100 arasında girilmelidir.");
 
-            if (!ozelSektorPayi.HasValue || ozelSektorPayi < 0 || ozelSektorPayi > 100)
+            if (ortaklikOranlariGerekli && (!ozelSektorPayi.HasValue || ozelSektorPayi < 0 || ozelSektorPayi > 100))
                 sonuc.HataEkle("Özel sektör payı 0 ile 100 arasında girilmelidir.");
 
             if (oncekiYilGerekli && (oncekiYilNetSatis == null || oncekiYilNetSatis.Value <= 0))

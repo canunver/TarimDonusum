@@ -25,6 +25,8 @@ public static class BilancoGelirTanimlari
         new("KISA_VADELI_YABANCI_KAYNAKLAR", "Kısa Vadeli Yabancı Kaynaklar", 11),
         new("UZUN_VADELI_YABANCI_KAYNAKLAR", "Uzun Vadeli Yabancı Kaynaklar", 12), new("OZ_KAYNAKLAR", "Öz Kaynaklar", 13),
         new("BRUT_SATISLAR", "Brüt Satışlar", 17), new("SATIS_INDIRIMLERI", "Satış İndirimleri (-)", 18, true),
+        // Bilgi satırıdır, kâr/zarar hesabına girmez; net satışların ihracat kısmını gösterir. Excel şablonunda boş olan 34. satıra yazılır.
+        new("IHRACAT_SATISLARI", "İhracat (Yurt Dışı) Satış Tutarı", 34),
         new("SATISLARIN_MALIYETI", "Satışların Maliyeti (-)", 20, true), new("FAALIYET_GIDERLERI", "Faaliyet Giderleri (-)", 22, true),
         new("DIGER_OLAGAN_GELIR_KARLAR", "Diğer Faaliyetlerden Olağan Gelir ve Kârlar", 24),
         new("DIGER_OLAGAN_GIDER_ZARARLAR", "Diğer Faaliyetlerden Olağan Gider ve Zararlar (-)", 25, true),
@@ -51,5 +53,24 @@ public static class BilancoGelirHesaplayici
         decimal pasif=kvyk+uvyk+oz, netSatis=V("BRUT_SATISLAR")-V("SATIS_INDIRIMLERI"), brutKar=netSatis-V("SATISLARIN_MALIYETI"), faaliyet=brutKar-V("FAALIYET_GIDERLERI");
         decimal olagan=faaliyet+V("DIGER_OLAGAN_GELIR_KARLAR")-V("DIGER_OLAGAN_GIDER_ZARARLAR")-V("FINANSMAN_GIDERLERI"), donem=olagan+V("OLAGANDISI_GELIR_KARLAR")-V("OLAGANDISI_GIDER_ZARARLAR"), net=donem-V("VERGI_YASAL_YUKUMLULUK");
         return new(aktif,pasif,netSatis,brutKar,faaliyet,olagan,donem,net,donen-kvyk,Bol(donen,kvyk),Bol(donen-V("STOKLAR"),kvyk),Bol(kvyk+uvyk,oz,100),Bol(faaliyet,netSatis,100),Bol(donem,kvyk,100),Bol(net,oz,100),Bol(net,aktif,100),faaliyet+V("DONEM_AMORTISMAN"));
+    }
+
+    // Başvurudaki "Mali Veriler ve Ölçek Kontrolü" sayfasının net satış, aktif toplamı ve ihracat tutarı bilançodan gelir.
+    // Bilançoda 1. sütun son yıl (dönem yılı - 1), 2. sütun önceki yıl (dönem yılı - 2) değerleridir; o yıla ait giriş yoksa null döner.
+    public static (decimal? NetSatis, decimal? AktifToplami, decimal? IhracatSatis) MaliVeriler(IEnumerable<BasvuruBilancoGelirSatiri> satirlar, int yilSirasi)
+    {
+        List<BasvuruBilancoGelirSatiri> liste = satirlar.ToList();
+        decimal? Deger(BasvuruBilancoGelirSatiri x) => yilSirasi switch { 1 => x.yil_1, 2 => x.yil_2, _ => x.yil_3 };
+        bool Var(params string[] kodlar) => liste.Any(x => kodlar.Contains(x.kod, StringComparer.OrdinalIgnoreCase) && Deger(x).HasValue);
+        BilancoGelirHesapSonucu h = Hesapla(liste, yilSirasi);
+        BasvuruBilancoGelirSatiri? ihracat = liste.FirstOrDefault(x => string.Equals(x.kod, "IHRACAT_SATISLARI", StringComparison.OrdinalIgnoreCase));
+        return (Var("BRUT_SATISLAR", "SATIS_INDIRIMLERI") ? h.NetSatislar : null, Var("DONEN_VARLIKLAR", "DURAN_VARLIKLAR") ? h.AktifToplami : null,
+            ihracat == null ? null : Deger(ihracat));
+    }
+
+    public static void MaliVerileriDoldur(BasvuruMali mali, IEnumerable<BasvuruBilancoGelirSatiri> satirlar)
+    {
+        (mali.sonYilNetSatis, mali.sonYilAktifToplami, mali.sonYilIhracatSatis) = MaliVeriler(satirlar, 1);
+        (mali.oncekiYilNetSatis, mali.oncekiYilAktifToplami, mali.oncekiYilIhracatSatis) = MaliVeriler(satirlar, 2);
     }
 }

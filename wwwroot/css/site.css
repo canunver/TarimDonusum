@@ -2350,6 +2350,9 @@ body {
 
 /* Yatırım uygulama adresi: koordinat seçme haritası */
 .uygulama-konum-tablosu input[readonly] { background: #f2f4f7; color: #344054; cursor: default; }
+
+/* Başvuru mali veriler: bilanço sayfasından gelen, değiştirilemeyen tutarlar */
+.mali-table input.bilancodan-gelen { background: #f2f4f7; color: #344054; cursor: not-allowed; pointer-events: none; }
 .konum-harita-modal { z-index: 1060; }
 .konum-harita-modal .modal-dialog { max-width: min(1100px, calc(100vw - 30px)); }
 #adresKonumHarita { height: min(68vh, 650px); min-height: 420px; border: 1px solid #d0d5dd; border-radius: 8px; cursor: crosshair; z-index: 0; }

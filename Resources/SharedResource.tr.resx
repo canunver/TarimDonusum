@@ -595,7 +595,7 @@
     <value>Başvuru Sahibi - Kimlik/iletişim</value>
   </data>
   <data name="Basvuru.Step.2" xml:space="preserve">
-    <value>2. İletişim</value>
+    <value>İletişim</value>
   </data>
   <data name="Basvuru.Step.3" xml:space="preserve">
     <value>Değer Zinciri - İl bazlı seçim ve aşamalar</value>
@@ -616,28 +616,28 @@
     <value>Mali ve Ortaklık Verileri</value>
   </data>
   <data name="Basvuru.Section1.Title" xml:space="preserve">
-    <value>1. Ön Başvuru Bilgileri</value>
+    <value>Ön Başvuru Bilgileri</value>
   </data>
   <data name="Basvuru.Section1.Description" xml:space="preserve">
     <value>Başvuru dönemi, başvuru konusu, firma ve başvuru bazındaki iletişim bilgileri.</value>
   </data>
   <data name="Basvuru.Section2.Title" xml:space="preserve">
-    <value>2. İletişim Bilgileri</value>
+    <value>İletişim Bilgileri</value>
   </data>
   <data name="Basvuru.Section2.PartnershipTitle" xml:space="preserve">
     <value>Ortaklık ve Yetki Bilgileri</value>
   </data>
   <data name="Basvuru.Section3.Title" xml:space="preserve">
-    <value>5. Değer Zinciri</value>
+    <value>Değer Zinciri</value>
   </data>
   <data name="Basvuru.Section4.Title" xml:space="preserve">
-    <value>4. Yatırım Bilgileri</value>
+    <value>Yatırım Bilgileri</value>
   </data>
   <data name="Basvuru.Section5.Title" xml:space="preserve">
-    <value>6. Finansman</value>
+    <value>Finansman</value>
   </data>
   <data name="Basvuru.Section6.Title" xml:space="preserve">
-    <value>2. Başvuru Sahibinin Kendi Mali Verileri ve Ölçek Kontrolü</value>
+    <value>Başvuru Sahibinin Kendi Mali Verileri ve Ölçek Kontrolü</value>
   </data>
   <data name="Basvuru.Field.TicaretUnvani" xml:space="preserve">
     <value>Ticaret unvanı</value>
@@ -910,13 +910,13 @@
     <value>Zorunlu Belgeler - Belge yükleme</value>
   </data>
   <data name="Basvuru.Section7.Title" xml:space="preserve">
-    <value>9. Zorunlu Belgeler</value>
+    <value>Zorunlu Belgeler</value>
   </data>
   <data name="Basvuru.Step.UygunHarcama" xml:space="preserve">
     <value>Uygun Harcama Ön Listesi</value>
   </data>
   <data name="Basvuru.Section.UygunHarcama.Title" xml:space="preserve">
-    <value>6. Uygun Harcama Ön Listesi</value>
+    <value>Uygun Harcama Ön Listesi</value>
   </data>
   <data name="Basvuru.Pikk.Description" xml:space="preserve">
     <value>Makine-ekipman veya yapım işi talep edildiyse ilgili ön liste doldurulmadan başvuru gönderilemez. Yapım işleri için yalnızca bina/yapım işi ön listesi alınır.</value>
@@ -973,19 +973,19 @@
   <data name="Basvuru.Step.ButceGiderler" xml:space="preserve"><value>Bütçe</value></data>
   <data name="Basvuru.Step.Giderler" xml:space="preserve"><value>Giderler</value></data>
   <data name="Basvuru.Section.YatirimOzeti.Title" xml:space="preserve">
-    <value>7. Yatırım Özeti Tablosu</value>
+    <value>Yatırım Özeti Tablosu</value>
   </data>
   <data name="Basvuru.Step.CevreselSosyal" xml:space="preserve">
     <value>Çevresel Sosyal Veri Formu</value>
   </data>
   <data name="Basvuru.Section.CevreselSosyal.Title" xml:space="preserve">
-    <value>10. Çevresel-Sosyal</value>
+    <value>Çevresel-Sosyal</value>
   </data>
   <data name="Basvuru.Step.TaahhutBeyan" xml:space="preserve">
     <value>Taahhüt/Beyan - Beyan dokümanı</value>
   </data>
   <data name="Basvuru.Section.TaahhutBeyan.Title" xml:space="preserve">
-    <value>11. Taahhüt/Beyan</value>
+    <value>Taahhüt/Beyan</value>
   </data>
   <data name="Basvuru.Section.TaahhutBeyan.Description" xml:space="preserve">
     <value>Başvuru rehberi eki beyan ve taahhüt dokümanı bu bölümden yüklenir.</value>
@@ -994,7 +994,7 @@
     <value>Özet - Ön kontrol</value>
   </data>
   <data name="Basvuru.Section.Ozet.Title" xml:space="preserve">
-    <value>12. Özet</value>
+    <value>Özet</value>
   </data>
   <data name="Basvuru.Section.Placeholder" xml:space="preserve">
     <value>Bu bölüm yeni form akışına göre ayrıldı; alan detayları eklenecek.</value>
@@ -2606,7 +2606,7 @@ Alt projem için belirlenecek risk kategorisine bağlı olarak hazırlanması ge
   <data name="Basvuru.Step.DbCtpMakineEkipman" xml:space="preserve"><value>Teknik Proje (Makine Ekipman)</value></data>
   <data name="Basvuru.Step.DbCtpBinaListesi" xml:space="preserve"><value>Teknik Proje (Bina Listesi)</value></data>
   <data name="Basvuru.Section.DbCtp.Title" xml:space="preserve">
-    <value>8. Teknik Proje</value>
+    <value>Teknik Proje</value>
   </data>
   <data name="Basvuru.Section.DbCtp.Description" xml:space="preserve">
     <value>Yatırımın teknik ön bilgileri, üretim ve kapasite verileri, girdi ihtiyacı, yenilenebilir enerji, makine-ekipman ve bina/yapı listeleri bu bölümde girilir.</value>

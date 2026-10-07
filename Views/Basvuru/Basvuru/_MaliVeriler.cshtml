@@ -12,10 +12,15 @@
     var isletmeler = (b.ortaklik?.ortaklar ?? new List<BasvuruOrtak>())
         .Where(x => string.Equals(x.kisiTuru, "Tüzel Kişi", StringComparison.OrdinalIgnoreCase))
         .ToList();
+    // Net satış ve aktif toplamı Bilanço sayfasından otomatik gelir.
+    BasvuruMali bilancoMali = new();
+    BilancoGelirHesaplayici.MaliVerileriDoldur(bilancoMali, b.bilancoGelir.satirlar);
+    bool oncekiYilEngelli = !FirmaGecmisYilKurallari.Girilebilir(b, 2), sonYilEngelli = !FirmaGecmisYilKurallari.Girilebilir(b, 1);
 }
 <section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruMaliVeriler)">
     <h2>Mali Veriler ve Ölçek Kontrolü</h2>
-    <p class="lead">Tutarları TL olarak ve tam mali yıl esasına göre giriniz.</p>
+    <p class="lead">Tutarları TL olarak ve tam mali yıl esasına göre giriniz. Yıllık net satış hasılatı, aktif toplamı ve ihracat satış tutarı Bilanço sayfasından otomatik alınır; değiştirmek için Bilanço sayfasını güncelleyiniz.</p>
+    <partial name="_FirmaGecmisYilKurallari" model="Model" />
 
     <h3 class="subhead">Başvuru Sahibinin Kendi Mali Verileri</h3>
     <div class="table-responsive">
@@ -23,11 +28,13 @@
             <colgroup><col style="width:12%" /><col style="width:15%" /><col style="width:15%" /><col style="width:15%" /><col style="width:15%" /><col style="width:12%" /><col style="width:16%" /></colgroup>
             <thead><tr><th>Mali veri</th><th>@oncekiYil</th><th>@sonYil</th><th>@oncekiYil belge ref.</th><th>@sonYil belge ref.</th><th>Kaynak</th><th>Açıklama</th></tr></thead>
             <tbody>
-                <tr><td>Yıllık net satış hasılatı (TL)</td><td><input class="money-integer" name="Basvuru.mali.OncekiYilNetSatis" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilNetSatis)" disabled="@ro" /></td><td><input class="money-integer" name="Basvuru.mali.SonYilNetSatis" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilNetSatis)" disabled="@ro" /></td><td>@MaliDosyaAlani("netSatis.onceki", 1, "maliRefNetOnceki", ro)</td><td>@MaliDosyaAlani("netSatis.son", 2, "maliRefNetSon", ro)</td><td>Gelir tablosu</td><td>Ölçek ve ihracat oranı için</td></tr>
-                <tr><td>Aktif toplamı (TL)</td><td><input class="money-integer" name="Basvuru.mali.OncekiYilAktifToplami" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilAktifToplami)" disabled="@ro" /></td><td><input class="money-integer" name="Basvuru.mali.SonYilAktifToplami" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilAktifToplami)" disabled="@ro" /></td><td>@MaliDosyaAlani("aktif.onceki", 3, "maliRefAktifOnceki", ro)</td><td>@MaliDosyaAlani("aktif.son", 4, "maliRefAktifSon", ro)</td><td>Bilanço</td><td>Ölçek için</td></tr>
-                <tr><td>İhracat satış tutarı (TL)</td><td><input class="money-integer" name="Basvuru.mali.OncekiYilIhracatSatis" value="@IsimBul.MetneCevirKurussuz(b.mali.oncekiYilIhracatSatis)" disabled="@ro" /></td><td><input class="money-integer" name="Basvuru.mali.SonYilIhracatSatis" value="@IsimBul.MetneCevirKurussuz(b.mali.sonYilIhracatSatis)" disabled="@ro" /></td><td>@MaliDosyaAlani("ihracat.onceki", 5, "maliRefIhracatOnceki", ro)</td><td>@MaliDosyaAlani("ihracat.son", 6, "maliRefIhracatSon", ro)</td><td>İhracat kayıtları</td><td>Son iki yıl toplamı</td></tr>
-                <tr><td>Çalışan sayısı (ortalama)</td><td><input type="number" min="0" step="1" name="Basvuru.mali.OncekiYilCalisanSayisi" value="@b.mali.oncekiYilCalisanSayisi" disabled="@ro" /></td><td><input type="number" min="0" step="1" name="Basvuru.mali.SonYilCalisanSayisi" value="@b.mali.sonYilCalisanSayisi" disabled="@ro" /></td><td>@MaliDosyaAlani("calisan.onceki", 7, "maliRefCalisanOnceki", ro)</td><td>@MaliDosyaAlani("calisan.son", 8, "maliRefCalisanSon", ro)</td><td>SGK kayıtları</td><td>Kadın istihdam kriteri için</td></tr>
-                <tr><td>Son iki yıl ihracat / satış oranı</td><td colspan="2"><strong id="basvuruMaliIhracatOrani">-</strong></td><td colspan="4">Sıralama puanı 7.2 girdisi</td></tr>
+                <tr><td>Yıllık net satış hasılatı (TL)</td><td>@BilancoAlani("Basvuru.mali.OncekiYilNetSatis", bilancoMali.oncekiYilNetSatis)</td><td>@BilancoAlani("Basvuru.mali.SonYilNetSatis", bilancoMali.sonYilNetSatis)</td><td>@MaliDosyaAlani("netSatis.onceki", 1, "maliRefNetOnceki", ro || oncekiYilEngelli)</td><td>@MaliDosyaAlani("netSatis.son", 2, "maliRefNetSon", ro || sonYilEngelli)</td><td>Bilanço (Brüt Satışlar - Satış İndirimleri)</td><td>Ölçek ve ihracat oranı için</td></tr>
+                <tr><td>Aktif toplamı (TL)</td><td>@BilancoAlani("Basvuru.mali.OncekiYilAktifToplami", bilancoMali.oncekiYilAktifToplami)</td><td>@BilancoAlani("Basvuru.mali.SonYilAktifToplami", bilancoMali.sonYilAktifToplami)</td><td>@MaliDosyaAlani("aktif.onceki", 3, "maliRefAktifOnceki", ro || oncekiYilEngelli)</td><td>@MaliDosyaAlani("aktif.son", 4, "maliRefAktifSon", ro || sonYilEngelli)</td><td>Bilanço (Dönen + Duran Varlıklar)</td><td>Ölçek için</td></tr>
+                <tr><td>İhracat satış tutarı (TL)</td><td>@BilancoAlani("Basvuru.mali.OncekiYilIhracatSatis", bilancoMali.oncekiYilIhracatSatis)</td><td>@BilancoAlani("Basvuru.mali.SonYilIhracatSatis", bilancoMali.sonYilIhracatSatis)</td><td>@MaliDosyaAlani("ihracat.onceki", 5, "maliRefIhracatOnceki", ro || oncekiYilEngelli)</td><td>@MaliDosyaAlani("ihracat.son", 6, "maliRefIhracatSon", ro || sonYilEngelli)</td><td>Bilanço (İhracat Satış Tutarı)</td><td>Son iki yıl toplamı</td></tr>
+                @if (Model.DenetciGorunumu)
+                {
+                    <tr><td>Son iki yıl ihracat / satış oranı</td><td colspan="2"><strong id="basvuruMaliIhracatOrani">-</strong></td><td colspan="4">Sıralama puanı 7.2 girdisi</td></tr>
+                }
             </tbody>
         </table>
     </div>
@@ -91,6 +98,13 @@
 </section>
 
 @functions {
+    // Bilançodan gelen değerler değiştirilemez; kaydedilirken de sunucu değeri bilançodan yeniden hesaplar.
+    private Microsoft.AspNetCore.Html.IHtmlContent BilancoAlani(string ad, decimal? deger)
+    {
+        string metin = System.Net.WebUtility.HtmlEncode(IsimBul.MetneCevirKurussuz(deger) ?? "");
+        return new Microsoft.AspNetCore.Html.HtmlString($"<input class=\"money-integer bilancodan-gelen\" name=\"{ad}\" value=\"{metin}\" readonly tabindex=\"-1\" data-kayit-disinda=\"true\" title=\"Bilanço sayfasından gelir, buradan değiştirilemez.\" />");
+    }
+
     private Microsoft.AspNetCore.Html.IHtmlContent MaliDosyaAlani(string anahtar, int dosyaNo, string id, bool saltOkunur)
     {
         string yukle = saltOkunur ? "" : $"<label class=\"btn btn-sm btn-outline-primary mb-0\" for=\"{id}\">Yükle</label><input id=\"{id}\" type=\"file\" class=\"document-file-input mali-belge-input\" data-auto-save=\"true\" data-ref-key=\"{anahtar}\" data-dosya-no=\"{dosyaNo}\" data-name-target=\"{id}Adi\" data-download-target=\"{id}Indir\" />";

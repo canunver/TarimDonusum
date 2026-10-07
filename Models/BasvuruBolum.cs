@@ -62,8 +62,8 @@ namespace TarimDonusum.Models
         [
             new(enumBasvuruBolum.Firma, 10, "Basvuru.Step.1", "Bolumler/_Firma"),
             new(enumBasvuruBolum.BasvuruSahibi, 15, "Basvuru.Step.1", "Basvuru/_BasvuruSahibi"),
-            new(enumBasvuruBolum.BasvuruMaliVeriler, 16, "Basvuru.ApplicationFinancial.Title", "Basvuru/_MaliVeriler"),
             new(enumBasvuruBolum.BasvuruBilancoGelir, 16, "Bilanço, Gelir Tablosu ve Analiz", "Basvuru/_BilancoGelir"),
+            new(enumBasvuruBolum.BasvuruMaliVeriler, 16, "Basvuru.ApplicationFinancial.Title", "Basvuru/_MaliVeriler"),
             new(enumBasvuruBolum.BasvuruOrtaklikYetki, 17, "Basvuru.ApplicationPartnershipAuthority.Title", "Basvuru/_OrtaklikYetki"),
             new(enumBasvuruBolum.BasvuruYatirimBilgileri, 18, "Basvuru.ApplicationInvestment.Title", "Basvuru/_YatirimBilgileri"),
             new(enumBasvuruBolum.BasvuruDegerZinciri, 19, "Basvuru.ApplicationValueChain.Title", "Basvuru/_DegerZinciri"),
@@ -77,8 +77,8 @@ namespace TarimDonusum.Models
             new(enumBasvuruBolum.BasvuruUrunSurecMakine, 24, "Basvuru.Step.UrunSurecMakine", "Basvuru/_UrunSurecMakine"),
             new(enumBasvuruBolum.BasvuruBinaListesi, 25, "Basvuru.Step.BinaListesi", "Basvuru/_BinaListesi"),
             new(enumBasvuruBolum.BasvuruMetraj, 25, "Metraj ve İnşaat Maliyeti", "Basvuru/_Metraj"),
-            new(enumBasvuruBolum.BasvuruIstihdam, 26, "Basvuru.Step.Istihdam", "Basvuru/_Istihdam"),
-            new(enumBasvuruBolum.BasvuruTedarikciEntegrasyonu, 27, "Tedarikçi Entegrasyonu", "Basvuru/_TedarikciEntegrasyonu"),
+            new(enumBasvuruBolum.BasvuruIstihdam, 93, "Basvuru.Step.Istihdam", "Basvuru/_Istihdam"),
+            new(enumBasvuruBolum.BasvuruTedarikciEntegrasyonu, 94, "Tedarikçi Entegrasyonu", "Basvuru/_TedarikciEntegrasyonu"),
             new(enumBasvuruBolum.BasvuruTaahhutBeyan, 28, "Taahhüt / Beyan", "Basvuru/_TaahhutBeyan"),
             new(enumBasvuruBolum.BasvuruCevreselSosyal, 29, "Çevresel ve Sosyal V.F.", "Basvuru/_CevreselSosyalVeriFormu"),
             new(enumBasvuruBolum.BasvuruZorunluBelgeler, 30, "Zorunlu Belgeler", "Basvuru/_ZorunluBelgeler"),
@@ -127,8 +127,6 @@ namespace TarimDonusum.Models
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruUrunSurecMakine)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruBinaListesi)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruMetraj)
-                .Where(x => x.Bolum != enumBasvuruBolum.BasvuruIstihdam)
-                .Where(x => x.Bolum != enumBasvuruBolum.BasvuruTedarikciEntegrasyonu)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruTaahhutBeyan)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruCevreselSosyal)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruZorunluBelgeler)
