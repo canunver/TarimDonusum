@@ -2315,24 +2315,6 @@ body {
 .select2-container .select2-selection--single .select2-selection__arrow {
     height: 36px;
 }
-/* Uygulama yeri koordinat ve kadastro bilgilerini aynı satırda tutar. */
-.uygulama-konum-tablosu {
-    grid-column: 1 / -1;
-    min-width: 0;
-}
-
-.uygulama-konum-tablosu table { min-width: 700px; }
-.uygulama-konum-tablosu th { white-space: nowrap; }
-.uygulama-konum-tablosu input { min-width: 95px; width: 100%; }
-.uygulama-konum-tablosu select { min-width: 110px; width: 100%; }
-.uygulama-konum-tablosu .konum-mahalle { width: 50ch; min-width: 360px; max-width: 50ch; }
-.uygulama-konum-tablosu .konum-mahalle input { min-width: 340px; }
-.uygulama-konum-tablosu .konum-ada,
-.uygulama-konum-tablosu .konum-parsel { width: 7ch; min-width: 7ch; max-width: 7ch; }
-.uygulama-konum-tablosu .konum-ada input,
-.uygulama-konum-tablosu .konum-parsel input { min-width: 5ch; }
-.uygulama-konum-tablosu .konum-koordinat { min-width: 225px; }
-
 /* Yatırım uygulama adresi penceresi: başlık | yüklü dosya + İndir | yeni dosya seçimi */
 .yatirim-yeri-dosyalari { display: grid; gap: 10px; margin-top: 12px; }
 .adres-dosya-satiri { display: grid; grid-template-columns: minmax(140px, 200px) minmax(0, 1fr) minmax(200px, 250px); gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid #d8e0ea; border-radius: 8px; }

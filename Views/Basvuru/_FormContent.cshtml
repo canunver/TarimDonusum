@@ -43,6 +43,45 @@
     string[] adliSicilGorevDegerleri = new[] { "Şirket Ortağı", "Temsil ve ilzama yetkili", "Yönetim kurulu üye", "Adli Sicil Kontrolüne Tabi Ek Kişi" };
     string[] adliSicilGorevMetinleri = T("Basvuru.Criminal.RoleOptions").Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }
+<style>
+    /* Yalnızca başvuru formundaki konum/parsel tablosuna ait sütun ölçüleri. */
+    .uygulama-konum-tablosu {
+        min-width: 0;
+        margin-top: 12px;
+    }
+
+    .uygulama-konum-tablosu table { width: 1090px; min-width: 1090px; table-layout: fixed; }
+    .uygulama-konum-tablosu .konum-sil-sutunu { width: 60px; }
+    .uygulama-konum-tablosu .konum-mahalle-sutunu { width: 400px; }
+    .uygulama-konum-tablosu .konum-ada-sutunu,
+    .uygulama-konum-tablosu .konum-parsel-sutunu { width: 130px; }
+    .uygulama-konum-tablosu .konum-koordinat-sutunu { width: 250px; }
+    .uygulama-konum-tablosu .konum-harita-sutunu { width: 120px; }
+    .uygulama-konum-tablosu th:nth-child(1),
+    .uygulama-konum-tablosu td:nth-child(1) { width: 60px; min-width: 60px; }
+    .uygulama-konum-tablosu th:nth-child(2),
+    .uygulama-konum-tablosu td:nth-child(2) { width: 400px; min-width: 400px; }
+    .uygulama-konum-tablosu th:nth-child(3),
+    .uygulama-konum-tablosu td:nth-child(3),
+    .uygulama-konum-tablosu th:nth-child(4),
+    .uygulama-konum-tablosu td:nth-child(4) { width: 130px; min-width: 130px; }
+    .uygulama-konum-tablosu th:nth-child(5),
+    .uygulama-konum-tablosu td:nth-child(5) { width: 250px; min-width: 250px; }
+    .uygulama-konum-tablosu th:nth-child(6),
+    .uygulama-konum-tablosu td:nth-child(6) { width: 120px; min-width: 120px; }
+    .uygulama-konum-tablosu th { white-space: nowrap; }
+    .uygulama-konum-tablosu input { min-width: 0; width: 100%; }
+    .uygulama-konum-tablosu select { min-width: 110px; width: 100%; }
+
+    .adres-tarih-grid {
+        grid-template-columns: repeat(2, 320px);
+        justify-content: start;
+    }
+
+    @@media (max-width: 720px) {
+        .adres-tarih-grid { grid-template-columns: minmax(0, 320px); }
+    }
+</style>
 <div class="basvuru-page">
     <div class="basvuru-titlebar">
         <div>
@@ -263,17 +302,28 @@
                                 </select>
                             </label>
                             <label>SEGE kademesi<input id="adresModalSegeKademesi" readonly /></label>
-                            <div class="uygulama-konum-tablosu">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <strong>Konum ve parsel bilgileri</strong>
-                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="AdresKonumSatiriEkle()" disabled="@ro">+ Satır ekle</button>
-                                </div>
-                                <div class="table-responsive"><table class="table table-bordered mb-0">
-                                    <thead><tr><th>Sil</th><th class="konum-mahalle-baslik">Mahalle</th><th>Ada</th><th>Parsel</th><th>Koordinat (X, Y)</th><th>Harita</th></tr></thead>
-                                    <tbody id="adresModalKonumlar"></tbody>
-                                </table></div>
-                            </div>
+                        </div>
 
+                        <div class="uygulama-konum-tablosu">
+                            <div class="d-flex align-items-center mb-2">
+                                <strong>Konum ve parsel bilgileri</strong>
+                                <button type="button" class="btn btn-sm btn-outline-primary ml-2" onclick="AdresKonumSatiriEkle()" disabled="@ro">+ Parsel Ekle</button>
+                            </div>
+                            <div class="table-responsive"><table class="table table-bordered mb-0">
+                                <colgroup>
+                                    <col class="konum-sil-sutunu" />
+                                    <col class="konum-mahalle-sutunu" />
+                                    <col class="konum-ada-sutunu" />
+                                    <col class="konum-parsel-sutunu" />
+                                    <col class="konum-koordinat-sutunu" />
+                                    <col class="konum-harita-sutunu" />
+                                </colgroup>
+                                <thead><tr><th>Sil</th><th class="konum-mahalle-baslik">Mahalle</th><th>Ada</th><th>Parsel</th><th>Koordinat (X, Y)</th><th>Harita</th></tr></thead>
+                                <tbody id="adresModalKonumlar"></tbody>
+                            </table></div>
+                        </div>
+
+                        <div class="form-grid adres-tarih-grid mt-3">
                             <label>Kullanım hakkı başlangıç tarihi<input id="adresModalKullanimHakkiBaslangicTarihi" type="date" /></label>
                             @if (basvuruKaydi) { <label>Uygulama ve geri ödeme dönemini kapsıyor mu?<select id="adresModalDonemleriKapsiyorMu"><option value="">Seçiniz</option><option value="true">Evet</option><option value="false">Hayır</option></select></label> } else { <label>@L["Basvuru.Field.KiraTahsisBitisTarihi"]<input id="adresModalKiraTahsisBitisTarihi" type="date" /></label> }
                         </div>
@@ -4806,6 +4856,47 @@
         return leafletYukleniyor;
     }
 
+    // Koordinatı henüz seçilmemiş parsellerde haritayı il/ilçe/mahalle bölgesine yaklaştırır.
+    // Bulunan merkez kullanıcı tarafından seçilmiş koordinat sayılmaz; yalnızca başlangıç görünümüdür.
+    async function AdresKonumMetnindenMerkezBul(satir) {
+        const il = modalValue('adresModalIl').trim();
+        const ilceAlani = document.getElementById('adresModalIlce');
+        const ilce = ilceAlani?.value ? (ilceAlani.selectedOptions?.[0]?.textContent || '').trim() : '';
+        const mahalle = String(satir?.mahalle || '').trim();
+        const sorgular = [
+            [mahalle, ilce, il, 'Türkiye'],
+            [ilce, il, 'Türkiye'],
+            [il, 'Türkiye']
+        ].map(parcalar => parcalar.filter(Boolean).join(', '))
+         .filter((sorgu, index, tumu) => sorgu && tumu.indexOf(sorgu) === index);
+
+        for (const sorgu of sorgular) {
+            try {
+                const parametreler = new URLSearchParams({
+                    format: 'jsonv2',
+                    countrycodes: 'tr',
+                    limit: '1',
+                    q: sorgu
+                });
+                const cevap = await fetch(`https://nominatim.openstreetmap.org/search?${parametreler}`, {
+                    headers: { 'Accept-Language': 'tr' }
+                });
+                if (!cevap.ok) continue;
+                const sonuclar = await cevap.json();
+                const sonuc = sonuclar?.[0];
+                if (!sonuc) continue;
+                const sinir = Array.isArray(sonuc.boundingbox) ? sonuc.boundingbox.map(Number) : null;
+                return {
+                    merkez: [Number(sonuc.lat), Number(sonuc.lon)],
+                    sinir: sinir?.length === 4 ? [[sinir[0], sinir[2]], [sinir[1], sinir[3]]] : null
+                };
+            } catch (_) {
+                // Bir sorgu başarısız olursa daha genel adres sorgusuyla devam edilir.
+            }
+        }
+        return null;
+    }
+
     function AdresKonumHaritaAc(index) {
         const satir = adresKonumSatirlari[index];
         if (!satir) return;
@@ -4853,6 +4944,15 @@
             AdresKonumHaritaIsaretiniGuncelle(koordinatVar ? merkez : null);
             adresKonumHaritaModal?.show();
             setTimeout(() => adresKonumHarita.invalidateSize(), 250);
+
+            if (!koordinatVar) {
+                AdresKonumMetnindenMerkezBul(satir).then(bulunan => {
+                    if (!bulunan || adresKonumHaritaSatiri !== index || !adresKonumHarita) return;
+                    adresKonumHarita.invalidateSize();
+                    if (bulunan.sinir) adresKonumHarita.fitBounds(bulunan.sinir, { padding: [24, 24], maxZoom: 15 });
+                    else adresKonumHarita.setView(bulunan.merkez, satir.mahalle ? 15 : 11);
+                });
+            }
         }).catch(() => PopupMesajGoster('Harita yüklenemedi. İnternet bağlantınızı kontrol ediniz.', false));
     }
 
