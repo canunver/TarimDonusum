@@ -31,6 +31,8 @@
 
   <ItemGroup>
     <Content Include="Sablonlar\**\*" Exclude="Sablonlar\**\~$*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Menü dosyaları (MenuBasvuru.xml, MenuGiris.xml) uygulama açılışında okunur; yayına da gitmeli. -->
+    <Content Include="App_Data\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
