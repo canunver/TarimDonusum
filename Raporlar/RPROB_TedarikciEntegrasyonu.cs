@@ -17,7 +17,7 @@ public sealed class RPROB_TedarikciEntegrasyonu(string uygulamaRootPath) : RPROB
     protected override void Doldur(Tablo t, Basvuru b)
     {
         List<BasvuruTedarikciEntegrasyonu> satirlar = b.TedarikciEntegrasyonlari.OrderBy(x => x.urunId).ThenBy(x => x.id).ToList();
-        Dictionary<int, string> urunler = b.YatirimOnBilgileri.Where(x => x.tur == enumYatirimOnBilgiTuru.UretilecekUrun).ToDictionary(x => x.id, x => x.ad);
+        Dictionary<int, string> urunler = b.YatirimOnBilgileri.Where(x => x.tur is enumYatirimOnBilgiTuru.MevcutUrun or enumYatirimOnBilgiTuru.UretilecekUrun).ToDictionary(x => x.id, x => x.ad);
         BasvuruUygulamaAdresi? adres = b.YatirimAdresleri.OrderBy(x => x.siraNo).ThenBy(x => x.id).FirstOrDefault();
 
         t.AktifSheetDegistir(FormSayfasi);

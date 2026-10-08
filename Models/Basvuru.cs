@@ -1083,14 +1083,29 @@ namespace TarimDonusum.Models
         public int? dayanakBelgeDosyaId { get; set; }
         public string dayanakBelgeDosyaAdi { get; set; } = "";
         public string kisaAciklama { get; set; } = "";
+        // Teknik Proje (Girdiler) sayfasından bu kayda bağlanan hammadde; her kayıtta tek hammadde olur.
+        public List<int> girdiIdleri { get; set; } = new();
 
-        public static readonly IReadOnlyList<string> Birimler = ["Ton", "Litre", "m³", "Adet", "Baş"];
-
-        public static string? BirimStandartlastir(string? birim)
+        // Hammadde adı, birim, hedef miktar, hedef birim fiyat ve tedarik il/ilçesi (girdinin adresi, SEGE kademesi dahil) bağlı girdiden gelir;
+        // girdi bağlı değilse kayıttaki değerler kalır.
+        public string? GirdilerdenDoldur(IEnumerable<BasvuruYatirimOnBilgi> tumGirdiler, IEnumerable<BasvuruUygulamaAdresi> adresler)
         {
-            string deger = (birim ?? "").Trim();
-            if (deger is "m3" or "M3") return "m³";
-            return Birimler.FirstOrDefault(x => string.Equals(x, deger, StringComparison.OrdinalIgnoreCase));
+            if (girdiIdleri.Count == 0) return null;
+            if (girdiIdleri.Count > 1) return "Bir tedarik kaydında yalnızca bir hammadde seçilebilir.";
+            BasvuruYatirimOnBilgi? girdi = tumGirdiler.FirstOrDefault(x => x.tur == enumYatirimOnBilgiTuru.Girdi && x.id == girdiIdleri[0]);
+            if (girdi == null) return "Seçilen hammadde bulunamadı.";
+            BasvuruUygulamaAdresi? adres = adresler.FirstOrDefault(a => a.id == girdi.uygulamaAdresiId);
+            if (adres?.ilceId is not > 0) return "Seçilen hammaddenin adresi (il/ilçe) Teknik Proje (Girdiler) sayfasında tanımlı değil.";
+            ilId = adres.ilId.GetValueOrDefault();
+            ilceId = adres.ilceId.Value;
+            ilAdi = adres.ilAdi;
+            ilceAdi = adres.ilceAdi;
+            segeKademesi = int.TryParse(adres.segeKademesi, out int sege) && sege is >= 1 and <= 6 ? sege : null;
+            tarimsalUrun = girdi.ad.Trim();
+            birim = (girdi.birim ?? "").Trim();
+            hedefYillikMiktar = girdi.miktar ?? 0;
+            hedefBirimFiyat = girdi.birimFiyat ?? 0;
+            return null;
         }
     }
 

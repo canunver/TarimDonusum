@@ -1017,8 +1017,6 @@ namespace TarimDonusum.Controllers
         public async Task<IActionResult> IzlemeGostergesiSil([FromBody] BasvuruIzlemeGostergesi model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruIzlemeGostergesiSilAsync(model.basvuruId,model.id,kullanici));}
         [OturumKontrol][HttpPost][ValidateAntiForgeryToken]
         public async Task<IActionResult> IzlemeUstBilgiKaydet([FromBody] BasvuruIzlemeUstBilgi model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruIzlemeUstBilgiKaydetAsync(model,kullanici));}
-        [HttpGet]
-        public async Task<IActionResult> TedarikIlceleriListele(int ilId){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.IlceleriListeleAsync(ilId));}
 
         [HttpPost]
         public async Task<IActionResult> BinaMahaliKaydet([FromBody] BasvuruBinaMahal model){Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruBinaMahaliKaydetAsync(model,kullanici));}

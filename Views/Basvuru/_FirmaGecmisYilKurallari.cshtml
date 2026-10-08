@@ -2,4 +2,5 @@
 <span hidden data-firma-gecmis-yil
       data-onceki="@((!FirmaGecmisYilKurallari.Girilebilir(Model.Basvuru, 2)).ToString().ToLowerInvariant())"
       data-son="@((!FirmaGecmisYilKurallari.Girilebilir(Model.Basvuru, 1)).ToString().ToLowerInvariant())"
-      data-hata="@FirmaGecmisYilKurallari.Hata(Model.Basvuru)"></span>
+      data-hata="@FirmaGecmisYilKurallari.Hata(Model.Basvuru)"
+      data-zorunlu-belge-engelli="@System.Text.Json.JsonSerializer.Serialize(ZorunluBelgeTanimSaglayici.Tum.Where(x => FirmaGecmisYilKurallari.BelgeEngelli(Model.Basvuru, "Basvuru_ZorunluBelge", x.belgeNo)).Select(x => x.belgeNo))"></span>

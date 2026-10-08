@@ -2840,4 +2840,5 @@ Alt projem için belirlenecek risk kategorisine bağlı olarak hazırlanması ge
   <data name="MenuBasvuru.uygunlukSorulari" xml:space="preserve"><value>Uygunluk Soruları</value></data>
   <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Çevresel Sosyal V.F.</value></data>
   <data name="MenuBasvuru.taahhutBeyanlar" xml:space="preserve"><value>Taahhüt/Beyan</value></data>
+  <data name="MenuBasvuru.zorunluBelgeler" xml:space="preserve"><value>Zorunlu Belgeler</value></data>
 </root>

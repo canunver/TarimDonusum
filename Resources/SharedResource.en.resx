@@ -2788,4 +2788,5 @@
   <data name="MenuBasvuru.uygunlukSorulari" xml:space="preserve"><value>Eligibility Questions</value></data>
   <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Environmental-Social Questionnaire</value></data>
   <data name="MenuBasvuru.taahhutBeyanlar" xml:space="preserve"><value>Commitments/Declarations</value></data>
+  <data name="MenuBasvuru.zorunluBelgeler" xml:space="preserve"><value>Required Documents</value></data>
 </root>

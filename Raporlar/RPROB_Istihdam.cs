@@ -10,7 +10,7 @@ public sealed class RPROB_Istihdam(string uygulamaRootPath) : RPROBTemel(uygulam
     protected override string CiktiDosyaOnEki => "TamZamanliIstihdam";
 
     private const string SablonYili = "2026";
-    private const int IlkSatir = 21, SablonSatirSayisi = 15, SonSutun = 11;
+    private const int IlkSatir = 21, SablonSatirSayisi = 15, SonSutun = 11, RehberSayfasi = 1;
 
     protected override void Doldur(Tablo t, Basvuru b)
     {
@@ -70,6 +70,8 @@ public sealed class RPROB_Istihdam(string uygulamaRootPath) : RPROBTemel(uygulam
         t.HucreDegerYaz(47 + kayma, 7, DateTime.Today.ToString("dd.MM.yyyy"));
 
         t.CalculateFormula();
+        // Doldurma rehberi indirilen dosyada yer almaz; ekranda İstihdam sayfasındaki "?" penceresinde gösterilir.
+        t.SheetSil(RehberSayfasi);
     }
 
     // Boş değer hücreyi temizler; boş metin yazılırsa şablon formülleri satırı dolu sayar.

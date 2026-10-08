@@ -4,13 +4,15 @@
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @{
     bool edit = !Model.DenetciGorunumu && !Model.SaltOkunur;
-    var urunler = Model.Basvuru.YatirimOnBilgileri.Where(x => x.tur == enumYatirimOnBilgiTuru.UretilecekUrun).OrderBy(x => x.siraNo).ThenBy(x => x.id).ToList();
+    // Mevcut ürünler de yatırım sonrasında üretilmeye devam ettiği için yeni ürünlerle birlikte listelenir.
+    var urunler = Model.Basvuru.YatirimOnBilgileri.Where(x => x.tur is enumYatirimOnBilgiTuru.MevcutUrun or enumYatirimOnBilgiTuru.UretilecekUrun).OrderBy(x => x.siraNo).ThenBy(x => x.id).ToList();
     decimal rff = Model.Basvuru.HesaplananTalepEdilenFinansmanTutari.GetValueOrDefault();
 }
 <section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruTedarikciEntegrasyonu)" data-tedarik-rff="@rff.ToString(CultureInfo.InvariantCulture)">
  <div class="section-toolbar"><div><h2 class="mb-0">Tedarikçi Entegrasyonu</h2><p class="text-muted mb-0">Ürünlerin elde edilmesi için çiftçilerden alınacak tarımsal ürünleri giriniz. Her kayıtta tedarik ili ve ilçesi ile hedef yıllık miktar ve hedef birim fiyat eksiksiz girilmelidir.</p></div><a class="btn btn-outline-primary" href="@Url.Action("TedarikciEntegrasyonuYazdir","Basvuru",new{id=Model.Basvuru.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div>
  <script type="application/json" id="tedarikEntegrasyonJson">@Html.Raw(JsonSerializer.Serialize(Model.Basvuru.TedarikciEntegrasyonlari))</script>
  <script type="application/json" id="tedarikUrunJson">@Html.Raw(JsonSerializer.Serialize(urunler.Select(x => new { x.id, x.ad, x.siraNo })))</script>
+ <script type="application/json" id="tedarikGirdiJson">@Html.Raw(JsonSerializer.Serialize(Model.Basvuru.YatirimOnBilgileri.Where(x => x.tur == enumYatirimOnBilgiTuru.Girdi).OrderBy(x => x.siraNo).ThenBy(x => x.id).Select(x => new { x.id, x.siraNo, x.ad, x.miktar, x.birim, x.birimFiyat, x.giderTuruAdi, x.uygulamaAdresiId, x.uygulamaAdresiAciklama, x.degerZinciriAsamaTuruAdi, ilceId = Model.Basvuru.YatirimAdresleri.FirstOrDefault(a => a.id == x.uygulamaAdresiId)?.ilceId })))</script>
  <h5>Sıralama puanı göstergeleri (1.2 SEGE + 2.1 Çiftçi Entegrasyonu)</h5>
  <div id="tedarikOzetAlani" class="mb-3"></div>
  <div class="basvuru-card mb-3">
@@ -19,16 +21,15 @@
  </div>
  <div id="tedarikEntegrasyonAlani"></div>
  @if(edit){
- <div class="modal fade" id="tedarikEntegrasyonModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-  <div class="modal-header"><h5 class="modal-title">Çiftçilerden Alınan Ürün</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
-  <div class="modal-body"><input id="tedIndex" type="hidden"><input id="tedId" type="hidden"><input id="tedUrunId" type="hidden"><div class="form-grid">
-   <label>Çiftçilerden Alınan Tarımsal Ürün<input id="tedTarimsalUrun" maxlength="250"></label>
-   <label>Tedarik İli<select id="tedIl" onchange="TedarikIlceleriYukle()"><option value="">Seçiniz</option>@foreach(var il in Model.Iller){<option value="@il.id">@il.ad</option>}</select></label>
-   <label>Tedarik İlçesi<select id="tedIlce"><option value="">Seçiniz</option></select></label>
-   <label>Birim<select id="tedBirim">@foreach(string birim in BasvuruTedarikciEntegrasyonu.Birimler){<option value="@birim">@birim</option>}</select></label>
+ <div class="modal fade" id="tedarikEntegrasyonModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title" id="tedModalBaslik">Çiftçilerden Alınan Ürün</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+  <div class="modal-body"><input id="tedIndex" type="hidden"><input id="tedId" type="hidden"><input id="tedUrunId" type="hidden">
+   <h6 class="font-weight-bold">Teknik Proje (Girdiler) – hammaddeler</h6>
+   <div id="tedGirdiListesi" class="table-responsive mb-3"></div>
+   <h6 class="font-weight-bold">Bu kayıt için seçilen hammadde</h6>
+   <div id="tedSecilenGirdiler" class="table-responsive mb-3"></div>
+   <div class="form-grid">
    <label>Mevcut Yıllık Miktar<input id="tedMevcutMiktar" type="number" min="0" step="0.001"></label><label>Mevcut Birim Fiyat (TL)<input id="tedMevcutBirimFiyat" type="number" min="0" step="0.01"></label>
-   <label>Hedef Yıllık Miktar<input id="tedHedefMiktar" type="number" min="0" step="0.001" oninput="TedarikHedefDegeriYaz()"></label><label>Hedef Birim Fiyat (TL)<input id="tedHedefBirimFiyat" type="number" min="0" step="0.01" oninput="TedarikHedefDegeriYaz()"></label>
-   <label>Hedef Yıllık Tedarik Değeri (TL)<input id="tedHedefDeger" readonly></label>
    <label>Mevcut Kayıtlı Çiftçi<input id="tedMevcutCiftci" type="number" min="0" step="1"></label><label>Eklenecek Kayıtlı Çiftçi<input id="tedEklenecekCiftci" type="number" min="0" step="1"></label>
    <label>Tedarik Şekli<select id="tedTedarikSekli"><option value="1">Sözleşmeli tedarik</option><option value="2">Niyet / protokol</option></select></label>
    <label>Dayanak Belge<input id="tedDosya" type="file" onchange="TedarikDayanakBelgesiYukle()"><small id="tedDosyaBilgi" class="form-text text-muted"></small><span id="tedDosyaAdi" class="document-file-name"></span><a id="tedDosyaIndir" class="btn btn-sm btn-outline-secondary d-none" target="_blank">İndir</a></label>

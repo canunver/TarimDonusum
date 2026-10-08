@@ -65,6 +65,50 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<List<ZorunluBelgeTanim>>> ZorunluBelgeleriListeleAsync(Kullanici? kullanici)
+        {
+            Sonuc<List<ZorunluBelgeTanim>> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                sonuc.nesne = await new TABZorunluBelgeTanim(connection, _localizer).ListeleAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Zorunlu belge tanımları okunamadı.");
+                sonuc.HataEkle("Zorunlu belge tanımları okunamadı.");
+            }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> ZorunluBelgeKaydetAsync(ZorunluBelgeTanim tanim, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            tanim.ad = (tanim.ad ?? "").Trim();
+            if (tanim.siraNo <= 0) sonuc.HataEkle("Sıra numarası zorunludur.");
+            if (tanim.ad.Length == 0) sonuc.HataEkle("Belge adı zorunludur.");
+            if (tanim.ad.Length > 500) sonuc.HataEkle("Belge adı 500 karakteri aşamaz.");
+            if (!sonuc.basarili) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                TABZorunluBelgeTanim tablo = new TABZorunluBelgeTanim(connection, _localizer);
+                sonuc.nesne = await tablo.KaydetAsync(tanim);
+                ZorunluBelgeTanimSaglayici.Guncelle(await tablo.ListeleAsync());
+                sonuc.mesaj = "Zorunlu belge kaydedildi.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Zorunlu belge kaydedilemedi.");
+                sonuc.HataEkle("Zorunlu belge kaydedilemedi.");
+            }
+            return sonuc;
+        }
+
         public async Task<Sonuc<int>> TaahhutBeyanKaydetAsync(TaahhutBeyanTanim tanim, Kullanici? kullanici)
         {
             Sonuc<int> sonuc = new();
@@ -115,7 +159,7 @@ namespace TarimDonusum.IsKurallari
             if ((soru.evetSonucu == "Kabul") == (soru.hayirSonucu == "Kabul"))
                 sonuc.HataEkle("Evet ve Hayır sonuçlarından yalnızca biri Kabul olmalıdır.");
             if(soru.birimTuru is not ("" or "PIK" or "PYK" or "CS"))sonuc.HataEkle("Birim türü geçersizdir.");
-            if(soru.zorunluBelgeNolari.Any(x=>x<1||x>11))sonuc.HataEkle("Zorunlu belge seçimi geçersizdir.");
+            if(soru.zorunluBelgeNolari.Any(x=>ZorunluBelgeTanimSaglayici.Bul(x)==null))sonuc.HataEkle("Zorunlu belge seçimi geçersizdir.");
             if(!sonuc.basarili)return sonuc;
             try { await using SqlConnection c=new(_connectionString);await c.OpenAsync();sonuc.nesne=await new TABUygunlukSorusu(c,_localizer).KaydetAsync(soru);sonuc.mesaj="Uygunluk sorusu kaydedildi."; }
             catch(Exception ex){_logger.LogError(ex,"Uygunluk sorusu kaydedilemedi.");sonuc.HataEkle("Uygunluk sorusu kaydedilemedi.");}

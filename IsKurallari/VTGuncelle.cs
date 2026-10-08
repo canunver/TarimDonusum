@@ -1534,6 +1534,28 @@ namespace TarimDonusum.IsKurallari
                   EXEC(N'ALTER TABLE dbo.BasvuruTedarikciEntegrasyonu ADD MevcutBirimFiyat DECIMAL(18,2) NOT NULL CONSTRAINT DF_BasvuruTedarikciEntegrasyonu_MevcutBirimFiyat DEFAULT 0');
                   IF COL_LENGTH(N'dbo.BasvuruTedarikciEntegrasyonu',N'HedefBirimFiyat') IS NULL
                     EXEC(N'ALTER TABLE dbo.BasvuruTedarikciEntegrasyonu ADD HedefBirimFiyat DECIMAL(18,2) NOT NULL CONSTRAINT DF_BasvuruTedarikciEntegrasyonu_HedefBirimFiyat DEFAULT 0');"),
+            new(127, @"IF OBJECT_ID(N'dbo.BasvuruTedarikciEntegrasyonuGirdi',N'U') IS NULL
+                  BEGIN
+                    CREATE TABLE dbo.BasvuruTedarikciEntegrasyonuGirdi(
+                      TedarikId INT NOT NULL, GirdiId INT NOT NULL,
+                      CONSTRAINT PK_BasvuruTedarikciEntegrasyonuGirdi PRIMARY KEY(TedarikId,GirdiId),
+                      CONSTRAINT FK_BasvuruTedarikciEntegrasyonuGirdi_Tedarik FOREIGN KEY(TedarikId) REFERENCES dbo.BasvuruTedarikciEntegrasyonu(Id) ON DELETE CASCADE,
+                      CONSTRAINT FK_BasvuruTedarikciEntegrasyonuGirdi_Girdi FOREIGN KEY(GirdiId) REFERENCES dbo.BasvuruYatirimOnBilgi(Id));
+                    CREATE INDEX IX_BasvuruTedarikciEntegrasyonuGirdi_Girdi ON dbo.BasvuruTedarikciEntegrasyonuGirdi(GirdiId);
+                  END"),
+            // Aynı hammadde farklı ürünlerin tedarik kayıtlarında kullanılabilir; tekrar kontrolü ürün bazında iş kurallarında yapılır.
+            new(128, @"IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_BasvuruTedarikciEntegrasyonuGirdi_Girdi' AND object_id = OBJECT_ID(N'dbo.BasvuruTedarikciEntegrasyonuGirdi'))
+                    DROP INDEX UX_BasvuruTedarikciEntegrasyonuGirdi_Girdi ON dbo.BasvuruTedarikciEntegrasyonuGirdi;
+                  IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_BasvuruTedarikciEntegrasyonuGirdi_Girdi' AND object_id = OBJECT_ID(N'dbo.BasvuruTedarikciEntegrasyonuGirdi'))
+                    CREATE INDEX IX_BasvuruTedarikciEntegrasyonuGirdi_Girdi ON dbo.BasvuruTedarikciEntegrasyonuGirdi(GirdiId);"),
+            new(129, @"IF OBJECT_ID(N'dbo.ZorunluBelgeTanim',N'U') IS NULL
+                  CREATE TABLE dbo.ZorunluBelgeTanim(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_ZorunluBelgeTanim PRIMARY KEY,
+                    BelgeNo INT NOT NULL CONSTRAINT UX_ZorunluBelgeTanim_BelgeNo UNIQUE,
+                    SiraNo INT NOT NULL, Ad NVARCHAR(500) NOT NULL,
+                    SadeceKooperatif INT NOT NULL CONSTRAINT DF_ZorunluBelgeTanim_SadeceKooperatif DEFAULT 0,
+                    Aktif INT NOT NULL CONSTRAINT DF_ZorunluBelgeTanim_Aktif DEFAULT 1,
+                    GuncellemeTarihi DATETIME2 NULL);"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

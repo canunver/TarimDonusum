@@ -10,16 +10,14 @@ public static class FirmaGecmisYilKurallari
         ? "Bu yıl kurulmuş bir firma önceki yıl bilgilerini giremez veya bu yıllara ait belge yükleyemez."
         : "Firma kuruluş tarihinden önceki yıllara ait bilgi girilemez veya belge yüklenemez.";
 
-    public static string BelgeAdi(Basvuru b, int dosyaNo, string varsayilan)
-    {
-        string? tur = dosyaNo switch { 1 or 9 => "gelir tablosu", 2 or 10 => "bilanço", 3 or 11 => "detaylı mizan", _ => null };
-        return tur == null ? varsayilan : $"{DonemYili(b) - (dosyaNo <= 3 ? 1 : 2)} yılına ait {tur}";
-    }
-
     public static bool BelgeEngelli(Basvuru b, string formAd, int dosyaNo)
     {
+        // Zorunlu belgelerde yıl, belge adındaki [dönem-1], [dönem-2] gibi yer tutuculardan anlaşılır.
         if (string.Equals(formAd, "Basvuru_ZorunluBelge", StringComparison.OrdinalIgnoreCase))
-            return dosyaNo is 1 or 2 or 3 ? !Girilebilir(b, 1) : dosyaNo is 9 or 10 or 11 && !Girilebilir(b, 2);
+        {
+            int yilFarki = ZorunluBelgeTanimSaglayici.EnEskiYilFarki(dosyaNo);
+            return yilFarki > 0 && !Girilebilir(b, yilFarki);
+        }
         if (string.Equals(formAd, "Basvuru_MaliBelge", StringComparison.OrdinalIgnoreCase) && dosyaNo is >= 1 and <= 8)
             return !Girilebilir(b, dosyaNo % 2 == 1 ? 2 : 1);
         if (string.Equals(formAd, "Basvuru_ZorunluBelgeMerkezi", StringComparison.OrdinalIgnoreCase) && dosyaNo == 16)

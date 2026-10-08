@@ -1,0 +1,59 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@{
+    // Tam Zamanlı İstihdam Formu'nun "Doldurma Rehberi" sayfası; yıllar başvuru dönemine göre yazılır.
+    int planYili = Model.Basvuru.basvuruFirma.donem.yil, sonYil = planYili - 1, oncekiYil = planYili - 2;
+    var bolumler = new (string Baslik, (string Konu, string Aciklama)[] Satirlar)[]
+    {
+        ("1. Başvuru ve RFF bilgileri", new[]
+        {
+            ("Puanlamaya esas RFF tutarı", "İstihdam katkısı göstergesinin paydasında kullanılan, puanlamaya esas RFF tutarını USD olarak giriniz. Toplam yatırım maliyetiyle karıştırmayınız."),
+            ("İl / İlçe", "Başvuru sahibinin yatırım yerini resmî kayıtlardaki yazımla giriniz.")
+        }),
+        ("2. Kadın / erkek istihdam kriteri", new[]
+        {
+            ("Dönem", $"Son iki tamamlanmış takvim yılı kullanılır. {planYili} tam başvuru aşamasında {oncekiYil} ve {sonYil} esas alınır."),
+            ("Hesaplama", "İki yılın ortalama toplam FTE'si 20'den fazla ve iki yılın toplam kadın FTE'si toplam erkek FTE'sinden fazlaysa kriter sağlanır ve 2,5 puan verilir."),
+            ("Veri kaynağı", "SGK aylık prim ve hizmet belgeleri, bordrolar ve personel listeleri esas alınır. Aynı kişi veya dönem iki kez sayılmaz."),
+            ("FTE yaklaşımı", "Kısmi süreli veya dönemsel çalışma, tam zamanlı çalışma süresine oranlanarak FTE'ye çevrilir. Kadın ve erkek toplamı yıllık toplam FTE ile uyumlu olmalıdır.")
+        }),
+        ("3. Net ek istihdam puanlaması", new[]
+        {
+            ("Gösterge", "Net ek FTE / (Puanlamaya Esas RFF Tutarı / 100.000 USD)."),
+            ("Puan bantları", "0,25'in altı: 0 puan; 0,25–<0,50: 5 puan; 0,50–<0,75: 10 puan; 0,75–<1,00: 15 puan; 1,00 ve üzeri: 20 puan."),
+            ("Bu formdan gelen puan", "Net ek istihdam puanı ile kadın istihdam kriter puanının toplamıdır; azami 22,5 puandır. Diğer sıralama boyutları bu formun dışındadır.")
+        }),
+        ($"4. Bileşen 1 — {sonYil} gerçekleşen ve {planYili} planlanan istihdam", new[]
+        {
+            ($"{sonYil} mevcut FTE", $"{sonYil} yılına ait gerçekleşmiş yıllık ortalama FTE'yi giriniz. Kısmi süreli veya dönemsel çalışma, tam zamanlı çalışma süresine oranlanarak FTE'ye çevrilmelidir."),
+            ("Mevcut / ilk ücret bilgisi", $"{sonYil} yılına ait mevcut veya ilk aylık ortalama brüt ücreti veri amacıyla giriniz. Bu bilgi sonuç, gösterge veya puan hesaplamasında kullanılmaz."),
+            ($"{planYili} planlanan FTE", $"{planYili} için yalnız planlanan net ek FTE'yi giriniz. Yıl sonunda ulaşılacak kişi sayısını değil, yıl içindeki çalışma süreleri dikkate alınarak hesaplanan yıllık ortalama FTE'yi yazınız."),
+            ("Planlanan iş eşdeğeri", "Başvuru aşaması planlanan iş eşdeğeri, toplam planlanan net ek FTE'nin sıfırın altına düşmeyen kısmıdır: maks. (0; toplam net ek FTE)."),
+            ("Kadın ve genç göstergeleri", "Kadın ve genç iş eşdeğerleri, ilgili satırlardaki planlanan net ek FTE toplamlarından hesaplanır. Ücret bilgisi bu alt göstergeleri de etkilemez."),
+            ("Hesaplama sınırı", "Gelecekte ödenecek ücret tahmin edilmediği için form ücret artışına dayalı 'daha iyi işler' bileşenini ölçmez. Gösterilen değer nihai PAD MBJ sonucu değildir.")
+        }),
+        ("5. Özel durumlar ve dayanak belgeler", new[]
+        {
+            ("Yeni işletme", $"{sonYil} gerçekleşen FTE alanına 0 giriniz. Mevcut/ilk ücret bilgisi yoksa ücret alanını boş bırakınız. {planYili} planlanan net ek FTE, başvuru aşaması planlanan iş eşdeğerini oluşturur."),
+            ("Önerilen belgeler", $"{sonYil} FTE ve mevcut/ilk ücret için SGK hizmet dökümü, bordro ve banka ücret ödeme kayıtları; {planYili} istihdam planı için organizasyon şeması, görev/personel planı ve işe alım takvimi kullanılabilir."),
+            ("Başvuru aşaması sınırı", $"Hesaplanan değer yalnız başvuru aşamasındaki net ek FTE planını gösterir. Yatırım {planYili}'de tam faaliyete geçmeyecekse {planYili} yerine yatırım sonrasındaki ilk tam faaliyet yılına ait plan kullanılmalıdır.")
+        })
+    };
+}
+<div class="modal fade" id="istihdamRehberModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-xl"><div class="modal-content">
+ <div class="modal-header"><h5 class="modal-title">Doldurma Rehberi — İstihdam ve Planlanan İş Eşdeğeri (@sonYil–@planYili)</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+ <div class="modal-body">
+  <div class="alert alert-info">Form, @sonYil gerçekleşen istihdamı ve @planYili planlanan net ek FTE'yi karşılaştırır. Mevcut/ilk ücret bilgisi yalnız veri amacıyla alınır ve hesaplamalara girmez.</div>
+  @foreach (var bolum in bolumler)
+  {
+   <h6 class="mt-3 font-weight-bold">@bolum.Baslik</h6>
+   <div class="table-responsive"><table class="table table-bordered table-sm mb-2"><tbody>
+    @foreach (var satir in bolum.Satirlar)
+    {
+     <tr><th style="width:24%">@satir.Konu</th><td>@satir.Aciklama</td></tr>
+    }
+   </tbody></table></div>
+  }
+  <p class="text-muted small mb-0">Sürüm: 28.09.2026 | Yöntem: Ücret bilgisi veri amaçlıdır ve hesaplamaya dahil edilmez.</p>
+ </div>
+ <div class="modal-footer"><button type="button" class="btn btn-primary" data-dismiss="modal">Kapat</button></div>
+</div></div></div>

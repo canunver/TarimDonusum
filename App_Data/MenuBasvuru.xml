@@ -21,5 +21,6 @@
     <Item type="Url" id="uygunlukSorulari" text="Uygunluk Soruları" url="/UygunlukSorusu" icon="fas fa-question-circle" roles="SistemYoneticisi" />
     <Item type="Url" id="taahhutBeyanlar" text="Taahhüt/Beyan" url="/TaahhutBeyan" icon="fas fa-file-signature" roles="SistemYoneticisi" />
     <Item type="Url" id="cevreselSosyalAnket" text="Çevresel Sosyal V.F." url="/CevreselSosyalAnket" icon="fas fa-poll-h" roles="SistemYoneticisi" />
+    <Item type="Url" id="zorunluBelgeler" text="Zorunlu Belgeler" url="/ZorunluBelge" icon="fas fa-folder-open" roles="SistemYoneticisi" />
   </Item>
 </Menu>

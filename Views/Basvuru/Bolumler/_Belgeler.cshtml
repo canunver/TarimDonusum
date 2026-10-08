@@ -6,31 +6,13 @@
     var b = Model.Basvuru;
     bool ro = Model.SaltOkunur;
     string T(string key) => L[key].Value;
-    string BelgeTuru(int dosyaNo, string varsayilan)
-    {
-        string key = $"Basvuru.Documents.Required.{dosyaNo}";
-        string value = L[key].Value;
-        return FirmaGecmisYilKurallari.BelgeAdi(b, dosyaNo, value == key ? varsayilan : value);
-    }
     string dosyaYok = T("Basvuru.Documents.NoFileSelected");
+    // Liste Tanımlar > Zorunlu Belgeler ekranından gelir; kayıtlı başvuruda sunucu yüklenen dosyalarla birlikte doldurur.
     if (b.ZorunluBelgeler.Count == 0)
     {
-        b.ZorunluBelgeler =
-        [
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 1, dosyaTuru = T("Basvuru.Documents.Required.1") },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 2, dosyaTuru = T("Basvuru.Documents.Required.2") },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 3, dosyaTuru = T("Basvuru.Documents.Required.3") },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 4, dosyaTuru = T("Basvuru.Documents.Required.4") },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 5, dosyaTuru = T("Basvuru.Documents.Required.5") },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 6, dosyaTuru = T("Basvuru.Documents.Required.6") },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 9, dosyaTuru = T("Basvuru.Documents.Required.9") },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 10, dosyaTuru = T("Basvuru.Documents.Required.10") },
-            new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 11, dosyaTuru = T("Basvuru.Documents.Required.11") }
-        ];
-        if (b.basvuruFirma.basvuruSahibiTuru is TarimDonusum.Models.enumBasvuruSahibiTuru.UreticiOrgutu or TarimDonusum.Models.enumBasvuruSahibiTuru.Kooperatif)
-        {
-            b.ZorunluBelgeler.Add(new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = 8, dosyaTuru = T("Basvuru.Documents.Required.8") });
-        }
+        b.ZorunluBelgeler = ZorunluBelgeTanimSaglayici.BasvuruIcin(b)
+            .Select(x => new TarimDonusum.Models.BasvuruOrtaklikDosya { dosyaNo = x.belgeNo, dosyaTuru = ZorunluBelgeTanimSaglayici.Ad(b, x.belgeNo) })
+            .ToList();
     }
 }
 <section class="basvuru-panel active" data-panel="7">
@@ -54,7 +36,7 @@
                     string fileNameId = $"zorunluBelgeAdi_{belge.dosyaNo}";
                     string downloadId = $"zorunluBelgeIndir_{belge.dosyaNo}";
                     <tr>
-                        <td>@BelgeTuru(belge.dosyaNo, belge.dosyaTuru) <span class="required-mark">*</span></td>
+                        <td>@belge.dosyaTuru <span class="required-mark">*</span></td>
                         <td id="@fileNameId">@(string.IsNullOrWhiteSpace(belge.dosyaAdi) ? dosyaYok : belge.dosyaAdi)</td>
                         <td class="text-nowrap">
                             @if (!ro)
