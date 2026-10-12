@@ -917,6 +917,9 @@ namespace TarimDonusum.Models
         public string uygulamaAdresiAciklama { get; set; } = "";
         public enumDegerZinciriAsamaTuru? degerZinciriAsamaTuru { get; set; }
         public string degerZinciriAsamaTuruAdi => degerZinciriAsamaTuru.HasValue ? DegerZinciriAsamaTuruTanimlari.Ad(degerZinciriAsamaTuru.Value) : "";
+        // Tanımlar > Uygun Harcama Listesi'nden seçilir; yalnızca başvuruda gösterilir.
+        public int? uygunHarcamaId { get; set; }
+        public string uygunHarcamaAdi => UygunHarcamaTanimSaglayici.Etiket(uygunHarcamaId);
         public int siraNo { get; set; }
         public string ad { get; set; } = "";
         public string birim { get; set; } = "";

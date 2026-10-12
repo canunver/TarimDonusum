@@ -3250,7 +3250,19 @@ namespace TarimDonusum.IsKurallari
             if(makine.teklifKontroluYapilsin&&makine.teklifler.Count(x=>x.basvuruyaEsas)!=1) sonuc.HataEkle("Başvuruya esas olarak tam bir teklif seçilmelidir.");
             if(makine.teklifKontroluYapilsin&&makine.teklifler.Any(x=>x.siraNo<=0||x.siraNo>99||string.IsNullOrWhiteSpace(x.tedarikci)||!ParaBirimleri.GecerliMi(x.paraBirimi)||x.birimFiyat<=0)) sonuc.HataEkle("Teklif sıra no 1-99 arasında olmalı; tedarikçi, geçerli para birimi ve birim fiyat bilgileri girilmelidir.");
             if(!sonuc.basarili)return sonuc;
-            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,makine.basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{TABBasvuru tab=new(connection,null,tr);await tab.BasvuruMakinesiKaydetAsync(makine);await new TABBasvuruLog(connection,null,tr).EkleAsync(makine.basvuruId,kullanici,"BasvuruMakinesiKaydet",makine);await tr.CommitAsync();sonuc.nesne=makine;sonuc.mesaj="Makine/ekipman kaydedildi.";}catch{await tr.RollbackAsync();throw;}}
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,makine.basvuruId,kullanici,yetki);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}
+                // Uygun harcama seçimi yalnızca başvurudaki Teknik Proje (Makine Ekipman) penceresinden gelir;
+                // ön başvuru ve teklif (Yeni Makine Ekipman Listesi) kayıtları kayıtlı seçimi değiştirmez.
+                int? kayitliHarcamaId=mevcut.Makineler.FirstOrDefault(x=>x.id==makine.id)?.uygunHarcamaId;
+                if(mevcut.kayitTuru!=enumBasvuruKayitTuru.Basvuru||makine.teklifKontroluYapilsin)makine.uygunHarcamaId=kayitliHarcamaId;
+                else if(makine.uygunHarcamaId is null or <= 0)
+                {
+                    // Başvuruda seçim zorunludur. Tanımlarda henüz aktif kalem yoksa kayıt engellenmez.
+                    makine.uygunHarcamaId=null;
+                    if(UygunHarcamaTanimSaglayici.Aktifler.Count>0){sonuc.HataEkle("Uygun harcama seçilmelidir.");return sonuc;}
+                }
+                else if(makine.uygunHarcamaId!=kayitliHarcamaId&&UygunHarcamaTanimSaglayici.Bul(makine.uygunHarcamaId)?.aktif!=true){sonuc.HataEkle("Seçilen uygun harcama kalemi bulunamadı veya pasif.");return sonuc;}
+                await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{TABBasvuru tab=new(connection,null,tr);await tab.BasvuruMakinesiKaydetAsync(makine);await new TABBasvuruLog(connection,null,tr).EkleAsync(makine.basvuruId,kullanici,"BasvuruMakinesiKaydet",makine);await tr.CommitAsync();sonuc.nesne=makine;sonuc.mesaj="Makine/ekipman kaydedildi.";}catch{await tr.RollbackAsync();throw;}}
             catch(Exception ex){BeklenmeyenHata(sonuc,ex,"Makine kaydedilemedi. BasvuruId: {BasvuruId}","Makine/ekipman kaydedilemedi.",makine.basvuruId);}return sonuc;
         }
 

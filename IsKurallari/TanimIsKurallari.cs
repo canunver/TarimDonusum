@@ -65,6 +65,57 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<List<UygunHarcamaTanim>>> UygunHarcamaTanimlariListeleAsync(Kullanici? kullanici)
+        {
+            Sonuc<List<UygunHarcamaTanim>> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                sonuc.nesne = await new TABUygunHarcamaTanim(connection, _localizer).ListeleAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Uygun harcama listesi okunamadı.");
+                sonuc.HataEkle("Uygun harcama listesi okunamadı.");
+            }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> UygunHarcamaTanimKaydetAsync(UygunHarcamaTanim harcama, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            harcama.kod = (harcama.kod ?? "").Trim();
+            harcama.ad = (harcama.ad ?? "").Trim();
+            if (harcama.kod.Length == 0) sonuc.HataEkle("Kod zorunludur.");
+            if (harcama.kod.Length > 50) sonuc.HataEkle("Kod 50 karakteri aşamaz.");
+            if (harcama.ad.Length == 0) sonuc.HataEkle("Ad zorunludur.");
+            if (harcama.ad.Length > 500) sonuc.HataEkle("Ad 500 karakteri aşamaz.");
+            if (!sonuc.basarili) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                TABUygunHarcamaTanim tablo = new TABUygunHarcamaTanim(connection, _localizer);
+                if (await tablo.KodKullaniliyorMuAsync(harcama.kod, harcama.id))
+                {
+                    sonuc.HataEkle("Bu kod başka bir kayıtta kullanılıyor.");
+                    return sonuc;
+                }
+                sonuc.nesne = await tablo.KaydetAsync(harcama);
+                UygunHarcamaTanimSaglayici.Guncelle(await tablo.ListeleAsync());
+                sonuc.mesaj = "Uygun harcama kaydedildi.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Uygun harcama kaydedilemedi.");
+                sonuc.HataEkle("Uygun harcama kaydedilemedi.");
+            }
+            return sonuc;
+        }
+
         public async Task<Sonuc<List<ZorunluBelgeTanim>>> ZorunluBelgeleriListeleAsync(Kullanici? kullanici)
         {
             Sonuc<List<ZorunluBelgeTanim>> sonuc = new();

@@ -7,6 +7,8 @@
   <div class="form-grid">
    <label>Kullanılacağı adres<select id="yeAdres"><option value="">Seçiniz</option>@foreach(var a in Model.Basvuru.YatirimAdresleri.OrderBy(x=>x.siraNo)){<option value="@a.id">@a.siraNo. @a.ilAdi / @a.ilceAdi - @a.tamAdres</option>}</select></label>
    <label>Değer zinciri aşaması<select id="yeDegerZinciriAsamaTuru"><option value="">Seçiniz</option>@foreach(enumDegerZinciriAsamaTuru asama in Enum.GetValues<enumDegerZinciriAsamaTuru>()){<option value="@((int)asama)">@DegerZinciriAsamaTuruTanimlari.Ad(asama)</option>}</select></label>
+   @* Tanımlar > Uygun Harcama Listesi'nden gelir. Ön başvuruda şimdilik gizlidir; ileride gerekirse d-none kaldırılarak açılabilir. *@
+   <label class="@(Model.Basvuru.kayitTuru == enumBasvuruKayitTuru.Basvuru ? "" : "d-none")">Uygun harcama <span class="required-mark">*</span><select id="yeUygunHarcama"><option value=""></option>@foreach(UygunHarcamaTanim harcama in UygunHarcamaTanimSaglayici.Aktifler){<option value="@harcama.id">@UygunHarcamaTanimSaglayici.Etiket(harcama)</option>}</select></label>
    <label>Makine-ekipmanın adı<input id="yeAd" maxlength="250" /></label><label>Markası<input id="yeMarka" maxlength="150" /></label><label>Modeli<input id="yeModel" maxlength="150" /></label>
    <label>Adedi<input id="yeAdet" type="number" min="0.001" step="0.001" /></label><label>Yerleşim planı ve listesindeki sıra numarası<input id="yePlanSira" type="number" min="1" max="9999" /></label>
    <label>Durum<select id="yeDurum" onchange="YatirimEkipmanDurumAlanlariGuncelle()"><option value="">Seçiniz</option><option>YENİ DESTEK İSTENİYOR</option><option>YENİ DESTEK İSTEMİYOR</option><option>MEVCUT KULLANILACAK</option><option>MEVCUT KULLANILMAYACAK</option></select></label>

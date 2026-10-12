@@ -1,0 +1,74 @@
+@{ ViewData["Title"] = "Uygun Harcama Listesi"; }
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div>
+            <h1>Uygun Harcama Listesi</h1>
+            <p>Başvurunun Teknik Proje (Makine Ekipman) sayfasında seçilebilen uygun harcama kalemlerini buradan ekleyebilir ve düzenleyebilirsiniz.</p>
+        </div>
+        <button class="btn btn-primary" onclick="ac()"><i class="fas fa-plus mr-1"></i>Yeni kayıt</button>
+    </div>
+    <div class="basvuru-card mb-3"><input id="ara" class="form-control" placeholder="Kod veya ada göre ara" oninput="ciz()"></div>
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover">
+            <thead><tr><th style="width:80px">ID</th><th style="width:180px">Kod</th><th>Ad</th><th style="width:90px">Durum</th><th style="width:110px"></th></tr></thead>
+            <tbody id="liste"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 id="modalBaslik">Uygun harcama</h5><button class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <label>ID<input id="id" readonly placeholder="Kayıtta otomatik verilir"></label>
+                    <label>Kod<input id="kod" maxlength="50"></label>
+                    <label>Durum<select id="aktif"><option value="true">Aktif</option><option value="false">Pasif</option></select></label>
+                </div>
+                <label class="wide-label">Ad<input id="ad" maxlength="500"></label>
+                <small class="form-text text-muted">Pasif kayıtlar başvurudaki seçim kutusunda gösterilmez; daha önce bu kaydı seçmiş ekipmanlarda seçim korunur.</small>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button>
+                <button class="btn btn-primary" onclick="kaydet()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {<script>
+let veriler = [];
+const esc = x => $('<div>').text(x ?? '').html();
+function hata(s) { PopupMesajGoster(s?.hataStr || 'İşlem gerçekleştirilemedi.', false); }
+function ciz() {
+    const aranan = ($('#ara').val() || '').toLocaleLowerCase('tr-TR');
+    const gorunen = veriler.filter(x => !aranan || `${x.kod} ${x.ad}`.toLocaleLowerCase('tr-TR').includes(aranan));
+    $('#liste').html(gorunen.length
+        ? gorunen.map(x => `<tr class="${x.aktif ? '' : 'text-muted'}"><td>${x.id}</td><td>${esc(x.kod)}</td><td>${esc(x.ad)}</td><td>${x.aktif ? 'Aktif' : 'Pasif'}</td><td><button class="btn btn-sm btn-outline-primary" onclick="ac(${x.id})">Düzenle</button></td></tr>`).join('')
+        : `<tr><td colspan="5" class="text-center text-muted py-3">${veriler.length ? 'Aramaya uyan kayıt bulunamadı.' : 'Henüz kayıt yok. "Yeni kayıt" düğmesiyle ekleyiniz.'}</td></tr>`);
+}
+function listele() {
+    AjaxGet('/UygunHarcamaTanim/Listele', null, s => {
+        if (!s?.basarili) return hata(s);
+        veriler = s.nesne || [];
+        ciz();
+    });
+}
+function ac(id) {
+    const x = veriler.find(y => y.id === id) || { id: 0, kod: '', ad: '', aktif: true };
+    $('#modalBaslik').text(x.id ? 'Uygun harcama düzenle' : 'Yeni uygun harcama');
+    $('#id').val(x.id || '').data('id', x.id); $('#kod').val(x.kod); $('#ad').val(x.ad); $('#aktif').val(String(x.aktif));
+    $('#modal').modal('show');
+}
+function kaydet() {
+    const harcama = { id: Number($('#id').data('id')) || 0, kod: $('#kod').val(), ad: $('#ad').val(), aktif: $('#aktif').val() === 'true' };
+    AjaxPost('/UygunHarcamaTanim/Kaydet', harcama, s => {
+        if (!s?.basarili) return hata(s);
+        $('#modal').modal('hide');
+        PopupMesajGoster(s.mesaj || 'Uygun harcama kaydedildi.', true);
+        listele();
+    });
+}
+$(listele);
+</script>}

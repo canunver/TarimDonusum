@@ -13,6 +13,16 @@ public sealed class RPROB_YatirimMakineEkipmanListesi(string uygulamaRootPath, i
     {
         List<BasvuruMakine> makineler=(basvuru.Makineler??[]).Where(x=>!uygulamaAdresiId.HasValue||x.uygulamaAdresiId==uygulamaAdresiId.Value).OrderBy(x=>x.siraNo).ThenBy(x=>x.id).ToList();
         const int ornekSatir=5;
+        // Uygun harcama yalnızca başvuruda seçilir; şablondaki son sütunun biçimiyle en sağa ek sütun olarak yazılır.
+        bool harcamaSutunu=basvuru.kayitTuru==enumBasvuruKayitTuru.Basvuru;
+        int sonSutun=harcamaSutunu?HarcamaSutunu:HarcamaSutunu-1;
+        if(harcamaSutunu)
+        {
+            tablo.HucreKopyala(3,HarcamaSutunu-1,ornekSatir,HarcamaSutunu-1,3,HarcamaSutunu);
+            tablo.HucreBirlestir(3,HarcamaSutunu,4,HarcamaSutunu);
+            tablo.HucreDegerYaz(3,HarcamaSutunu,"UYGUN HARCAMA");
+            tablo.SutunGenislikAyarla(HarcamaSutunu,HarcamaSutunu,30);
+        }
         if(makineler.Count>1)
         {
             double yukseklik=tablo.SatirGercekYukseklikAl(ornekSatir);
@@ -20,13 +30,19 @@ public sealed class RPROB_YatirimMakineEkipmanListesi(string uygulamaRootPath, i
             for(int i=1;i<makineler.Count;i++)
             {
                 int hedef=ornekSatir+i;
-                tablo.HucreKopyala(ornekSatir,0,ornekSatir,13,hedef,0);
+                tablo.HucreKopyala(ornekSatir,0,ornekSatir,sonSutun,hedef,0);
                 tablo.SatirGercekYukseklikAyarla(hedef,hedef,yukseklik);
             }
         }
 
-        for(int i=0;i<makineler.Count;i++) SatirYaz(tablo,ornekSatir+i,i+1,makineler[i]);
+        for(int i=0;i<makineler.Count;i++)
+        {
+            SatirYaz(tablo,ornekSatir+i,i+1,makineler[i]);
+            if(harcamaSutunu) Yaz(tablo,ornekSatir+i,HarcamaSutunu,makineler[i].uygunHarcamaAdi);
+        }
     }
+
+    private const int HarcamaSutunu=14;
 
     private static void SatirYaz(Tablo t,int r,int sira,BasvuruMakine m)
     {

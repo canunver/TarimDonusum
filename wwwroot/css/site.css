@@ -234,6 +234,27 @@ body {
   color: inherit;
 }
 
+/* Yan menü: simge solda sabit bir sütunda durur, yazı hep sağında kalır; uzun yazı alt satıra geçince simgenin altına kaymaz.
+   Simge, yazı kaç satır olursa olsun dikeyde ortalanır. */
+.nav-sidebar .nav-link {
+  display: flex;
+  align-items: center;
+}
+
+.nav-sidebar .nav-link > .nav-icon {
+  flex: 0 0 auto;
+}
+
+.nav-sidebar .nav-link > p {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Alt menüsü olan başlıkta yazı sağdaki açma okunun altına girmesin. */
+.nav-sidebar .menu-folder > .nav-link > p {
+  padding-right: 1.2rem;
+}
+
 .home-layout .content-wrapper,
 .basvuru-layout .content-wrapper {
   min-height: calc(100vh - 106px) !important;
@@ -2314,6 +2335,53 @@ body {
 
 .select2-container .select2-selection--single .select2-selection__arrow {
     height: 36px;
+}
+
+/* Form ızgarasındaki aramalı seçim kutusu (Select2), yanındaki normal seçim kutularıyla aynı görünür */
+.form-grid .select2-container {
+    display: block;
+    margin-top: 6px;
+}
+
+/* Yükseklik sabit verilmez: yazı boyutu ekran genişliğine göre değiştiği için normal kutular gibi içerikten hesaplanır. */
+.form-grid .select2-container .select2-selection--single {
+    height: auto;
+    padding: 0;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+}
+
+.form-grid .select2-container .select2-selection--single .select2-selection__rendered,
+.form-grid .select2-container .select2-selection--single .select2-selection__placeholder {
+    font-size: .95rem;
+    font-weight: 400;
+    color: #101828;
+}
+
+.form-grid .select2-container .select2-selection--single .select2-selection__rendered {
+    line-height: 1.44;
+    margin: 0;
+    padding: 9px 28px 9px 10px;
+}
+
+.form-grid .select2-container .select2-selection--single .select2-selection__arrow {
+    top: 0;
+    bottom: 0;
+    height: auto;
+    right: 4px;
+}
+
+.form-grid .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #101828 transparent transparent transparent;
+}
+
+.form-grid .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #101828 transparent;
+}
+
+.form-grid .select2-container .select2-selection--single .select2-selection__clear {
+    font-weight: 400;
+    margin-right: 22px;
 }
 /* Yatırım uygulama adresi penceresi: başlık | yüklü dosya + İndir | yeni dosya seçimi */
 .yatirim-yeri-dosyalari { display: grid; gap: 10px; margin-top: 12px; }

@@ -1556,6 +1556,31 @@ namespace TarimDonusum.IsKurallari
                     SadeceKooperatif INT NOT NULL CONSTRAINT DF_ZorunluBelgeTanim_SadeceKooperatif DEFAULT 0,
                     Aktif INT NOT NULL CONSTRAINT DF_ZorunluBelgeTanim_Aktif DEFAULT 1,
                     GuncellemeTarihi DATETIME2 NULL);"),
+            new(130, @"IF OBJECT_ID(N'dbo.UygunHarcamaTanim',N'U') IS NULL
+                  CREATE TABLE dbo.UygunHarcamaTanim(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_UygunHarcamaTanim PRIMARY KEY,
+                    Kod NVARCHAR(50) NOT NULL CONSTRAINT UX_UygunHarcamaTanim_Kod UNIQUE,
+                    Ad NVARCHAR(500) NOT NULL,
+                    Aktif INT NOT NULL CONSTRAINT DF_UygunHarcamaTanim_Aktif DEFAULT 1,
+                    GuncellemeTarihi DATETIME2 NULL);"),
+            new(131, @"IF COL_LENGTH(N'dbo.BasvuruMakine',N'UygunHarcamaId') IS NULL
+                  BEGIN
+                    ALTER TABLE dbo.BasvuruMakine ADD UygunHarcamaId INT NULL;
+                    EXEC(N'ALTER TABLE dbo.BasvuruMakine ADD CONSTRAINT FK_BasvuruMakine_UygunHarcamaTanim FOREIGN KEY(UygunHarcamaId) REFERENCES dbo.UygunHarcamaTanim(Id)');
+                  END"),
+            // 130-131 ilk hâlinde tablo "UygulamaHarcama", kolon "UygulamaHarcamaId" adıyla oluşturulmuştu; o adlarla kurulmuş veritabanları yeni adlara taşınır.
+            new(132, @"IF OBJECT_ID(N'dbo.UygulamaHarcama',N'U') IS NOT NULL AND OBJECT_ID(N'dbo.UygunHarcamaTanim',N'U') IS NULL
+                  BEGIN
+                    EXEC sp_rename N'dbo.UygulamaHarcama', N'UygunHarcamaTanim';
+                    IF OBJECT_ID(N'dbo.PK_UygulamaHarcama') IS NOT NULL EXEC sp_rename N'dbo.PK_UygulamaHarcama', N'PK_UygunHarcamaTanim', N'OBJECT';
+                    IF OBJECT_ID(N'dbo.UX_UygulamaHarcama_Kod') IS NOT NULL EXEC sp_rename N'dbo.UX_UygulamaHarcama_Kod', N'UX_UygunHarcamaTanim_Kod', N'OBJECT';
+                    IF OBJECT_ID(N'dbo.DF_UygulamaHarcama_Aktif') IS NOT NULL EXEC sp_rename N'dbo.DF_UygulamaHarcama_Aktif', N'DF_UygunHarcamaTanim_Aktif', N'OBJECT';
+                  END
+                  IF COL_LENGTH(N'dbo.BasvuruMakine',N'UygulamaHarcamaId') IS NOT NULL AND COL_LENGTH(N'dbo.BasvuruMakine',N'UygunHarcamaId') IS NULL
+                  BEGIN
+                    EXEC sp_rename N'dbo.BasvuruMakine.UygulamaHarcamaId', N'UygunHarcamaId', N'COLUMN';
+                    IF OBJECT_ID(N'dbo.FK_BasvuruMakine_UygulamaHarcama') IS NOT NULL EXEC sp_rename N'dbo.FK_BasvuruMakine_UygulamaHarcama', N'FK_BasvuruMakine_UygunHarcamaTanim', N'OBJECT';
+                  END"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)
