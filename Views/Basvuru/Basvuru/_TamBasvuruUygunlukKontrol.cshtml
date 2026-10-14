@@ -1,0 +1,31 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using System.Text.Json
+@using TarimDonusum.Models
+@{
+    var b = Model.Basvuru;
+    // Uzman, başvuru incelemeye gönderildikten sonra güncel kayıtta doldurur.
+    bool duzenlenebilir = Model.DenetciGorunumu && b.durum == enumBasvuruDurum.BasvuruIncelemeDurumu && b.basvuruFirma.siraNo == 0;
+    HashSet<int> cevaplananlar = TamBasvuruKontrolCevaplari.CevaplananIdler(b.TamBasvuruUygunlukKontrolJson);
+    var tanimlar = TamBasvuruUygunlukSorusuTanimSaglayici.Tum
+        .Where(x => x.aktif || cevaplananlar.Contains(x.id))
+        .Select(x => new { x.id, x.siraNo, x.soru, x.kontrolAciklamasi, x.kaynakBelge, x.aktif });
+    // Genel uygunluk sonucu belge ön kontrolündeki (kaydedilmiş) sonuçları da kapsar.
+    HashSet<int> belgeCevaplananlar = TamBasvuruKontrolCevaplari.CevaplananIdler(b.TamBasvuruBelgeKontrolJson);
+    var belgeTanimlari = TamBasvuruBelgeKontrolTanimSaglayici.Tum
+        .Where(x => x.aktif || belgeCevaplananlar.Contains(x.id))
+        .Select(x => new { x.id });
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruUygunlukKontrolu)" data-tamlik-bolum="uygunluk" data-editable="@duzenlenebilir.ToString().ToLowerInvariant()">
+    <div class="section-toolbar"><h2 class="mb-0">Detaylı Tamlık ve Uygunluk Soruları</h2></div>
+    <div class="alert alert-info">Her soru olumlu ifade edilmiştir. Sorunun karşılanması hâlinde <strong>Evet</strong>, karşılanmaması hâlinde <strong>Hayır</strong> seçilir; Hayır cevaplarında açıklama zorunludur. Koşullu bir husus başvuruya uygulanmıyorsa Evet seçilir ve açıklamaya “Uygulanamaz” gerekçesi yazılır.</div>
+    @if (!duzenlenebilir)
+    {
+        <div class="alert alert-secondary">Kontroller yalnızca başvuru incelemeye gönderildikten sonra, inceleme sürerken doldurulabilir. Bu görünüm salt okunurdur.</div>
+    }
+    <script type="application/json" id="tamlikUygunlukTanimJson">@Html.Raw(JsonSerializer.Serialize(tanimlar))</script>
+    <script type="application/json" id="tamlikUygunlukCevapJson">@Html.Raw(TamBasvuruKontrolCevaplari.JsonVeyaBos(b.TamBasvuruUygunlukKontrolJson))</script>
+    <script type="application/json" id="tamlikBelgeTanimJson">@Html.Raw(JsonSerializer.Serialize(belgeTanimlari))</script>
+    <script type="application/json" id="tamlikBelgeCevapJson">@Html.Raw(TamBasvuruKontrolCevaplari.JsonVeyaBos(b.TamBasvuruBelgeKontrolJson))</script>
+    <div id="tamlikOzetAlani"></div>
+    <div id="tamlikTabloAlani"></div>
+</section>

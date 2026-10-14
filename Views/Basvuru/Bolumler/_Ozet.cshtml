@@ -226,11 +226,11 @@
                                     id="incelemeyeGonderBtn"
                                     class="btn btn-success btn-lg py-3"
                                     data-url="@Url.Action("SozlesmeyeGonder", "Basvuru")"
-                                    data-confirm="Başvuruyu sözleşmeye göndermek istediğinize emin misiniz? Gönderimden sonra bilgiler değiştirilemez."
+                                    data-confirm="Başvuruyu incelemeye göndermek istediğinize emin misiniz? Gönderimden sonra bilgiler değiştirilemez."
                                     data-basvuru-id="@b.Id"
-                                    data-failed-message="Başvuru sözleşmeye gönderilemedi. Lütfen tekrar deneyin.">
+                                    data-failed-message="Başvuru incelemeye gönderilemedi. Lütfen tekrar deneyin.">
                                 <i class="fas fa-paper-plane mr-2"></i>
-                                Sözleşmeye Gönder
+                                Başvuruyu İncelemeye Gönder
                             </button>
                         }
                         else
@@ -251,7 +251,7 @@
             }
             else
             {
-                <div class="alert alert-info mb-0">@(basvuruKaydi ? "Başvuru sözleşmeye gönderildi. Başvuru artık salt okunur durumdadır." : L["Basvuru.Summary.SubmittedReadonly"].Value)</div>
+                <div class="alert alert-info mb-0">@(basvuruKaydi ? "Başvuru incelemeye gönderildi. Başvuru artık salt okunur durumdadır." : L["Basvuru.Summary.SubmittedReadonly"].Value)</div>
             }
         }
         else

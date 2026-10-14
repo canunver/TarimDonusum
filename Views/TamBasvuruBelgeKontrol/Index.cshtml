@@ -1,0 +1,70 @@
+@{ ViewData["Title"] = "Belge / Form Envanteri"; }
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div>
+            <h1>Belge / Form Envanteri ve Ön Kontrol</h1>
+            <p>Tam başvuru tamlık kontrolünde uzmanın Evet / Hayır ile değerlendireceği belge ve form satırlarını buradan ekleyebilir ve düzenleyebilirsiniz.</p>
+        </div>
+        <button class="btn btn-primary" onclick="ac()"><i class="fas fa-plus mr-1"></i>Yeni kontrol</button>
+    </div>
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover">
+            <thead><tr><th style="width:70px">No</th><th>Tamlık kontrol sorusu</th><th style="width:120px">Zorunluluk</th><th style="width:90px">Durum</th><th style="width:110px"></th></tr></thead>
+            <tbody id="liste"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 id="modalBaslik">Belge kontrolü</h5><button class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <input id="id" type="hidden">
+                <div class="form-grid">
+                    <label>Sıra no<input id="sira" type="number" min="1"></label>
+                    <label>Zorunluluk<select id="kosullu"><option value="false">Zorunlu</option><option value="true">Koşullu</option></select></label>
+                    <label>Durum<select id="aktif"><option value="true">Aktif</option><option value="false">Pasif</option></select></label>
+                </div>
+                <label class="wide-label">Tamlık kontrol sorusu<textarea id="soru" rows="3" maxlength="1000"></textarea></label>
+                <small class="form-text text-muted">Koşullu satır başvuruya uygulanmıyorsa uzman Evet işaretler ve açıklamaya gerekçesini yazar. Pasif satırlar yeni kontrollerde gösterilmez.</small>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button>
+                <button class="btn btn-primary" onclick="kaydet()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {<script>
+let veriler = [];
+const esc = x => $('<div>').text(x ?? '').html();
+function hata(s) { PopupMesajGoster(s?.hataStr || 'İşlem gerçekleştirilemedi.', false); }
+function listele() {
+    AjaxGet('/TamBasvuruBelgeKontrol/Listele', null, s => {
+        if (!s?.basarili) return hata(s);
+        veriler = s.nesne || [];
+        $('#liste').html(veriler.length
+            ? veriler.map(x => `<tr class="${x.aktif ? '' : 'text-muted'}"><td>${x.siraNo}</td><td>${esc(x.soru)}</td><td>${x.kosullu ? 'Koşullu' : 'Zorunlu'}</td><td>${x.aktif ? 'Aktif' : 'Pasif'}</td><td><button class="btn btn-sm btn-outline-primary" onclick="ac(${x.id})">Düzenle</button></td></tr>`).join('')
+            : '<tr><td colspan="5" class="text-muted">Henüz belge kontrolü tanımlanmadı.</td></tr>');
+    });
+}
+function ac(id) {
+    const x = veriler.find(y => y.id === id) || { id: 0, siraNo: Math.max(0, ...veriler.map(y => Number(y.siraNo) || 0)) + 1, soru: '', kosullu: false, aktif: true };
+    $('#modalBaslik').text(x.id ? 'Belge kontrolü düzenle' : 'Yeni belge kontrolü');
+    $('#id').val(x.id); $('#sira').val(x.siraNo); $('#soru').val(x.soru);
+    $('#kosullu').val(String(x.kosullu)); $('#aktif').val(String(x.aktif));
+    $('#modal').modal('show');
+}
+function kaydet() {
+    const tanim = { id: +$('#id').val(), siraNo: +$('#sira').val(), soru: $('#soru').val(), kosullu: $('#kosullu').val() === 'true', aktif: $('#aktif').val() === 'true' };
+    AjaxPost('/TamBasvuruBelgeKontrol/Kaydet', tanim, s => {
+        if (!s?.basarili) return hata(s);
+        $('#modal').modal('hide');
+        PopupMesajGoster(s.mesaj || 'Belge kontrolü kaydedildi.', true);
+        listele();
+    });
+}
+$(listele);
+</script>}

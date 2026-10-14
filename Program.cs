@@ -67,6 +67,7 @@ await CevreselSosyalAnketAktarici.AktarVeYukleAsync(app.Configuration, app.Logge
 await TaahhutBeyanTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
 await ZorunluBelgeTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
 await IzlemeGostergesiTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
+await TamBasvuruKontrolTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
 await UygunHarcamaTanimYukleyici.YukleAsync(app.Configuration, app.Logger);
 
 app.UseExceptionHandler("/Home/Error");

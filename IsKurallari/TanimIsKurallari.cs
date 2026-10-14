@@ -211,6 +211,98 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<List<TamBasvuruBelgeKontrolTanim>>> TamBasvuruBelgeKontrolleriListeleAsync(Kullanici? kullanici)
+        {
+            Sonuc<List<TamBasvuruBelgeKontrolTanim>> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                sonuc.nesne = await new TABTamBasvuruBelgeKontrolTanim(connection, _localizer).ListeleAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Belge / form envanteri tanımları okunamadı.");
+                sonuc.HataEkle("Belge / form envanteri tanımları okunamadı.");
+            }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> TamBasvuruBelgeKontrolKaydetAsync(TamBasvuruBelgeKontrolTanim tanim, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            tanim.soru = (tanim.soru ?? "").Trim();
+            if (tanim.siraNo <= 0) sonuc.HataEkle("Sıra numarası zorunludur.");
+            if (tanim.soru.Length == 0) sonuc.HataEkle("Tamlık kontrol sorusu zorunludur.");
+            if (tanim.soru.Length > 1000) sonuc.HataEkle("Tamlık kontrol sorusu 1000 karakteri aşamaz.");
+            if (!sonuc.basarili) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                TABTamBasvuruBelgeKontrolTanim tablo = new TABTamBasvuruBelgeKontrolTanim(connection, _localizer);
+                sonuc.nesne = await tablo.KaydetAsync(tanim);
+                TamBasvuruBelgeKontrolTanimSaglayici.Guncelle(await tablo.ListeleAsync());
+                sonuc.mesaj = "Belge kontrolü kaydedildi.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Belge kontrolü kaydedilemedi.");
+                sonuc.HataEkle("Belge kontrolü kaydedilemedi.");
+            }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<List<TamBasvuruUygunlukSorusuTanim>>> TamBasvuruUygunlukSorulariListeleAsync(Kullanici? kullanici)
+        {
+            Sonuc<List<TamBasvuruUygunlukSorusuTanim>> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                sonuc.nesne = await new TABTamBasvuruUygunlukSorusuTanim(connection, _localizer).ListeleAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Tamlık ve uygunluk soruları okunamadı.");
+                sonuc.HataEkle("Tamlık ve uygunluk soruları okunamadı.");
+            }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> TamBasvuruUygunlukSorusuKaydetAsync(TamBasvuruUygunlukSorusuTanim tanim, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            tanim.soru = (tanim.soru ?? "").Trim();
+            tanim.kontrolAciklamasi = (tanim.kontrolAciklamasi ?? "").Trim();
+            tanim.kaynakBelge = (tanim.kaynakBelge ?? "").Trim();
+            if (tanim.siraNo <= 0) sonuc.HataEkle("Sıra numarası zorunludur.");
+            if (tanim.soru.Length == 0) sonuc.HataEkle("Kontrol sorusu zorunludur.");
+            if (tanim.soru.Length > 1000) sonuc.HataEkle("Kontrol sorusu 1000 karakteri aşamaz.");
+            if (tanim.kontrolAciklamasi.Length > 2000) sonuc.HataEkle("Kontrol açıklaması 2000 karakteri aşamaz.");
+            if (tanim.kaynakBelge.Length > 500) sonuc.HataEkle("Kaynak belge / form 500 karakteri aşamaz.");
+            if (!sonuc.basarili) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                TABTamBasvuruUygunlukSorusuTanim tablo = new TABTamBasvuruUygunlukSorusuTanim(connection, _localizer);
+                sonuc.nesne = await tablo.KaydetAsync(tanim);
+                TamBasvuruUygunlukSorusuTanimSaglayici.Guncelle(await tablo.ListeleAsync());
+                sonuc.mesaj = "Uygunluk sorusu kaydedildi.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Uygunluk sorusu kaydedilemedi.");
+                sonuc.HataEkle("Uygunluk sorusu kaydedilemedi.");
+            }
+            return sonuc;
+        }
+
         public async Task<Sonuc<int>> TaahhutBeyanKaydetAsync(TaahhutBeyanTanim tanim, Kullanici? kullanici)
         {
             Sonuc<int> sonuc = new();

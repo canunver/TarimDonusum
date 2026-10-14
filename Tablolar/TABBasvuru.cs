@@ -120,6 +120,8 @@ namespace TarimDonusum.Tablolar
                     B.DenetimSonucu,
                     B.BankaKrediLimiti,
                     B.BankaMaksimumAylikOdeme,
+                    B.TamBasvuruBelgeKontrolJson,
+                    B.TamBasvuruUygunlukKontrolJson,
 
                     D.Yil,
                     D.Ad,
@@ -1047,6 +1049,26 @@ namespace TarimDonusum.Tablolar
             }
         }
 
+        /// <summary>Uzman tamlık/uygunluk cevaplarını yalnızca incelemedeki (Başvuru İnceleme) güncel başvuru kaydına yazar.</summary>
+        public async Task<bool> TamBasvuruKontrolKaydetAsync(int basvuruId, bool belgeKontrolu, string json)
+        {
+            string kolon = belgeKontrolu ? "TamBasvuruBelgeKontrolJson" : "TamBasvuruUygunlukKontrolJson";
+            string sql = $@"
+                UPDATE B SET B.{kolon} = @Json
+                FROM dbo.Basvuru B
+                INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
+                WHERE B.Id = @BasvuruId
+                  AND B.KayitTuru = @KayitTuru
+                  AND BA.Durum = @Durum
+                  AND B.SiraNo = 0;";
+            await using SqlCommand command = KomutOlustur(sql);
+            command.Parameters.AddWithValue("@BasvuruId", basvuruId);
+            command.Parameters.AddWithValue("@Json", json);
+            command.Parameters.AddWithValue("@KayitTuru", (int)enumBasvuruKayitTuru.Basvuru);
+            command.Parameters.AddWithValue("@Durum", (int)enumBasvuruDurum.BasvuruIncelemeDurumu);
+            return await command.ExecuteNonQueryAsync() == 1;
+        }
+
         public async Task<enumBasvuruKayitTuru?> KayitTuruOkuAsync(int basvuruId)
         {
             await using SqlCommand command = KomutOlustur("SELECT KayitTuru FROM dbo.Basvuru WHERE Id = @BasvuruId;");
@@ -1257,6 +1279,8 @@ namespace TarimDonusum.Tablolar
                 : null;
             basvuru.BankaKrediLimiti = NullOkuDecimal(reader, kol++).GetValueOrDefault();
             basvuru.BankaMaksimumAylikOdeme = NullOkuDecimal(reader, kol++).GetValueOrDefault();
+            basvuru.TamBasvuruBelgeKontrolJson = NullOkuString(reader, kol++) ?? "";
+            basvuru.TamBasvuruUygunlukKontrolJson = NullOkuString(reader, kol++) ?? "";
             basvuru.ortaklik.basvuruId = basvuru.Id;
             basvuru.ortaklik.ozelSektorPayi = basvuru.basvuruFirma.ozelSektorPayi;
             basvuru.ortaklik.halkaAciklikOrani = basvuru.basvuruFirma.halkaAciklikOrani;

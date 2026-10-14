@@ -1592,6 +1592,28 @@ namespace TarimDonusum.IsKurallari
                     Siklik NVARCHAR(100) NOT NULL CONSTRAINT DF_IzlemeGostergesiTanim_Siklik DEFAULT N'',
                     Aktif INT NOT NULL CONSTRAINT DF_IzlemeGostergesiTanim_Aktif DEFAULT 1,
                     GuncellemeTarihi DATETIME2 NULL);"),
+            // Tam başvuru tamlık ve uygunluk kontrol formu: A. Belge / form envanteri ve ön kontrol
+            new(134, @"IF OBJECT_ID(N'dbo.TamBasvuruBelgeKontrolTanim',N'U') IS NULL
+                  CREATE TABLE dbo.TamBasvuruBelgeKontrolTanim(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_TamBasvuruBelgeKontrolTanim PRIMARY KEY,
+                    SiraNo INT NOT NULL,
+                    Soru NVARCHAR(1000) NOT NULL,
+                    Kosullu INT NOT NULL CONSTRAINT DF_TamBasvuruBelgeKontrolTanim_Kosullu DEFAULT 0,
+                    Aktif INT NOT NULL CONSTRAINT DF_TamBasvuruBelgeKontrolTanim_Aktif DEFAULT 1,
+                    GuncellemeTarihi DATETIME2 NULL);"),
+            // Tam başvuru tamlık ve uygunluk kontrol formu: B. Detaylı tamlık ve uygunluk soruları
+            new(135, @"IF OBJECT_ID(N'dbo.TamBasvuruUygunlukSorusuTanim',N'U') IS NULL
+                  CREATE TABLE dbo.TamBasvuruUygunlukSorusuTanim(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_TamBasvuruUygunlukSorusuTanim PRIMARY KEY,
+                    SiraNo INT NOT NULL,
+                    Soru NVARCHAR(1000) NOT NULL,
+                    KontrolAciklamasi NVARCHAR(2000) NOT NULL CONSTRAINT DF_TamBasvuruUygunlukSorusuTanim_KontrolAciklamasi DEFAULT N'',
+                    KaynakBelge NVARCHAR(500) NOT NULL CONSTRAINT DF_TamBasvuruUygunlukSorusuTanim_KaynakBelge DEFAULT N'',
+                    Aktif INT NOT NULL CONSTRAINT DF_TamBasvuruUygunlukSorusuTanim_Aktif DEFAULT 1,
+                    GuncellemeTarihi DATETIME2 NULL);"),
+            // Uzmanın tam başvuru belge ön kontrolü ve uygunluk sorusu cevapları (tanım Id'sine göre JSON); revizyonda kopyalanır.
+            new(136, @"IF COL_LENGTH(N'dbo.Basvuru',N'TamBasvuruBelgeKontrolJson') IS NULL ALTER TABLE dbo.Basvuru ADD TamBasvuruBelgeKontrolJson NVARCHAR(MAX) NULL;
+                  IF COL_LENGTH(N'dbo.Basvuru',N'TamBasvuruUygunlukKontrolJson') IS NULL ALTER TABLE dbo.Basvuru ADD TamBasvuruUygunlukKontrolJson NVARCHAR(MAX) NULL;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

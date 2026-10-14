@@ -203,6 +203,17 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TamBasvuruKontrolKaydet([FromBody] TamBasvuruKontrolKayit model)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null) return Json(new { basarili = false, mesaj = "Oturum süresi doldu." });
+            if (BasvuruKullanicisiMi(kullanici)) return Forbid();
+            return Json(await _basvuruIsKurallari.TamBasvuruKontrolKaydetAsync(model, kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SistemSonuclariniYenidenUret([FromBody] DenetimListesiKayit model)
         {
             Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);

@@ -1,0 +1,24 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using System.Text.Json
+@using TarimDonusum.Models
+@{
+    var b = Model.Basvuru;
+    // Uzman, başvuru incelemeye gönderildikten sonra güncel kayıtta doldurur.
+    bool duzenlenebilir = Model.DenetciGorunumu && b.durum == enumBasvuruDurum.BasvuruIncelemeDurumu && b.basvuruFirma.siraNo == 0;
+    HashSet<int> cevaplananlar = TamBasvuruKontrolCevaplari.CevaplananIdler(b.TamBasvuruBelgeKontrolJson);
+    var tanimlar = TamBasvuruBelgeKontrolTanimSaglayici.Tum
+        .Where(x => x.aktif || cevaplananlar.Contains(x.id))
+        .Select(x => new { x.id, x.siraNo, x.soru, x.kosullu, x.aktif });
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruBelgeOnKontrol)" data-tamlik-bolum="belge" data-editable="@duzenlenebilir.ToString().ToLowerInvariant()">
+    <div class="section-toolbar"><h2 class="mb-0">Belge / Form Envanteri ve Ön Kontrol</h2></div>
+    <div class="alert alert-info">Bu bölüm Kurum uzmanı tarafından doldurulur. Her satırda <strong>Evet</strong> veya <strong>Hayır</strong> seçilir; Hayır seçilen satırlarda açıklama zorunludur. Koşullu bir satır başvuruya uygulanmıyorsa Evet seçilir ve açıklamaya “Uygulanamaz” gerekçesi yazılır.</div>
+    @if (!duzenlenebilir)
+    {
+        <div class="alert alert-secondary">Kontroller yalnızca başvuru incelemeye gönderildikten sonra, inceleme sürerken doldurulabilir. Bu görünüm salt okunurdur.</div>
+    }
+    <script type="application/json" id="tamlikBelgeTanimJson">@Html.Raw(JsonSerializer.Serialize(tanimlar))</script>
+    <script type="application/json" id="tamlikBelgeCevapJson">@Html.Raw(TamBasvuruKontrolCevaplari.JsonVeyaBos(b.TamBasvuruBelgeKontrolJson))</script>
+    <div id="tamlikOzetAlani"></div>
+    <div id="tamlikTabloAlani"></div>
+</section>

@@ -446,6 +446,55 @@ namespace TarimDonusum.IsKurallari
         }
 
         /// <summary>
+        /// Uzmanın tam başvuru "Belge / Form Ön Kontrol" veya "Tamlık ve Uygunluk Soruları" cevaplarını kaydeder.
+        /// Yalnızca incelemedeki başvuruda ve başvuru kullanıcısı olmayan (uzman) kullanıcılar kaydedebilir.
+        /// </summary>
+        public async Task<Sonuc> TamBasvuruKontrolKaydetAsync(TamBasvuruKontrolKayit model, Kullanici kullanici)
+        {
+            Sonuc sonuc = new();
+            if (BasvuruKullanicisiMi(kullanici)) sonuc.HataEkle("Başvuru kullanıcıları tamlık ve uygunluk kontrolü yapamaz.");
+            if (model.basvuruId <= 0) sonuc.HataEkle("Başvuru seçilmelidir.");
+            HashSet<int> tanimIdleri = model.belgeKontrolu
+                ? TamBasvuruBelgeKontrolTanimSaglayici.Tum.Select(x => x.id).ToHashSet()
+                : TamBasvuruUygunlukSorusuTanimSaglayici.Tum.Select(x => x.id).ToHashSet();
+            Dictionary<string, object> cevaplar = new();
+            foreach (TamBasvuruKontrolCevap cevap in model.cevaplar ?? [])
+            {
+                string secim = (cevap.cevap ?? "").Trim();
+                string aciklama = (cevap.aciklama ?? "").Trim();
+                if (!tanimIdleri.Contains(cevap.tanimId)) { sonuc.HataEkle("Geçersiz kontrol satırı gönderildi."); break; }
+                if (secim is not ("" or "Evet" or "Hayır")) { sonuc.HataEkle("Cevap yalnızca Evet veya Hayır olabilir."); break; }
+                if (aciklama.Length > 2000) { sonuc.HataEkle("Açıklama 2000 karakteri aşamaz."); break; }
+                if (secim.Length > 0 || aciklama.Length > 0)
+                    cevaplar[cevap.tanimId.ToString()] = new { cevap = secim, aciklama };
+            }
+            if (!sonuc.basarili) return sonuc;
+
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                string json = JsonSerializer.Serialize(cevaplar);
+                if (!await new TABBasvuru(connection, _localizer, transaction).TamBasvuruKontrolKaydetAsync(model.basvuruId, model.belgeKontrolu, json))
+                {
+                    sonuc.HataEkle("Kontroller yalnızca incelemedeki güncel başvuru kaydında değiştirilebilir.");
+                    await transaction.RollbackAsync();
+                    return sonuc;
+                }
+                await new TABBasvuruLog(connection, _localizer, transaction).EkleAsync(model.basvuruId, kullanici,
+                    model.belgeKontrolu ? "TamBasvuruBelgeKontrolKaydedildi" : "TamBasvuruUygunlukKontrolKaydedildi", cevaplar);
+                await transaction.CommitAsync();
+                sonuc.mesaj = model.belgeKontrolu ? "Belge / form ön kontrolü kaydedildi." : "Tamlık ve uygunluk soruları kaydedildi.";
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex, "Tam başvuru kontrolü kaydedilemedi. BasvuruId: {BasvuruId}", "Kontroller kaydedilemedi.", model.basvuruId);
+            }
+            return sonuc;
+        }
+
+        /// <summary>
         /// Başvuruyu sözleşme incelemesine gönderir (Başvuru → Başvuru İnceleme). Ön başvurudaki gönderim kontrollerinin
         /// tamamı (sonradan bozulmuş olabilecek eski alanlar dahil) ve başvuruya özel kontroller yapılır.
         /// </summary>
@@ -469,7 +518,7 @@ namespace TarimDonusum.IsKurallari
             if (!BasvuruKullanicisiMi(kullanici))
                 BasvuruKullanicisiYetkiHatasiEkle(sonuc);
             if (basvuru.kayitTuru != enumBasvuruKayitTuru.Basvuru || basvuru.durum != enumBasvuruDurum.BasvuruDurumu || basvuru.basvuruFirma.siraNo != 0)
-                sonuc.HataEkle("Başvuru daha önce sözleşmeye gönderilmiş veya artık düzenlenebilir durumda değil.");
+                sonuc.HataEkle("Başvuru daha önce incelemeye gönderilmiş veya artık düzenlenebilir durumda değil.");
 
             IncelemeyeGonderimEksikleriniDogrula(basvuru, sonuc);
             foreach (string eksik in BasvuruOnKontrol.Eksikler(basvuru))
@@ -484,7 +533,7 @@ namespace TarimDonusum.IsKurallari
                 TABBasvuru tabBasvuru = new(connection, _localizer, transaction);
                 if (!await tabBasvuru.BasvuruAnaDurumGuncelleAsync(basvuruId, enumBasvuruDurum.BasvuruDurumu, enumBasvuruDurum.BasvuruIncelemeDurumu))
                 {
-                    sonuc.HataEkle("Başvuru daha önce sözleşmeye gönderilmiş veya artık düzenlenebilir durumda değil.");
+                    sonuc.HataEkle("Başvuru daha önce incelemeye gönderilmiş veya artık düzenlenebilir durumda değil.");
                     await transaction.RollbackAsync();
                     return sonuc;
                 }
@@ -492,13 +541,13 @@ namespace TarimDonusum.IsKurallari
                 await new TABBasvuruLog(connection, _localizer, transaction).EkleAsync(basvuruId, kullanici, "BasvuruSozlesmeyeGonderildi",
                     new { EskiDurum = enumBasvuruDurum.BasvuruDurumu, YeniDurum = enumBasvuruDurum.BasvuruIncelemeDurumu });
                 await transaction.CommitAsync();
-                sonuc.mesaj = "Başvuru sözleşme incelemesine gönderildi.";
+                sonuc.mesaj = "Başvuru incelemeye gönderildi.";
             }
             catch (Exception ex)
             {
                 BeklenmeyenHata(sonuc, ex,
-                    "Başvuru sözleşmeye gönderilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}",
-                    "Başvuru sözleşmeye gönderilemedi. Lütfen tekrar deneyin.", basvuruId, kullanici.Id);
+                    "Başvuru incelemeye gönderilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}",
+                    "Başvuru incelemeye gönderilemedi. Lütfen tekrar deneyin.", basvuruId, kullanici.Id);
             }
 
             return sonuc;

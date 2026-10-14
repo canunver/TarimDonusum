@@ -23,6 +23,8 @@
     <Item type="Url" id="cevreselSosyalAnket" text="Çevresel Sosyal V.F." url="/CevreselSosyalAnket" icon="fas fa-poll-h" roles="SistemYoneticisi" />
     <Item type="Url" id="zorunluBelgeler" text="Zorunlu Belgeler" url="/ZorunluBelge" icon="fas fa-folder-open" roles="SistemYoneticisi" />
     <Item type="Url" id="izlemeGostergeleri" text="İzleme Göstergeleri" url="/IzlemeGostergesiTanim" icon="fas fa-chart-line" roles="SistemYoneticisi" />
+    <Item type="Url" id="tamBasvuruBelgeKontrolleri" text="Belge / Form Envanteri" url="/TamBasvuruBelgeKontrol" icon="fas fa-tasks" roles="SistemYoneticisi" />
+    <Item type="Url" id="tamBasvuruUygunlukSorulari" text="Tamlık ve Uygunluk Soruları" url="/TamBasvuruUygunlukSorusu" icon="fas fa-clipboard-list" roles="SistemYoneticisi" />
     <Item type="Url" id="uygunHarcamaListesi" text="Uygun Harcama Listesi" url="/UygunHarcamaTanim" icon="fas fa-list-alt" roles="SistemYoneticisi" />
   </Item>
 </Menu>

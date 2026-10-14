@@ -568,6 +568,8 @@
     const bolumBasvuruZorunluBelgeler = @((int)enumBasvuruBolum.BasvuruZorunluBelgeler);
     const bolumBasvuruOzeti = @((int)enumBasvuruBolum.BasvuruOzeti);
     const bolumBasvuruIzlemeGostergeleri = @((int)enumBasvuruBolum.BasvuruIzlemeGostergeleri);
+    const bolumBasvuruBelgeOnKontrol = @((int)enumBasvuruBolum.BasvuruBelgeOnKontrol);
+    const bolumBasvuruUygunlukKontrolu = @((int)enumBasvuruBolum.BasvuruUygunlukKontrolu);
     const genelParaBirimleri = @Html.Raw(JsonSerializer.Serialize(ParaBirimleri.Tum));
     const genelOlcuBirimleri = @Html.Raw(JsonSerializer.Serialize(OlcuBirimleri.Tum));
     const bolumIrtibat = @((int)enumBasvuruBolum.Irtibat);
@@ -1050,6 +1052,8 @@
             return document.querySelector('[data-list-type]')?.dataset.editable === 'true';
         if (active === bolumKarar)
             return document.querySelector('[data-panel="' + bolumKarar + '"]')?.dataset.editable === 'true';
+        if (active === bolumBasvuruBelgeOnKontrol || active === bolumBasvuruUygunlukKontrolu)
+            return document.querySelector('[data-tamlik-bolum]')?.dataset.editable === 'true';
         return false;
     }
 
@@ -1112,6 +1116,7 @@
         if (bolum === bolumBasvuruZorunluBelgeler) ZorunluBelgeMerkeziIlklendir();
         if (bolum === bolumBasvuruOzeti) BasvuruOzetiIlklendir();
         if (bolum === bolumBasvuruIzlemeGostergeleri) IzlemeGostergeleriIlklendir();
+        if (bolum === bolumBasvuruBelgeOnKontrol || bolum === bolumBasvuruUygunlukKontrolu) TamlikKontrolIlklendir();
         if (bolum === bolumOrtaklik) OrtaklikBolumuIlklendir();
         if (bolum === bolumUygunHarcama) UygunHarcamaBolumuIlklendir();
         if (bolum === bolumYatirimOzeti || bolum === bolumButceGiderler || bolum === bolumGiderler) YatirimOzetiBolumuIlklendir();
@@ -4605,6 +4610,75 @@
         AjaxPost('/Denetleme/BasvuruOzetiKurumKaydet',{basvuruId:BasvuruId(),kurumJson:JSON.stringify(data)},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)dirty=false;});
     }
 
+    // Tam başvuru uzman kontrolleri: "Belge / Form Ön Kontrol" (belge) ve "Tamlık ve Uygunluk Soruları" (uygunluk).
+    // Satır ve özet sonuçları Excel kontrol formundaki formüllerle aynı kurala göre sayfada hesaplanır.
+    let tamlikBolum='',tamlikDuzenlenebilir=false,tamlikTanimlari=[],tamlikCevaplari={},tamlikBelgeTanimlari=[],tamlikBelgeCevaplari={};
+    function TamlikJsonOku(id,bos){try{const x=JSON.parse(document.getElementById(id)?.textContent||'');return x&&typeof x==='object'?x:bos;}catch{return bos;}}
+    function TamlikSatirSonucu(c,belge){
+        const cevap=c?.cevap||'',aciklama=(c?.aciklama||'').trim();
+        if(!cevap)return 'BEKLEMEDE';
+        if(cevap==='Evet')return belge?'TAM':'UYGUN';
+        return aciklama?(belge?'EKSİK':'UYGUN DEĞİL'):'AÇIKLAMA BEKLİYOR';
+    }
+    function TamlikSonucRozeti(s){
+        const renk={'TAM':'success','UYGUN':'success','EKSİK':'danger','UYGUN DEĞİL':'danger','AÇIKLAMA BEKLİYOR':'warning','BEKLEMEDE':'secondary','İNCELEMEDE':'info'}[s]||'secondary';
+        return `<span class="badge badge-${renk}">${htmlEncode(s)}</span>`;
+    }
+    function TamlikBelgeSonucu(s){return s.includes('EKSİK')?'EKSİK':s.includes('AÇIKLAMA BEKLİYOR')?'AÇIKLAMA BEKLİYOR':s.includes('BEKLEMEDE')?'İNCELEMEDE':'TAM';}
+    function TamlikGenelSonuc(a,b){return a.includes('EKSİK')?'EKSİK':b.includes('UYGUN DEĞİL')?'UYGUN DEĞİL':(a.includes('AÇIKLAMA BEKLİYOR')||b.includes('AÇIKLAMA BEKLİYOR'))?'AÇIKLAMA BEKLİYOR':(a.includes('BEKLEMEDE')||b.includes('BEKLEMEDE'))?'İNCELEMEDE':'UYGUN';}
+    function TamlikKontrolIlklendir(){
+        const panel=document.querySelector('[data-tamlik-bolum]');if(!panel)return;
+        tamlikBolum=panel.dataset.tamlikBolum;tamlikDuzenlenebilir=panel.dataset.editable==='true';
+        tamlikBelgeTanimlari=TamlikJsonOku('tamlikBelgeTanimJson',[]);tamlikBelgeCevaplari=TamlikJsonOku('tamlikBelgeCevapJson',{});
+        if(tamlikBolum==='belge'){tamlikTanimlari=tamlikBelgeTanimlari;tamlikCevaplari=tamlikBelgeCevaplari;}
+        else{tamlikTanimlari=TamlikJsonOku('tamlikUygunlukTanimJson',[]);tamlikCevaplari=TamlikJsonOku('tamlikUygunlukCevapJson',{});}
+        TamlikTabloRender();TamlikOzetRender();
+    }
+    function TamlikTabloRender(){
+        const alan=document.getElementById('tamlikTabloAlani');if(!alan)return;
+        const belge=tamlikBolum==='belge',edit=tamlikDuzenlenebilir;
+        const satir=t=>{
+            const c=tamlikCevaplari[t.id]||{},pasif=t.aktif===false?' <span class="badge badge-secondary" title="Bu satır tanımlarda pasife alınmıştır; girilen cevap korunur.">Pasif</span>':'';
+            const soru=belge?`${htmlEncode(t.soru)}${pasif}`:`${htmlEncode(t.soru)}${pasif}<div class="small text-muted mt-1">${htmlEncode(t.kontrolAciklamasi||'')}</div>`;
+            const ek=belge?`<td>${t.kosullu?'Koşullu':'Zorunlu'}</td>`:`<td>${htmlEncode(t.kaynakBelge||'')}</td>`;
+            const cevap=edit?`<select class="form-control tamlik-cevap" data-id="${t.id}"><option value="">Seçiniz</option><option ${c.cevap==='Evet'?'selected':''}>Evet</option><option ${c.cevap==='Hayır'?'selected':''}>Hayır</option></select>`:htmlEncode(c.cevap||'-');
+            const aciklama=edit?`<textarea class="form-control tamlik-aciklama" data-id="${t.id}" rows="2" maxlength="2000">${htmlEncode(c.aciklama||'')}</textarea>`:`<div style="white-space:pre-wrap">${htmlEncode(c.aciklama||'')}</div>`;
+            return `<tr data-id="${t.id}"><td>${htmlEncode(t.siraNo)}</td><td>${soru}</td>${ek}<td>${cevap}</td><td class="tamlik-sonuc">${TamlikSonucRozeti(TamlikSatirSonucu(c,belge))}</td><td>${aciklama}</td></tr>`;
+        };
+        const baslik=belge?'<th>Tamlık kontrol sorusu</th><th style="width:110px">Zorunluluk</th>':'<th>Kontrol sorusu / uygulama esası</th><th style="width:180px">Kaynak belge / form</th>';
+        alan.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-sm" style="min-width:1100px"><thead><tr><th style="width:50px">No</th>${baslik}<th style="width:130px">Cevap</th><th style="width:170px">Sonuç</th><th style="width:26%">Açıklama</th></tr></thead><tbody>${tamlikTanimlari.length?tamlikTanimlari.map(satir).join(''):'<tr><td colspan="6" class="text-muted">Tanımlarda aktif kontrol satırı bulunmuyor.</td></tr>'}</tbody></table></div>`;
+        alan.querySelectorAll('.tamlik-cevap,.tamlik-aciklama').forEach(el=>el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>TamlikCevapDegisti(el)));
+    }
+    function TamlikCevapDegisti(el){
+        const id=el.dataset.id,c=tamlikCevaplari[id]||(tamlikCevaplari[id]={cevap:'',aciklama:''});
+        if(el.classList.contains('tamlik-cevap'))c.cevap=el.value;else c.aciklama=el.value;
+        dirty=true;
+        const hucre=el.closest('tr')?.querySelector('.tamlik-sonuc');if(hucre)hucre.innerHTML=TamlikSonucRozeti(TamlikSatirSonucu(c,tamlikBolum==='belge'));
+        TamlikOzetRender();
+    }
+    function TamlikOzetRender(){
+        const alan=document.getElementById('tamlikOzetAlani');if(!alan)return;
+        const belge=tamlikBolum==='belge';
+        const sonuclar=tamlikTanimlari.map(t=>TamlikSatirSonucu(tamlikCevaplari[t.id],belge));
+        const say=s=>sonuclar.filter(x=>x===s).length,toplam=sonuclar.length;
+        const kart=(baslik,deger)=>`<div class="summary-card"><span>${htmlEncode(baslik)}</span><strong>${deger}</strong></div>`;
+        const oran=x=>'%'+(toplam?Math.round(x/toplam*1000)/10:0).toLocaleString('tr-TR');
+        let html;
+        if(belge){
+            html=kart('Toplam kontrol satırı',toplam)+kart('Tam',say('TAM'))+kart('Eksik / açıklama bekleyen',say('EKSİK')+say('AÇIKLAMA BEKLİYOR'))+kart('Bekleyen kontrol',say('BEKLEMEDE'))
+                +kart('Belge tamlık sonucu',TamlikSonucRozeti(TamlikBelgeSonucu(sonuclar)))+kart('Tamlık tamamlama oranı',oran(say('TAM')));
+        }else{
+            const belgeSonuclari=tamlikBelgeTanimlari.map(t=>TamlikSatirSonucu(tamlikBelgeCevaplari[t.id],true));
+            html=kart('Toplam soru',toplam)+kart('Uygun',say('UYGUN'))+kart('Uygun değil / açıklama bekleyen',say('UYGUN DEĞİL')+say('AÇIKLAMA BEKLİYOR'))+kart('Bekleyen soru',say('BEKLEMEDE'))
+                +kart('Genel uygunluk sonucu',TamlikSonucRozeti(TamlikGenelSonuc(belgeSonuclari,sonuclar)))+kart('Soru tamamlama oranı',oran(say('UYGUN')+say('UYGUN DEĞİL')));
+        }
+        alan.innerHTML=`<div class="summary-card-grid mb-3">${html}</div>${belge?'':'<div class="small text-muted mb-3">Genel uygunluk sonucu, Belge / Form Ön Kontrol sayfasında kaydedilmiş sonuçları da kapsar.</div>'}`;
+    }
+    function TamlikKontrolKaydet(afterSuccess){
+        const cevaplar=tamlikTanimlari.map(t=>({tanimId:t.id,cevap:tamlikCevaplari[t.id]?.cevap||'',aciklama:tamlikCevaplari[t.id]?.aciklama||''}));
+        AjaxPost('/Denetleme/TamBasvuruKontrolKaydet',{basvuruId:BasvuruId(),belgeKontrolu:tamlikBolum==='belge',cevaplar},sonuc=>SonucGosterVeDirtyTemizle(sonuc,afterSuccess));
+    }
+
     let izlemeTanimlari=[],izlemeKayitlari=[];
     function IzlemeGostergeleriIlklendir(){try{izlemeTanimlari=JSON.parse(document.getElementById('izlemeTanimJson')?.textContent||'[]');izlemeKayitlari=JSON.parse(document.getElementById('izlemeKayitJson')?.textContent||'[]');}catch{izlemeTanimlari=[];izlemeKayitlari=[];}IzlemeGostergeleriRender();}
     function IzlemeGostergeleriRender(){const a=document.getElementById('izlemeGostergeleriAlani');if(!a)return;const edit=a.dataset.edit==='true';a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover table-sm" style="min-width:1300px"><thead><tr>${edit?'<th class="text-center" style="width:60px">İşlem</th>':''}<th>Gösterge</th><th>Başlangıç</th><th>Hedef</th><th>Birim</th><th>Kadın kırılımı</th><th>Genç kırılımı</th><th>Veri kaynağı / kanıt</th><th>Sıklık</th><th>Açıklama</th></tr></thead><tbody>${izlemeTanimlari.map((t,i)=>{const x=izlemeKayitlari.find(k=>k.gostergeKodu===t.kod)||{};return `<tr>${edit?`<td class="text-center"><button type="button" class="btn btn-sm btn-outline-primary" title="Düzenle" aria-label="${htmlEncode(t.ad)} göstergesini düzenle" onclick="IzlemeGostergesiModalAc(izlemeTanimlari[${i}].kod)"><i class="fas fa-pencil-alt"></i></button></td>`:''}<td>${htmlEncode(t.ad)}${t.aktif===false?' <span class="badge badge-secondary" title="Bu gösterge tanımlarda pasife alınmıştır; girilen değer korunur.">Pasif</span>':''}</td><td>${htmlEncode(x.baslangicDegeri||'')}</td><td>${htmlEncode(x.hedefDeger||'')}</td><td>${htmlEncode(t.birim)}</td><td>${htmlEncode(x.kadinKirilimi||'')}</td><td>${htmlEncode(x.gencKirilimi||'')}</td><td>${htmlEncode(t.veriKaynagi)}</td><td>${htmlEncode(t.siklik)}</td><td>${htmlEncode(x.aciklama||'')}</td></tr>`;}).join('')}</tbody></table></div>`;}
@@ -4727,6 +4801,7 @@
             const button = document.getElementById('basvuruKaydetBtn');
             if (panel?._denetimListesiKaydet && button) panel._denetimListesiKaydet(button, afterSuccess);
         }
+        else if (active === bolumBasvuruBelgeOnKontrol || active === bolumBasvuruUygunlukKontrolu) TamlikKontrolKaydet(afterSuccess);
         else if (active === bolumKarar) {
             const button = document.getElementById('basvuruKaydetBtn');
             if (button) DenetimKaydet(button, false, afterSuccess);

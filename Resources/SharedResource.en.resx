@@ -2805,5 +2805,7 @@
   <data name="MenuBasvuru.taahhutBeyanlar" xml:space="preserve"><value>Commitments/Declarations</value></data>
   <data name="MenuBasvuru.zorunluBelgeler" xml:space="preserve"><value>Required Documents</value></data>
   <data name="MenuBasvuru.izlemeGostergeleri" xml:space="preserve"><value>Monitoring Indicators</value></data>
+  <data name="MenuBasvuru.tamBasvuruBelgeKontrolleri" xml:space="preserve"><value>Document / Form Inventory</value></data>
+  <data name="MenuBasvuru.tamBasvuruUygunlukSorulari" xml:space="preserve"><value>Completeness and Eligibility Questions</value></data>
   <data name="MenuBasvuru.uygunHarcamaListesi" xml:space="preserve"><value>Eligible Expense List</value></data>
 </root>

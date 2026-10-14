@@ -121,8 +121,7 @@ namespace TarimDonusum.Models
 
         /// <summary>Ön başvuru için yazılmış bildirim metnini başvuru kaydına uyarlar.</summary>
         public static string MetniUyarla(string metin, enumBasvuruKayitTuru tur) => tur != enumBasvuruKayitTuru.Basvuru ? metin : metin
-            .Replace("Ön Başvuru", "Başvuru").Replace("Ön başvuru", "Başvuru").Replace("ön başvuru", "başvuru")
-            .Replace("incelemeye gönder", "sözleşmeye gönder");
+            .Replace("Ön Başvuru", "Başvuru").Replace("Ön başvuru", "Başvuru").Replace("ön başvuru", "başvuru");
     }
 
     public enum enumBasvuruKayitTuru : int
@@ -422,6 +421,10 @@ namespace TarimDonusum.Models
 
         public string DenetimAnketi { get; set; } = "";
         public string SistemDenetimAnketi { get; set; } = "";
+        /// <summary>Uzmanın "Belge / Form Ön Kontrol" cevapları: {"tanımId":{"cevap":"Evet|Hayır","aciklama":""}}.</summary>
+        public string TamBasvuruBelgeKontrolJson { get; set; } = "";
+        /// <summary>Uzmanın "Tamlık ve Uygunluk Soruları" cevapları: {"tanımId":{"cevap":"Evet|Hayır","aciklama":""}}.</summary>
+        public string TamBasvuruUygunlukKontrolJson { get; set; } = "";
         public string DenetimGerekcesi { get; set; } = "";
         public enumOnBasvuruDenetimSonucu? DenetimSonucu { get; set; }
         public decimal BankaKrediLimiti { get; set; }
