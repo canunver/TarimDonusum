@@ -190,6 +190,11 @@
     Eksikse(cevreselAdresler.Count == 0 || cevreselAdresler.Any(x => string.IsNullOrWhiteSpace(x.cevreselSosyalJson)), R("Basvuru.Summary.Error.EsfRequired"));
     Eksikse(kapsamDisiBeyani == "Evet", R("Basvuru.Summary.Error.EsfExclusion"));
     Eksikse(!b.TaahhutDosyaId.HasValue, R("Basvuru.Summary.Error.CommitmentRequired"));
+
+    // Başvuruda ön başvurunun tüm kontrolleri yine yapılır (sonradan bozulan alanlar için) ve başvuruya özel kontroller eklenir.
+    bool basvuruKaydi = b.kayitTuru == enumBasvuruKayitTuru.Basvuru;
+    eksikler.AddRange(BasvuruOnKontrol.Eksikler(b));
+    enumBasvuruDurum gonderilebilirDurum = basvuruKaydi ? enumBasvuruDurum.BasvuruDurumu : enumBasvuruDurum.OnBasvuruDurumu;
 }
 
 <section class="basvuru-panel active" data-panel="14">
@@ -203,34 +208,50 @@
     </div>
 
     <div class="summary-check-panel">
-        @if (eksikler.Count > 0 || b.durum == enumBasvuruDurum.OnBasvuruDurumu)
+        @if (eksikler.Count > 0 || b.durum == gonderilebilirDurum)
         {
             <h3>@L["Basvuru.Summary.CheckResultTitle"]</h3>
         }
         @if (eksikler.Count == 0)
         {
-            @if (b.durum == enumBasvuruDurum.OnBasvuruDurumu)
+            @if (b.durum == gonderilebilirDurum)
             {
                 <div class="alert summary-success-message"><strong>@L["Basvuru.Summary.SuccessStrong"]</strong> @L["Basvuru.Summary.SuccessText"]</div>
                 @if (!Model.SaltOkunur)
                 {
                     <div class="summary-submit-action">
-                        <button type="button"
-                                id="incelemeyeGonderBtn"
-                                class="btn btn-success btn-lg py-3"
-                                data-url="@Url.Action("IncelemeyeGonder", "Basvuru")"
-                                data-confirm="@L["Basvuru.Summary.SubmitConfirm"]"
-                                data-basvuru-id="@b.Id"
-                                data-failed-message="@L["Business.Application.Submit.Failed"]">
-                            <i class="fas fa-paper-plane mr-2"></i>
-                            @L["Basvuru.Summary.SubmitButton"]
-                        </button>
+                        @if (basvuruKaydi)
+                        {
+                            <button type="button"
+                                    id="incelemeyeGonderBtn"
+                                    class="btn btn-success btn-lg py-3"
+                                    data-url="@Url.Action("SozlesmeyeGonder", "Basvuru")"
+                                    data-confirm="Başvuruyu sözleşmeye göndermek istediğinize emin misiniz? Gönderimden sonra bilgiler değiştirilemez."
+                                    data-basvuru-id="@b.Id"
+                                    data-failed-message="Başvuru sözleşmeye gönderilemedi. Lütfen tekrar deneyin.">
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                Sözleşmeye Gönder
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button"
+                                    id="incelemeyeGonderBtn"
+                                    class="btn btn-success btn-lg py-3"
+                                    data-url="@Url.Action("IncelemeyeGonder", "Basvuru")"
+                                    data-confirm="@L["Basvuru.Summary.SubmitConfirm"]"
+                                    data-basvuru-id="@b.Id"
+                                    data-failed-message="@L["Business.Application.Submit.Failed"]">
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                @L["Basvuru.Summary.SubmitButton"]
+                            </button>
+                        }
                     </div>
                 }
             }
             else
             {
-                <div class="alert alert-info mb-0">@L["Basvuru.Summary.SubmittedReadonly"]</div>
+                <div class="alert alert-info mb-0">@(basvuruKaydi ? "Başvuru sözleşmeye gönderildi. Başvuru artık salt okunur durumdadır." : L["Basvuru.Summary.SubmittedReadonly"].Value)</div>
             }
         }
         else

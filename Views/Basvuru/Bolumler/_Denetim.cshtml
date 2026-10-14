@@ -5,7 +5,9 @@
 
 @{
     var b = Model.Basvuru;
-    bool tamamlanabilir = b.durum == enumBasvuruDurum.OnBasvuruIncelemeDurumu;
+    // Başvuru kaydında karar, sözleşmeye gönderilmiş (Başvuru İnceleme) kayıtta verilir.
+    bool basvuruKaydi = b.kayitTuru == enumBasvuruKayitTuru.Basvuru;
+    bool tamamlanabilir = b.durum == BasvuruDurumAkisi.Inceleme(b.kayitTuru);
     bool denetimKayitli =
         !string.IsNullOrWhiteSpace(b.DenetimGerekcesi) &&
         b.DenetimSonucu.HasValue &&
@@ -55,6 +57,8 @@
          data-finalize-confirm="@L["Basvuru.Review.FinalizeConfirm"]">
     <h2>@L["Basvuru.Step.Decision"]</h2>
 
+    @if (!basvuruKaydi)
+    {
     <div class="row mb-4 text-center">
         <div class="col-sm-6 col-xl-3 mb-3">
             <div class="card h-100 border-info"><div class="card-body">
@@ -81,6 +85,7 @@
             </div></div>
         </div>
     </div>
+    }
 
     <div class="denetim-result-card">
         @if (Model.DenetciGorunumu && b.kayitTuru == enumBasvuruKayitTuru.OnBasvuru && b.basvuruFirma.revizyonNo > 0)
@@ -92,6 +97,8 @@
             </div>
         }
         <div class="denetim-inline-fields">
+            @if (!basvuruKaydi)
+            {
             <div class="denetim-inline-field">
                 <label for="bankaKrediLimiti">Banka tarafından bildirilen verilebilecek kredi limiti (EUR):</label>
                 <input id="bankaKrediLimiti" class="form-control" type="text" inputmode="numeric" value="@b.BankaKrediLimiti.ToString("0")" disabled="@(!tamamlanabilir)" />
@@ -104,6 +111,7 @@
                 <label for="tahminiVadeSuresiAy">Tahmini vade süresi (ay):</label>
                 <input id="tahminiVadeSuresiAy" class="form-control" type="number" value="@b.TahminiVadeSuresiAy" readonly />
             </div>
+            }
             <div class="denetim-inline-field">
                 <label for="denetimSonucu">@L["Basvuru.Review.Result"]: <span class="required-mark">*</span></label>
                 <select id="denetimSonucu" disabled="@(!tamamlanabilir)">
@@ -133,6 +141,10 @@
                     class="btn btn-success btn-lg @(!denetimKayitli ? "d-none" : "")"
                     disabled="@(!denetimKayitli)">@L["Basvuru.Review.Finalize"]</button>
         </div>
+    }
+    else if (basvuruKaydi && b.durum == enumBasvuruDurum.BasvuruDurumu)
+    {
+        <div class="alert alert-info mt-3 mb-0">Başvuru henüz sözleşmeye gönderilmedi; karar, başvuru sahibi sözleşmeye gönderdikten sonra verilebilir.</div>
     }
     else
     {

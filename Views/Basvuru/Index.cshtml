@@ -66,7 +66,7 @@
                     var versiyonlar = grup.OrderByDescending(x => x.basvuruFirma.revizyonNo).ThenByDescending(x => x.Id).ToList();
                     var item = versiyonlar.FirstOrDefault(x => x.basvuruFirma.siraNo == 0) ?? versiyonlar[0];
                     var duzenleLinkId = $"basvuruDuzenle_{item.BasvuruAnaId}";
-                    bool itirazEkrani = item.kayitTuru == enumBasvuruKayitTuru.OnBasvuru && (item.durum == enumBasvuruDurum.IptalDurumu || item.durum == enumBasvuruDurum.OnBasvuruItirazEdildiDurumu);
+                    bool itirazEkrani = item.durum == BasvuruDurumAkisi.Red(item.kayitTuru) || item.durum == BasvuruDurumAkisi.Itiraz(item.kayitTuru);
                     <tr>
                         <td>
                             <select class="form-select form-select-sm basvuru-version-select"
@@ -139,6 +139,9 @@
                 enumBasvuruDurum.BasvuruDurumu => "Ön Başvuru Kabul Edildi",
                 enumBasvuruDurum.IptalDurumu => "Ön Başvuru Red",
                 enumBasvuruDurum.OnBasvuruItirazEdildiDurumu => "Ön Başvuru İtiraz Edildi",
+                // Ön başvuru kabul edildikten sonra durum başvuru aşamasında ilerler.
+                enumBasvuruDurum.BasvuruIncelemeDurumu or enumBasvuruDurum.KabulEdildiDurumu or enumBasvuruDurum.ReddedildiDurumu
+                    or enumBasvuruDurum.BasvuruSecilmediDurumu or enumBasvuruDurum.BasvuruItirazEdildiDurumu => "Ön Başvuru Kabul Edildi",
                 _ => "Ön Başvuru"
             };
         }
@@ -146,9 +149,10 @@
         return item.durum switch
         {
             enumBasvuruDurum.BasvuruDurumu => "Başvuru",
-            enumBasvuruDurum.BasvuruIncelemeDurumu => "Başvuru İnceleme",
+            enumBasvuruDurum.BasvuruIncelemeDurumu => "Sözleşme İncelemesinde",
             enumBasvuruDurum.KabulEdildiDurumu => "Başvuru Kabul",
             enumBasvuruDurum.ReddedildiDurumu => "Başvuru Red",
+            enumBasvuruDurum.BasvuruItirazEdildiDurumu => "Başvuru İtiraz Edildi",
             enumBasvuruDurum.BasvuruSecilmediDurumu => "Başvuru Seçilmedi",
             _ => "Başvuru"
         };

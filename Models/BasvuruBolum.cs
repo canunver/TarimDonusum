@@ -80,7 +80,7 @@ namespace TarimDonusum.Models
             new(enumBasvuruBolum.BasvuruIstihdam, 93, "Basvuru.Step.Istihdam", "Basvuru/_Istihdam"),
             new(enumBasvuruBolum.BasvuruTedarikciEntegrasyonu, 94, "Tedarikçi Entegrasyonu", "Basvuru/_TedarikciEntegrasyonu"),
             new(enumBasvuruBolum.BasvuruTaahhutBeyan, 28, "Taahhüt / Beyan", "Basvuru/_TaahhutBeyan"),
-            new(enumBasvuruBolum.BasvuruCevreselSosyal, 29, "Çevresel ve Sosyal V.F.", "Basvuru/_CevreselSosyalVeriFormu"),
+            new(enumBasvuruBolum.BasvuruCevreselSosyal, 29, "Çevresel ve Sosyal V.F.", "Bolumler/_CevreselSosyal"),
             new(enumBasvuruBolum.BasvuruZorunluBelgeler, 30, "Zorunlu Belgeler", "Basvuru/_ZorunluBelgeler"),
             new(enumBasvuruBolum.BasvuruOzeti, 31, "Başvuru Özeti", "Basvuru/_BasvuruOzeti"),
             new(enumBasvuruBolum.BasvuruIzlemeGostergeleri, 32, "İzleme Göstergeleri", "Basvuru/_IzlemeGostergeleri"),
@@ -108,7 +108,10 @@ namespace TarimDonusum.Models
             if (kayitTuru == enumBasvuruKayitTuru.Basvuru)
             {
                 return Tanimlar
-                    .Where(x => x.Bolum == enumBasvuruBolum.BasvuruSahibi || x.Bolum == enumBasvuruBolum.BasvuruMaliVeriler || x.Bolum == enumBasvuruBolum.BasvuruBilancoGelir || x.Bolum == enumBasvuruBolum.BasvuruOrtaklikYetki || x.Bolum == enumBasvuruBolum.BasvuruYatirimBilgileri || x.Bolum == enumBasvuruBolum.BasvuruDegerZinciri || x.Bolum == enumBasvuruBolum.ButceGiderler || x.Bolum == enumBasvuruBolum.Giderler || x.Bolum == enumBasvuruBolum.BasvuruFinansman || x.Bolum == enumBasvuruBolum.BasvuruYatirimOnBilgileri || x.Bolum == enumBasvuruBolum.BasvuruTeknikProjeGirdiler || x.Bolum == enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar || x.Bolum == enumBasvuruBolum.BasvuruMakineEkipman || x.Bolum == enumBasvuruBolum.BasvuruUrunSurecMakine || x.Bolum == enumBasvuruBolum.BasvuruBinaListesi || x.Bolum == enumBasvuruBolum.BasvuruMetraj || x.Bolum == enumBasvuruBolum.BasvuruIstihdam || x.Bolum == enumBasvuruBolum.BasvuruTedarikciEntegrasyonu || x.Bolum == enumBasvuruBolum.BasvuruTaahhutBeyan || x.Bolum == enumBasvuruBolum.BasvuruCevreselSosyal || x.Bolum == enumBasvuruBolum.BasvuruZorunluBelgeler || x.Bolum == enumBasvuruBolum.BasvuruOzeti || x.Bolum == enumBasvuruBolum.BasvuruIzlemeGostergeleri || x.Bolum == enumBasvuruBolum.YatirimOzeti)
+                    .Where(x => x.Bolum == enumBasvuruBolum.BasvuruSahibi || x.Bolum == enumBasvuruBolum.BasvuruMaliVeriler || x.Bolum == enumBasvuruBolum.BasvuruBilancoGelir || x.Bolum == enumBasvuruBolum.BasvuruOrtaklikYetki || x.Bolum == enumBasvuruBolum.BasvuruYatirimBilgileri || x.Bolum == enumBasvuruBolum.BasvuruDegerZinciri || x.Bolum == enumBasvuruBolum.ButceGiderler || x.Bolum == enumBasvuruBolum.Giderler || x.Bolum == enumBasvuruBolum.BasvuruFinansman || x.Bolum == enumBasvuruBolum.BasvuruYatirimOnBilgileri || x.Bolum == enumBasvuruBolum.BasvuruTeknikProjeGirdiler || x.Bolum == enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar || x.Bolum == enumBasvuruBolum.BasvuruMakineEkipman || x.Bolum == enumBasvuruBolum.BasvuruUrunSurecMakine || x.Bolum == enumBasvuruBolum.BasvuruBinaListesi || x.Bolum == enumBasvuruBolum.BasvuruMetraj || x.Bolum == enumBasvuruBolum.BasvuruIstihdam || x.Bolum == enumBasvuruBolum.BasvuruTedarikciEntegrasyonu || x.Bolum == enumBasvuruBolum.BasvuruTaahhutBeyan || x.Bolum == enumBasvuruBolum.BasvuruCevreselSosyal || x.Bolum == enumBasvuruBolum.BasvuruZorunluBelgeler || x.Bolum == enumBasvuruBolum.BasvuruOzeti || x.Bolum == enumBasvuruBolum.BasvuruIzlemeGostergeleri
+                        // Ön başvurunun özet/gönderim, itiraz ve karar sayfaları başvuruda da aynı akışla kullanılır.
+                        || x.Bolum == enumBasvuruBolum.Ozet || x.Bolum == enumBasvuruBolum.OnBasvuruItiraz || x.Bolum == enumBasvuruBolum.Karar)
+                    .Where(x => denetciGorunumu || !x.DenetciBolumu)
                     .ToList();
             }
 

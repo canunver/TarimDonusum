@@ -8,10 +8,10 @@
     bool ro = Model.SaltOkunur;
     bool kilitli = b.Id <= 0 && !Model.DenetciGorunumu;
     IReadOnlyList<BasvuruBolumTanim> bolumler = BasvuruBolumleri.Tum(Model.DenetciGorunumu, b.kayitTuru);
-    bool itirazBolumuGoster = b.Id > 0 && b.kayitTuru == enumBasvuruKayitTuru.OnBasvuru &&
+    bool itirazBolumuGoster = b.Id > 0 &&
         (Model.ItirazTarihcesi.Count > 0 ||
-         b.durum == enumBasvuruDurum.IptalDurumu ||
-         b.durum == enumBasvuruDurum.OnBasvuruItirazEdildiDurumu);
+         b.durum == BasvuruDurumAkisi.Red(b.kayitTuru) ||
+         b.durum == BasvuruDurumAkisi.Itiraz(b.kayitTuru));
     if (!itirazBolumuGoster)
     {
         bolumler = bolumler.Where(x => x.Bolum != enumBasvuruBolum.OnBasvuruItiraz).ToList();
@@ -540,6 +540,7 @@
     <div class="modal fade nace-search-modal" id="basvuruNaceAramaModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5>NACE kodu seçimi</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body"><div class="input-group nace-search-toolbar"><input id="basvuruNaceAramaMetni" class="form-control" placeholder="Kod veya açıklama" onkeydown="if(event.key==='Enter'){event.preventDefault();BasvuruNaceAra();}"><div class="input-group-append"><button type="button" class="btn btn-primary" onclick="BasvuruNaceAra()"><i class="fas fa-search mr-1"></i>Ara</button></div></div><div id="basvuruNaceSonuclar" class="nace-search-results"><div class="text-muted">Aramak istediğiniz kodu veya açıklamayı yazınız.</div></div></div></div></div></div>
 </div>
 
+<script src="~/js/tablo-siralama.js" asp-append-version="true"></script>
 <script>
     var active = @((int)ilkBolum.Bolum);
     let basvuruIlId = @b.basvuruFirma.ilId;
@@ -1108,7 +1109,6 @@
         if (bolum === bolumBasvuruIstihdam) IstihdamBolumuIlklendir();
         if (bolum === bolumBasvuruTedarikciEntegrasyonu) TedarikciEntegrasyonuIlklendir();
         if (bolum === bolumBasvuruTaahhutBeyan) BasvuruBeyanBolumuIlklendir();
-        if (bolum === bolumBasvuruCevreselSosyal) BasvuruCevreselSosyalBolumuIlklendir();
         if (bolum === bolumBasvuruZorunluBelgeler) ZorunluBelgeMerkeziIlklendir();
         if (bolum === bolumBasvuruOzeti) BasvuruOzetiIlklendir();
         if (bolum === bolumBasvuruIzlemeGostergeleri) IzlemeGostergeleriIlklendir();
@@ -1116,7 +1116,7 @@
         if (bolum === bolumUygunHarcama) UygunHarcamaBolumuIlklendir();
         if (bolum === bolumYatirimOzeti || bolum === bolumButceGiderler || bolum === bolumGiderler) YatirimOzetiBolumuIlklendir();
         if (bolum === bolumDbCtpTeknikProje || bolum === bolumBasvuruTeknikProjeGirdiler) DbCtpBolumuIlklendir();
-        if (bolum === bolumCevreselSosyal) CevreselSosyalBolumuIlklendir();
+        if (bolum === bolumCevreselSosyal || bolum === bolumBasvuruCevreselSosyal) CevreselSosyalBolumuIlklendir();
         if (bolum === bolumTaahhutBeyan) TaahhutBeyanBolumuIlklendir();
         if (bolum === bolumBelgeler || bolum === bolumTaahhutBeyan || bolum === bolumBasvuruTaahhutBeyan) BelgelerBolumuIlklendir();
         if (bolum === bolumOzet) OzetBolumuIlklendir();
@@ -4540,31 +4540,6 @@
         }, sonuc => SonucGosterVeDirtyTemizle(sonuc, afterSuccess));
     }
 
-    function BasvuruCevreselSosyalBolumuIlklendir() {
-        let data = {};
-        try { data = JSON.parse(document.getElementById('basvuruCevreselSosyalJson')?.textContent || '{}'); } catch { data = {}; }
-        const cevaplar = data.cevaplar && typeof data.cevaplar === 'object' ? data.cevaplar : {};
-        document.querySelectorAll('#basvuruCevreselSosyalSatirlari tr').forEach(row => {
-            const kayit = cevaplar[row.dataset.kod] || {};
-            if (!row.querySelector('.cs-yanit')?.readOnly) row.querySelector('.cs-yanit').value = kayit.yanit || '';
-            row.querySelector('.cs-onlem').value = kayit.aciklamaOnlem || '';
-        });
-    }
-
-    function BasvuruCevreselSosyalKaydet(afterSuccess) {
-        const cevaplar = {};
-        document.querySelectorAll('#basvuruCevreselSosyalSatirlari tr').forEach(row => {
-            cevaplar[row.dataset.kod] = {
-                yanit: row.querySelector('.cs-yanit')?.value || '',
-                aciklamaOnlem: row.querySelector('.cs-onlem')?.value || ''
-            };
-        });
-        AjaxPost('/Basvuru/KaydetCevreselSosyal', {
-            ...BasvuruKimlikleri(), basvuruSayfasi: true,
-            cevreselSosyalJson: JSON.stringify({ cevaplar })
-        }, sonuc => SonucGosterVeDirtyTemizle(sonuc, afterSuccess));
-    }
-
     function ZorunluBelgeMerkeziIlklendir() {
         document.querySelectorAll('.merkezi-zorunlu-belge-input').forEach(input =>
             input.addEventListener('change', () => ZorunluBelgeMerkeziYukle(input)));
@@ -4632,7 +4607,7 @@
 
     let izlemeTanimlari=[],izlemeKayitlari=[];
     function IzlemeGostergeleriIlklendir(){try{izlemeTanimlari=JSON.parse(document.getElementById('izlemeTanimJson')?.textContent||'[]');izlemeKayitlari=JSON.parse(document.getElementById('izlemeKayitJson')?.textContent||'[]');}catch{izlemeTanimlari=[];izlemeKayitlari=[];}IzlemeGostergeleriRender();}
-    function IzlemeGostergeleriRender(){const a=document.getElementById('izlemeGostergeleriAlani');if(!a)return;const edit=a.dataset.edit==='true';a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover table-sm" style="min-width:1300px"><thead><tr>${edit?'<th style="width:90px">İşlem</th>':''}<th>Gösterge</th><th>Başlangıç</th><th>Hedef</th><th>Birim</th><th>Kadın kırılımı</th><th>Genç kırılımı</th><th>Veri kaynağı / kanıt</th><th>Sıklık</th><th>Açıklama</th></tr></thead><tbody>${izlemeTanimlari.map(t=>{const x=izlemeKayitlari.find(k=>k.gostergeKodu===t.kod)||{};return `<tr>${edit?`<td><button type="button" class="btn btn-sm btn-outline-primary" onclick="IzlemeGostergesiModalAc('${t.kod}')">${x.id?'Düzenle':'Gir'}</button></td>`:''}<td>${htmlEncode(t.ad)}</td><td>${htmlEncode(x.baslangicDegeri||'')}</td><td>${htmlEncode(x.hedefDeger||'')}</td><td>${htmlEncode(t.birim)}</td><td>${htmlEncode(x.kadinKirilimi||'')}</td><td>${htmlEncode(x.gencKirilimi||'')}</td><td>${htmlEncode(t.veriKaynagi)}</td><td>${htmlEncode(t.siklik)}</td><td>${htmlEncode(x.aciklama||'')}</td></tr>`;}).join('')}</tbody></table></div>`;}
+    function IzlemeGostergeleriRender(){const a=document.getElementById('izlemeGostergeleriAlani');if(!a)return;const edit=a.dataset.edit==='true';a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover table-sm" style="min-width:1300px"><thead><tr>${edit?'<th class="text-center" style="width:60px">İşlem</th>':''}<th>Gösterge</th><th>Başlangıç</th><th>Hedef</th><th>Birim</th><th>Kadın kırılımı</th><th>Genç kırılımı</th><th>Veri kaynağı / kanıt</th><th>Sıklık</th><th>Açıklama</th></tr></thead><tbody>${izlemeTanimlari.map((t,i)=>{const x=izlemeKayitlari.find(k=>k.gostergeKodu===t.kod)||{};return `<tr>${edit?`<td class="text-center"><button type="button" class="btn btn-sm btn-outline-primary" title="Düzenle" aria-label="${htmlEncode(t.ad)} göstergesini düzenle" onclick="IzlemeGostergesiModalAc(izlemeTanimlari[${i}].kod)"><i class="fas fa-pencil-alt"></i></button></td>`:''}<td>${htmlEncode(t.ad)}${t.aktif===false?' <span class="badge badge-secondary" title="Bu gösterge tanımlarda pasife alınmıştır; girilen değer korunur.">Pasif</span>':''}</td><td>${htmlEncode(x.baslangicDegeri||'')}</td><td>${htmlEncode(x.hedefDeger||'')}</td><td>${htmlEncode(t.birim)}</td><td>${htmlEncode(x.kadinKirilimi||'')}</td><td>${htmlEncode(x.gencKirilimi||'')}</td><td>${htmlEncode(t.veriKaynagi)}</td><td>${htmlEncode(t.siklik)}</td><td>${htmlEncode(x.aciklama||'')}</td></tr>`;}).join('')}</tbody></table></div>`;}
     function IzlemeGostergesiModalAc(kod){const t=izlemeTanimlari.find(x=>x.kod===kod),x=izlemeKayitlari.find(x=>x.gostergeKodu===kod)||{id:0,gostergeKodu:kod};if(!t)return;$('#izlemeId').val(x.id||0);$('#izlemeKod').val(kod);$('#izlemeAd').val(t.ad);$('#izlemeBirim').val(t.birim);$('#izlemeBaslangic').val(x.baslangicDegeri||'');$('#izlemeHedef').val(x.hedefDeger||'');$('#izlemeKadin').val(x.kadinKirilimi||'');$('#izlemeGenc').val(x.gencKirilimi||'');$('#izlemeKaynak').val(t.veriKaynagi);$('#izlemeSiklik').val(t.siklik);$('#izlemeAciklama').val(x.aciklama||'');$('#izlemeSilBtn').toggle(Boolean(x.id));$('#izlemeGostergesiModal').modal('show');}
     function IzlemeGostergesiKaydet(){const m={id:Number($('#izlemeId').val()),basvuruId:BasvuruId(),gostergeKodu:$('#izlemeKod').val(),baslangicDegeri:$('#izlemeBaslangic').val(),hedefDeger:$('#izlemeHedef').val(),kadinKirilimi:$('#izlemeKadin').val(),gencKirilimi:$('#izlemeGenc').val(),aciklama:$('#izlemeAciklama').val()};AjaxPost('/Basvuru/IzlemeGostergesiKaydet',m,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){const i=izlemeKayitlari.findIndex(x=>x.gostergeKodu===m.gostergeKodu);if(i>=0)izlemeKayitlari[i]=sonuc.nesne;else izlemeKayitlari.push(sonuc.nesne);$('#izlemeGostergesiModal').modal('hide');IzlemeGostergeleriRender();dirty=false;}});}
     function IzlemeUstBilgiKaydet(){const m={basvuruId:BasvuruId(),baslangicTarihi:$('#izlemeUstBaslangic').val()||null,hedefTarihi:$('#izlemeUstHedef').val()||null,veriSorumlusu:$('#izlemeUstSorumlu').val()};AjaxPost('/Basvuru/IzlemeUstBilgiKaydet',m,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)dirty=false;});}
@@ -4743,11 +4718,10 @@
         else if ([bolumBasvuruTeknikProjeGirdiler, bolumDbCtpTeknikProje, bolumDbCtpMakineEkipman, bolumDbCtpBinaListesi].includes(active)) DbCtpKaydet(afterSuccess);
         else if (active === bolumTaahhutBeyan) TaahhutBeyanlariKaydet(afterSuccess);
         else if (active === bolumBasvuruTaahhutBeyan) BasvuruBeyanKaydet(afterSuccess);
-        else if (active === bolumBasvuruCevreselSosyal) BasvuruCevreselSosyalKaydet(afterSuccess);
         else if (active === bolumMali || active === bolumBasvuruMaliVeriler) MaliKaydet(afterSuccess);
         else if (active === bolumBasvuruBilancoGelir) BilancoGelirKaydet(afterSuccess);
         else if (active === bolumOrtaklik || active === bolumBasvuruOrtaklikYetki) OrtaklikKaydet(afterSuccess);
-        else if (active === bolumCevreselSosyal) CevreselSosyalKaydet(afterSuccess);
+        else if (active === bolumCevreselSosyal || active === bolumBasvuruCevreselSosyal) CevreselSosyalKaydet(afterSuccess);
         else if (active === bolumSistemSonuclari || active === bolumUzmanSonuclari) {
             const panel = document.querySelector('[data-list-type]');
             const button = document.getElementById('basvuruKaydetBtn');

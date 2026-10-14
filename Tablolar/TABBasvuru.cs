@@ -766,14 +766,15 @@ namespace TarimDonusum.Tablolar
             return Convert.ToInt32(await command.ExecuteScalarAsync()) == 1;
         }
 
-        public async Task<bool> OnBasvuruDenetimTaslagiKaydetAsync(Basvuru basvuru)
+        public async Task<bool> OnBasvuruDenetimTaslagiKaydetAsync(Basvuru basvuru, enumBasvuruDurum incelemeDurumu = enumBasvuruDurum.OnBasvuruIncelemeDurumu)
         {
+            // Banka alanları yalnızca ön başvuru kararında girilir; başvuru kararında ön başvurudan gelen değerler korunur.
             const string sql = @"
                 UPDATE B
                 SET B.DenetimGerekcesi = @DenetimGerekcesi,
                     B.DenetimSonucu = @DenetimSonucu,
-                    B.BankaKrediLimiti = @BankaKrediLimiti,
-                    B.BankaMaksimumAylikOdeme = @BankaMaksimumAylikOdeme
+                    B.BankaKrediLimiti = CASE WHEN @BankaGuncelle = 1 THEN @BankaKrediLimiti ELSE B.BankaKrediLimiti END,
+                    B.BankaMaksimumAylikOdeme = CASE WHEN @BankaGuncelle = 1 THEN @BankaMaksimumAylikOdeme ELSE B.BankaMaksimumAylikOdeme END
                 FROM dbo.Basvuru B
                 INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
                 WHERE B.Id = @BasvuruId
@@ -786,7 +787,8 @@ namespace TarimDonusum.Tablolar
                 basvuru.DenetimSonucu.HasValue && basvuru.DenetimSonucu != enumOnBasvuruDenetimSonucu.Tanimsiz
                     ? (int)basvuru.DenetimSonucu.Value
                     : DBNull.Value);
-            command.Parameters.AddWithValue("@MevcutDurum", (int)enumBasvuruDurum.OnBasvuruIncelemeDurumu);
+            command.Parameters.AddWithValue("@MevcutDurum", (int)incelemeDurumu);
+            command.Parameters.AddWithValue("@BankaGuncelle", incelemeDurumu == enumBasvuruDurum.OnBasvuruIncelemeDurumu ? 1 : 0);
             command.Parameters.AddWithValue("@BankaKrediLimiti", basvuru.BankaKrediLimiti);
             command.Parameters.AddWithValue("@BankaMaksimumAylikOdeme", basvuru.BankaMaksimumAylikOdeme);
             return await command.ExecuteNonQueryAsync() == 1;
@@ -960,7 +962,7 @@ namespace TarimDonusum.Tablolar
             return Convert.ToInt32(await command.ExecuteScalarAsync());
         }
 
-        public async Task<Basvuru?> OnBasvuruDenetimBilgisiOkuAsync(int basvuruId)
+        public async Task<Basvuru?> OnBasvuruDenetimBilgisiOkuAsync(int basvuruId, enumBasvuruDurum incelemeDurumu = enumBasvuruDurum.OnBasvuruIncelemeDurumu)
         {
             const string sql = @"
                 SELECT B.DenetimAnketi, B.SistemDenetimAnketi, B.DenetimGerekcesi, B.DenetimSonucu,B.BankaKrediLimiti,B.BankaMaksimumAylikOdeme
@@ -972,7 +974,7 @@ namespace TarimDonusum.Tablolar
 
             await using SqlCommand command = KomutOlustur(sql);
             command.Parameters.AddWithValue("@BasvuruId", basvuruId);
-            command.Parameters.AddWithValue("@Durum", (int)enumBasvuruDurum.OnBasvuruIncelemeDurumu);
+            command.Parameters.AddWithValue("@Durum", (int)incelemeDurumu);
             await using SqlDataReader reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
                 return null;
@@ -1043,6 +1045,14 @@ namespace TarimDonusum.Tablolar
                 command.Parameters.AddWithValue("@YeniId", yeniId);
                 await command.ExecuteNonQueryAsync();
             }
+        }
+
+        public async Task<enumBasvuruKayitTuru?> KayitTuruOkuAsync(int basvuruId)
+        {
+            await using SqlCommand command = KomutOlustur("SELECT KayitTuru FROM dbo.Basvuru WHERE Id = @BasvuruId;");
+            command.Parameters.AddWithValue("@BasvuruId", basvuruId);
+            object? sonuc = await command.ExecuteScalarAsync();
+            return sonuc == null || sonuc == DBNull.Value ? null : (enumBasvuruKayitTuru)Convert.ToInt32(sonuc);
         }
 
         public async Task<bool> BasvuruAnaDurumGuncelleAsync(int basvuruId, enumBasvuruDurum mevcutDurum, enumBasvuruDurum yeniDurum)

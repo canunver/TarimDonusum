@@ -2409,3 +2409,10 @@ body {
 @media (max-width: 767.98px) {
   #adresKonumHarita { height: 58vh; min-height: 320px; }
 }
+
+/* Başvuru tablolarında başlığa tıklayarak sıralama (js/tablo-siralama.js) */
+th.tablo-siralanabilir { position: relative; padding-right: 20px !important; cursor: pointer; user-select: none; }
+th.tablo-siralanabilir:hover { background-color: rgba(0, 0, 0, .05); }
+.tablo-siralama-ikon { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: .8em; opacity: .3; }
+th[aria-sort="ascending"] > .tablo-siralama-ikon,
+th[aria-sort="descending"] > .tablo-siralama-ikon { opacity: .9; }

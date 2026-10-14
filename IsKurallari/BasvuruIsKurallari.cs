@@ -445,6 +445,65 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        /// <summary>
+        /// Başvuruyu sözleşme incelemesine gönderir (Başvuru → Başvuru İnceleme). Ön başvurudaki gönderim kontrollerinin
+        /// tamamı (sonradan bozulmuş olabilecek eski alanlar dahil) ve başvuruya özel kontroller yapılır.
+        /// </summary>
+        public async Task<Sonuc> SozlesmeyeGonderAsync(int basvuruId, Kullanici kullanici)
+        {
+            Sonuc sonuc = new();
+            if (basvuruId <= 0)
+            {
+                HataEkle(sonuc, "Business.Application.RecordRequired");
+                return sonuc;
+            }
+
+            Sonuc<Basvuru> okumaSonucu = await OkuAsync(basvuruId, kullanici);
+            if (!okumaSonucu.basarili || okumaSonucu.nesne == null)
+            {
+                SonucHatalariniAktar(okumaSonucu, sonuc);
+                return sonuc;
+            }
+
+            Basvuru basvuru = okumaSonucu.nesne;
+            if (!BasvuruKullanicisiMi(kullanici))
+                BasvuruKullanicisiYetkiHatasiEkle(sonuc);
+            if (basvuru.kayitTuru != enumBasvuruKayitTuru.Basvuru || basvuru.durum != enumBasvuruDurum.BasvuruDurumu || basvuru.basvuruFirma.siraNo != 0)
+                sonuc.HataEkle("Başvuru daha önce sözleşmeye gönderilmiş veya artık düzenlenebilir durumda değil.");
+
+            IncelemeyeGonderimEksikleriniDogrula(basvuru, sonuc);
+            foreach (string eksik in BasvuruOnKontrol.Eksikler(basvuru))
+                sonuc.HataEkle(eksik);
+            if (!sonuc.basarili) return sonuc;
+
+            try
+            {
+                await using SqlConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+                await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                TABBasvuru tabBasvuru = new(connection, _localizer, transaction);
+                if (!await tabBasvuru.BasvuruAnaDurumGuncelleAsync(basvuruId, enumBasvuruDurum.BasvuruDurumu, enumBasvuruDurum.BasvuruIncelemeDurumu))
+                {
+                    sonuc.HataEkle("Başvuru daha önce sözleşmeye gönderilmiş veya artık düzenlenebilir durumda değil.");
+                    await transaction.RollbackAsync();
+                    return sonuc;
+                }
+
+                await new TABBasvuruLog(connection, _localizer, transaction).EkleAsync(basvuruId, kullanici, "BasvuruSozlesmeyeGonderildi",
+                    new { EskiDurum = enumBasvuruDurum.BasvuruDurumu, YeniDurum = enumBasvuruDurum.BasvuruIncelemeDurumu });
+                await transaction.CommitAsync();
+                sonuc.mesaj = "Başvuru sözleşme incelemesine gönderildi.";
+            }
+            catch (Exception ex)
+            {
+                BeklenmeyenHata(sonuc, ex,
+                    "Başvuru sözleşmeye gönderilemedi. BasvuruId: {BasvuruId}, KullaniciId: {KullaniciId}",
+                    "Başvuru sözleşmeye gönderilemedi. Lütfen tekrar deneyin.", basvuruId, kullanici.Id);
+            }
+
+            return sonuc;
+        }
+
         public async Task<Sonuc> IncelemeyeGonderAsync(int basvuruId, Kullanici kullanici)
         {
             Sonuc sonuc = new();
@@ -522,28 +581,34 @@ namespace TarimDonusum.IsKurallari
                 await connection.OpenAsync();
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync();
                 TABBasvuru tabBasvuru = new(connection, _localizer, transaction);
+                // Başvuru kaydı da ön başvuru ile aynı karar akışını kendi durumlarıyla (inceleme, kabul, ret) izler.
+                enumBasvuruKayitTuru kayitTuru = await tabBasvuru.KayitTuruOkuAsync(denetim.Id) ?? enumBasvuruKayitTuru.OnBasvuru;
+                bool basvuruKaydi = kayitTuru == enumBasvuruKayitTuru.Basvuru;
+                enumBasvuruDurum incelemeDurumu = BasvuruDurumAkisi.Inceleme(kayitTuru);
+                string kayitAdi = BasvuruDurumAkisi.Ad(kayitTuru);
                 enumBasvuruDurum? yeniDurum = null;
                 bool kaydedildi;
                 int? yeniRevizyonId = null;
                 if (sonuclandir)
                 {
-                    Basvuru? kayitliDenetim = await tabBasvuru.OnBasvuruDenetimBilgisiOkuAsync(denetim.Id);
+                    Basvuru? kayitliDenetim = await tabBasvuru.OnBasvuruDenetimBilgisiOkuAsync(denetim.Id, incelemeDurumu);
                     if (kayitliDenetim == null)
                     {
-                        if (await tabBasvuru.TamBasvuruOlusturulmusMuAsync(denetim.Id))
+                        if (!basvuruKaydi && await tabBasvuru.TamBasvuruOlusturulmusMuAsync(denetim.Id))
                         {
                             await transaction.RollbackAsync();
                             sonuc.mesaj = "Ön başvuru daha önce onaylanmış ve tam başvuru kaydı oluşturulmuş.";
                             return sonuc;
                         }
 
-                        sonuc.HataEkle("Ön başvuru aktif inceleme kaydı bulunamadı. Kayıt daha önce sonuçlandırılmış veya revizyonu değişmiş olabilir.");
+                        sonuc.HataEkle($"{kayitAdi} aktif inceleme kaydı bulunamadı. Kayıt daha önce sonuçlandırılmış veya revizyonu değişmiş olabilir.");
                     }
                     else
                     {
-                        if (!DenetimListesiTamamMi(kayitliDenetim.SistemDenetimAnketi, true))
+                        // Sistem ve uzman kontrol listeleri ön başvuru uygunluk sorularıdır; başvuru kararında aranmaz.
+                        if (!basvuruKaydi && !DenetimListesiTamamMi(kayitliDenetim.SistemDenetimAnketi, true))
                             sonuc.HataEkle("Sonuçlandırmadan önce sistem kontrol listesi kaydedilmelidir.");
-                        if (!DenetimListesiTamamMi(kayitliDenetim.DenetimAnketi, false))
+                        if (!basvuruKaydi && !DenetimListesiTamamMi(kayitliDenetim.DenetimAnketi, false))
                             sonuc.HataEkle("Sonuçlandırmadan önce uzman kontrol listesi kaydedilmelidir.");
                         if (string.IsNullOrWhiteSpace(kayitliDenetim.DenetimGerekcesi) ||
                             !kayitliDenetim.DenetimSonucu.HasValue ||
@@ -568,28 +633,31 @@ namespace TarimDonusum.IsKurallari
                 if (sonuclandir &&
                     denetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi)
                 {
-                    kaydedildi = true;
-                    if (kaydedildi)
+                    // Düzeltme: aynı kayıt türünde yeni revizyon açılır ve başvuru sahibine düzenlemeye geri döner.
+                    yeniRevizyonId = await tabBasvuru.YeniRevizyonOlusturAsync(denetim.Id, kayitTuru);
+                    Sonuc<Dictionary<int, int>> dosyaKopyalama =
+                        await _dosyaYonetimIsKurallari.BasvuruDosyalariniKopyalaAsync(denetim.Id, yeniRevizyonId.Value);
+                    if (!dosyaKopyalama.basarili)
                     {
-                        yeniRevizyonId = await tabBasvuru.YeniRevizyonOlusturAsync(denetim.Id);
-                        Sonuc<Dictionary<int, int>> dosyaKopyalama =
-                            await _dosyaYonetimIsKurallari.BasvuruDosyalariniKopyalaAsync(denetim.Id, yeniRevizyonId.Value);
-                        if (!dosyaKopyalama.basarili)
-                        {
-                            SonucHatalariniAktar(dosyaKopyalama, sonuc);
-                            await transaction.RollbackAsync();
-                            return sonuc;
-                        }
-
-                        await tabBasvuru.DosyaReferanslariniGuncelleAsync(
-                            yeniRevizyonId.Value,
-                            dosyaKopyalama.nesne);
-                        kaydedildi = await tabBasvuru.BasvuruAnaDurumGuncelleAsync(
-                            yeniRevizyonId.Value,
-                            enumBasvuruDurum.OnBasvuruIncelemeDurumu,
-                            enumBasvuruDurum.OnBasvuruDurumu);
-                        yeniDurum = enumBasvuruDurum.OnBasvuruDurumu;
+                        SonucHatalariniAktar(dosyaKopyalama, sonuc);
+                        await transaction.RollbackAsync();
+                        return sonuc;
                     }
+
+                    await tabBasvuru.DosyaReferanslariniGuncelleAsync(
+                        yeniRevizyonId.Value,
+                        dosyaKopyalama.nesne);
+                    yeniDurum = BasvuruDurumAkisi.Duzenleme(kayitTuru);
+                    kaydedildi = await tabBasvuru.BasvuruAnaDurumGuncelleAsync(
+                        yeniRevizyonId.Value,
+                        incelemeDurumu,
+                        yeniDurum.Value);
+                }
+                else if (sonuclandir && basvuruKaydi && denetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.KabulEdildi)
+                {
+                    // Başvuru kabulünde yeni kayıt açılmaz; kayıt sözleşme aşamasına (Kabul Edildi) geçer.
+                    yeniDurum = enumBasvuruDurum.KabulEdildiDurumu;
+                    kaydedildi = await tabBasvuru.BasvuruAnaDurumGuncelleAsync(denetim.Id, incelemeDurumu, yeniDurum.Value);
                 }
                 else if (sonuclandir && denetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.KabulEdildi)
                 {
@@ -611,13 +679,13 @@ namespace TarimDonusum.IsKurallari
                 }
                 else if (sonuclandir)
                 {
-                    yeniDurum = enumBasvuruDurum.IptalDurumu;
+                    yeniDurum = BasvuruDurumAkisi.Red(kayitTuru);
                     kaydedildi = await tabBasvuru.BasvuruAnaDurumGuncelleAsync(
-                        denetim.Id, enumBasvuruDurum.OnBasvuruIncelemeDurumu, yeniDurum.Value);
+                        denetim.Id, incelemeDurumu, yeniDurum.Value);
                 }
                 else
                 {
-                    kaydedildi = await tabBasvuru.OnBasvuruDenetimTaslagiKaydetAsync(denetim);
+                    kaydedildi = await tabBasvuru.OnBasvuruDenetimTaslagiKaydetAsync(denetim, incelemeDurumu);
                 }
 
                 if (!kaydedildi)
@@ -627,13 +695,14 @@ namespace TarimDonusum.IsKurallari
                     return sonuc;
                 }
 
+                string onEk = basvuruKaydi ? "Basvuru" : "OnBasvuru";
                 await new TABBasvuruLog(connection, _localizer, transaction).EkleAsync(
                     denetim.Id,
                     kullanici,
                     yeniRevizyonId.HasValue && denetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi
-                        ? "OnBasvuruDuzeltmeIcinIadeEdildi"
+                        ? onEk + "DuzeltmeIcinIadeEdildi"
                         : yeniRevizyonId.HasValue ? "OnBasvuruOnaylandiTamBasvuruOlusturuldu"
-                        : sonuclandir ? "OnBasvuruDenetimiTamamlandi" : "OnBasvuruDenetimTaslagiKaydedildi",
+                        : sonuclandir ? onEk + "DenetimiTamamlandi" : onEk + "DenetimTaslagiKaydedildi",
                     new
                     {
                         denetim.DenetimAnketi,
@@ -657,12 +726,12 @@ namespace TarimDonusum.IsKurallari
                 }
                 await transaction.CommitAsync();
                 sonuc.mesaj = yeniRevizyonId.HasValue && denetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.DuzeltmeIcinIadeEdildi
-                    ? "Ön başvuru düzeltme için iade edildi ve yeni revizyon oluşturuldu."
+                    ? $"{kayitAdi} düzeltme için iade edildi ve yeni revizyon oluşturuldu."
                     : yeniRevizyonId.HasValue
                         ? "Ön başvuru onaylandı ve tam başvuru kaydı oluşturuldu."
                         : sonuclandir
-                            ? "Ön başvuru denetimi sonuçlandırıldı."
-                            : "Ön başvuru denetimi kaydedildi.";
+                            ? $"{kayitAdi} denetimi sonuçlandırıldı."
+                            : $"{kayitAdi} denetimi kaydedildi.";
             }
             catch (Exception ex)
             {
@@ -1962,7 +2031,7 @@ namespace TarimDonusum.IsKurallari
                 await using SqlConnection connection = new(_connectionString);
                 await connection.OpenAsync();
                 const string sql = @"
-                    SELECT BA.BasvuruNo, F.TicaretUnvani, F.Eposta
+                    SELECT BA.BasvuruNo, F.TicaretUnvani, F.Eposta, B.KayitTuru
                     FROM dbo.Basvuru B
                     INNER JOIN dbo.BasvuruAna BA ON BA.Id = B.BasvuruAnaId
                     INNER JOIN dbo.Firma F ON F.Id = BA.FirmaId
@@ -1986,7 +2055,8 @@ namespace TarimDonusum.IsKurallari
                 OnBasvuruBildirimBilgisi bilgi = new()
                 {
                     BasvuruNo = reader.IsDBNull(0) ? "" : reader.GetString(0),
-                    FirmaUnvani = reader.IsDBNull(1) ? "" : reader.GetString(1)
+                    FirmaUnvani = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                    KayitTuru = reader.IsDBNull(3) ? enumBasvuruKayitTuru.OnBasvuru : (enumBasvuruKayitTuru)Convert.ToInt32(reader.GetValue(3))
                 };
                 if (!reader.IsDBNull(2))
                     bilgi.EpostaAdresleri.Add(reader.GetString(2));
@@ -2023,7 +2093,9 @@ namespace TarimDonusum.IsKurallari
                 await connection.OpenAsync();
                 const string sql = @"SELECT I.Id,I.BasvuruId,I.IslemTuru,I.Metin,I.IslemTarihi,I.KullaniciId,LTRIM(RTRIM(K.Ad+N' '+K.Soyad)),I.YaziNo,I.YaziTarihi,I.YaziDosyaId,I.YaziDosyaAdi
                     FROM dbo.OnBasvuruItiraz I INNER JOIN dbo.Kullanici K ON K.Id=I.KullaniciId
-                    WHERE I.BasvuruAnaId=(SELECT BasvuruAnaId FROM dbo.Basvuru WHERE Id=@Id) ORDER BY I.Id;";
+                    INNER JOIN dbo.Basvuru IB ON IB.Id=I.BasvuruId
+                    INNER JOIN dbo.Basvuru B ON B.Id=@Id AND B.BasvuruAnaId=I.BasvuruAnaId AND B.KayitTuru=IB.KayitTuru
+                    ORDER BY I.Id;";
                 await using SqlCommand command = new(sql, connection); command.Parameters.AddWithValue("@Id", basvuruId);
                 await using SqlDataReader reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync()) sonuc.nesne.Add(new OnBasvuruItiraz {
@@ -2084,6 +2156,9 @@ namespace TarimDonusum.IsKurallari
             try {
                 await using SqlConnection connection=new(_connectionString); await connection.OpenAsync();
                 await using SqlTransaction transaction=(SqlTransaction)await connection.BeginTransactionAsync();
+                // Ön başvuruda "Ön Başvuru Red", başvuruda "Başvuru Red" kararına itiraz edilir.
+                enumBasvuruKayitTuru kayitTuru=await new TABBasvuru(connection,_localizer,transaction).KayitTuruOkuAsync(model.BasvuruId)??enumBasvuruKayitTuru.OnBasvuru;
+                enumBasvuruDurum itirazDurumu=BasvuruDurumAkisi.Itiraz(kayitTuru);
                 const string sql=@"DECLARE @AnaId INT;
                     SELECT @AnaId=B.BasvuruAnaId FROM dbo.Basvuru B INNER JOIN dbo.BasvuruAna BA ON BA.Id=B.BasvuruAnaId
                     WHERE B.Id=@Id AND BA.Durum=@Red AND EXISTS(SELECT 1 FROM dbo.FirmaKullanici FK WHERE FK.FirmaId=BA.FirmaId AND FK.KullaniciId=@KullaniciId AND FK.Aktif=1);
@@ -2091,9 +2166,9 @@ namespace TarimDonusum.IsKurallari
                       UPDATE dbo.BasvuruAna SET Durum=@Itiraz WHERE Id=@AnaId AND Durum=@Red;
                       IF @@ROWCOUNT=1 BEGIN INSERT dbo.OnBasvuruItiraz(BasvuruAnaId,BasvuruId,IslemTuru,Metin,KullaniciId) VALUES(@AnaId,@Id,1,@Metin,@KullaniciId); SELECT 1 END ELSE SELECT 0
                     END";
-                await using SqlCommand command=new(sql,connection,transaction); command.Parameters.AddWithValue("@Id",model.BasvuruId); command.Parameters.AddWithValue("@KullaniciId",kullanici.Id); command.Parameters.AddWithValue("@Metin",model.Metin.Trim()); command.Parameters.AddWithValue("@Red",(int)enumBasvuruDurum.IptalDurumu); command.Parameters.AddWithValue("@Itiraz",(int)enumBasvuruDurum.OnBasvuruItirazEdildiDurumu);
-                if (OrtakFonksiyonlar.Int32Yap(await command.ExecuteScalarAsync())!=1) { sonuc.HataEkle("Ön başvuru itiraza uygun durumda değil."); await transaction.RollbackAsync(); return sonuc; }
-                await new TABBasvuruLog(connection,_localizer,transaction).EkleAsync(model.BasvuruId,kullanici,"OnBasvuruItirazEdildi",new { model.Metin, YeniDurum=enumBasvuruDurum.OnBasvuruItirazEdildiDurumu });
+                await using SqlCommand command=new(sql,connection,transaction); command.Parameters.AddWithValue("@Id",model.BasvuruId); command.Parameters.AddWithValue("@KullaniciId",kullanici.Id); command.Parameters.AddWithValue("@Metin",model.Metin.Trim()); command.Parameters.AddWithValue("@Red",(int)BasvuruDurumAkisi.Red(kayitTuru)); command.Parameters.AddWithValue("@Itiraz",(int)itirazDurumu);
+                if (OrtakFonksiyonlar.Int32Yap(await command.ExecuteScalarAsync())!=1) { sonuc.HataEkle($"{BasvuruDurumAkisi.Ad(kayitTuru)} itiraza uygun durumda değil."); await transaction.RollbackAsync(); return sonuc; }
+                await new TABBasvuruLog(connection,_localizer,transaction).EkleAsync(model.BasvuruId,kullanici,kayitTuru==enumBasvuruKayitTuru.Basvuru?"BasvuruItirazEdildi":"OnBasvuruItirazEdildi",new { model.Metin, YeniDurum=itirazDurumu });
                 await transaction.CommitAsync(); sonuc.mesaj="İtirazınız uzmana iletildi.";
             } catch(Exception ex) { BeklenmeyenHata(sonuc,ex,"Ön başvuru itirazı kaydedilemedi. BasvuruId: {BasvuruId}","İtiraz kaydedilemedi.",model.BasvuruId); }
             return sonuc;
@@ -2115,18 +2190,19 @@ namespace TarimDonusum.IsKurallari
                 await using SqlTransaction transaction=(SqlTransaction)await connection.BeginTransactionAsync();
                 TABBasvuru tab=new(connection,_localizer,transaction);
                 Basvuru? mevcut=await tab.OkuAsync(model.BasvuruId);
-                if(mevcut==null || mevcut.durum!=enumBasvuruDurum.OnBasvuruItirazEdildiDurumu) { sonuc.HataEkle("Ön başvuru bekleyen itiraz durumunda değil."); await transaction.RollbackAsync(); return sonuc; }
+                if(mevcut==null || mevcut.durum!=BasvuruDurumAkisi.Itiraz(mevcut.kayitTuru)) { sonuc.HataEkle("Kayıt bekleyen itiraz durumunda değil."); await transaction.RollbackAsync(); return sonuc; }
                 int hedefId=model.BasvuruId;
                 enumBasvuruDurum yeniDurum;
                 enumOnBasvuruItirazIslemTuru tur;
                 if(model.RevizyonaGonder) {
-                    hedefId=await tab.YeniRevizyonOlusturAsync(model.BasvuruId);
+                    // Revizyon kaydın kendi türünde açılır: ön başvuru ön başvuruya, başvuru başvuruya döner.
+                    hedefId=await tab.YeniRevizyonOlusturAsync(model.BasvuruId,mevcut.kayitTuru);
                     Sonuc<Dictionary<int,int>> kopya=await _dosyaYonetimIsKurallari.BasvuruDosyalariniKopyalaAsync(model.BasvuruId,hedefId);
                     if(!kopya.basarili){SonucHatalariniAktar(kopya,sonuc);await transaction.RollbackAsync();return sonuc;}
                     await tab.DosyaReferanslariniGuncelleAsync(hedefId,kopya.nesne);
-                    yeniDurum=enumBasvuruDurum.OnBasvuruDurumu; tur=enumOnBasvuruItirazIslemTuru.RevizyonaGonderildi;
-                } else { yeniDurum=enumBasvuruDurum.IptalDurumu; tur=enumOnBasvuruItirazIslemTuru.ItirazReddedildi; }
-                if(!await tab.BasvuruAnaDurumGuncelleAsync(hedefId,enumBasvuruDurum.OnBasvuruItirazEdildiDurumu,yeniDurum)){sonuc.HataEkle("İtiraz durumu değiştirilemedi.");await transaction.RollbackAsync();return sonuc;}
+                    yeniDurum=BasvuruDurumAkisi.Duzenleme(mevcut.kayitTuru); tur=enumOnBasvuruItirazIslemTuru.RevizyonaGonderildi;
+                } else { yeniDurum=BasvuruDurumAkisi.Red(mevcut.kayitTuru); tur=enumOnBasvuruItirazIslemTuru.ItirazReddedildi; }
+                if(!await tab.BasvuruAnaDurumGuncelleAsync(hedefId,mevcut.durum,yeniDurum)){sonuc.HataEkle("İtiraz durumu değiştirilemedi.");await transaction.RollbackAsync();return sonuc;}
                 const string ekle=@"INSERT dbo.OnBasvuruItiraz(BasvuruAnaId,BasvuruId,IslemTuru,Metin,KullaniciId,YaziNo,YaziTarihi) OUTPUT INSERTED.Id VALUES(@AnaId,@Id,@Tur,@Metin,@KullaniciId,@YaziNo,@YaziTarihi);";
                 await using SqlCommand command=new(ekle,connection,transaction); command.Parameters.AddWithValue("@AnaId",mevcut.BasvuruAnaId);command.Parameters.AddWithValue("@Id",model.BasvuruId);command.Parameters.AddWithValue("@Tur",(int)tur);command.Parameters.AddWithValue("@Metin",model.Metin.Trim());command.Parameters.AddWithValue("@KullaniciId",kullanici.Id);command.Parameters.AddWithValue("@YaziNo",model.YaziNo);command.Parameters.AddWithValue("@YaziTarihi",model.YaziTarihi!.Value.Date);
                 int itirazId=Convert.ToInt32(await command.ExecuteScalarAsync());
@@ -2136,8 +2212,9 @@ namespace TarimDonusum.IsKurallari
                     await using SqlCommand dosyaKomutu=new("UPDATE dbo.OnBasvuruItiraz SET YaziDosyaId=@DosyaId,YaziDosyaAdi=@DosyaAdi WHERE Id=@Id;",connection,transaction);
                     dosyaKomutu.Parameters.AddWithValue("@DosyaId",dosyaSonucu.nesne.Id);dosyaKomutu.Parameters.AddWithValue("@DosyaAdi",dosyaSonucu.nesne.DosyaAdi);dosyaKomutu.Parameters.AddWithValue("@Id",itirazId);await dosyaKomutu.ExecuteNonQueryAsync();
                 }
-                await new TABBasvuruLog(connection,_localizer,transaction).EkleAsync(model.BasvuruId,kullanici,model.RevizyonaGonder?"OnBasvuruItiraziRevizyonaGonderildi":"OnBasvuruItiraziReddedildi",new { model.Metin,YeniDurum=yeniDurum,YeniBasvuruId=hedefId });
-                await transaction.CommitAsync(); sonuc.nesne=hedefId; sonuc.mesaj=model.RevizyonaGonder?"İtiraz kabul edildi ve ön başvuru revizyona gönderildi.":"İtiraz gerekçeli olarak reddedildi.";
+                string onEk=mevcut.kayitTuru==enumBasvuruKayitTuru.Basvuru?"Basvuru":"OnBasvuru";
+                await new TABBasvuruLog(connection,_localizer,transaction).EkleAsync(model.BasvuruId,kullanici,onEk+(model.RevizyonaGonder?"ItiraziRevizyonaGonderildi":"ItiraziReddedildi"),new { model.Metin,YeniDurum=yeniDurum,YeniBasvuruId=hedefId });
+                await transaction.CommitAsync(); sonuc.nesne=hedefId; sonuc.mesaj=model.RevizyonaGonder?$"İtiraz kabul edildi ve {BasvuruDurumAkisi.Ad(mevcut.kayitTuru).ToLower(new System.Globalization.CultureInfo("tr-TR"))} revizyona gönderildi.":"İtiraz gerekçeli olarak reddedildi.";
             } catch(Exception ex){BeklenmeyenHata(sonuc,ex,"İtiraz kararı kaydedilemedi. BasvuruId: {BasvuruId}","İtiraz kararı kaydedilemedi.",model.BasvuruId);}
             return sonuc;
         }
@@ -3328,9 +3405,9 @@ namespace TarimDonusum.IsKurallari
         public async Task<Sonuc<BasvuruIzlemeGostergesi>> BasvuruIzlemeGostergesiKaydetAsync(BasvuruIzlemeGostergesi model,Kullanici kullanici)
         {
             Sonuc<BasvuruIzlemeGostergesi> sonuc=new();model.gostergeKodu=model.gostergeKodu?.Trim()??"";model.baslangicDegeri=model.baslangicDegeri?.Trim()??"";model.hedefDeger=model.hedefDeger?.Trim()??"";model.kadinKirilimi=model.kadinKirilimi?.Trim()??"";model.gencKirilimi=model.gencKirilimi?.Trim()??"";model.aciklama=model.aciklama?.Trim()??"";
-            if(model.basvuruId<=0||IzlemeGostergesiTanimlari.Bul(model.gostergeKodu)==null||string.IsNullOrWhiteSpace(model.baslangicDegeri)||string.IsNullOrWhiteSpace(model.hedefDeger)){sonuc.HataEkle("Gösterge, başlangıç değeri ve hedef değer girilmelidir.");return sonuc;}
+            if(model.basvuruId<=0||IzlemeGostergesiTanimSaglayici.Bul(model.gostergeKodu)==null||string.IsNullOrWhiteSpace(model.baslangicDegeri)||string.IsNullOrWhiteSpace(model.hedefDeger)){sonuc.HataEkle("Gösterge, başlangıç değeri ve hedef değer girilmelidir.");return sonuc;}
             if(model.baslangicDegeri.Length>250||model.hedefDeger.Length>250||model.kadinKirilimi.Length>250||model.gencKirilimi.Length>250||model.aciklama.Length>2000){sonuc.HataEkle("İzleme göstergesi alanlarından biri izin verilen uzunluğu aşıyor.");return sonuc;}
-            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,yetki,true);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}if(mevcut.kayitTuru!=enumBasvuruKayitTuru.Basvuru){sonuc.HataEkle("İzleme göstergeleri başvuru kaydında tutulmalıdır.");return sonuc;}if(mevcut.IzlemeGostergeleri.Any(x=>x.id!=model.id&&x.gostergeKodu==model.gostergeKodu)){sonuc.HataEkle("Bu gösterge için daha önce kayıt oluşturulmuş.");return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{await new TABBasvuru(connection,null,tr).BasvuruIzlemeGostergesiKaydetAsync(model);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruIzlemeGostergesiKaydet",model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj="İzleme göstergesi kaydedildi.";}catch{await tr.RollbackAsync();throw;}}
+            try{await using SqlConnection connection=new(_connectionString);await connection.OpenAsync();Sonuc yetki=new();Basvuru? mevcut=await BasvuruOnBasvuruYetkiKontrolAsync(connection,model.basvuruId,kullanici,yetki,true);if(!yetki.basarili||mevcut==null){SonucHatalariniAktar(yetki,sonuc);return sonuc;}if(mevcut.kayitTuru!=enumBasvuruKayitTuru.Basvuru){sonuc.HataEkle("İzleme göstergeleri başvuru kaydında tutulmalıdır.");return sonuc;}if(mevcut.IzlemeGostergeleri.Any(x=>x.id!=model.id&&x.gostergeKodu==model.gostergeKodu)){sonuc.HataEkle("Bu gösterge için daha önce kayıt oluşturulmuş.");return sonuc;}if(IzlemeGostergesiTanimSaglayici.Bul(model.gostergeKodu)?.aktif!=true&&!mevcut.IzlemeGostergeleri.Any(x=>x.gostergeKodu==model.gostergeKodu)){sonuc.HataEkle("Bu gösterge pasif durumdadır; yeni değer girilemez.");return sonuc;}await using SqlTransaction tr=(SqlTransaction)await connection.BeginTransactionAsync();try{await new TABBasvuru(connection,null,tr).BasvuruIzlemeGostergesiKaydetAsync(model);await new TABBasvuruLog(connection,null,tr).EkleAsync(model.basvuruId,kullanici,"BasvuruIzlemeGostergesiKaydet",model);await tr.CommitAsync();sonuc.nesne=model;sonuc.mesaj="İzleme göstergesi kaydedildi.";}catch{await tr.RollbackAsync();throw;}}
             catch(Exception ex){BeklenmeyenHata(sonuc,ex,"İzleme göstergesi kaydedilemedi. BasvuruId: {BasvuruId}","İzleme göstergesi kaydedilemedi.",model.basvuruId);}return sonuc;
         }
         public async Task<Sonuc> BasvuruIzlemeUstBilgiKaydetAsync(BasvuruIzlemeUstBilgi model,Kullanici kullanici)

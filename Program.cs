@@ -66,6 +66,7 @@ await VTGuncelle.GuncelleAsync(app.Configuration, app.Logger);
 await CevreselSosyalAnketAktarici.AktarVeYukleAsync(app.Configuration, app.Logger);
 await TaahhutBeyanTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
 await ZorunluBelgeTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
+await IzlemeGostergesiTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
 await UygunHarcamaTanimYukleyici.YukleAsync(app.Configuration, app.Logger);
 
 app.UseExceptionHandler("/Home/Error");

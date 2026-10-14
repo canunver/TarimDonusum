@@ -26,6 +26,9 @@ public static class BasvuruOzetiHesaplayici
     {
         static int Dolu(params bool[] alanlar) => alanlar.Count(x => x);
         static bool Var(string? x) => !string.IsNullOrWhiteSpace(x);
+        // Yeni tesis veya mevcut tesiste kapasite artırımı / modernizasyon olan adreste çevresel-sosyal anket doldurulur.
+        static bool AnketGerekir(BasvuruUygulamaAdresi a) => a.yatirimTurleri.Any(x => x is (int)enumYatirimTuru.Yeni or (int)enumYatirimTuru.KapasiteArtirimi
+            or (int)enumYatirimTuru.Modernizasyon or (int)enumYatirimTuru.TeknolojiYenileme);
         Firma f=b.basvuruFirma.firma;
         BasvuruUygulamaAdresi? adres=b.YatirimAdresleri.OrderByDescending(x=>int.TryParse(x.segeKademesi,out int s)?s:0).ThenBy(x=>x.siraNo).FirstOrDefault();
         string dz=b.yatirim.degerZinciriAsamalari.FirstOrDefault()?.dz?.ad??"";
@@ -41,7 +44,7 @@ public static class BasvuruOzetiHesaplayici
             new("ozet","Yatırım Özeti",3,Dolu(Var(b.yatirimOzeti.yatirimOzetiJson),b.YatirimOnBilgileri.Any(x=>x.tur==enumYatirimOnBilgiTuru.UretilecekUrun),b.YatirimOnBilgileri.Any(x=>x.tur==enumYatirimOnBilgiTuru.Girdi)),"Yatırım Özeti","Üretim/gider bilgileri"),
             new("teknik","Teknik Proje",3,Dolu(b.YatirimOnBilgileri.Count>0,b.Makineler.Count>0,b.UrunSurecleri.Count>0),"Teknik Proje","Ürün/girdi/makine"),
             new("belge","Belgeler",1,Dolu(b.TumBasvuruDosyalari.Count>0||b.ZorunluBelgeler.Count>0),"Zorunlu Belgeler","Uygulanabilir belgeler"),
-            new("cs","Ç&S",1,Dolu(Var(b.cevreselSosyal.cevreselSosyalJson)),"Ç&S Veri Formu","Beyan dahil"),
+            new("cs","Ç&S",1,Dolu(b.YatirimAdresleri.Any(AnketGerekir)&&b.YatirimAdresleri.Where(AnketGerekir).All(x=>Var(x.cevreselSosyalJson))),"Ç&S Veri Formu","Anket gereken tüm adresler"),
             new("beyan","Beyanlar",21,BeyanKabulSayisi(b.TaahhutBeyanlarJson),"Beyanlar","Tüm zorunlu beyanlar"),
             new("izleme","İzleme",3,Dolu(b.IzlemeGostergeleri.Count>0,b.IzlemeGostergeleri.Count>0&&b.IzlemeGostergeleri.All(x=>Var(x.baslangicDegeri)&&Var(x.hedefDeger)),b.IzlemeGostergeleri.Any(x=>Var(x.aciklama))),"İzleme Göstergeleri","Başlangıç/hedef/açıklama")
         ];

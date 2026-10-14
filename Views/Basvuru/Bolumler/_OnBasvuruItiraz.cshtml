@@ -2,28 +2,30 @@
 @using TarimDonusum.Models
 @{
     Basvuru b = Model.Basvuru;
-    bool basvuranYazabilir = !Model.DenetciGorunumu && b.durum == enumBasvuruDurum.IptalDurumu;
-    bool uzmanYazabilir = Model.DenetciGorunumu && b.durum == enumBasvuruDurum.OnBasvuruItirazEdildiDurumu;
+    // Ön başvuru ve başvuru aynı itiraz akışını kendi red / itiraz durumlarıyla kullanır.
+    string kayitAdi = BasvuruDurumAkisi.Ad(b.kayitTuru);
+    bool basvuranYazabilir = !Model.DenetciGorunumu && b.durum == BasvuruDurumAkisi.Red(b.kayitTuru);
+    bool uzmanYazabilir = Model.DenetciGorunumu && b.durum == BasvuruDurumAkisi.Itiraz(b.kayitTuru);
 }
 
 <section class="basvuru-panel active"
          data-panel="@((int)enumBasvuruBolum.OnBasvuruItiraz)"
          data-appeal-required="İtiraz metni girilmelidir."
          data-reason-required="Karar gerekçesi girilmelidir."
-         data-revision-confirm="Ön başvuru revizyona gönderilsin mi?"
+         data-revision-confirm="@kayitAdi revizyona gönderilsin mi?"
          data-reject-confirm="İtiraz reddedilsin mi?"
          data-failed-message="İşlem tamamlanamadı.">
     <div class="section-heading">
         <div>
             <h2>İtiraz / İtiraz Geçmişi</h2>
-            <p>Ön başvuruya ait itiraz ve uzman kararlarının tamamı tarih sırasıyla gösterilir.</p>
+            <p>@(kayitAdi)ya ait itiraz ve uzman kararlarının tamamı tarih sırasıyla gösterilir.</p>
         </div>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(b.DenetimGerekcesi))
     {
         <div class="alert alert-danger">
-            <strong>Ön başvuru ret gerekçesi</strong>
+            <strong>@kayitAdi ret gerekçesi</strong>
             <div style="white-space:pre-wrap">@b.DenetimGerekcesi</div>
         </div>
     }
@@ -70,7 +72,7 @@
         <div class="card">
             <div class="card-header font-weight-bold">Yeni İtiraz</div>
             <div class="card-body">
-                <p>Ön başvurunuzun neden kabul edilmesi gerektiğini açıklayınız.</p>
+                <p>@(kayitAdi)nuzun neden kabul edilmesi gerektiğini açıklayınız.</p>
                 <textarea id="onBasvuruItirazMetni" class="form-control" rows="8" maxlength="4000"></textarea>
                 <button type="button" id="onBasvuruItirazGonder" class="btn btn-primary mt-3">İtirazı İlet</button>
             </div>
@@ -93,7 +95,7 @@
             </div>
         </div>
     }
-    else if (b.durum == enumBasvuruDurum.OnBasvuruItirazEdildiDurumu)
+    else if (b.durum == BasvuruDurumAkisi.Itiraz(b.kayitTuru))
     {
         <div class="alert alert-info">İtirazınız uzman değerlendirmesini bekliyor.</div>
     }

@@ -160,6 +160,57 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<List<IzlemeGostergesiTanim>>> IzlemeGostergeleriListeleAsync(Kullanici? kullanici)
+        {
+            Sonuc<List<IzlemeGostergesiTanim>> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                sonuc.nesne = await new TABIzlemeGostergesiTanim(connection, _localizer).ListeleAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "İzleme göstergesi tanımları okunamadı.");
+                sonuc.HataEkle("İzleme göstergesi tanımları okunamadı.");
+            }
+            return sonuc;
+        }
+
+        public async Task<Sonuc<int>> IzlemeGostergesiKaydetAsync(IzlemeGostergesiTanim tanim, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            tanim.ad = (tanim.ad ?? "").Trim();
+            tanim.birim = (tanim.birim ?? "").Trim();
+            tanim.veriKaynagi = (tanim.veriKaynagi ?? "").Trim();
+            tanim.siklik = (tanim.siklik ?? "").Trim();
+            if (tanim.siraNo <= 0) sonuc.HataEkle("Sıra numarası zorunludur.");
+            if (tanim.ad.Length == 0) sonuc.HataEkle("Gösterge adı zorunludur.");
+            if (tanim.ad.Length > 500) sonuc.HataEkle("Gösterge adı 500 karakteri aşamaz.");
+            if (tanim.birim.Length == 0) sonuc.HataEkle("Birim zorunludur.");
+            if (tanim.birim.Length > 200) sonuc.HataEkle("Birim 200 karakteri aşamaz.");
+            if (tanim.veriKaynagi.Length > 500) sonuc.HataEkle("Veri kaynağı / kanıt 500 karakteri aşamaz.");
+            if (tanim.siklik.Length > 100) sonuc.HataEkle("Sıklık 100 karakteri aşamaz.");
+            if (!sonuc.basarili) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                TABIzlemeGostergesiTanim tablo = new TABIzlemeGostergesiTanim(connection, _localizer);
+                sonuc.nesne = await tablo.KaydetAsync(tanim);
+                IzlemeGostergesiTanimSaglayici.Guncelle(await tablo.ListeleAsync());
+                sonuc.mesaj = "İzleme göstergesi kaydedildi.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "İzleme göstergesi kaydedilemedi.");
+                sonuc.HataEkle("İzleme göstergesi kaydedilemedi.");
+            }
+            return sonuc;
+        }
+
         public async Task<Sonuc<int>> TaahhutBeyanKaydetAsync(TaahhutBeyanTanim tanim, Kullanici? kullanici)
         {
             Sonuc<int> sonuc = new();

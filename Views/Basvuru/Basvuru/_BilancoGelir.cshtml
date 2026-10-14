@@ -23,7 +23,7 @@
  }
  </tbody></table></div>
  <h3 class="subhead mt-4">Bilanço Analizi</h3>
- <div class="table-responsive"><table class="table table-bordered bilanco-analiz-table"><thead><tr><th>Hesaplanan değer</th><th>@(dyil>0?dyil-1:0)</th><th>@(dyil>0?dyil-2:0)</th><th>@(dyil>0?dyil-3:0)</th></tr></thead><tbody>
+ <div class="table-responsive"><table class="table table-bordered bilanco-analiz-table" data-siralama="yok"><thead><tr><th>Hesaplanan değer</th><th>@(dyil>0?dyil-1:0)</th><th>@(dyil>0?dyil-2:0)</th><th>@(dyil>0?dyil-3:0)</th></tr></thead><tbody>
  @{var analiz=new[]{("NET_ISLETME_SERMAYESI","Net İşletme Sermayesi"),("CARI_ORAN","Cari Oran"),("LIKIDITE_ORANI","Likidite Oranı"),("FINANSMAN_ORANI","Finansman Oranı (%)"),("FAALIYET_KARLILIGI","Faaliyet Kârlılığı (%)"),("BILANCO_KARLILIGI","Bilanço Kârlılığı (%)"),("OZSERMAYE_KARLILIGI","Özsermaye Kârlılığı (%)"),("AKTIF_KARLILIGI","Aktif Kârlılığı (%)"),("FAVOK","FAVÖK (EBITDA)")};}
  @foreach(var a in analiz){<tr><td>@a.Item2</td>@for(int s=1;s<=3;s++){<td class="bilanco-hesap" data-hesap="@a.Item1" data-yil="@s"></td>}</tr>}
  </tbody></table></div>

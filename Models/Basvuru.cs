@@ -103,6 +103,26 @@ namespace TarimDonusum.Models
         ReddedildiDurumu = 8, // Başvuru Red
         IptalDurumu = 9, // Ön Başvuru Red
         OnBasvuruItirazEdildiDurumu = 10,
+        BasvuruItirazEdildiDurumu = 11, // Başvuru red kararına itiraz
+    }
+
+    /// <summary>Ön başvuru ve başvuru aynı inceleme / ret / itiraz akışını kendi durumlarıyla izler.</summary>
+    public static class BasvuruDurumAkisi
+    {
+        public static enumBasvuruDurum Duzenleme(enumBasvuruKayitTuru tur) =>
+            tur == enumBasvuruKayitTuru.Basvuru ? enumBasvuruDurum.BasvuruDurumu : enumBasvuruDurum.OnBasvuruDurumu;
+        public static enumBasvuruDurum Inceleme(enumBasvuruKayitTuru tur) =>
+            tur == enumBasvuruKayitTuru.Basvuru ? enumBasvuruDurum.BasvuruIncelemeDurumu : enumBasvuruDurum.OnBasvuruIncelemeDurumu;
+        public static enumBasvuruDurum Red(enumBasvuruKayitTuru tur) =>
+            tur == enumBasvuruKayitTuru.Basvuru ? enumBasvuruDurum.ReddedildiDurumu : enumBasvuruDurum.IptalDurumu;
+        public static enumBasvuruDurum Itiraz(enumBasvuruKayitTuru tur) =>
+            tur == enumBasvuruKayitTuru.Basvuru ? enumBasvuruDurum.BasvuruItirazEdildiDurumu : enumBasvuruDurum.OnBasvuruItirazEdildiDurumu;
+        public static string Ad(enumBasvuruKayitTuru tur) => tur == enumBasvuruKayitTuru.Basvuru ? "Başvuru" : "Ön başvuru";
+
+        /// <summary>Ön başvuru için yazılmış bildirim metnini başvuru kaydına uyarlar.</summary>
+        public static string MetniUyarla(string metin, enumBasvuruKayitTuru tur) => tur != enumBasvuruKayitTuru.Basvuru ? metin : metin
+            .Replace("Ön Başvuru", "Başvuru").Replace("Ön başvuru", "Başvuru").Replace("ön başvuru", "başvuru")
+            .Replace("incelemeye gönder", "sözleşmeye gönder");
     }
 
     public enum enumBasvuruKayitTuru : int
@@ -466,6 +486,7 @@ namespace TarimDonusum.Models
     {
         public string BasvuruNo { get; set; } = "";
         public string FirmaUnvani { get; set; } = "";
+        public enumBasvuruKayitTuru KayitTuru { get; set; } = enumBasvuruKayitTuru.OnBasvuru;
         public List<string> EpostaAdresleri { get; set; } = new();
     }
 

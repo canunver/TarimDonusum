@@ -220,8 +220,6 @@ namespace TarimDonusum.Controllers
         [OturumKontrol][HttpGet]
         public Task<IActionResult> BeyanYazdir(int id)=>RaporYazdirAsync(id,new RPROB_Beyan(_environment.ContentRootPath),"Taahhüt/beyan bilgileri yazdırılmadan önce başvuru kaydedilmelidir.");
         [OturumKontrol][HttpGet]
-        public Task<IActionResult> CevreselSosyalVeriFormuYazdir(int id)=>RaporYazdirAsync(id,new RPROB_CevreselSosyalVeriFormu(_environment.ContentRootPath),"Çevresel ve sosyal veri formu yazdırılmadan önce başvuru kaydedilmelidir.");
-        [OturumKontrol][HttpGet]
         public Task<IActionResult> OnBasvuruCevreselSosyalYazdir(int id, int uygulamaAdresiId)=>
             uygulamaAdresiId <= 0
                 ? Task.FromResult<IActionResult>(BadRequest("Yazdırılacak yatırım adresi seçilmelidir."))
@@ -1333,6 +1331,23 @@ namespace TarimDonusum.Controllers
             });
         }
 
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SozlesmeyeGonder(int basvuruId)
+        {
+            Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
+            if (kullanici == null)
+                return Unauthorized(new { basarili = false, mesaj = L["Business.Session.Expired"].ToString() });
+
+            Sonuc sonuc = await _basvuruIsKurallari.SozlesmeyeGonderAsync(basvuruId, kullanici);
+            return Json(new
+            {
+                basarili = sonuc.basarili,
+                mesaj = sonuc.basarili ? sonuc.mesaj : string.Join(" ", sonuc.hatalar)
+            });
+        }
+
         private List<string> ModelStateHatalariniOku()
         {
             return ModelState
@@ -1364,7 +1379,7 @@ namespace TarimDonusum.Controllers
                 DenetciGorunumu = kullanici != null && !basvuruKullanicisi,
             };
 
-            if (basvuru.Id > 0 && basvuru.kayitTuru == enumBasvuruKayitTuru.OnBasvuru && kullanici != null)
+            if (basvuru.Id > 0 && kullanici != null)
             {
                 Sonuc<List<OnBasvuruItiraz>> itirazTarihcesi =
                     await _basvuruIsKurallari.OnBasvuruItirazTarihcesiOkuAsync(basvuru.Id, kullanici);

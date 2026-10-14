@@ -2500,13 +2500,28 @@
     <value>Under Review</value>
   </data>
   <data name="enumBasvuruDurum_5" xml:space="preserve">
-    <value>Accepted</value>
+    <value>Contract Review</value>
   </data>
   <data name="enumBasvuruDurum_7" xml:space="preserve">
-    <value>Rejected</value>
+    <value>Application Not Selected</value>
   </data>
   <data name="enumBasvuruDurum_9" xml:space="preserve">
     <value>Pre-application Rejected</value>
+  </data>
+  <data name="enumBasvuruDurum_2" xml:space="preserve">
+    <value>Pre-application Correction</value>
+  </data>
+  <data name="enumBasvuruDurum_4" xml:space="preserve">
+    <value>Application</value>
+  </data>
+  <data name="enumBasvuruDurum_6" xml:space="preserve">
+    <value>Application Accepted</value>
+  </data>
+  <data name="enumBasvuruDurum_8" xml:space="preserve">
+    <value>Application Rejected</value>
+  </data>
+  <data name="enumBasvuruDurum_11" xml:space="preserve">
+    <value>Application Appealed</value>
   </data>
   <data name="enumBasvuruDurum_10" xml:space="preserve">
     <value>Pre-application Appealed</value>
@@ -2789,5 +2804,6 @@
   <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Environmental-Social Questionnaire</value></data>
   <data name="MenuBasvuru.taahhutBeyanlar" xml:space="preserve"><value>Commitments/Declarations</value></data>
   <data name="MenuBasvuru.zorunluBelgeler" xml:space="preserve"><value>Required Documents</value></data>
+  <data name="MenuBasvuru.izlemeGostergeleri" xml:space="preserve"><value>Monitoring Indicators</value></data>
   <data name="MenuBasvuru.uygunHarcamaListesi" xml:space="preserve"><value>Eligible Expense List</value></data>
 </root>

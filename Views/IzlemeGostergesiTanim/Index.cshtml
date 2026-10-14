@@ -1,0 +1,73 @@
+@{ ViewData["Title"] = "İzleme Göstergeleri"; }
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div>
+            <h1>İzleme Göstergeleri</h1>
+            <p>Başvurunun İzleme Göstergeleri sayfasında listelenen göstergeleri buradan ekleyebilir ve düzenleyebilirsiniz.</p>
+        </div>
+        <button class="btn btn-primary" onclick="ac()"><i class="fas fa-plus mr-1"></i>Yeni gösterge</button>
+    </div>
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover">
+            <thead><tr><th style="width:70px">Sıra</th><th>Gösterge</th><th style="width:170px">Birim</th><th>Veri kaynağı / kanıt</th><th style="width:120px">Sıklık</th><th style="width:90px">Durum</th><th style="width:110px"></th></tr></thead>
+            <tbody id="liste"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 id="modalBaslik">İzleme göstergesi</h5><button class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <input id="id" type="hidden">
+                <div class="form-grid">
+                    <label>Sıra no<input id="sira" type="number" min="1"></label>
+                    <label>Birim<input id="birim" maxlength="200"></label>
+                    <label>Sıklık<input id="siklik" maxlength="100" list="siklikListesi"></label>
+                    <label>Durum<select id="aktif"><option value="true">Aktif</option><option value="false">Pasif</option></select></label>
+                </div>
+                <datalist id="siklikListesi"><option value="Aylık"></option><option value="Üç aylık"></option><option value="Altı aylık"></option><option value="Yıllık"></option></datalist>
+                <label class="wide-label">Gösterge adı<input id="ad" maxlength="500"></label>
+                <label class="wide-label">Veri kaynağı / kanıt<input id="veriKaynagi" maxlength="500"></label>
+                <small class="form-text text-muted">Pasif göstergeler yeni başvurularda gösterilmez; daha önce değeri girilmiş başvurularda değer korunur ve gösterge "Pasif" etiketiyle görünür.</small>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button>
+                <button class="btn btn-primary" onclick="kaydet()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {<script>
+let veriler = [];
+const esc = x => $('<div>').text(x ?? '').html();
+function hata(s) { PopupMesajGoster(s?.hataStr || 'İşlem gerçekleştirilemedi.', false); }
+function listele() {
+    AjaxGet('/IzlemeGostergesiTanim/Listele', null, s => {
+        if (!s?.basarili) return hata(s);
+        veriler = s.nesne || [];
+        $('#liste').html(veriler.length
+            ? veriler.map(x => `<tr class="${x.aktif ? '' : 'text-muted'}"><td>${x.siraNo}</td><td>${esc(x.ad)}</td><td>${esc(x.birim)}</td><td>${esc(x.veriKaynagi)}</td><td>${esc(x.siklik)}</td><td>${x.aktif ? 'Aktif' : 'Pasif'}</td><td><button class="btn btn-sm btn-outline-primary" onclick="ac(${x.id})">Düzenle</button></td></tr>`).join('')
+            : '<tr><td colspan="7" class="text-muted">Henüz izleme göstergesi tanımlanmadı.</td></tr>');
+    });
+}
+function ac(id) {
+    const x = veriler.find(y => y.id === id) || { id: 0, siraNo: Math.max(0, ...veriler.map(y => Number(y.siraNo) || 0)) + 1, ad: '', birim: '', veriKaynagi: '', siklik: 'Yıllık', aktif: true };
+    $('#modalBaslik').text(x.id ? 'İzleme göstergesi düzenle' : 'Yeni izleme göstergesi');
+    $('#id').val(x.id); $('#sira').val(x.siraNo); $('#ad').val(x.ad); $('#birim').val(x.birim);
+    $('#veriKaynagi').val(x.veriKaynagi); $('#siklik').val(x.siklik); $('#aktif').val(String(x.aktif));
+    $('#modal').modal('show');
+}
+function kaydet() {
+    const tanim = { id: +$('#id').val(), siraNo: +$('#sira').val(), ad: $('#ad').val(), birim: $('#birim').val(), veriKaynagi: $('#veriKaynagi').val(), siklik: $('#siklik').val(), aktif: $('#aktif').val() === 'true' };
+    AjaxPost('/IzlemeGostergesiTanim/Kaydet', tanim, s => {
+        if (!s?.basarili) return hata(s);
+        $('#modal').modal('hide');
+        PopupMesajGoster(s.mesaj || 'İzleme göstergesi kaydedildi.', true);
+        listele();
+    });
+}
+$(listele);
+</script>}

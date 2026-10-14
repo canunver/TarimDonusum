@@ -1581,6 +1581,17 @@ namespace TarimDonusum.IsKurallari
                     EXEC sp_rename N'dbo.BasvuruMakine.UygulamaHarcamaId', N'UygunHarcamaId', N'COLUMN';
                     IF OBJECT_ID(N'dbo.FK_BasvuruMakine_UygulamaHarcama') IS NOT NULL EXEC sp_rename N'dbo.FK_BasvuruMakine_UygulamaHarcama', N'FK_BasvuruMakine_UygunHarcamaTanim', N'OBJECT';
                   END"),
+            new(133, @"IF OBJECT_ID(N'dbo.IzlemeGostergesiTanim',N'U') IS NULL
+                  CREATE TABLE dbo.IzlemeGostergesiTanim(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_IzlemeGostergesiTanim PRIMARY KEY,
+                    Kod NVARCHAR(50) NOT NULL CONSTRAINT UX_IzlemeGostergesiTanim_Kod UNIQUE,
+                    SiraNo INT NOT NULL,
+                    Ad NVARCHAR(500) NOT NULL,
+                    Birim NVARCHAR(200) NOT NULL,
+                    VeriKaynagi NVARCHAR(500) NOT NULL CONSTRAINT DF_IzlemeGostergesiTanim_VeriKaynagi DEFAULT N'',
+                    Siklik NVARCHAR(100) NOT NULL CONSTRAINT DF_IzlemeGostergesiTanim_Siklik DEFAULT N'',
+                    Aktif INT NOT NULL CONSTRAINT DF_IzlemeGostergesiTanim_Aktif DEFAULT 1,
+                    GuncellemeTarihi DATETIME2 NULL);"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

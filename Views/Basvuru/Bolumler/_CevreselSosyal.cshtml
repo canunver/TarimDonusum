@@ -1,5 +1,6 @@
 @using System.Text.Json
 @using TarimDonusum.IsKurallari
+@using TarimDonusum.Models
 @model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
 @inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
 
@@ -9,7 +10,7 @@
     var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 }
 
-<section class="basvuru-panel active" data-panel="12">
+<section class="basvuru-panel active" data-panel="@((int)(b.kayitTuru == enumBasvuruKayitTuru.Basvuru ? enumBasvuruBolum.BasvuruCevreselSosyal : enumBasvuruBolum.CevreselSosyal))">
     <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
         <h2 class="mb-0">@L["Basvuru.CevreselSosyal.Title"]</h2>
         <a id="cevreselSosyalYazdir" class="btn btn-outline-primary disabled" href="#" aria-disabled="true">

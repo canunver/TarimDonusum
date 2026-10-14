@@ -2552,13 +2552,28 @@ Alt projem için belirlenecek risk kategorisine bağlı olarak hazırlanması ge
     <value>İncelemede</value>
   </data>
   <data name="enumBasvuruDurum_5" xml:space="preserve">
-    <value>Kabul Edildi</value>
+    <value>Sözleşme İncelemesinde</value>
   </data>
   <data name="enumBasvuruDurum_7" xml:space="preserve">
-    <value>Reddedildi</value>
+    <value>Başvuru Seçilmedi</value>
   </data>
   <data name="enumBasvuruDurum_9" xml:space="preserve">
     <value>Ön Başvuru Red</value>
+  </data>
+  <data name="enumBasvuruDurum_2" xml:space="preserve">
+    <value>Ön Başvuru Düzeltme</value>
+  </data>
+  <data name="enumBasvuruDurum_4" xml:space="preserve">
+    <value>Başvuru</value>
+  </data>
+  <data name="enumBasvuruDurum_6" xml:space="preserve">
+    <value>Başvuru Kabul</value>
+  </data>
+  <data name="enumBasvuruDurum_8" xml:space="preserve">
+    <value>Başvuru Red</value>
+  </data>
+  <data name="enumBasvuruDurum_11" xml:space="preserve">
+    <value>Başvuru İtiraz Edildi</value>
   </data>
   <data name="enumBasvuruDurum_10" xml:space="preserve">
     <value>Ön Başvuru İtiraz Edildi</value>
@@ -2841,5 +2856,6 @@ Alt projem için belirlenecek risk kategorisine bağlı olarak hazırlanması ge
   <data name="MenuBasvuru.cevreselSosyalAnket" xml:space="preserve"><value>Çevresel Sosyal V.F.</value></data>
   <data name="MenuBasvuru.taahhutBeyanlar" xml:space="preserve"><value>Taahhüt/Beyan</value></data>
   <data name="MenuBasvuru.zorunluBelgeler" xml:space="preserve"><value>Zorunlu Belgeler</value></data>
+  <data name="MenuBasvuru.izlemeGostergeleri" xml:space="preserve"><value>İzleme Göstergeleri</value></data>
   <data name="MenuBasvuru.uygunHarcamaListesi" xml:space="preserve"><value>Uygun Harcama Listesi</value></data>
 </root>

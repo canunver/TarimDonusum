@@ -168,6 +168,15 @@ namespace TarimDonusum.Controllers
                 _ => ("", "")
             };
             if (string.IsNullOrWhiteSpace(konu)) return;
+            if (bilgi.KayitTuru == enumBasvuruKayitTuru.Basvuru)
+            {
+                // Başvuru kabulünde yeni kayıt açılmaz; başvuru sözleşme aşamasına geçer.
+                if (denetim.DenetimSonucu.Value == enumOnBasvuruDenetimSonucu.KabulEdildi)
+                    (konu, govde) = ($"Başvurunuz Kabul Edildi - {basvuru}",
+                        $"<p>Sayın {WebUtility.HtmlEncode(bilgi.FirmaUnvani)},</p><p><strong>{WebUtility.HtmlEncode(basvuru)}</strong> numaralı başvurunuzun sözleşme öncesi incelemesi tamamlanmış ve başvurunuz <strong>kabul edilmiştir</strong>.</p><p>Sözleşme süreciyle ilgili olarak tarafınıza bilgi verilecektir.</p><p>Bilgilerinize sunarız.</p>");
+                else
+                    (konu, govde) = (BasvuruDurumAkisi.MetniUyarla(konu, bilgi.KayitTuru), BasvuruDurumAkisi.MetniUyarla(govde, bilgi.KayitTuru));
+            }
 
             string alicilar = string.Join(";", bilgi.EpostaAdresleri);
             string mailHatasi = await _mailServisi.MailAtAsync("", alicilar, konu, govde, true, false);
