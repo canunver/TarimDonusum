@@ -17,6 +17,15 @@ public sealed class TABDonemTahmini(SqlConnection connection, IStringLocalizer<S
         return liste;
     }
 
+    public async Task<List<(int donemId, DonemTahminSatiri satir)>> TumunuListeleAsync()
+    {
+        const string sql = @"SELECT DonemId, Yil, KurTahminiTL, EnflasyonTahminiYuzde FROM dbo.DonemTahmini ORDER BY DonemId, Yil;";
+        await using SqlCommand command=KomutOlustur(sql);
+        await using SqlDataReader reader=await command.ExecuteReaderAsync(); List<(int, DonemTahminSatiri)> liste=[];
+        while(await reader.ReadAsync()) liste.Add((reader.GetInt32(0),new(){yil=reader.GetInt32(1),kurTahminiTL=NullOkuDecimal(reader,2),enflasyonTahminiYuzde=NullOkuDecimal(reader,3)}));
+        return liste;
+    }
+
     public async Task KaydetAsync(int donemId, IEnumerable<DonemTahminSatiri> tahminler)
     {
         const string sql=@"MERGE dbo.DonemTahmini AS H

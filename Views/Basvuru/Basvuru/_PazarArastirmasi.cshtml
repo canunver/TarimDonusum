@@ -1,0 +1,34 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@using System.Text.Json
+@{
+    var b = Model.Basvuru;
+    bool duzenlenebilir = Model.DenetciGorunumu && b.durum == enumBasvuruDurum.BasvuruIncelemeDurumu && b.basvuruFirma.siraNo == 0;
+    // Makineler Yeni Makine Ekipman Listesi'nden gelir; başvuruya esas teklif oradaki "Esas" seçimidir.
+    var makineler = b.Makineler
+        .Where(m => string.Equals(m.durum, "YENİ DESTEK İSTENİYOR", StringComparison.Ordinal))
+        .OrderBy(m => m.siraNo).ThenBy(m => m.id)
+        .Select(m =>
+        {
+            BasvuruMakineTeklif? esas = m.teklifler.FirstOrDefault(t => t.basvuruyaEsas);
+            return new
+            {
+                m.id, m.siraNo, m.ad, m.birim, m.miktar,
+                esasTeklifNo = esas?.siraNo,
+                esasTedarikci = esas?.tedarikci,
+                esasTl = esas?.birimFiyat is decimal fiyat ? fiyat * m.miktar * (esas.kur ?? 1) : (decimal?)null,
+                m.uzmanParaBirimi, m.uzmanKur, m.uzmanMinimumFiyat, m.uzmanMaksimumFiyat, m.uzmanOnerilenFiyatTl, m.uzmanKontrolSonucu, m.uzmanAciklama
+            };
+        });
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruPazarArastirmasi)" data-pazar-arastirmasi data-editable="@duzenlenebilir.ToString().ToLowerInvariant()">
+    <div class="section-toolbar"><h2 class="mb-0">Pazar Araştırması (Uzman Fiyatları)</h2></div>
+    <div class="alert alert-info">Yeni Makine Ekipman Listesi'ndeki makineler otomatik listelenir. Uzman para birimi, kur, minimum / maksimum fiyat, önerilen uygun fiyat, kontrol sonucu ve açıklamayı girer; TL karşılıkları, %5 marj sınırı ve başvuruya esas teklif bilgileri otomatik hesaplanır. Başvuruya esas TL, esas teklifin birim fiyatı × miktar × kur olduğundan uzman fiyatları da makinenin toplam miktarı için girilir.</div>
+    @if (!duzenlenebilir)
+    {
+        <div class="alert alert-secondary">Pazar araştırması yalnızca başvuru incelemeye gönderildikten sonra, inceleme sürerken doldurulabilir. Bu görünüm salt okunurdur.</div>
+    }
+    <script type="application/json" id="pazarArastirmasiJson">@Html.Raw(JsonSerializer.Serialize(makineler))</script>
+    <script type="application/json" id="pazarKontrolSonucJson">@Html.Raw(JsonSerializer.Serialize(MakineUzmanSecenekleri.KontrolSonuclari))</script>
+    <div id="pazarArastirmasiAlani"></div>
+</section>

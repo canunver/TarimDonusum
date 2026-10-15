@@ -1,0 +1,70 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using System.Globalization
+@using TarimDonusum.Models
+@{
+    GeriOdemeKarlilikSonucu sonuc = GeriOdemeKarlilikHesaplayici.Hesapla(Model.Basvuru);
+    CultureInfo tr = CultureInfo.GetCultureInfo("tr-TR");
+    string P(decimal x) => x.ToString("N2", tr);
+    string Yuzde(decimal x) => "%" + (x * 100).ToString("N0", tr);
+    int n = NakitAkisTablosu.YilSayisi;
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruKarlilik)">
+    <div class="section-toolbar"><h2 class="mb-0">Karlılık – Duyarlılık Analizi</h2></div>
+    @if (sonuc.Uyarilar.Count > 0)
+    {
+        <div class="alert alert-warning"><ul class="mb-0">@foreach (string uyari in sonuc.Uyarilar) { <li>@uyari</li> }</ul></div>
+    }
+
+    <div class="summary-card-grid mb-3">
+        <div class="summary-card"><span>Proje durumu</span><strong>@if (sonuc.ProjePozitif) { <span class="badge badge-success">POZİTİF</span> } else { <span class="badge badge-danger">NEGATİF</span> }</strong></div>
+        <div class="summary-card"><span>Başabaş noktası</span><strong>@(sonuc.BasabasNoktasi is decimal bn ? "%" + (bn * 100).ToString("N2", tr) : "-")</strong></div>
+        <div class="summary-card"><span>Ortalama BSKO</span><strong>@(sonuc.OrtalamaBsko is decimal ob ? ob.ToString("N2", tr) : "-")</strong></div>
+    </div>
+    <p class="small text-muted">Proje durumu; ortalama EBITDA/ciro oranı sıfırdan büyük, ortalama BSKO 1'den büyük, başabaş noktası %100'ün altında ve Senaryo 1, 3 ve 5 dayanıklı ise pozitiftir.</p>
+
+    <div class="row">
+        <div class="col-lg-5">
+            <h3 class="h5">Senaryolar</h3>
+            <table class="table table-bordered table-sm" data-siralama="yok">
+                <thead><tr><th>Senaryo</th><th class="text-right">Oran</th><th>Durum</th></tr></thead>
+                <tbody>
+                    @foreach (GeriOdemeSenaryosu s in sonuc.Senaryolar)
+                    {
+                        <tr><td>@s.No - @s.Ad</td><td class="text-right">@Yuzde(s.Oran)</td><td>@if (s.Dayanikli) { <span class="badge badge-success">Dayanıklı</span> } else { <span class="badge badge-danger">Dayanıksız</span> }</td></tr>
+                    }
+                </tbody>
+            </table>
+            <p class="small text-muted">Kümülatif net nakit akışı yatırım dönemi dahil hiçbir yılda eksiye düşmüyorsa senaryo dayanıklıdır.</p>
+        </div>
+        <div class="col-lg-7">
+            <h3 class="h5">EBITDA (FAVÖK) – BSKO Göstergeleri</h3>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm" data-siralama="yok">
+                    <thead><tr><th></th>@for (int i = 0; i < n; i++) { <th class="text-right">@(i + 1). Yıl</th> }</tr></thead>
+                    <tbody>
+                        <tr><th>EBITDA</th>@for (int i = 0; i < n; i++) { <td class="text-right">@P(sonuc.Ebitda[i])</td> }</tr>
+                        <tr><th>EBITDA / Ciro</th>@for (int i = 0; i < n; i++) { <td class="text-right">@P(sonuc.EbitdaCiroOrani[i])</td> }</tr>
+                        <tr><th>BSKO</th>@for (int i = 0; i < n; i++) { <td class="text-right">@P(sonuc.Bsko[i])</td> }</tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mt-3" role="tablist">
+        @foreach (GeriOdemeSenaryosu s in sonuc.Senaryolar)
+        {
+            <li class="nav-item"><a class="nav-link @(s.No == 1 ? "active" : "")" data-toggle="tab" href="#karlilikSenaryo@(s.No)" role="tab">Senaryo @s.No</a></li>
+        }
+    </ul>
+    <div class="tab-content border border-top-0 p-3 mb-3">
+        @foreach (GeriOdemeSenaryosu s in sonuc.Senaryolar)
+        {
+            <div class="tab-pane fade @(s.No == 1 ? "show active" : "")" id="karlilikSenaryo@(s.No)" role="tabpanel">
+                <h3 class="h6">Senaryo @s.No – @s.Ad (@Yuzde(s.Oran)) – Nakit Akış Tablosu
+                    @if (s.Dayanikli) { <span class="badge badge-success ml-1">Dayanıklı</span> } else { <span class="badge badge-danger ml-1">Dayanıksız</span> }</h3>
+                <partial name="~/Views/Basvuru/Basvuru/_NakitAkisTablosu.cshtml" model="new NakitAkisGorunum(s.Tablo, sonuc.Yillar, true)" />
+            </div>
+        }
+    </div>
+</section>

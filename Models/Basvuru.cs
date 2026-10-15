@@ -999,24 +999,74 @@ namespace TarimDonusum.Models
         public string aciklama { get; set; } = "";
     }
 
+    /// <summary>Yeni Makine Ekipman Listesi: tek bir teknik özelliğin kaydı.</summary>
+    public class BasvuruMakineOzellikKayit
+    {
+        public int basvuruId { get; set; }
+        public BasvuruMakineOzellik ozellik { get; set; } = new();
+    }
+
+    /// <summary>Yeni Makine Ekipman Listesi: tek bir teklifin kaydı.</summary>
+    public class BasvuruMakineTeklifKayit
+    {
+        public int basvuruId { get; set; }
+        public BasvuruMakineTeklif teklif { get; set; } = new();
+    }
+
+    /// <summary>Yeni Makine Ekipman Listesi: teknik özellik veya teklif silme.</summary>
+    public class BasvuruMakineAltKayitSil
+    {
+        public int basvuruId { get; set; }
+        public int makineId { get; set; }
+        public int id { get; set; }
+    }
+
+    /// <summary>İşlemden sonra makinenin güncel teknik özellik ve teklif listeleri.</summary>
+    public class BasvuruMakineAltKayitlari
+    {
+        public int makineId { get; set; }
+        public List<BasvuruMakineOzellik> teknikOzellikler { get; set; } = new();
+        public List<BasvuruMakineTeklif> teklifler { get; set; } = new();
+    }
+
     public class BasvuruMakineKayitModel
     {
         public int basvuruId { get; set; }
         public List<BasvuruMakine> makineler { get; set; } = new();
     }
 
+    /// <summary>Pazar Araştırması (Uzman Fiyatları) sayfasında bir makine satırı için uzmanın girdiği alanlar.</summary>
     public class BasvuruMakineUzmanKayitModel
     {
-        public int basvuruId { get; set; }
         public int makineId { get; set; }
         public string? uzmanParaBirimi { get; set; }
         public decimal? uzmanKur { get; set; }
         public decimal? uzmanMinimumFiyat { get; set; }
         public decimal? uzmanMaksimumFiyat { get; set; }
-        public int? uzmanSecilenTeklifId { get; set; }
         public decimal? uzmanOnerilenFiyatTl { get; set; }
         public string? uzmanKontrolSonucu { get; set; }
         public string? uzmanAciklama { get; set; }
+    }
+
+    /// <summary>Pazar Araştırması sayfasındaki tüm makine satırlarının tek seferde kaydı.</summary>
+    public class BasvuruPazarArastirmasiKayit
+    {
+        public int basvuruId { get; set; }
+        public List<BasvuruMakineUzmanKayitModel> makineler { get; set; } = new();
+    }
+
+    /// <summary>Uzman Dokümanları sayfasında işlemden sonra makinenin güncel doküman listesi.</summary>
+    public class BasvuruMakineUzmanDokumanlari
+    {
+        public int makineId { get; set; }
+        public int dokumanId { get; set; }
+        public List<BasvuruMakineUzmanDokuman> dokumanlar { get; set; } = new();
+    }
+
+    public static class MakineUzmanSecenekleri
+    {
+        public static readonly IReadOnlyList<string> KontrolSonuclari = ["Kabul edilebilir", "Minimum fiyat esas alınır", "Eksik"];
+        public static readonly IReadOnlyList<string> DokumanTurleri = ["Yazışma / fiyat araştırması", "Teklif", "Ekran görüntüsü", "Katalog", "Kurum içi kayıt", "Diğer"];
     }
 
     public class BasvuruMakineUzmanDokuman

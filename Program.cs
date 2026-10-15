@@ -68,6 +68,7 @@ await TaahhutBeyanTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.L
 await ZorunluBelgeTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
 await IzlemeGostergesiTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
 await TamBasvuruKontrolTanimYukleyici.IlkDegerleVeYukleAsync(app.Configuration, app.Logger);
+await DonemTahminYukleyici.YukleAsync(app.Configuration, app.Logger);
 await UygunHarcamaTanimYukleyici.YukleAsync(app.Configuration, app.Logger);
 
 app.UseExceptionHandler("/Home/Error");

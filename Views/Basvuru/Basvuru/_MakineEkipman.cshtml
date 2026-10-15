@@ -3,52 +3,49 @@
 @using System.Text.Json
 @{
     bool uzman = Model.DenetciGorunumu;
+    // Teknik özellik ve teklifler başvuru sahibi tarafından satır satır eklenir/düzenlenir; makine bilgileri Teknik Proje (Makine Ekipman) sayfasından gelir.
+    bool duzenlenebilir = !uzman && !Model.SaltOkunur;
     var yeniMakineler = Model.Basvuru.Makineler.Where(m => string.Equals(m.durum, "YENİ DESTEK İSTENİYOR", StringComparison.Ordinal)).ToList();
     var basvuranVerisi = yeniMakineler.Select(m => new { m.id,m.basvuruId,m.siraNo,m.ad,m.birim,m.miktar,m.aciklama,m.marka,m.model,m.kapasiteOzellikleri,m.yerlesimPlaniSiraNo,m.kullanimAmaci,m.durum,m.kapasiteSecimGerekcesi,teknikOzellikler=m.teknikOzellikler,teklifler=m.teklifler });
 }
-<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruMakineEkipman)">
-    <div class="section-toolbar"><h2 class="mb-0">Yeni Makine Ekipman Listesi</h2><div class="d-flex align-items-center" style="gap:8px"><a class="btn btn-outline-primary" href="@Url.Action("MakineEkipmanYazdir","Basvuru",new{id=Model.Basvuru.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>@if(!uzman&&!Model.SaltOkunur){<button type="button" class="btn btn-primary" id="makineYeniBtn">Yeni makine ekle</button>}</div></div>
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruMakineEkipman)" data-makine-duzenlenebilir="@duzenlenebilir.ToString().ToLowerInvariant()">
+    <div class="section-toolbar"><h2 class="mb-0">Yeni Makine Ekipman Listesi</h2><div class="d-flex align-items-center" style="gap:8px"><a class="btn btn-outline-primary" href="@Url.Action("MakineEkipmanYazdir","Basvuru",new{id=Model.Basvuru.Id})"><i class="fas fa-file-excel mr-1"></i>Yazdır</a></div></div>
+    <div class="alert alert-info">Teknik Proje (Makine Ekipman) sayfasında durumu <strong>Yeni destek isteniyor</strong> olan makineler listelenir; makine bilgileri o sayfadan değiştirilir. Bu sayfada her makine için teknik özellik ve teklif ekleyebilir, eklenen satırı kalem simgesiyle düzenleyebilirsiniz.</div>
     <script type="application/json" id="makineListeJson">@Html.Raw(JsonSerializer.Serialize(basvuranVerisi))</script>
     <div id="makineListeAlani"></div>
-    @if(uzman)
-    {
-        <h3 class="mt-4">Kurum Uzmanı Değerlendirmesi</h3>
-        <div class="alert alert-warning">Bu bölümdeki veriler başvuru sahibine gösterilmez.</div>
-        @foreach(var m in yeniMakineler)
-        {
-            <div class="card mb-3 uzman-makine" data-makine-id="@m.id">
-                <div class="card-header"><strong>@m.siraNo - @m.ad</strong></div><div class="card-body">
-                <div class="form-grid">
-                    <label>Uzman para birimi<select class="u-para"><option value="">Seçiniz</option>@foreach(var p in ParaBirimleri.Tum){<option value="@p" selected="@(m.uzmanParaBirimi==p)">@p</option>}</select></label>
-                    <label>Kur<input class="u-kur" type="number" min="0" step="0.000001" value="@m.uzmanKur?.ToString(System.Globalization.CultureInfo.InvariantCulture)" oninput="MakineUzmanHesapla(this)" /></label>
-                    <label>Uzman minimum fiyat<input class="u-min" type="number" min="0" step="0.01" value="@m.uzmanMinimumFiyat?.ToString(System.Globalization.CultureInfo.InvariantCulture)" oninput="MakineUzmanHesapla(this)" /></label>
-                    <label>Uzman maksimum fiyat<input class="u-maks" type="number" min="0" step="0.01" value="@m.uzmanMaksimumFiyat?.ToString(System.Globalization.CultureInfo.InvariantCulture)" oninput="MakineUzmanHesapla(this)" /></label>
-                    <label>Minimum (TL)<input class="u-min-tl" readonly /></label><label>Maksimum (TL)<input class="u-maks-tl" readonly /></label><label>Maksimum + %5 marj (TL)<input class="u-marj" readonly /></label>
-                    <label>Uzmanın seçtiği teklif<select class="u-teklif"><option value="">Seçiniz</option>@foreach(var t in m.teklifler){<option value="@t.id" selected="@(m.uzmanSecilenTeklifId==t.id)">@t.tedarikci - @t.birimFiyat?.ToString("N2") @t.paraBirimi</option>}</select></label>
-                    <label>Uzmanın önerdiği fiyat (TL)<input class="u-oneri" type="number" min="0" step="0.01" value="@m.uzmanOnerilenFiyatTl?.ToString(System.Globalization.CultureInfo.InvariantCulture)" /></label>
-                    <label>Kontrol sonucu<select class="u-sonuc"><option value="">Seçiniz</option>@foreach(var s in new[]{"Eksik","Kabul edilebilir","Minimum fiyat esas alınır"}){<option value="@s" selected="@(m.uzmanKontrolSonucu==s)">@s</option>}</select></label>
-                </div><label class="wide-label">Açıklama<textarea class="u-aciklama">@m.uzmanAciklama</textarea></label>
-                <button type="button" class="btn btn-primary" onclick="MakineUzmanKaydet(this)">Uzman değerlendirmesini kaydet</button>
-                <hr />
-                <div class="section-toolbar mt-3"><h4 class="mb-0">Araştırma Bulguları ve Ek Dokümanlar</h4><button type="button" class="btn btn-outline-primary btn-sm" onclick="MakineUzmanDokumanEkle(this)">Doküman ekle</button></div>
-                <div class="u-dokuman-form border rounded p-3 mt-2" style="display:none">
-                    <input type="hidden" class="ud-index" value="-1" /><input type="hidden" class="ud-id" value="0" />
-                    <div class="form-grid"><label>Doküman / Yazışma Adı<input class="ud-ad" maxlength="250" /></label><label>Doküman Türü<input class="ud-tur" maxlength="100" /></label><label>Kaynak / Tedarikçi<input class="ud-kaynak" maxlength="250" /></label><label>Belge Tarihi<input class="ud-tarih" type="date" /></label></div>
-                    <label class="wide-label">Açıklama<textarea class="ud-aciklama" maxlength="2000"></textarea></label>
-                    <div class="text-right"><button type="button" class="btn btn-outline-secondary btn-sm" onclick="this.closest('.u-dokuman-form').style.display='none'">İptal</button> <button type="button" class="btn btn-primary btn-sm" onclick="MakineUzmanDokumanKaydet(this)">Doküman bilgisini kaydet</button></div>
-                </div>
-                <script type="application/json" class="u-dokuman-json">@Html.Raw(JsonSerializer.Serialize(m.uzmanDokumanlari))</script>
-                <div class="u-dokumanlar"></div>
-                </div>
-            </div>
-        }
-    }
 </section>
 @if(!uzman&&!Model.SaltOkunur)
 {
-<div class="modal fade" id="makineModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Makine / Ekipman Detayı</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body" style="max-height:calc(100vh - 180px);overflow-y:auto;">
-    <input type="hidden" id="makineIndex" /><div class="form-grid"><label>Makine sıra no<input id="makineSira" type="number" min="1" /></label><label>Makine/Ekipman adı<input id="makineAd" maxlength="250" /></label><label>Birim<select id="makineBirim">@foreach(var birim in OlcuBirimleri.Tum){<option value="@birim">@birim</option>}</select></label><label>Miktar<input id="makineMiktar" type="number" min="0.001" step="0.001" /></label></div><label class="wide-label">Açıklama<textarea id="makineAciklama" maxlength="2000"></textarea></label>
-    <div class="section-toolbar mt-3"><h3>1- Teknik Özellikler</h3><button type="button" class="btn btn-outline-primary" onclick="MakineOzellikEkle()">Özellik ekle</button></div><div class="table-responsive"><table class="table"><thead><tr><th>Sıra</th><th>Özellik başlığı</th><th>Açıklama / Asgari Gereklilik</th><th>Zorunlu mu?</th></tr></thead><tbody id="makineOzellikler"></tbody></table></div>
-    <div class="section-toolbar mt-3"><h3>2- Teklifler</h3><button type="button" class="btn btn-outline-primary" onclick="MakineTeklifEkle()">Teklif ekle</button></div><div class="table-responsive"><table class="table"><thead><tr><th style="width:90px">Sıra / Esas</th><th>Tedarikçi</th><th>Marka</th><th>Model</th><th>Para</th><th>Kur</th><th>Birim fiyat</th></tr></thead><tbody id="makineTeklifler"></tbody></table></div>
-</div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="MakineKaydet()">Kaydet</button></div></div></div></div>
+<div class="modal fade" id="makineOzellikModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="makineOzellikBaslik">Teknik özellik</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body">
+        <input type="hidden" id="moMakineId" /><input type="hidden" id="moId" />
+        <div class="form-grid"><label>Sıra no<input id="moSira" type="number" min="1" /></label><label>Zorunlu mu?<select id="moZorunlu"><option value="true">Evet</option><option value="false">Hayır</option></select></label></div>
+        <label class="wide-label">Özellik başlığı<input id="moBaslik" maxlength="250" /></label>
+        <label class="wide-label">Açıklama / asgari gereklilik<textarea id="moAciklama" rows="4" maxlength="2000"></textarea></label>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="MakineOzellikKaydet()">Kaydet</button></div>
+</div></div></div>
+<div class="modal fade" id="makineTeklifModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="makineTeklifBaslik">Teklif</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body">
+        <input type="hidden" id="mtMakineId" /><input type="hidden" id="mtId" />
+        <div class="form-grid">
+            <label>Sıra no<input id="mtSira" type="number" min="1" max="99" /></label>
+            <label>Tedarikçi<input id="mtTedarikci" maxlength="250" /></label>
+            <label>Marka<input id="mtMarka" maxlength="150" /></label>
+            <label>Model<input id="mtModel" maxlength="150" /></label>
+            <label>Para birimi<select id="mtPara">@foreach(var p in ParaBirimleri.Tum){<option value="@p">@p</option>}</select></label>
+            <label>Kur<input id="mtKur" type="number" min="0" step="0.000001" /></label>
+            <label>Birim fiyat<input id="mtFiyat" type="text" inputmode="decimal" onblur="MakineTeklifBirimFiyatCikis(this)" /></label>
+            <label>Teklif tarihi<input id="mtTarih" type="date" /></label>
+            <label>Geçerlilik tarihi<input id="mtGecerlilik" type="date" /></label>
+        </div>
+        <input type="hidden" id="mtEsas" />
+        <small class="form-text text-muted">Başvuruya esas teklif, teklif tablosundaki "Esas" sütunundan seçilir. İlk eklenen teklif otomatik olarak esas olur.</small>
+        <label class="wide-label">Açıklama<textarea id="mtAciklama" rows="3" maxlength="2000"></textarea></label>
+        <label class="wide-label">Teklif belgesi<input id="mtDosya" class="form-control-file mt-1" type="file" onchange="MakineTeklifDosyasiYukle(this)" /><small id="mtDosyaAdi" class="text-muted"></small></label>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">İptal</button><button type="button" class="btn btn-primary" onclick="MakineTeklifKaydet()">Kaydet</button></div>
+</div></div></div>
 }

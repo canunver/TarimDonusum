@@ -1,8 +1,8 @@
 namespace TarimDonusum.Models;
 
 /// <summary>
-/// Başvurunun sözleşmeye gönderilmeden önce, ön başvuru gönderim kontrollerine ek olarak geçmesi gereken kontroller.
-/// Hem "Özet - Ön Kontrol" sayfası hem de sözleşmeye gönderim iş kuralı bu listeyi kullanır.
+/// Başvurunun incelemeye gönderilmeden önce, ön başvuru gönderim kontrollerine ek olarak geçmesi gereken kontroller.
+/// Hem "Özet - Ön Kontrol" sayfası hem de incelemeye gönderim iş kuralı bu listeyi kullanır.
 /// </summary>
 public static class BasvuruOnKontrol
 {

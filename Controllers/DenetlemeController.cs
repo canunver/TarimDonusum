@@ -101,9 +101,9 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MakineUzmanKaydet([FromBody] BasvuruMakineUzmanKayitModel model)
+        public async Task<IActionResult> PazarArastirmasiKaydet([FromBody] BasvuruPazarArastirmasiKayit model)
         {
-            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();if(BasvuruKullanicisiMi(kullanici))return Forbid();return Json(await _basvuruIsKurallari.BasvuruMakineUzmanKaydetAsync(model,kullanici));
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();if(BasvuruKullanicisiMi(kullanici))return Forbid();return Json(await _basvuruIsKurallari.PazarArastirmasiKaydetAsync(model,kullanici));
         }
 
         [OturumKontrol]
@@ -119,7 +119,36 @@ namespace TarimDonusum.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MakineUzmanDokumaniKaydet([FromBody] BasvuruMakineUzmanDokuman model)
         {
-            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();if(BasvuruKullanicisiMi(kullanici))return Forbid();return Json(await _basvuruIsKurallari.BasvuruMakineUzmanDokumaniKaydetAsync(model,kullanici));
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();if(BasvuruKullanicisiMi(kullanici))return Forbid();return Json(await _basvuruIsKurallari.MakineUzmanDokumaniKaydetAsync(model,kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MakineUzmanDokumaniSil([FromBody] BasvuruMakineAltKayitSil model)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();if(BasvuruKullanicisiMi(kullanici))return Forbid();return Json(await _basvuruIsKurallari.MakineUzmanDokumaniSilAsync(model,kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MakineUzmanDokumanDosyasiYukle(int basvuruId, int dokumanId, IFormFile? dosya)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();if(BasvuruKullanicisiMi(kullanici))return Forbid();
+            byte[] icerik=[];
+            if(dosya!=null&&dosya.Length>0){await using MemoryStream stream=new();await dosya.CopyToAsync(stream);icerik=stream.ToArray();}
+            return Json(await _basvuruIsKurallari.MakineUzmanDokumanDosyasiKaydetAsync(basvuruId,dokumanId,dosya?.FileName??"",icerik,kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpGet]
+        public async Task<IActionResult> MakineUzmanDokumanDosyasiIndir(int id)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return RedirectToAction("Index","Home");if(BasvuruKullanicisiMi(kullanici))return Forbid();
+            Sonuc<Dosya> sonuc=await _basvuruIsKurallari.MakineUzmanDokumanDosyasiIndirAsync(id,kullanici);
+            if(!sonuc.basarili||sonuc.nesne==null)return NotFound(sonuc.hataStr);
+            return File(sonuc.nesne.Icerik,"application/octet-stream",string.IsNullOrWhiteSpace(sonuc.nesne.DosyaAdi)?$"dokuman-{id}":sonuc.nesne.DosyaAdi);
         }
 
         [OturumKontrol]
@@ -170,10 +199,10 @@ namespace TarimDonusum.Controllers
             if (string.IsNullOrWhiteSpace(konu)) return;
             if (bilgi.KayitTuru == enumBasvuruKayitTuru.Basvuru)
             {
-                // Başvuru kabulünde yeni kayıt açılmaz; başvuru sözleşme aşamasına geçer.
+                // Başvuru kabulünde yeni kayıt açılmaz; başvuru "Kabul Edildi" durumuna geçer.
                 if (denetim.DenetimSonucu.Value == enumOnBasvuruDenetimSonucu.KabulEdildi)
                     (konu, govde) = ($"Başvurunuz Kabul Edildi - {basvuru}",
-                        $"<p>Sayın {WebUtility.HtmlEncode(bilgi.FirmaUnvani)},</p><p><strong>{WebUtility.HtmlEncode(basvuru)}</strong> numaralı başvurunuzun sözleşme öncesi incelemesi tamamlanmış ve başvurunuz <strong>kabul edilmiştir</strong>.</p><p>Sözleşme süreciyle ilgili olarak tarafınıza bilgi verilecektir.</p><p>Bilgilerinize sunarız.</p>");
+                        $"<p>Sayın {WebUtility.HtmlEncode(bilgi.FirmaUnvani)},</p><p><strong>{WebUtility.HtmlEncode(basvuru)}</strong> numaralı başvurunuzun uzman incelemesi tamamlanmış ve başvurunuz <strong>kabul edilmiştir</strong>.</p><p>Sonraki adımlarla ilgili olarak tarafınıza bilgi verilecektir.</p><p>Bilgilerinize sunarız.</p>");
                 else
                     (konu, govde) = (BasvuruDurumAkisi.MetniUyarla(konu, bilgi.KayitTuru), BasvuruDurumAkisi.MetniUyarla(govde, bilgi.KayitTuru));
             }

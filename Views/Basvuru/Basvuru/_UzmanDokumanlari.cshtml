@@ -1,0 +1,39 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using TarimDonusum.Models
+@using System.Text.Json
+@{
+    var b = Model.Basvuru;
+    bool duzenlenebilir = Model.DenetciGorunumu && b.durum == enumBasvuruDurum.BasvuruIncelemeDurumu && b.basvuruFirma.siraNo == 0;
+    var makineler = b.Makineler
+        .Where(m => string.Equals(m.durum, "YENİ DESTEK İSTENİYOR", StringComparison.Ordinal))
+        .OrderBy(m => m.siraNo).ThenBy(m => m.id)
+        .Select(m => new { m.id, m.siraNo, m.ad, m.birim, m.miktar, dokumanlar = m.uzmanDokumanlari });
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruUzmanDokumanlari)" data-uzman-dokuman data-editable="@duzenlenebilir.ToString().ToLowerInvariant()">
+    <div class="section-toolbar"><h2 class="mb-0">Uzman Dokümanları</h2></div>
+    <div class="alert alert-info">Yeni Makine Ekipman Listesi'ndeki her makine için pazar araştırmasında kullanılan yazışma, teklif, katalog vb. dokümanlar eklenir. Önce doküman bilgileri (ad, tür, kaynak / tedarikçi) kaydedilir, ardından dosya yüklenebilir. Bir makineye istenen sayıda doküman eklenebilir.</div>
+    @if (!duzenlenebilir)
+    {
+        <div class="alert alert-secondary">Dokümanlar yalnızca başvuru incelemeye gönderildikten sonra, inceleme sürerken eklenebilir. Bu görünüm salt okunurdur.</div>
+    }
+    <script type="application/json" id="uzmanDokumanJson">@Html.Raw(JsonSerializer.Serialize(makineler))</script>
+    <div id="uzmanDokumanAlani"></div>
+</section>
+@if (duzenlenebilir)
+{
+<div class="modal fade" id="uzmanDokumanModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="udBaslik">Doküman</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body">
+        <input type="hidden" id="udMakineId" /><input type="hidden" id="udId" />
+        <div class="form-grid">
+            <label>Doküman / yazışma adı<input id="udAd" maxlength="250" /></label>
+            <label>Doküman türü<select id="udTur"><option value="">Seçiniz</option>@foreach (string t in MakineUzmanSecenekleri.DokumanTurleri) { <option value="@t">@t</option> }</select></label>
+            <label>Kaynak / tedarikçi<input id="udKaynak" maxlength="250" /></label>
+            <label>Belge tarihi<input id="udTarih" type="date" min="1900-01-01" max="2100-12-31" /></label>
+        </div>
+        <label class="wide-label">Açıklama<textarea id="udAciklama" rows="3" maxlength="2000"></textarea></label>
+        <label class="wide-label">Dosya<input id="udDosya" class="form-control-file mt-1" type="file" onchange="UzmanDokumanDosyasiYukle(this, Number($('#udId').val()))" /><small id="udDosyaBilgi" class="form-text text-muted"></small></label>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button><button type="button" class="btn btn-primary" onclick="UzmanDokumanKaydet()">Bilgileri kaydet</button></div>
+</div></div></div>
+}

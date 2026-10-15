@@ -12,7 +12,7 @@
 }
 <section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruBelgeOnKontrol)" data-tamlik-bolum="belge" data-editable="@duzenlenebilir.ToString().ToLowerInvariant()">
     <div class="section-toolbar"><h2 class="mb-0">Belge / Form Envanteri ve Ön Kontrol</h2></div>
-    <div class="alert alert-info">Bu bölüm Kurum uzmanı tarafından doldurulur. Her satırda <strong>Evet</strong> veya <strong>Hayır</strong> seçilir; Hayır seçilen satırlarda açıklama zorunludur. Koşullu bir satır başvuruya uygulanmıyorsa Evet seçilir ve açıklamaya “Uygulanamaz” gerekçesi yazılır.</div>
+    <div class="alert alert-info">Bu bölüm Kurum uzmanı tarafından doldurulur. Her satırda <strong>Evet</strong> veya <strong>Hayır</strong> seçilir. Zorunlu satırda Hayır seçilirse sonuç doğrudan EKSİK olur (açıklama isteğe bağlıdır); koşullu satırda Hayır seçilirse açıklama zorunludur. Koşullu bir satır başvuruya uygulanmıyorsa Evet seçilir ve açıklamaya “Uygulanamaz” gerekçesi yazılır.</div>
     @if (!duzenlenebilir)
     {
         <div class="alert alert-secondary">Kontroller yalnızca başvuru incelemeye gönderildikten sonra, inceleme sürerken doldurulabilir. Bu görünüm salt okunurdur.</div>

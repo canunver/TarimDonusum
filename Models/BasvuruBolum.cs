@@ -48,7 +48,11 @@ namespace TarimDonusum.Models
         Giderler = 43,
         BasvuruTeknikProjeGirdiler = 44,
         BasvuruBelgeOnKontrol = 45,
-        BasvuruUygunlukKontrolu = 46
+        BasvuruUygunlukKontrolu = 46,
+        BasvuruGeriOdeme = 47,
+        BasvuruKarlilik = 48,
+        BasvuruPazarArastirmasi = 49,
+        BasvuruUzmanDokumanlari = 50
     }
 
     public sealed record BasvuruBolumTanim(
@@ -99,6 +103,12 @@ namespace TarimDonusum.Models
             new(enumBasvuruBolum.CevreselSosyal, 100, "Basvuru.Step.CevreselSosyal", "Bolumler/_CevreselSosyal"),
             new(enumBasvuruBolum.TaahhutBeyan, 110, "Basvuru.Step.TaahhutBeyan", "Bolumler/_TaahhutBeyan"),
             new(enumBasvuruBolum.Ozet, 120, "Basvuru.Step.Ozet", "Bolumler/_Ozet"),
+            // Uzmanın geri ödeme ve karlılık (duyarlılık) analizi; kur/enflasyon Tanımlar > Kur ve Enflasyon Tahminleri'nden gelir.
+            new(enumBasvuruBolum.BasvuruGeriOdeme, 121, "Geri Ödeme", "Basvuru/_GeriOdeme", true),
+            new(enumBasvuruBolum.BasvuruKarlilik, 121, "Karlılık", "Basvuru/_Karlilik", true),
+            // Yeni Makine Ekipman Listesi'ndeki makineler için uzman pazar araştırması ve araştırma dokümanları.
+            new(enumBasvuruBolum.BasvuruPazarArastirmasi, 121, "Pazar Araştırması (Uzman Fiyatları)", "Basvuru/_PazarArastirmasi", true),
+            new(enumBasvuruBolum.BasvuruUzmanDokumanlari, 121, "Uzman Dokümanları", "Basvuru/_UzmanDokumanlari", true),
             // Tam başvuru uzman kontrolleri (Tanımlar > Belge / Form Envanteri, Tamlık ve Uygunluk Soruları)
             new(enumBasvuruBolum.BasvuruBelgeOnKontrol, 121, "Belge / Form Ön Kontrol", "Basvuru/_TamBasvuruBelgeKontrol", true),
             new(enumBasvuruBolum.BasvuruUygunlukKontrolu, 122, "Tamlık ve Uygunluk Soruları", "Basvuru/_TamBasvuruUygunlukKontrol", true),
@@ -116,6 +126,8 @@ namespace TarimDonusum.Models
                     .Where(x => x.Bolum == enumBasvuruBolum.BasvuruSahibi || x.Bolum == enumBasvuruBolum.BasvuruMaliVeriler || x.Bolum == enumBasvuruBolum.BasvuruBilancoGelir || x.Bolum == enumBasvuruBolum.BasvuruOrtaklikYetki || x.Bolum == enumBasvuruBolum.BasvuruYatirimBilgileri || x.Bolum == enumBasvuruBolum.BasvuruDegerZinciri || x.Bolum == enumBasvuruBolum.ButceGiderler || x.Bolum == enumBasvuruBolum.Giderler || x.Bolum == enumBasvuruBolum.BasvuruFinansman || x.Bolum == enumBasvuruBolum.BasvuruYatirimOnBilgileri || x.Bolum == enumBasvuruBolum.BasvuruTeknikProjeGirdiler || x.Bolum == enumBasvuruBolum.BasvuruYatirimdaKullanilacakEkipmanlar || x.Bolum == enumBasvuruBolum.BasvuruMakineEkipman || x.Bolum == enumBasvuruBolum.BasvuruUrunSurecMakine || x.Bolum == enumBasvuruBolum.BasvuruBinaListesi || x.Bolum == enumBasvuruBolum.BasvuruMetraj || x.Bolum == enumBasvuruBolum.BasvuruIstihdam || x.Bolum == enumBasvuruBolum.BasvuruTedarikciEntegrasyonu || x.Bolum == enumBasvuruBolum.BasvuruTaahhutBeyan || x.Bolum == enumBasvuruBolum.BasvuruCevreselSosyal || x.Bolum == enumBasvuruBolum.BasvuruZorunluBelgeler || x.Bolum == enumBasvuruBolum.BasvuruOzeti || x.Bolum == enumBasvuruBolum.BasvuruIzlemeGostergeleri
                         // Ön başvurunun özet/gönderim, itiraz ve karar sayfaları başvuruda da aynı akışla kullanılır.
                         || x.Bolum == enumBasvuruBolum.Ozet || x.Bolum == enumBasvuruBolum.OnBasvuruItiraz || x.Bolum == enumBasvuruBolum.Karar
+                        || x.Bolum == enumBasvuruBolum.BasvuruGeriOdeme || x.Bolum == enumBasvuruBolum.BasvuruKarlilik
+                        || x.Bolum == enumBasvuruBolum.BasvuruPazarArastirmasi || x.Bolum == enumBasvuruBolum.BasvuruUzmanDokumanlari
                         || x.Bolum == enumBasvuruBolum.BasvuruBelgeOnKontrol || x.Bolum == enumBasvuruBolum.BasvuruUygunlukKontrolu)
                     .Where(x => denetciGorunumu || !x.DenetciBolumu)
                     .ToList();
@@ -142,6 +154,8 @@ namespace TarimDonusum.Models
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruOzeti)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruIzlemeGostergeleri)
                 .Where(x => x.Bolum != enumBasvuruBolum.BasvuruBelgeOnKontrol && x.Bolum != enumBasvuruBolum.BasvuruUygunlukKontrolu)
+                .Where(x => x.Bolum != enumBasvuruBolum.BasvuruGeriOdeme && x.Bolum != enumBasvuruBolum.BasvuruKarlilik)
+                .Where(x => x.Bolum != enumBasvuruBolum.BasvuruPazarArastirmasi && x.Bolum != enumBasvuruBolum.BasvuruUzmanDokumanlari)
                 .Where(x => x.Bolum != enumBasvuruBolum.Ortaklik)
                 .Where(x => x.Bolum != enumBasvuruBolum.Yatirim)
                 .Where(x => denetciGorunumu || !x.DenetciBolumu)

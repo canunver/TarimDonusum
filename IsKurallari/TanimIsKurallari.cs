@@ -578,7 +578,7 @@ namespace TarimDonusum.IsKurallari
                 Donem? donem = await new TABDonem(connection, _localizer).OkuAsync(donemId);
                 if (donem == null) { sonuc.HataEkle("Dönem bulunamadı."); return sonuc; }
                 List<DonemTahminSatiri> kayitlar = await new TABDonemTahmini(connection, _localizer).ListeleAsync(donemId);
-                sonuc.nesne = new() { donemId = donem.id, donemYili = donem.yil, tahminler = Enumerable.Range(donem.yil + 1, 7).Select(y => kayitlar.FirstOrDefault(x => x.yil == y) ?? new DonemTahminSatiri { yil = y }).ToList() };
+                sonuc.nesne = new() { donemId = donem.id, donemYili = donem.yil, tahminler = Enumerable.Range(donem.yil, DonemTahminSaglayici.YilSayisi).Select(y => kayitlar.FirstOrDefault(x => x.yil == y) ?? new DonemTahminSatiri { yil = y }).ToList() };
             }
             catch (Exception ex) { _logger.LogError(ex, "Dönem tahminleri okunamadı. DonemId: {DonemId}", donemId); sonuc.HataEkle("Dönem tahminleri okunamadı."); }
             return sonuc;
@@ -592,13 +592,14 @@ namespace TarimDonusum.IsKurallari
             {
                 await using SqlConnection connection = new(_connectionString); await connection.OpenAsync(); Donem? donem = await new TABDonem(connection, _localizer).OkuAsync(model.donemId);
                 if (donem == null) { sonuc.HataEkle("Dönem bulunamadı."); return sonuc; }
-                int[] beklenen = Enumerable.Range(donem.yil + 1, 7).ToArray();
-                if (model.tahminler.Count != 7 || !model.tahminler.Select(x => x.yil).Order().SequenceEqual(beklenen)) sonuc.HataEkle($"{donem.yil + 1}-{donem.yil + 7} yıllarının tamamı ve yalnızca birer kez gönderilmelidir.");
+                int[] beklenen = Enumerable.Range(donem.yil, DonemTahminSaglayici.YilSayisi).ToArray();
+                if (model.tahminler.Count != beklenen.Length || !model.tahminler.Select(x => x.yil).Order().SequenceEqual(beklenen)) sonuc.HataEkle($"{beklenen[0]}-{beklenen[^1]} yıllarının tamamı ve yalnızca birer kez gönderilmelidir.");
                 if (model.tahminler.Any(x => !x.kurTahminiTL.HasValue || !x.enflasyonTahminiYuzde.HasValue)) sonuc.HataEkle("Kur ve enflasyon tahminlerinin tamamı girilmelidir.");
                 if (model.tahminler.Any(x => x.kurTahminiTL <= 0)) sonuc.HataEkle("Kur tahmini sıfırdan büyük bir TL değeri olmalıdır.");
                 if (model.tahminler.Any(x => x.enflasyonTahminiYuzde < 0 || x.enflasyonTahminiYuzde > 1000)) sonuc.HataEkle("Enflasyon tahmini yüzde 0 ile 1000 arasında olmalıdır.");
                 if (!sonuc.basarili) return sonuc;
                 await using SqlTransaction transaction = (SqlTransaction)await connection.BeginTransactionAsync(); await new TABDonemTahmini(connection, _localizer, transaction).KaydetAsync(model.donemId, model.tahminler); await transaction.CommitAsync();
+                DonemTahminSaglayici.Guncelle(model.donemId, model.tahminler);
                 sonuc.nesne = model.donemId; sonuc.mesaj = "Kur ve enflasyon tahminleri kaydedildi.";
             }
             catch (Exception ex) { _logger.LogError(ex, "Dönem tahminleri kaydedilemedi. DonemId: {DonemId}", model.donemId); sonuc.HataEkle("Dönem tahminleri kaydedilemedi."); }

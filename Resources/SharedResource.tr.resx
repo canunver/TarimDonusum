@@ -2552,7 +2552,7 @@ Alt projem için belirlenecek risk kategorisine bağlı olarak hazırlanması ge
     <value>İncelemede</value>
   </data>
   <data name="enumBasvuruDurum_5" xml:space="preserve">
-    <value>Sözleşme İncelemesinde</value>
+    <value>Başvuru İncelemede</value>
   </data>
   <data name="enumBasvuruDurum_7" xml:space="preserve">
     <value>Başvuru Seçilmedi</value>

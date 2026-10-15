@@ -53,7 +53,6 @@
             JsonElement root = doc.RootElement;
             yatirimButcesi = JsonDecimal(root, "totals", "budget", "investment");
             finansmanToplami = JsonDecimal(root, "totals", "budget", "finance");
-            yillikIsletmeGideri = JsonDecimal(root, "totals", "operatingExpense", "total");
 
             if ((yatirimButcesi == 0 || finansmanToplami == 0) && root.TryGetProperty("investmentBudgetData", out JsonElement budgetData))
             {
@@ -63,7 +62,8 @@
                 finansmanToplami = BudgetSatirToplami(budgetData, "D") + BudgetSatirToplami(budgetData, "E") + BudgetSatirToplami(budgetData, "F") + BudgetSatirToplami(budgetData, "G");
             }
 
-            if (yillikIsletmeGideri == 0 && root.TryGetProperty("operatingExpenseRows", out JsonElement expenses) && expenses.ValueKind == JsonValueKind.Array)
+            // İşletme gideri her zaman satırlardan hesaplanır (Teknik Proje girdileri dahil); kayıtlı toplam kullanılmaz.
+            if (root.TryGetProperty("operatingExpenseRows", out JsonElement expenses) && expenses.ValueKind == JsonValueKind.Array)
             {
                 foreach (JsonElement row in expenses.EnumerateArray())
                 {
@@ -225,7 +225,7 @@
                             <button type="button"
                                     id="incelemeyeGonderBtn"
                                     class="btn btn-success btn-lg py-3"
-                                    data-url="@Url.Action("SozlesmeyeGonder", "Basvuru")"
+                                    data-url="@Url.Action("BasvuruIncelemeyeGonder", "Basvuru")"
                                     data-confirm="Başvuruyu incelemeye göndermek istediğinize emin misiniz? Gönderimden sonra bilgiler değiştirilemez."
                                     data-basvuru-id="@b.Id"
                                     data-failed-message="Başvuru incelemeye gönderilemedi. Lütfen tekrar deneyin.">

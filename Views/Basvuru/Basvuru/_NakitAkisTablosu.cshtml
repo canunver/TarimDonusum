@@ -1,0 +1,44 @@
+@model TarimDonusum.Models.NakitAkisGorunum
+@using System.Globalization
+@{
+    var t = Model.Tablo;
+    CultureInfo tr = CultureInfo.GetCultureInfo("tr-TR");
+    string P(decimal x) => x.ToString("N2", tr);
+    string Sinif(decimal x) => x < 0 ? "text-danger" : "";
+    int n = TarimDonusum.Models.NakitAkisTablosu.YilSayisi;
+}
+<div class="table-responsive">
+    <table class="table table-bordered table-sm nakit-akis-tablosu" data-siralama="yok" style="min-width:1100px">
+        <thead>
+            <tr>
+                <th style="min-width:220px">Kalem</th>
+                <th class="text-right">Yatırım Dönemi<br /><small>@(Model.Yillar.Length > 0 ? Model.Yillar[0] : "")</small></th>
+                @for (int i = 0; i < n; i++)
+                {
+                    <th class="text-right">@(i + 1). Yıl<br /><small>@(Model.Yillar.Length > i + 1 ? Model.Yillar[i + 1] : "")</small></th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            <tr><th>Gelirler</th><td class="text-right text-muted font-italic" title="Baz değer: ürünlerin 1. yıl satış bedeli toplamı (enflasyon uygulanmadan). Toplamlara dahil değildir.">@P(t.BazGelir)</td>@for (int i = 0; i < n; i++) { <td class="text-right">@P(t.Gelirler[i])</td> }</tr>
+            <tr><th>TARGET Kredisi</th><td class="text-right">@P(t.TargetKredisi)</td>@for (int i = 0; i < n; i++) { <td></td> }</tr>
+            <tr><th>Özkaynaklar</th><td class="text-right">@P(t.Ozkaynaklar)</td>@for (int i = 0; i < n; i++) { <td></td> }</tr>
+            <tr><th>Diğer Kaynaklar</th><td class="text-right">@P(t.DigerKaynaklar)</td>@for (int i = 0; i < n; i++) { <td></td> }</tr>
+            <tr><th>Banka Kredisi</th><td class="text-right">@P(t.BankaKredisi)</td>@for (int i = 0; i < n; i++) { <td></td> }</tr>
+            <tr><th>İşletme Giderleri</th><td class="text-right text-muted font-italic" title="Baz değer: Giderler sayfasındaki toplam işletme gideri (enflasyon uygulanmadan). Toplamlara dahil değildir.">@P(t.BazIsletmeGideri)</td>@for (int i = 0; i < n; i++) { <td class="text-right">@P(t.IsletmeGiderleri[i])</td> }</tr>
+            <tr><th>Yatırım Giderleri</th><td class="text-right">@P(t.YatirimGiderleri)</td>@for (int i = 0; i < n; i++) { <td></td> }</tr>
+            <tr><th>İşletme Sermayesi</th><td class="text-right">@P(t.IsletmeSermayesi)</td>@for (int i = 0; i < n; i++) { <td></td> }</tr>
+            <tr><th>Amortisman Giderleri</th><td></td>@for (int i = 0; i < n; i++) { <td class="text-right">@P(t.Amortisman[i])</td> }</tr>
+            <tr><th>TARGET Kredi Ödemesi (EUR)</th><td class="text-right">@(t.YatirimDonemiTargetOdemesiEur == 0 ? "" : P(t.YatirimDonemiTargetOdemesiEur))</td>@for (int i = 0; i < n; i++) { <td class="text-right">@P(t.TargetKrediOdemesiEur[i])</td> }</tr>
+            <tr><th>TARGET Kredi Ödemesi (TL)</th><td class="text-right">@(t.YatirimDonemiTargetOdemesi == 0 ? "" : P(t.YatirimDonemiTargetOdemesi))</td>@for (int i = 0; i < n; i++) { <td class="text-right">@P(t.TargetKrediOdemesi[i])</td> }</tr>
+            <tr class="table-light"><th>Vergilendirme Öncesi Kar</th><td></td>@for (int i = 0; i < n; i++) { <td class="text-right @Sinif(t.VergiOncesiKar[i])">@P(t.VergiOncesiKar[i])</td> }</tr>
+            <tr><th>Vergi Ödemesi</th><td></td>@for (int i = 0; i < n; i++) { <td class="text-right">@P(t.VergiOdemesi[i])</td> }</tr>
+            <tr class="table-light"><th>Net Nakit Akışı</th><td class="text-right @Sinif(t.YatirimDonemiNetNakit)">@P(t.YatirimDonemiNetNakit)</td>@for (int i = 0; i < n; i++) { <td class="text-right @Sinif(t.NetNakitAkisi[i])">@P(t.NetNakitAkisi[i])</td> }</tr>
+            <tr class="table-light font-weight-bold"><th>Kümülatif Net Nakit Akışı</th><td class="text-right @Sinif(t.YatirimDonemiNetNakit)">@P(t.YatirimDonemiNetNakit)</td>@for (int i = 0; i < n; i++) { <td class="text-right @Sinif(t.KumulatifNetNakit[i])">@P(t.KumulatifNetNakit[i])</td> }</tr>
+        </tbody>
+    </table>
+</div>
+@if (Model.SenaryoTablosu)
+{
+    <small class="text-muted">Senaryolarda vergi yalnızca vergilendirme öncesi kâr pozitif olan yıllarda hesaplanır.</small>
+}

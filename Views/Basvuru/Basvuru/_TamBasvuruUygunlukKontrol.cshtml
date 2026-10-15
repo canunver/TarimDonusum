@@ -13,7 +13,7 @@
     HashSet<int> belgeCevaplananlar = TamBasvuruKontrolCevaplari.CevaplananIdler(b.TamBasvuruBelgeKontrolJson);
     var belgeTanimlari = TamBasvuruBelgeKontrolTanimSaglayici.Tum
         .Where(x => x.aktif || belgeCevaplananlar.Contains(x.id))
-        .Select(x => new { x.id });
+        .Select(x => new { x.id, x.kosullu });
 }
 <section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruUygunlukKontrolu)" data-tamlik-bolum="uygunluk" data-editable="@duzenlenebilir.ToString().ToLowerInvariant()">
     <div class="section-toolbar"><h2 class="mb-0">Detaylı Tamlık ve Uygunluk Soruları</h2></div>

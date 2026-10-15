@@ -5,7 +5,7 @@
 
 @{
     var b = Model.Basvuru;
-    // Başvuru kaydında karar, sözleşmeye gönderilmiş (Başvuru İnceleme) kayıtta verilir.
+    // Başvuru kaydında karar, incelemeye gönderilmiş (Başvuru İnceleme) kayıtta verilir.
     bool basvuruKaydi = b.kayitTuru == enumBasvuruKayitTuru.Basvuru;
     bool tamamlanabilir = b.durum == BasvuruDurumAkisi.Inceleme(b.kayitTuru);
     bool denetimKayitli =

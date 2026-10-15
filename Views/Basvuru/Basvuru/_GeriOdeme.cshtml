@@ -1,0 +1,52 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using System.Globalization
+@using TarimDonusum.Models
+@{
+    GeriOdemeKarlilikSonucu sonuc = GeriOdemeKarlilikHesaplayici.Hesapla(Model.Basvuru);
+    CultureInfo tr = CultureInfo.GetCultureInfo("tr-TR");
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.BasvuruGeriOdeme)">
+    <div class="section-toolbar"><h2 class="mb-0">Geri Ödeme</h2></div>
+    @if (sonuc.Uyarilar.Count > 0)
+    {
+        <div class="alert alert-warning"><ul class="mb-0">@foreach (string uyari in sonuc.Uyarilar) { <li>@uyari</li> }</ul></div>
+    }
+
+    <h3 class="h5">Ekonomik Gösterge Tahminleri</h3>
+    <p class="text-muted small mb-2">Başvurunun dönemine ait değerler Tanımlar &gt; Kur ve Enflasyon Tahminleri sayfasından alınır; burada değiştirilemez.</p>
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered table-sm" data-siralama="yok" style="min-width:900px">
+            <thead>
+                <tr>
+                    <th style="min-width:200px"></th>
+                    @for (int i = 0; i < sonuc.Yillar.Length; i++)
+                    {
+                        <th class="text-right">@sonuc.Yillar[i]<br /><small>@(i == 0 ? "Yatırım Dönemi" : $"{i}. Yıl")</small></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                <tr><th>Enflasyon Tahmini</th>@for (int i = 0; i < sonuc.Yillar.Length; i++) { <td class="text-right">@(sonuc.Enflasyon[i] is decimal e ? "%" + e.ToString("N2", tr) : "-")</td> }</tr>
+                <tr><th>Kur Tahmini (TL)</th>@for (int i = 0; i < sonuc.Yillar.Length; i++) { <td class="text-right">@(sonuc.Kur[i] is decimal k ? k.ToString("N2", tr) : "-")</td> }</tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="h5">TARGET Kredisi Geri Ödeme Planı</h3>
+    @{
+        int odemesizAy = sonuc.GeriOdemesizAy + sonuc.YatirimSuresiAy;
+        int odemesizYil = GeriOdemeKarlilikHesaplayici.OdemesizYil(odemesizAy);
+        string Eur(decimal x) => x.ToString("N2", tr) + " EUR";
+    }
+    <div class="summary-card-grid mb-2">
+        <div class="summary-card"><span>Talep edilen RFF tutarı</span><strong>@Eur(sonuc.TargetEur)</strong></div>
+        <div class="summary-card"><span>Vade</span><strong>@sonuc.VadeAy ay</strong></div>
+        <div class="summary-card"><span>Ödemesiz süre (geri ödemesiz + yatırım süresi)</span><strong>@sonuc.GeriOdemesizAy + @sonuc.YatirimSuresiAy = @odemesizAy ay (@odemesizYil yıl)</strong></div>
+        <div class="summary-card"><span>Aylık taksit (RFF tutarı / vade)</span><strong>@Eur(sonuc.AylikTaksitEur)</strong></div>
+    </div>
+    <p class="text-muted small mb-4">Ödemesiz süre tam yıla yukarı yuvarlanır; @(odemesizYil == 0 ? "ödemeler 1. yılın başında başlar" : $"ilk {odemesizYil} yıl ödeme yapılmaz, ödemeler {odemesizYil + 1}. yılın başında başlar") ve @sonuc.VadeAy ay sürer. Her yılın EUR toplamı o yılın kur tahminiyle TL'ye çevrilir.</p>
+
+    <h3 class="h5">Nakit Akış Tablosu</h3>
+    <p class="text-muted small mb-2">Tutarlar TL'dir. Gelir ve işletme giderleri her yıl bir önceki yılın enflasyon tahminiyle artırılır; TARGET kredi taksitleri ödeme yılının kur tahminiyle TL'ye çevrilir.</p>
+    <partial name="~/Views/Basvuru/Basvuru/_NakitAkisTablosu.cshtml" model="new NakitAkisGorunum(sonuc.Temel, sonuc.Yillar, false)" />
+</section>

@@ -779,6 +779,18 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* Kart değerindeki sonuç rozetleri, kart başlığı için yazılan ".summary-card span" kuralından etkilenmesin. */
+.summary-card strong .badge {
+  display: inline-block;
+  margin-bottom: 0;
+  font-size: 14px;
+  color: #fff;
+}
+
+.summary-card strong .badge-warning {
+  color: #212529;
+}
+
 .summary-check-panel,
 .summary-detail-panel {
   margin-top: 18px;
@@ -2416,3 +2428,20 @@ th.tablo-siralanabilir:hover { background-color: rgba(0, 0, 0, .05); }
 .tablo-siralama-ikon { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: .8em; opacity: .3; }
 th[aria-sort="ascending"] > .tablo-siralama-ikon,
 th[aria-sort="descending"] > .tablo-siralama-ikon { opacity: .9; }
+
+/* Yeni Makine Ekipman Listesi: her makine (başlık satırı + özellik/teklif alanı) ayrı bir blok olarak görünsün.
+   Tüm hücreler aynı ince kenarı kullanır; yalnızca makine bloklarını ayıran kenarlar kalındır. */
+.makine-liste-tablosu, .makine-liste-tablosu .table { border-collapse: collapse; border-color: #d5dde7; }
+.makine-liste-tablosu th, .makine-liste-tablosu td { border-color: #d5dde7; }
+.makine-liste-tablosu thead th { border-bottom-width: 1px; border-bottom-color: #d5dde7; }
+.makine-liste-tablosu > tbody > tr.makine-ust-satir > td { background: #eef3f9; border-top: 3px solid #5b7590; }
+.makine-liste-tablosu > tbody > tr.makine-ust-satir { cursor: pointer; }
+.makine-liste-tablosu > tbody > tr.makine-ust-satir:hover > td { background: #e2eaf4; }
+.makine-liste-tablosu > tbody > tr.makine-ust-satir > td:first-child { border-left: 3px solid #5b7590; }
+.makine-liste-tablosu > tbody > tr.makine-ust-satir:not(.acik) > td { border-bottom: 3px solid #5b7590; }
+.makine-liste-tablosu > tbody > tr.makine-detay-satir > td { background: #f7f9fc; border-left: 3px solid #5b7590; border-bottom: 3px solid #5b7590; padding: 8px 12px 12px; }
+.makine-liste-tablosu > tbody > tr.makine-ara-satir > td { border-top: 0; border-left-color: transparent; border-right-color: transparent; padding: 0; height: 14px; background: #fff; }
+/* Pazar Araştırması (Uzman Fiyatları): otomatik hesaplanan / Yeni Makine Ekipman Listesi'nden gelen hücreler */
+.pazar-tablosu th { font-size: .82rem; vertical-align: middle; }
+.pazar-tablosu td { vertical-align: middle; }
+.pazar-tablosu td.pazar-hesap { background: #f4f6f9; }

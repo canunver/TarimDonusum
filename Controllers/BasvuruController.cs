@@ -908,6 +908,39 @@ namespace TarimDonusum.Controllers
             Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.BasvuruMakinesiKaydetAsync(model,kullanici));
         }
 
+        // Yeni Makine Ekipman Listesi: teknik özellik ve teklifler satır satır eklenir, düzenlenir ve silinir.
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MakineOzellikKaydet([FromBody] BasvuruMakineOzellikKayit model)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.MakineOzellikKaydetAsync(model,kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MakineOzellikSil([FromBody] BasvuruMakineAltKayitSil model)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.MakineAltKaydiSilAsync(model,false,kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MakineTeklifKaydet([FromBody] BasvuruMakineTeklifKayit model)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.MakineTeklifKaydetAsync(model,kullanici));
+        }
+
+        [OturumKontrol]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MakineTeklifSil([FromBody] BasvuruMakineAltKayitSil model)
+        {
+            Kullanici? kullanici=await OturumKullanicisiOkuAsync(_basvuruIsKurallari);if(kullanici==null)return Unauthorized();return Json(await _basvuruIsKurallari.MakineAltKaydiSilAsync(model,true,kullanici));
+        }
+
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -1334,13 +1367,13 @@ namespace TarimDonusum.Controllers
         [OturumKontrol]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SozlesmeyeGonder(int basvuruId)
+        public async Task<IActionResult> BasvuruIncelemeyeGonder(int basvuruId)
         {
             Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuruIsKurallari);
             if (kullanici == null)
                 return Unauthorized(new { basarili = false, mesaj = L["Business.Session.Expired"].ToString() });
 
-            Sonuc sonuc = await _basvuruIsKurallari.SozlesmeyeGonderAsync(basvuruId, kullanici);
+            Sonuc sonuc = await _basvuruIsKurallari.BasvuruIncelemeyeGonderAsync(basvuruId, kullanici);
             return Json(new
             {
                 basarili = sonuc.basarili,

@@ -85,7 +85,7 @@
 <div class="basvuru-page">
     <div class="basvuru-titlebar">
         <div>
-            <h1>@(Model.DenetciGorunumu ? T("Basvuru.Form.AuditTitle") : (b.Id > 0 ? formBasligi : T("Basvuru.Form.NewTitle")))</h1>
+            <h1>@(Model.DenetciGorunumu ? (basvuruKaydi ? "Başvuru Denetleme" : T("Basvuru.Form.AuditTitle")) : (b.Id > 0 ? formBasligi : T("Basvuru.Form.NewTitle")))</h1>
             <p>@basvuruNoMetni</p>
         </div>
     </div>
@@ -521,6 +521,22 @@
             </div>
         </div>
     </div>
+<div class="modal fade" id="onayPenceresiModal" tabindex="-1" role="dialog" aria-labelledby="onayPenceresiBaslik" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="onayPenceresiBaslik">Onay</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Kapat"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body" id="onayPenceresiMetin"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Vazgeç</button>
+                <button type="button" class="btn btn-success" id="onayPenceresiEvet">Onayla</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="kaydedilmemisDegisiklikModal" tabindex="-1" role="dialog" aria-labelledby="kaydedilmemisDegisiklikBaslik" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -570,6 +586,8 @@
     const bolumBasvuruIzlemeGostergeleri = @((int)enumBasvuruBolum.BasvuruIzlemeGostergeleri);
     const bolumBasvuruBelgeOnKontrol = @((int)enumBasvuruBolum.BasvuruBelgeOnKontrol);
     const bolumBasvuruUygunlukKontrolu = @((int)enumBasvuruBolum.BasvuruUygunlukKontrolu);
+    const bolumBasvuruPazarArastirmasi = @((int)enumBasvuruBolum.BasvuruPazarArastirmasi);
+    const bolumBasvuruUzmanDokumanlari = @((int)enumBasvuruBolum.BasvuruUzmanDokumanlari);
     const genelParaBirimleri = @Html.Raw(JsonSerializer.Serialize(ParaBirimleri.Tum));
     const genelOlcuBirimleri = @Html.Raw(JsonSerializer.Serialize(OlcuBirimleri.Tum));
     const bolumIrtibat = @((int)enumBasvuruBolum.Irtibat);
@@ -955,7 +973,8 @@
             BasvuruStepSec(active);
             return;
         }
-        if (dirty && (BolumKayitGerektirir(active) || active === bolumKarar || active === bolumSistemSonuclari || active === bolumUzmanSonuclari)) {
+        if (dirty && (BolumKayitGerektirir(active) || active === bolumKarar || active === bolumSistemSonuclari || active === bolumUzmanSonuclari
+            || active === bolumBasvuruBelgeOnKontrol || active === bolumBasvuruUygunlukKontrolu || active === bolumBasvuruPazarArastirmasi)) {
             bekleyenBolum = bolum;
             BasvuruStepSec(active);
             kaydedilmemisDegisiklikModal?.show();
@@ -1054,6 +1073,8 @@
             return document.querySelector('[data-panel="' + bolumKarar + '"]')?.dataset.editable === 'true';
         if (active === bolumBasvuruBelgeOnKontrol || active === bolumBasvuruUygunlukKontrolu)
             return document.querySelector('[data-tamlik-bolum]')?.dataset.editable === 'true';
+        if (active === bolumBasvuruPazarArastirmasi)
+            return document.querySelector('[data-pazar-arastirmasi]')?.dataset.editable === 'true';
         return false;
     }
 
@@ -1117,6 +1138,8 @@
         if (bolum === bolumBasvuruOzeti) BasvuruOzetiIlklendir();
         if (bolum === bolumBasvuruIzlemeGostergeleri) IzlemeGostergeleriIlklendir();
         if (bolum === bolumBasvuruBelgeOnKontrol || bolum === bolumBasvuruUygunlukKontrolu) TamlikKontrolIlklendir();
+        if (bolum === bolumBasvuruPazarArastirmasi) PazarArastirmasiIlklendir();
+        if (bolum === bolumBasvuruUzmanDokumanlari) UzmanDokumanIlklendir();
         if (bolum === bolumOrtaklik) OrtaklikBolumuIlklendir();
         if (bolum === bolumUygunHarcama) UygunHarcamaBolumuIlklendir();
         if (bolum === bolumYatirimOzeti || bolum === bolumButceGiderler || bolum === bolumGiderler) YatirimOzetiBolumuIlklendir();
@@ -1368,12 +1391,29 @@
         });
     }
 
+    // Tarayıcının confirm() penceresi yerine uygulama içi onay penceresi; onaylanırsa true döner.
+    function OnayPenceresiGoster(mesaj, baslik, onayMetni) {
+        return new Promise(resolve => {
+            const modal = document.getElementById('onayPenceresiModal');
+            if (!modal) { resolve(window.confirm(mesaj)); return; }
+            document.getElementById('onayPenceresiBaslik').textContent = baslik || 'Onay';
+            document.getElementById('onayPenceresiMetin').textContent = mesaj || '';
+            const evet = document.getElementById('onayPenceresiEvet');
+            evet.textContent = onayMetni || 'Onayla';
+            let onaylandi = false;
+            evet.onclick = () => { onaylandi = true; $(modal).modal('hide'); };
+            $(modal).off('hidden.bs.modal.onay').one('hidden.bs.modal.onay', () => resolve(onaylandi));
+            $(modal).modal('show');
+        });
+    }
+
     function OzetBolumuIlklendir() {
         const button = document.getElementById('incelemeyeGonderBtn');
         if (!button) return;
 
         button.addEventListener('click', async function () {
-            if (!window.confirm(button.dataset.confirm || '')) return;
+            const dugmeMetni = button.textContent.trim();
+            if (!await OnayPenceresiGoster(button.dataset.confirm || '', dugmeMetni, dugmeMetni)) return;
             button.disabled = true;
 
             const token = document.querySelector('#basvuruForm input[name="__RequestVerificationToken"]')?.value || '';
@@ -4352,37 +4392,195 @@
             .then(r=>r.json()).then(sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&Array.isArray(sonuc.nesne?.makineler)){yatirimEkipmanlari.push(...sonuc.nesne.makineler);YatirimEkipmanListeRender();dirty=false;}})
             .catch(()=>PopupMesajGoster('Excel dosyası yüklenemedi.',false)).finally(()=>{input.value='';});
     }
+    // Yeni Makine Ekipman Listesi: makine bilgileri Teknik Proje (Makine Ekipman) sayfasından gelir ve burada salt okunurdur.
+    // Teknik özellik ve teklifler satır satır eklenir; kalem simgesi yalnızca o satırı düzenler.
+    let makineAcikIdler=null;
     function MakineBolumuIlklendir() {
         try { basvuruMakineleri = JSON.parse(document.getElementById('makineListeJson')?.textContent || '[]'); } catch { basvuruMakineleri = []; }
+        // Özellik ve teklifler kapalı gelir; makine satırına tıklanınca açılır.
+        if(makineAcikIdler===null)makineAcikIdler=new Set();
         MakineListeRender();
-        document.getElementById('makineYeniBtn')?.addEventListener('click', () => MakineModalAc(-1));
-        document.querySelectorAll('.uzman-makine').forEach(x => MakineUzmanHesapla(x.querySelector('.u-kur')));
-        document.querySelectorAll('.uzman-makine').forEach(MakineUzmanDokumanIlklendir);
+    }
+    function MakineDuzenlenebilir(){return document.querySelector('[data-makine-duzenlenebilir]')?.dataset.makineDuzenlenebilir==='true';}
+    function MakineTarih(x){const t=String(x||'').substring(0,10);return t?t.split('-').reverse().join('.'):'';}
+    function MakineIslemDugmeleri(duzenle,sil){return `<td class="text-nowrap"><button type="button" class="btn btn-sm btn-outline-primary" title="Düzenle" onclick="${duzenle}"><i class="fas fa-pencil-alt"></i></button> <button type="button" class="btn btn-sm btn-outline-danger" title="Sil" onclick="${sil}"><i class="fas fa-trash-alt"></i></button></td>`;}
+    function MakineDetayHtml(m,edit){
+        const ozellikler=[...(m.teknikOzellikler||[])].sort((a,b)=>a.siraNo-b.siraNo),teklifler=[...(m.teklifler||[])].sort((a,b)=>a.siraNo-b.siraNo);
+        const ozSatir=o=>`<tr><td>${htmlEncode(o.siraNo)}</td><td>${htmlEncode(o.baslik)}</td><td style="white-space:pre-wrap">${htmlEncode(o.aciklamaAsgariGereklilik)}</td><td>${o.zorunluMu?'Evet':'Hayır'}</td>${edit?MakineIslemDugmeleri(`MakineOzellikModalAc(${m.id},${o.id})`,`MakineOzellikSil(${m.id},${o.id})`):''}</tr>`;
+        const tkSatir=t=>`<tr><td>${htmlEncode(t.siraNo)}</td><td class="text-center">${edit?`<input type="radio" name="makineEsas_${m.id}" title="Başvuruya esas teklif" ${t.basvuruyaEsas?'checked':''} onchange="MakineTeklifEsasYap(${m.id},${t.id})">`:(t.basvuruyaEsas?'<span class="badge badge-success">Esas</span>':'')}</td><td>${htmlEncode(t.tedarikci)}</td><td>${htmlEncode(t.marka)}</td><td>${htmlEncode(t.model)}</td><td>${htmlEncode(t.paraBirimi)}</td><td class="text-right">${t.kur??''}</td><td class="text-right">${t.birimFiyat?htmlEncode(YatirimOzetiParaKuruslu(YatirimOzetiSayi(t.birimFiyat))):''}</td><td>${MakineTarih(t.teklifTarihi)}</td><td>${MakineTarih(t.gecerlilikTarihi)}</td><td>${t.teklifBelgesiDosyaId?`<a href="/Basvuru/DosyaIndir/${t.teklifBelgesiDosyaId}" target="_blank">${htmlEncode(t.teklifBelgesiDosyaAdi||'Belge')}</a>`:'<span class="text-muted">-</span>'}</td><td style="white-space:pre-wrap">${htmlEncode(t.aciklama)}</td>${edit?MakineIslemDugmeleri(`MakineTeklifModalAc(${m.id},${t.id})`,`MakineTeklifSil(${m.id},${t.id})`):''}</tr>`;
+        const islemBaslik=edit?'<th style="width:96px"></th>':'';
+        return `<div class="p-2">
+            <div class="d-flex align-items-center mb-1" style="gap:12px"><h4 class="h6 mb-0">Teknik Özellikler</h4>${edit?`<button type="button" class="btn btn-sm btn-outline-primary" onclick="MakineOzellikModalAc(${m.id},0)"><i class="fas fa-plus mr-1"></i>Özellik ekle</button>`:''}</div>
+            <div class="table-responsive"><table class="table table-sm table-bordered bg-white mb-3"><thead><tr><th style="width:60px">Sıra</th><th style="width:22%">Özellik başlığı</th><th>Açıklama / Asgari Gereklilik</th><th style="width:90px">Zorunlu</th>${islemBaslik}</tr></thead>
+            <tbody>${ozellikler.length?ozellikler.map(ozSatir).join(''):`<tr><td colspan="${edit?5:4}" class="text-muted">Henüz teknik özellik eklenmedi.</td></tr>`}</tbody></table></div>
+            <div class="d-flex align-items-center mb-1" style="gap:12px"><h4 class="h6 mb-0">Teklifler</h4>${edit?`<button type="button" class="btn btn-sm btn-outline-primary" onclick="MakineTeklifModalAc(${m.id},0)"><i class="fas fa-plus mr-1"></i>Teklif ekle</button>`:''}</div>
+            <div class="table-responsive"><table class="table table-sm table-bordered bg-white mb-1" style="min-width:1100px"><thead><tr><th style="width:55px">Sıra</th><th style="width:60px">Esas</th><th>Tedarikçi</th><th>Marka</th><th>Model</th><th style="width:60px">Para</th><th style="width:80px">Kur</th><th style="width:120px">Birim fiyat</th><th style="width:95px">Teklif tarihi</th><th style="width:95px">Geçerlilik</th><th>Belge</th><th>Açıklama</th>${islemBaslik}</tr></thead>
+            <tbody>${teklifler.length?teklifler.map(tkSatir).join(''):`<tr><td colspan="${edit?13:12}" class="text-muted">Henüz teklif eklenmedi.</td></tr>`}</tbody></table></div>
+        </div>`;
     }
     function MakineListeRender() {
         const alan=document.getElementById('makineListeAlani'); if(!alan)return;
-        if(!basvuruMakineleri.length){alan.innerHTML='<div class="alert alert-info">Henüz makine/ekipman eklenmedi.</div>';return;}
-        const duzenlenebilir=!!document.getElementById('makineYeniBtn');
-        alan.innerHTML=`<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Sıra</th><th>Makine/Ekipman</th><th>Birim</th><th>Miktar</th><th>Açıklama</th><th>Özellik</th><th>Teklif</th><th></th></tr></thead><tbody>${basvuruMakineleri.map((m,i)=>`<tr><td>${htmlEncode(m.siraNo)}</td><td>${htmlEncode(m.ad)}</td><td>${htmlEncode(m.birim)}</td><td>${htmlEncode(m.miktar)}</td><td>${htmlEncode(m.aciklama)}</td><td>${(m.teknikOzellikler||[]).length}</td><td>${(m.teklifler||[]).length}</td><td>${duzenlenebilir?`<button type="button" class="btn btn-sm btn-outline-primary" onclick="MakineModalAc(${i})">Güncelle</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
+        if(!basvuruMakineleri.length){alan.innerHTML='<div class="alert alert-info">Teknik Proje (Makine Ekipman) sayfasında yeni destek istenen makine bulunmuyor.</div>';return;}
+        const edit=MakineDuzenlenebilir();
+        alan.innerHTML=`<div class="table-responsive"><table class="table table-bordered makine-liste-tablosu" data-siralama="yok"><thead><tr><th style="width:40px"></th><th style="width:60px">Sıra</th><th>Makine/Ekipman</th><th>Birim</th><th>Miktar</th><th>Marka</th><th>Model</th><th>Açıklama</th><th style="width:80px">Özellik</th><th style="width:80px">Teklif</th></tr></thead><tbody>${basvuruMakineleri.map((m,i)=>{const acik=makineAcikIdler.has(m.id);return `${i>0?'<tr class="makine-ara-satir"><td colspan="10"></td></tr>':''}<tr class="makine-ust-satir${acik?' acik':''}" title="${acik?'Özellik ve teklifleri gizle':'Özellik ve teklifleri göster'}" onclick="MakineDetayAcKapa(${m.id})"><td class="text-center"><i class="fas fa-chevron-${acik?'down':'right'} text-primary"></i></td><td>${htmlEncode(m.siraNo)}</td><td><strong>${htmlEncode(m.ad)}</strong></td><td>${htmlEncode(m.birim)}</td><td>${htmlEncode(m.miktar)}</td><td>${htmlEncode(m.marka||'')}</td><td>${htmlEncode(m.model||'')}</td><td>${htmlEncode(m.aciklama||'')}</td><td>${(m.teknikOzellikler||[]).length}</td><td>${(m.teklifler||[]).length}</td></tr>${acik?`<tr class="makine-detay-satir"><td colspan="10">${MakineDetayHtml(m,edit)}</td></tr>`:''}`;}).join('')}</tbody></table></div>`;
     }
-    function MakineModalAc(index){const m=index>=0?basvuruMakineleri[index]:{id:0,basvuruId:BasvuruId(),siraNo:basvuruMakineleri.length+1,ad:'',birim:'Adet',miktar:1,aciklama:'',durum:'YENİ DESTEK İSTENİYOR',teknikOzellikler:[],teklifler:[]};document.getElementById('makineIndex').value=index;document.getElementById('makineIndex').dataset.model=JSON.stringify(m);document.getElementById('makineSira').value=m.siraNo||'';document.getElementById('makineAd').value=m.ad||'';document.getElementById('makineBirim').value=m.birim||'';document.getElementById('makineMiktar').value=m.miktar||'';document.getElementById('makineAciklama').value=m.aciklama||'';MakineOzellikRender(m.teknikOzellikler||[]);MakineTeklifRender(m.teklifler||[]);$('#makineModal').modal('show');}
-    function MakineOzellikRender(list){const b=document.getElementById('makineOzellikler');b.innerHTML=list.map((o,i)=>`<tr data-id="${o.id||0}"><td><input class="o-sira form-control" type="number" min="1" value="${o.siraNo||i+1}"></td><td><input class="o-baslik form-control" value="${htmlEncode(o.baslik||'')}"></td><td><textarea class="o-aciklama form-control">${htmlEncode(o.aciklamaAsgariGereklilik||'')}</textarea></td><td><select class="o-zorunlu form-control"><option value="true" ${o.zorunluMu?'selected':''}>Evet</option><option value="false" ${!o.zorunluMu?'selected':''}>Hayır</option></select></td></tr>`).join('');}
-    function MakineOzellikEkle(){const b=document.getElementById('makineOzellikler');b.insertAdjacentHTML('beforeend',`<tr data-id="0"><td><input class="o-sira form-control" type="number" min="1" value="${b.children.length+1}"></td><td><input class="o-baslik form-control"></td><td><textarea class="o-aciklama form-control"></textarea></td><td><select class="o-zorunlu form-control"><option value="true">Evet</option><option value="false">Hayır</option></select></td></tr>`);}
-    function MakineTeklifRender(list){const b=document.getElementById('makineTeklifler');b.innerHTML=list.map((t,i)=>MakineTeklifSatir(t,i)).join('');}
-    function MakineTeklifSatir(t,i){return `<tr class="makine-teklif" data-id="${t.id||0}" style="border-top:3px solid #8da2b8"><td rowspan="2" style="width:90px;min-width:90px;vertical-align:middle;text-align:center;background:#f2f5f9;border-right:2px solid #8da2b8;border-bottom:3px solid #8da2b8"><div class="d-flex flex-column align-items-center"><input class="t-sira form-control text-center" type="number" min="1" max="99" style="width:58px;min-width:58px;font-size:1.15rem;font-weight:700" value="${t.siraNo||i+1}"><label class="mt-2 mb-0 font-weight-bold" title="Başvuruya esas teklif"><input class="t-esas" type="radio" name="makineEsasTeklif" ${t.basvuruyaEsas?'checked':''}> Esas</label></div></td><td><input class="t-tedarikci form-control" value="${htmlEncode(t.tedarikci||'')}"></td><td><input class="t-marka form-control" value="${htmlEncode(t.marka||'')}"></td><td><input class="t-model form-control" value="${htmlEncode(t.model||'')}"></td><td><select class="t-para form-control">${genelParaBirimleri.map(x=>`<option ${t.paraBirimi===x?'selected':''}>${x}</option>`).join('')}</select></td><td><input class="t-kur form-control" type="number" min="0" step="0.000001" value="${t.kur||''}"></td><td><input class="t-fiyat form-control" type="text" inputmode="decimal" value="${t.birimFiyat?htmlEncode(YatirimOzetiParaKuruslu(YatirimOzetiSayi(t.birimFiyat))):''}" onblur="MakineTeklifBirimFiyatCikis(this)"></td></tr><tr class="makine-teklif-detay" style="border-bottom:3px solid #8da2b8"><td colspan="6"><div style="display:grid;grid-template-columns:190px 190px minmax(320px,1fr) minmax(240px,.75fr);gap:16px;align-items:start"><label class="mb-0">Teklif tarihi<input class="t-tarih form-control" type="date" value="${(t.teklifTarihi||'').substring(0,10)}"></label><label class="mb-0">Geçerlilik tarihi<input class="t-gecerlilik form-control" type="date" value="${(t.gecerlilikTarihi||'').substring(0,10)}"></label><label class="mb-0">Açıklama<textarea class="t-aciklama form-control">${htmlEncode(t.aciklama||'')}</textarea></label><label class="mb-0">Teklif belgesi<input class="t-dosya form-control-file mt-1" type="file" data-teklif-id="${t.id||0}" onchange="MakineTeklifDosyasiYukle(this)" ${t.id?'':'disabled'}><small class="t-dosya-adi">${htmlEncode(t.teklifBelgesiDosyaAdi||'')}${t.id?'':' (Belge için önce teklifi kaydedin)'}</small></label></div></td></tr>`;}
-    function MakineTeklifEkle(){const b=document.getElementById('makineTeklifler'),adet=b.querySelectorAll('.makine-teklif').length;b.insertAdjacentHTML('beforeend',MakineTeklifSatir({siraNo:adet+1,paraBirimi:'EUR',basvuruyaEsas:adet===0},adet));}
-    function MakineKaydet(){const eski=JSON.parse(document.getElementById('makineIndex').dataset.model||'{}');const model={...eski,id:eski.id||0,basvuruId:BasvuruId(),teklifKontroluYapilsin:true,siraNo:Number(document.getElementById('makineSira').value),ad:document.getElementById('makineAd').value,birim:document.getElementById('makineBirim').value,miktar:Number(document.getElementById('makineMiktar').value),aciklama:document.getElementById('makineAciklama').value,teknikOzellikler:[...document.querySelectorAll('#makineOzellikler tr')].map(r=>({id:Number(r.dataset.id||0),siraNo:Number(r.querySelector('.o-sira').value),baslik:r.querySelector('.o-baslik').value,aciklamaAsgariGereklilik:r.querySelector('.o-aciklama').value,zorunluMu:r.querySelector('.o-zorunlu').value==='true'})),teklifler:[...document.querySelectorAll('#makineTeklifler .makine-teklif')].map(r=>{const d=r.nextElementSibling;return {id:Number(r.dataset.id||0),siraNo:Number(r.querySelector('.t-sira').value),basvuruyaEsas:r.querySelector('.t-esas').checked,tedarikci:r.querySelector('.t-tedarikci').value,marka:r.querySelector('.t-marka').value,model:r.querySelector('.t-model').value,paraBirimi:r.querySelector('.t-para').value,kur:Number(r.querySelector('.t-kur').value)||null,birimFiyat:YatirimOzetiSayi(r.querySelector('.t-fiyat').value)||null,teklifTarihi:d.querySelector('.t-tarih').value||null,gecerlilikTarihi:d.querySelector('.t-gecerlilik').value||null,teklifBelgesiDosyaId:(eski.teklifler||[]).find(x=>x.id===Number(r.dataset.id||0))?.teklifBelgesiDosyaId||null,teklifBelgesiDosyaAdi:(eski.teklifler||[]).find(x=>x.id===Number(r.dataset.id||0))?.teklifBelgesiDosyaAdi||'',aciklama:d.querySelector('.t-aciklama').value};})};AjaxPost('/Basvuru/MakineKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){const i=Number(document.getElementById('makineIndex').value);if(i>=0)basvuruMakineleri[i]=sonuc.nesne;else basvuruMakineleri.push(sonuc.nesne);$('#makineModal').modal('hide');MakineListeRender();dirty=false;}});}
-    function MakineTeklifDosyasiYukle(input){const teklifId=Number(input.dataset.teklifId||0);if(!teklifId||!input.files?.length)return;const fd=new FormData();fd.append('basvuruId',BasvuruId());fd.append('formAd','BMT_'+teklifId);fd.append('dosyaNo','1');fd.append('dosya',input.files[0]);fetch('/Basvuru/BasvuruDosyasiYukle',{method:'POST',headers:{'RequestVerificationToken':antiForgeryToken()},body:fd}).then(r=>r.json()).then(sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){input.closest('td').querySelector('.t-dosya-adi').textContent=sonuc.nesne?.dosyaAdi||input.files[0].name;}});}
+    function MakineDetayAcKapa(id){if(makineAcikIdler.has(id))makineAcikIdler.delete(id);else makineAcikIdler.add(id);MakineListeRender();}
+    function MakineBul(id){return basvuruMakineleri.find(x=>x.id===id);}
+    function MakineAltKayitlariniUygula(n){const m=n&&MakineBul(n.makineId);if(!m)return;m.teknikOzellikler=n.teknikOzellikler||[];m.teklifler=n.teklifler||[];makineAcikIdler.add(m.id);MakineListeRender();}
+    function MakineOzellikModalAc(makineId,id){
+        const m=MakineBul(makineId);if(!m)return;
+        const o=(m.teknikOzellikler||[]).find(x=>x.id===id)||{id:0,siraNo:Math.max(0,...(m.teknikOzellikler||[]).map(x=>x.siraNo))+1,baslik:'',aciklamaAsgariGereklilik:'',zorunluMu:true};
+        document.getElementById('makineOzellikBaslik').textContent=`${m.siraNo} - ${m.ad}: ${o.id?'Teknik özelliği düzenle':'Yeni teknik özellik'}`;
+        $('#moMakineId').val(makineId);$('#moId').val(o.id);$('#moSira').val(o.siraNo);$('#moBaslik').val(o.baslik);$('#moAciklama').val(o.aciklamaAsgariGereklilik);$('#moZorunlu').val(String(!!o.zorunluMu));
+        $('#makineOzellikModal').modal('show');
+    }
+    function MakineOzellikKaydet(){
+        const ozellik={id:Number($('#moId').val())||0,makineId:Number($('#moMakineId').val()),siraNo:Number($('#moSira').val())||0,baslik:$('#moBaslik').val(),aciklamaAsgariGereklilik:$('#moAciklama').val(),zorunluMu:$('#moZorunlu').val()==='true'};
+        AjaxPost('/Basvuru/MakineOzellikKaydet',{basvuruId:BasvuruId(),ozellik},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){$('#makineOzellikModal').modal('hide');MakineAltKayitlariniUygula(sonuc.nesne);}});
+    }
+    async function MakineOzellikSil(makineId,id){
+        const o=(MakineBul(makineId)?.teknikOzellikler||[]).find(x=>x.id===id);
+        if(!await OnayPenceresiGoster(`"${o?.baslik||''}" teknik özelliği silinsin mi?`,'Teknik özelliği sil','Sil'))return;
+        AjaxPost('/Basvuru/MakineOzellikSil',{basvuruId:BasvuruId(),makineId,id},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)MakineAltKayitlariniUygula(sonuc.nesne);});
+    }
+    function MakineTeklifModalAc(makineId,id){
+        const m=MakineBul(makineId);if(!m)return;
+        const liste=m.teklifler||[];
+        const t=liste.find(x=>x.id===id)||{id:0,siraNo:Math.max(0,...liste.map(x=>x.siraNo))+1,basvuruyaEsas:liste.length===0,tedarikci:'',marka:'',model:'',paraBirimi:'EUR',kur:null,birimFiyat:null,teklifTarihi:null,gecerlilikTarihi:null,aciklama:''};
+        document.getElementById('makineTeklifBaslik').textContent=`${m.siraNo} - ${m.ad}: ${t.id?'Teklifi düzenle':'Yeni teklif'}`;
+        $('#mtMakineId').val(makineId);$('#mtId').val(t.id);$('#mtSira').val(t.siraNo);$('#mtTedarikci').val(t.tedarikci);$('#mtMarka').val(t.marka);$('#mtModel').val(t.model);$('#mtPara').val(t.paraBirimi||'EUR');
+        $('#mtKur').val(t.kur??'');$('#mtFiyat').val(t.birimFiyat?YatirimOzetiParaKuruslu(YatirimOzetiSayi(t.birimFiyat)):'');$('#mtTarih').val(String(t.teklifTarihi||'').substring(0,10));$('#mtGecerlilik').val(String(t.gecerlilikTarihi||'').substring(0,10));$('#mtAciklama').val(t.aciklama);
+        $('#mtEsas').val(t.basvuruyaEsas||liste.length===0?'true':'false');
+        const dosya=document.getElementById('mtDosya');dosya.value='';dosya.disabled=!t.id;dosya.dataset.teklifId=t.id||0;
+        document.getElementById('mtDosyaAdi').textContent=t.id?(t.teklifBelgesiDosyaAdi?`Yüklü belge: ${t.teklifBelgesiDosyaAdi}`:'Henüz belge yüklenmedi.'):'Belge yüklemek için önce teklifi kaydedin, sonra kalem simgesiyle açın.';
+        $('#makineTeklifModal').modal('show');
+    }
+    function MakineTeklifKaydet(){
+        const teklif={id:Number($('#mtId').val())||0,makineId:Number($('#mtMakineId').val()),siraNo:Number($('#mtSira').val())||0,basvuruyaEsas:$('#mtEsas').val()==='true',tedarikci:$('#mtTedarikci').val(),marka:$('#mtMarka').val(),model:$('#mtModel').val(),paraBirimi:$('#mtPara').val(),kur:Number($('#mtKur').val())||null,birimFiyat:YatirimOzetiSayi($('#mtFiyat').val())||null,teklifTarihi:$('#mtTarih').val()||null,gecerlilikTarihi:$('#mtGecerlilik').val()||null,aciklama:$('#mtAciklama').val()};
+        AjaxPost('/Basvuru/MakineTeklifKaydet',{basvuruId:BasvuruId(),teklif},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){$('#makineTeklifModal').modal('hide');MakineAltKayitlariniUygula(sonuc.nesne);}});
+    }
+    function MakineTeklifEsasYap(makineId,id){
+        const t=(MakineBul(makineId)?.teklifler||[]).find(x=>x.id===id);if(!t)return;
+        AjaxPost('/Basvuru/MakineTeklifKaydet',{basvuruId:BasvuruId(),teklif:{...t,makineId,basvuruyaEsas:true}},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)MakineAltKayitlariniUygula(sonuc.nesne);else MakineListeRender();});
+    }
+    async function MakineTeklifSil(makineId,id){
+        const t=(MakineBul(makineId)?.teklifler||[]).find(x=>x.id===id);
+        if(!await OnayPenceresiGoster(`${t?.siraNo??''} sıralı "${t?.tedarikci||''}" teklifi silinsin mi?`,'Teklifi sil','Sil'))return;
+        AjaxPost('/Basvuru/MakineTeklifSil',{basvuruId:BasvuruId(),makineId,id},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)MakineAltKayitlariniUygula(sonuc.nesne);});
+    }
+    function MakineTeklifDosyasiYukle(input){const teklifId=Number(input.dataset.teklifId||0);if(!teklifId||!input.files?.length)return;const fd=new FormData();fd.append('basvuruId',BasvuruId());fd.append('formAd','BMT_'+teklifId);fd.append('dosyaNo','1');fd.append('dosya',input.files[0]);fetch('/Basvuru/BasvuruDosyasiYukle',{method:'POST',headers:{'RequestVerificationToken':antiForgeryToken()},body:fd}).then(r=>r.json()).then(sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili){const n=sonuc.nesne||{},ad=n.dosyaAdi||n.DosyaAdi||input.files[0].name,dosyaId=n.dosyaId||n.DosyaId||n.id||n.Id||null;document.getElementById('mtDosyaAdi').textContent=`Yüklü belge: ${ad}`;const m=MakineBul(Number($('#mtMakineId').val())),t=(m?.teklifler||[]).find(x=>x.id===teklifId);if(t){t.teklifBelgesiDosyaAdi=ad;if(dosyaId)t.teklifBelgesiDosyaId=dosyaId;MakineListeRender();}}});}
     function MakineTeklifBirimFiyatCikis(input){const deger=YatirimOzetiSayi(input.value);input.value=input.value.trim()===''?'':YatirimOzetiParaKuruslu(deger);}
-    function MakineUzmanHesapla(el){const kart=el?.closest('.uzman-makine');if(!kart)return;const kur=Number(kart.querySelector('.u-kur').value)||0,min=Number(kart.querySelector('.u-min').value)||0,maks=Number(kart.querySelector('.u-maks').value)||0;kart.querySelector('.u-min-tl').value=(kur*min).toLocaleString('tr-TR');kart.querySelector('.u-maks-tl').value=(kur*maks).toLocaleString('tr-TR');kart.querySelector('.u-marj').value=(kur*maks*1.05).toLocaleString('tr-TR');}
-    function MakineUzmanKaydet(btn){const k=btn.closest('.uzman-makine');AjaxPost('/Denetleme/MakineUzmanKaydet',{basvuruId:BasvuruId(),makineId:Number(k.dataset.makineId),uzmanParaBirimi:k.querySelector('.u-para').value,uzmanKur:Number(k.querySelector('.u-kur').value)||null,uzmanMinimumFiyat:Number(k.querySelector('.u-min').value)||null,uzmanMaksimumFiyat:Number(k.querySelector('.u-maks').value)||null,uzmanSecilenTeklifId:Number(k.querySelector('.u-teklif').value)||null,uzmanOnerilenFiyatTl:Number(k.querySelector('.u-oneri').value)||null,uzmanKontrolSonucu:k.querySelector('.u-sonuc').value,uzmanAciklama:k.querySelector('.u-aciklama').value},SonucGoster);}
-    function MakineUzmanDokumanIlklendir(k){try{k._uzmanDokumanlari=JSON.parse(k.querySelector('.u-dokuman-json')?.textContent||'[]');}catch{k._uzmanDokumanlari=[];}MakineUzmanDokumanRender(k);}
-    function MakineUzmanDokumanRender(k){const alan=k.querySelector('.u-dokumanlar'),liste=k._uzmanDokumanlari||[];if(!liste.length){alan.innerHTML='<div class="alert alert-light border mt-2">Henüz araştırma dokümanı eklenmedi.</div>';return;}alan.innerHTML=`<div class="table-responsive mt-2"><table class="table table-sm table-bordered" style="min-width:1200px"><thead><tr><th>Sıra</th><th>Doküman / Yazışma Adı</th><th>Doküman Türü</th><th>Kaynak / Tedarikçi</th><th>Belge Tarihi</th><th>Açıklama</th><th>Dosya</th><th></th></tr></thead><tbody>${liste.map((d,i)=>`<tr><td>${htmlEncode(d.siraNo)}</td><td>${htmlEncode(d.dokumanAdi)}</td><td>${htmlEncode(d.dokumanTuru)}</td><td>${htmlEncode(d.kaynakTedarikci)}</td><td>${htmlEncode((d.belgeTarihi||'').substring(0,10))}</td><td>${htmlEncode(d.aciklama||'')}</td><td><input type="file" class="form-control-file" data-id="${d.id}" onchange="MakineUzmanDokumanDosyasiYukle(this)"><small>${d.dosyaId?`<a href="/Basvuru/DosyaIndir?id=${d.dosyaId}">${htmlEncode(d.dosyaAdi||'Dosyayı indir')}</a>`:'Dosya seçilmedi'}</small></td><td><button type="button" class="btn btn-sm btn-outline-primary" onclick="MakineUzmanDokumanDuzenle(this,${i})">Düzenle</button></td></tr>`).join('')}</tbody></table></div>`;}
-    function MakineUzmanDokumanEkle(btn){MakineUzmanDokumanFormuAc(btn.closest('.uzman-makine'),-1);}
-    function MakineUzmanDokumanDuzenle(btn,index){MakineUzmanDokumanFormuAc(btn.closest('.uzman-makine'),index);}
-    function MakineUzmanDokumanFormuAc(k,index){const d=index>=0?k._uzmanDokumanlari[index]:{},f=k.querySelector('.u-dokuman-form');f.querySelector('.ud-index').value=index;f.querySelector('.ud-id').value=d.id||0;f.querySelector('.ud-ad').value=d.dokumanAdi||'';f.querySelector('.ud-tur').value=d.dokumanTuru||'';f.querySelector('.ud-kaynak').value=d.kaynakTedarikci||'';f.querySelector('.ud-tarih').value=(d.belgeTarihi||'').substring(0,10);f.querySelector('.ud-aciklama').value=d.aciklama||'';f.style.display='block';f.querySelector('.ud-ad').focus();}
-    function MakineUzmanDokumanKaydet(btn){const f=btn.closest('.u-dokuman-form'),k=btn.closest('.uzman-makine'),index=Number(f.querySelector('.ud-index').value),eski=index>=0?k._uzmanDokumanlari[index]:{};const model={...eski,id:Number(f.querySelector('.ud-id').value),basvuruId:BasvuruId(),makineId:Number(k.dataset.makineId),dokumanAdi:f.querySelector('.ud-ad').value,dokumanTuru:f.querySelector('.ud-tur').value,kaynakTedarikci:f.querySelector('.ud-kaynak').value,belgeTarihi:f.querySelector('.ud-tarih').value||null,aciklama:f.querySelector('.ud-aciklama').value};AjaxPost('/Denetleme/MakineUzmanDokumaniKaydet',model,sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili&&sonuc.nesne){if(index>=0)k._uzmanDokumanlari[index]=sonuc.nesne;else k._uzmanDokumanlari.push(sonuc.nesne);f.style.display='none';MakineUzmanDokumanRender(k);dirty=false;}});}
-    function MakineUzmanDokumanDosyasiYukle(input){if(!input.files?.length)return;const fd=new FormData();fd.append('basvuruId',BasvuruId());fd.append('formAd','BMUD_'+input.dataset.id);fd.append('dosyaNo','1');fd.append('dosya',input.files[0]);fetch('/Basvuru/BasvuruDosyasiYukle',{method:'POST',headers:{'RequestVerificationToken':antiForgeryToken()},body:fd}).then(r=>r.json()).then(sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)input.nextElementSibling.textContent=sonuc.nesne?.dosyaAdi||input.files[0].name;});}
+    // Pazar Araştırması (Uzman Fiyatları): makine satırları Yeni Makine Ekipman Listesi'nden gelir; uzman yalnızca fiyat/kontrol alanlarını girer,
+    // TL karşılıkları (fiyat × kur) ve maksimum + %5 marj sınırı burada hesaplanır.
+    let pazarSatirlari=[],pazarKontrolSonuclari=[];
+    function PazarArastirmasiIlklendir(){
+        try{pazarSatirlari=JSON.parse(document.getElementById('pazarArastirmasiJson')?.textContent||'[]');pazarKontrolSonuclari=JSON.parse(document.getElementById('pazarKontrolSonucJson')?.textContent||'[]');}catch{pazarSatirlari=[];pazarKontrolSonuclari=[];}
+        PazarArastirmasiRender();
+    }
+    function PazarSayi(x){const t=String(x??'').trim();return t===''?null:YatirimOzetiSayi(t);}
+    function PazarTutar(x,basamak=2){return x===null||x===undefined||x===''||isNaN(x)?'':Number(x).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:basamak});}
+    function PazarHesap(s){
+        const kur=s.uzmanParaBirimi==='TL'?1:s.uzmanKur;
+        const minTl=kur!=null&&s.uzmanMinimumFiyat!=null?kur*s.uzmanMinimumFiyat:null;
+        const maksTl=kur!=null&&s.uzmanMaksimumFiyat!=null?kur*s.uzmanMaksimumFiyat:null;
+        return {kur,minTl,maksTl,marj:maksTl!=null?maksTl*1.05:null};
+    }
+    function PazarMarjNotu(s,h){
+        if(s.esasTl==null||h.marj==null)return '';
+        return s.esasTl<=h.marj?'<small class="text-success d-block mt-1">Esas teklif marj sınırı içinde</small>':'<small class="text-danger d-block mt-1">Esas teklif marj sınırını aşıyor</small>';
+    }
+    function PazarArastirmasiRender(){
+        const alan=document.getElementById('pazarArastirmasiAlani');if(!alan)return;
+        if(!pazarSatirlari.length){alan.innerHTML='<div class="alert alert-light border">Yeni Makine Ekipman Listesi\'nde yeni destek istenen makine bulunmuyor.</div>';return;}
+        const edit=document.querySelector('[data-pazar-arastirmasi]')?.dataset.editable==='true';
+        const satir=(s,i)=>{
+            const h=PazarHesap(s),tl=s.uzmanParaBirimi==='TL';
+            const hesap=(x,sinif)=>`<td class="text-right pazar-hesap ${sinif}">${PazarTutar(x)}</td>`;
+            const sayi=(alanAdi,deger,basamak=2,salt=false)=>edit&&!salt?`<td><input class="form-control form-control-sm text-right pazar-giris" data-i="${i}" data-alan="${alanAdi}" inputmode="decimal" value="${PazarTutar(deger,basamak)}"></td>`:`<td class="text-right">${PazarTutar(deger,basamak)}</td>`;
+            const para=edit?`<td><select class="form-control form-control-sm pazar-giris" data-i="${i}" data-alan="uzmanParaBirimi"><option value="">Seçiniz</option>${genelParaBirimleri.map(p=>`<option ${s.uzmanParaBirimi===p?'selected':''}>${htmlEncode(p)}</option>`).join('')}</select></td>`:`<td>${htmlEncode(s.uzmanParaBirimi||'')}</td>`;
+            const sonuc=edit?`<select class="form-control form-control-sm pazar-giris" data-i="${i}" data-alan="uzmanKontrolSonucu"><option value="">Seçiniz</option>${pazarKontrolSonuclari.map(x=>`<option ${s.uzmanKontrolSonucu===x?'selected':''}>${htmlEncode(x)}</option>`).join('')}</select>`:htmlEncode(s.uzmanKontrolSonucu||'');
+            const aciklama=edit?`<textarea class="form-control form-control-sm pazar-giris" data-i="${i}" data-alan="uzmanAciklama" rows="2" maxlength="2000">${htmlEncode(s.uzmanAciklama||'')}</textarea>`:`<div style="white-space:pre-wrap">${htmlEncode(s.uzmanAciklama||'')}</div>`;
+            const esasNo=s.esasTeklifNo!=null?`<span title="${htmlEncode(s.esasTedarikci||'')}">${htmlEncode(s.esasTeklifNo)}</span>`:'<span class="text-muted" title="Yeni Makine Ekipman Listesi\'nde esas teklif seçilmemiş">-</span>';
+            return `<tr data-i="${i}"><td><strong>${htmlEncode(s.siraNo)}. ${htmlEncode(s.ad)}</strong><br><small class="text-muted">${Number(s.miktar||0).toLocaleString('tr-TR',{maximumFractionDigits:3})} ${htmlEncode(s.birim||'')}</small></td>${para}${sayi('uzmanKur',h.kur,6,tl)}${sayi('uzmanMinimumFiyat',s.uzmanMinimumFiyat)}${sayi('uzmanMaksimumFiyat',s.uzmanMaksimumFiyat)}${hesap(h.minTl,'pazar-min-tl')}${hesap(h.maksTl,'pazar-maks-tl')}${hesap(h.marj,'pazar-marj')}<td class="text-center pazar-hesap">${esasNo}</td>${hesap(s.esasTl,'')}${sayi('uzmanOnerilenFiyatTl',s.uzmanOnerilenFiyatTl)}<td>${sonuc}<div class="pazar-marj-notu">${PazarMarjNotu(s,h)}</div></td><td>${aciklama}</td></tr>`;
+        };
+        alan.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-sm pazar-tablosu" style="min-width:1900px"><thead><tr><th style="width:200px">Makine / Ekipman</th><th style="width:100px">Uzman para birimi</th><th style="width:110px">Kur (TL)</th><th style="width:130px">Uzman minimum fiyat</th><th style="width:130px">Uzman maksimum fiyat</th><th style="width:130px">Uzman minimum TL</th><th style="width:130px">Uzman maksimum TL</th><th style="width:140px">Maksimum + %5 marj sınırı (TL)</th><th style="width:80px">Esas teklif no</th><th style="width:130px">Başvuruya esas TL</th><th style="width:140px">Önerilen uygun fiyat (TL)</th><th style="width:190px">Kontrol sonucu</th><th>Uzman açıklaması</th></tr></thead><tbody>${pazarSatirlari.map(satir).join('')}</tbody></table></div>`;
+        alan.querySelectorAll('.pazar-giris').forEach(el=>{
+            const alanAdi=el.dataset.alan,s=pazarSatirlari[Number(el.dataset.i)];
+            if(el.tagName==='SELECT'){el.addEventListener('change',()=>{s[alanAdi]=el.value||null;dirty=true;if(alanAdi==='uzmanParaBirimi')PazarArastirmasiRender();});return;}
+            if(el.tagName==='TEXTAREA'){el.addEventListener('input',()=>{s[alanAdi]=el.value;dirty=true;});return;}
+            el.addEventListener('input',()=>{s[alanAdi]=PazarSayi(el.value);dirty=true;PazarSatirHesapla(el.closest('tr'),s);});
+            el.addEventListener('change',()=>{el.value=PazarTutar(s[alanAdi],alanAdi==='uzmanKur'?6:2);});
+        });
+    }
+    function PazarSatirHesapla(tr,s){
+        if(!tr)return;const h=PazarHesap(s);
+        tr.querySelector('.pazar-min-tl').textContent=PazarTutar(h.minTl);tr.querySelector('.pazar-maks-tl').textContent=PazarTutar(h.maksTl);tr.querySelector('.pazar-marj').textContent=PazarTutar(h.marj);
+        tr.querySelector('.pazar-marj-notu').innerHTML=PazarMarjNotu(s,h);
+    }
+    function PazarArastirmasiKaydet(afterSuccess){
+        const makineler=pazarSatirlari.map(s=>({makineId:s.id,uzmanParaBirimi:s.uzmanParaBirimi||null,uzmanKur:s.uzmanParaBirimi==='TL'?1:s.uzmanKur,uzmanMinimumFiyat:s.uzmanMinimumFiyat,uzmanMaksimumFiyat:s.uzmanMaksimumFiyat,uzmanOnerilenFiyatTl:s.uzmanOnerilenFiyatTl,uzmanKontrolSonucu:s.uzmanKontrolSonucu||null,uzmanAciklama:s.uzmanAciklama||''}));
+        AjaxPost('/Denetleme/PazarArastirmasiKaydet',{basvuruId:BasvuruId(),makineler},sonuc=>SonucGosterVeDirtyTemizle(sonuc,afterSuccess));
+    }
+
+    // Uzman Dokümanları: makine başına istenen sayıda doküman; önce bilgiler kaydedilir, sonra dosya yüklenir.
+    let uzmanDokumanMakineleri=[];
+    function UzmanDokumanIlklendir(){try{uzmanDokumanMakineleri=JSON.parse(document.getElementById('uzmanDokumanJson')?.textContent||'[]');}catch{uzmanDokumanMakineleri=[];}UzmanDokumanRender();}
+    function UzmanDokumanMakine(id){return uzmanDokumanMakineleri.find(x=>x.id===id);}
+    // Uzun dosya adları 30 karakterde kesilip sonuna "..." eklenir; tam ad fareyle üzerine gelince görünür.
+    function UzmanDokumanDosyaAdiKisalt(ad,uzunluk=30){const t=String(ad||'');return t.length>uzunluk?t.substring(0,uzunluk-3).trimEnd()+'...':t;}
+    function UzmanDokumanRender(){
+        const alan=document.getElementById('uzmanDokumanAlani');if(!alan)return;
+        if(!uzmanDokumanMakineleri.length){alan.innerHTML='<div class="alert alert-light border">Yeni Makine Ekipman Listesi\'nde yeni destek istenen makine bulunmuyor.</div>';return;}
+        const edit=document.querySelector('[data-uzman-dokuman]')?.dataset.editable==='true';
+        const dokSatir=(m,d)=>{
+            const bilgi=[d.dokumanTuru,d.kaynakTedarikci,MakineTarih(d.belgeTarihi)].filter(Boolean).map(htmlEncode).join(' · ');
+            const dosya=d.dosyaId?`<a href="/Denetleme/MakineUzmanDokumanDosyasiIndir?id=${d.id}" target="_blank" rel="noopener" title="${htmlEncode(d.dosyaAdi||'')}"><i class="fas fa-download mr-1"></i>${htmlEncode(UzmanDokumanDosyaAdiKisalt(d.dosyaAdi||'Dosya'))}</a>`:'<span class="text-muted">Dosya yüklenmedi</span>';
+            const yukle=edit?`<label class="btn btn-sm btn-outline-secondary mb-0 ml-2" title="${d.dosyaId?'Dosyayı değiştir':'Dosya yükle'}"><i class="fas fa-upload"></i><input type="file" hidden onchange="UzmanDokumanDosyasiYukle(this,${d.id})"></label>`:'';
+            const islem=edit?`<button type="button" class="btn btn-sm btn-outline-primary ml-1" title="Düzenle" onclick="UzmanDokumanModalAc(${m.id},${d.id})"><i class="fas fa-pencil-alt"></i></button><button type="button" class="btn btn-sm btn-outline-danger ml-1" title="Sil" onclick="UzmanDokumanSil(${m.id},${d.id})"><i class="fas fa-trash-alt"></i></button>`:'';
+            return `<div class="d-flex align-items-start justify-content-between border-bottom py-2" style="gap:12px"><div style="flex:1;min-width:0"><div>${htmlEncode(d.siraNo)}. <strong>${htmlEncode(d.dokumanAdi)}</strong></div><small class="text-muted">${bilgi}</small>${d.aciklama?`<div class="small" style="white-space:pre-wrap">${htmlEncode(d.aciklama)}</div>`:''}</div><div class="d-flex align-items-center text-nowrap">${dosya}${yukle}${islem}</div></div>`;
+        };
+        alan.innerHTML=`<div class="table-responsive"><table class="table table-bordered"><thead><tr><th style="width:26%">Makine / Ekipman</th><th style="width:110px">Miktar</th><th>Dokümanlar</th>${edit?'<th style="width:160px">İşlemler</th>':''}</tr></thead><tbody>${uzmanDokumanMakineleri.map(m=>{const ds=[...(m.dokumanlar||[])].sort((a,b)=>a.siraNo-b.siraNo);return `<tr><td>${htmlEncode(m.siraNo)}. ${htmlEncode(m.ad)}</td><td>${Number(m.miktar||0).toLocaleString('tr-TR',{maximumFractionDigits:3})} ${htmlEncode(m.birim||'')}</td><td>${ds.length?ds.map(d=>dokSatir(m,d)).join(''):'<span class="text-muted">Doküman eklenmedi</span>'}</td>${edit?`<td><button type="button" class="btn btn-sm btn-outline-success" onclick="UzmanDokumanModalAc(${m.id},0)"><i class="fas fa-plus mr-1"></i>Doküman ekle</button></td>`:''}</tr>`;}).join('')}</tbody></table></div>`;
+    }
+    function UzmanDokumanModalAc(makineId,id){
+        const m=UzmanDokumanMakine(makineId);if(!m)return;const d=(m.dokumanlar||[]).find(x=>x.id===id)||{};
+        $('#udMakineId').val(makineId);$('#udId').val(d.id||0);
+        $('#udBaslik').text(`${d.id?'Dokümanı düzenle':'Yeni doküman'} — ${m.siraNo}. ${m.ad}`);
+        $('#udAd').val(d.dokumanAdi||'');$('#udTur').val(d.dokumanTuru||'');$('#udKaynak').val(d.kaynakTedarikci||'');$('#udTarih').val(String(d.belgeTarihi||'').substring(0,10));$('#udAciklama').val(d.aciklama||'');
+        UzmanDokumanModalDosyaDurumu(d);
+        $('#uzmanDokumanModal').modal('show');
+    }
+    function UzmanDokumanModalDosyaDurumu(d){
+        const kayitli=!!d?.id,input=document.getElementById('udDosya');if(!input)return;input.value='';input.disabled=!kayitli;
+        document.getElementById('udDosyaBilgi').textContent=!kayitli?'Dosya, doküman bilgileri kaydedildikten sonra yüklenebilir.':(d.dosyaId?`Yüklü dosya: ${UzmanDokumanDosyaAdiKisalt(d.dosyaAdi,60)} (yeni dosya seçilirse değiştirilir)`:'Henüz dosya yüklenmedi.');
+    }
+    function UzmanDokumanUygula(n){const m=UzmanDokumanMakine(n?.makineId);if(m)m.dokumanlar=n.dokumanlar||[];UzmanDokumanRender();}
+    function UzmanDokumanKaydet(){
+        const makineId=Number($('#udMakineId').val()),id=Number($('#udId').val())||0;
+        const model={id,basvuruId:BasvuruId(),makineId,dokumanAdi:$('#udAd').val(),dokumanTuru:$('#udTur').val(),kaynakTedarikci:$('#udKaynak').val(),belgeTarihi:$('#udTarih').val()||null,aciklama:$('#udAciklama').val()};
+        AjaxPost('/Denetleme/MakineUzmanDokumaniKaydet',model,sonuc=>{
+            SonucGoster(sonuc);if(!sonuc?.basarili||!sonuc.nesne)return;
+            UzmanDokumanUygula(sonuc.nesne);
+            if(id){$('#uzmanDokumanModal').modal('hide');return;}
+            // Yeni doküman kaydedilince pencere açık kalır ve dosya yüklenebilir hâle gelir.
+            const d=(sonuc.nesne.dokumanlar||[]).find(x=>x.id===sonuc.nesne.dokumanId);
+            $('#udId').val(d?.id||0);if(d)$('#udBaslik').text(`Dokümanı düzenle — ${$('#udBaslik').text().split(' — ').slice(1).join(' — ')}`);
+            UzmanDokumanModalDosyaDurumu(d);
+        });
+    }
+    async function UzmanDokumanSil(makineId,id){
+        const d=(UzmanDokumanMakine(makineId)?.dokumanlar||[]).find(x=>x.id===id);
+        if(!await OnayPenceresiGoster(`"${d?.dokumanAdi||''}" dokümanı silinsin mi?`,'Dokümanı sil','Sil'))return;
+        AjaxPost('/Denetleme/MakineUzmanDokumaniSil',{basvuruId:BasvuruId(),makineId,id},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)UzmanDokumanUygula(sonuc.nesne);});
+    }
+    function UzmanDokumanDosyasiYukle(input,dokumanId){
+        if(!dokumanId||!input.files?.length)return;
+        const fd=new FormData();fd.append('basvuruId',BasvuruId());fd.append('dokumanId',dokumanId);fd.append('dosya',input.files[0]);
+        DosyaAjaxPost('/Denetleme/MakineUzmanDokumanDosyasiYukle',fd,sonuc=>{
+            SonucGoster(sonuc);input.value='';if(!sonuc?.basarili||!sonuc.nesne)return;
+            UzmanDokumanUygula(sonuc.nesne);
+            if(Number($('#udId').val())===dokumanId)UzmanDokumanModalDosyaDurumu((sonuc.nesne.dokumanlar||[]).find(x=>x.id===dokumanId));
+        });
+    }
 
     var urunSurecleri=[],urunSurecUrunler=[],urunSurecMakineler=[];
     function UrunSurecBolumuIlklendir(){try{urunSurecleri=JSON.parse(document.getElementById('urunSurecJson')?.textContent||'[]');urunSurecUrunler=JSON.parse(document.getElementById('urunSurecUrunJson')?.textContent||'[]');urunSurecMakineler=JSON.parse(document.getElementById('urunSurecMakineJson')?.textContent||'[]');}catch{urunSurecleri=[];urunSurecUrunler=[];urunSurecMakineler=[];}UrunSurecListeRender();document.getElementById('urunSurecYeniBtn')?.addEventListener('click',()=>UrunSurecModalAc(-1));}
@@ -4610,75 +4808,77 @@
         AjaxPost('/Denetleme/BasvuruOzetiKurumKaydet',{basvuruId:BasvuruId(),kurumJson:JSON.stringify(data)},sonuc=>{SonucGoster(sonuc);if(sonuc?.basarili)dirty=false;});
     }
 
-    // Tam başvuru uzman kontrolleri: "Belge / Form Ön Kontrol" (belge) ve "Tamlık ve Uygunluk Soruları" (uygunluk).
-    // Satır ve özet sonuçları Excel kontrol formundaki formüllerle aynı kurala göre sayfada hesaplanır.
-    let tamlikBolum='',tamlikDuzenlenebilir=false,tamlikTanimlari=[],tamlikCevaplari={},tamlikBelgeTanimlari=[],tamlikBelgeCevaplari={};
-    function TamlikJsonOku(id,bos){try{const x=JSON.parse(document.getElementById(id)?.textContent||'');return x&&typeof x==='object'?x:bos;}catch{return bos;}}
-    function TamlikSatirSonucu(c,belge){
-        const cevap=c?.cevap||'',aciklama=(c?.aciklama||'').trim();
-        if(!cevap)return 'BEKLEMEDE';
-        if(cevap==='Evet')return belge?'TAM':'UYGUN';
-        return aciklama?(belge?'EKSİK':'UYGUN DEĞİL'):'AÇIKLAMA BEKLİYOR';
-    }
-    function TamlikSonucRozeti(s){
-        const renk={'TAM':'success','UYGUN':'success','EKSİK':'danger','UYGUN DEĞİL':'danger','AÇIKLAMA BEKLİYOR':'warning','BEKLEMEDE':'secondary','İNCELEMEDE':'info'}[s]||'secondary';
-        return `<span class="badge badge-${renk}">${htmlEncode(s)}</span>`;
-    }
-    function TamlikBelgeSonucu(s){return s.includes('EKSİK')?'EKSİK':s.includes('AÇIKLAMA BEKLİYOR')?'AÇIKLAMA BEKLİYOR':s.includes('BEKLEMEDE')?'İNCELEMEDE':'TAM';}
-    function TamlikGenelSonuc(a,b){return a.includes('EKSİK')?'EKSİK':b.includes('UYGUN DEĞİL')?'UYGUN DEĞİL':(a.includes('AÇIKLAMA BEKLİYOR')||b.includes('AÇIKLAMA BEKLİYOR'))?'AÇIKLAMA BEKLİYOR':(a.includes('BEKLEMEDE')||b.includes('BEKLEMEDE'))?'İNCELEMEDE':'UYGUN';}
-    function TamlikKontrolIlklendir(){
-        const panel=document.querySelector('[data-tamlik-bolum]');if(!panel)return;
-        tamlikBolum=panel.dataset.tamlikBolum;tamlikDuzenlenebilir=panel.dataset.editable==='true';
-        tamlikBelgeTanimlari=TamlikJsonOku('tamlikBelgeTanimJson',[]);tamlikBelgeCevaplari=TamlikJsonOku('tamlikBelgeCevapJson',{});
-        if(tamlikBolum==='belge'){tamlikTanimlari=tamlikBelgeTanimlari;tamlikCevaplari=tamlikBelgeCevaplari;}
-        else{tamlikTanimlari=TamlikJsonOku('tamlikUygunlukTanimJson',[]);tamlikCevaplari=TamlikJsonOku('tamlikUygunlukCevapJson',{});}
-        TamlikTabloRender();TamlikOzetRender();
-    }
-    function TamlikTabloRender(){
-        const alan=document.getElementById('tamlikTabloAlani');if(!alan)return;
-        const belge=tamlikBolum==='belge',edit=tamlikDuzenlenebilir;
-        const satir=t=>{
-            const c=tamlikCevaplari[t.id]||{},pasif=t.aktif===false?' <span class="badge badge-secondary" title="Bu satır tanımlarda pasife alınmıştır; girilen cevap korunur.">Pasif</span>':'';
-            const soru=belge?`${htmlEncode(t.soru)}${pasif}`:`${htmlEncode(t.soru)}${pasif}<div class="small text-muted mt-1">${htmlEncode(t.kontrolAciklamasi||'')}</div>`;
-            const ek=belge?`<td>${t.kosullu?'Koşullu':'Zorunlu'}</td>`:`<td>${htmlEncode(t.kaynakBelge||'')}</td>`;
-            const cevap=edit?`<select class="form-control tamlik-cevap" data-id="${t.id}"><option value="">Seçiniz</option><option ${c.cevap==='Evet'?'selected':''}>Evet</option><option ${c.cevap==='Hayır'?'selected':''}>Hayır</option></select>`:htmlEncode(c.cevap||'-');
-            const aciklama=edit?`<textarea class="form-control tamlik-aciklama" data-id="${t.id}" rows="2" maxlength="2000">${htmlEncode(c.aciklama||'')}</textarea>`:`<div style="white-space:pre-wrap">${htmlEncode(c.aciklama||'')}</div>`;
-            return `<tr data-id="${t.id}"><td>${htmlEncode(t.siraNo)}</td><td>${soru}</td>${ek}<td>${cevap}</td><td class="tamlik-sonuc">${TamlikSonucRozeti(TamlikSatirSonucu(c,belge))}</td><td>${aciklama}</td></tr>`;
-        };
-        const baslik=belge?'<th>Tamlık kontrol sorusu</th><th style="width:110px">Zorunluluk</th>':'<th>Kontrol sorusu / uygulama esası</th><th style="width:180px">Kaynak belge / form</th>';
-        alan.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-sm" style="min-width:1100px"><thead><tr><th style="width:50px">No</th>${baslik}<th style="width:130px">Cevap</th><th style="width:170px">Sonuç</th><th style="width:26%">Açıklama</th></tr></thead><tbody>${tamlikTanimlari.length?tamlikTanimlari.map(satir).join(''):'<tr><td colspan="6" class="text-muted">Tanımlarda aktif kontrol satırı bulunmuyor.</td></tr>'}</tbody></table></div>`;
-        alan.querySelectorAll('.tamlik-cevap,.tamlik-aciklama').forEach(el=>el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>TamlikCevapDegisti(el)));
-    }
-    function TamlikCevapDegisti(el){
-        const id=el.dataset.id,c=tamlikCevaplari[id]||(tamlikCevaplari[id]={cevap:'',aciklama:''});
-        if(el.classList.contains('tamlik-cevap'))c.cevap=el.value;else c.aciklama=el.value;
-        dirty=true;
-        const hucre=el.closest('tr')?.querySelector('.tamlik-sonuc');if(hucre)hucre.innerHTML=TamlikSonucRozeti(TamlikSatirSonucu(c,tamlikBolum==='belge'));
-        TamlikOzetRender();
-    }
-    function TamlikOzetRender(){
-        const alan=document.getElementById('tamlikOzetAlani');if(!alan)return;
-        const belge=tamlikBolum==='belge';
-        const sonuclar=tamlikTanimlari.map(t=>TamlikSatirSonucu(tamlikCevaplari[t.id],belge));
-        const say=s=>sonuclar.filter(x=>x===s).length,toplam=sonuclar.length;
-        const kart=(baslik,deger)=>`<div class="summary-card"><span>${htmlEncode(baslik)}</span><strong>${deger}</strong></div>`;
-        const oran=x=>'%'+(toplam?Math.round(x/toplam*1000)/10:0).toLocaleString('tr-TR');
-        let html;
-        if(belge){
-            html=kart('Toplam kontrol satırı',toplam)+kart('Tam',say('TAM'))+kart('Eksik / açıklama bekleyen',say('EKSİK')+say('AÇIKLAMA BEKLİYOR'))+kart('Bekleyen kontrol',say('BEKLEMEDE'))
-                +kart('Belge tamlık sonucu',TamlikSonucRozeti(TamlikBelgeSonucu(sonuclar)))+kart('Tamlık tamamlama oranı',oran(say('TAM')));
-        }else{
-            const belgeSonuclari=tamlikBelgeTanimlari.map(t=>TamlikSatirSonucu(tamlikBelgeCevaplari[t.id],true));
-            html=kart('Toplam soru',toplam)+kart('Uygun',say('UYGUN'))+kart('Uygun değil / açıklama bekleyen',say('UYGUN DEĞİL')+say('AÇIKLAMA BEKLİYOR'))+kart('Bekleyen soru',say('BEKLEMEDE'))
-                +kart('Genel uygunluk sonucu',TamlikSonucRozeti(TamlikGenelSonuc(belgeSonuclari,sonuclar)))+kart('Soru tamamlama oranı',oran(say('UYGUN')+say('UYGUN DEĞİL')));
-        }
-        alan.innerHTML=`<div class="summary-card-grid mb-3">${html}</div>${belge?'':'<div class="small text-muted mb-3">Genel uygunluk sonucu, Belge / Form Ön Kontrol sayfasında kaydedilmiş sonuçları da kapsar.</div>'}`;
-    }
-    function TamlikKontrolKaydet(afterSuccess){
-        const cevaplar=tamlikTanimlari.map(t=>({tanimId:t.id,cevap:tamlikCevaplari[t.id]?.cevap||'',aciklama:tamlikCevaplari[t.id]?.aciklama||''}));
-        AjaxPost('/Denetleme/TamBasvuruKontrolKaydet',{basvuruId:BasvuruId(),belgeKontrolu:tamlikBolum==='belge',cevaplar},sonuc=>SonucGosterVeDirtyTemizle(sonuc,afterSuccess));
-    }
-
+    // Tam başvuru uzman kontrolleri: "Belge / Form Ön Kontrol" (belge) ve "Tamlık ve Uygunluk Soruları" (uygunluk).
+    // Satır ve özet sonuçları Excel kontrol formundaki formüllerle aynı kurala göre sayfada hesaplanır.
+    let tamlikBolum='',tamlikDuzenlenebilir=false,tamlikTanimlari=[],tamlikCevaplari={},tamlikBelgeTanimlari=[],tamlikBelgeCevaplari={};
+    function TamlikJsonOku(id,bos){try{const x=JSON.parse(document.getElementById(id)?.textContent||'');return x&&typeof x==='object'?x:bos;}catch{return bos;}}
+    // t: tanım satırı. Zorunlu belge satırında Hayır doğrudan EKSİK sayılır; açıklama yine yazılabilir.
+    function TamlikSatirSonucu(c,belge,t){
+        const cevap=c?.cevap||'',aciklama=(c?.aciklama||'').trim();
+        if(!cevap)return 'BEKLEMEDE';
+        if(cevap==='Evet')return belge?'TAM':'UYGUN';
+        if(belge&&t&&!t.kosullu)return 'EKSİK';
+        return aciklama?(belge?'EKSİK':'UYGUN DEĞİL'):'AÇIKLAMA BEKLİYOR';
+    }
+    function TamlikSonucRozeti(s){
+        const renk={'TAM':'success','UYGUN':'success','EKSİK':'danger','UYGUN DEĞİL':'danger','AÇIKLAMA BEKLİYOR':'warning','BEKLEMEDE':'secondary','İNCELEMEDE':'info'}[s]||'secondary';
+        return `<span class="badge badge-${renk}">${htmlEncode(s)}</span>`;
+    }
+    function TamlikBelgeSonucu(s){return s.includes('EKSİK')?'EKSİK':s.includes('AÇIKLAMA BEKLİYOR')?'AÇIKLAMA BEKLİYOR':s.includes('BEKLEMEDE')?'İNCELEMEDE':'TAM';}
+    function TamlikGenelSonuc(a,b){return a.includes('EKSİK')?'EKSİK':b.includes('UYGUN DEĞİL')?'UYGUN DEĞİL':(a.includes('AÇIKLAMA BEKLİYOR')||b.includes('AÇIKLAMA BEKLİYOR'))?'AÇIKLAMA BEKLİYOR':(a.includes('BEKLEMEDE')||b.includes('BEKLEMEDE'))?'İNCELEMEDE':'UYGUN';}
+    function TamlikKontrolIlklendir(){
+        const panel=document.querySelector('[data-tamlik-bolum]');if(!panel)return;
+        tamlikBolum=panel.dataset.tamlikBolum;tamlikDuzenlenebilir=panel.dataset.editable==='true';
+        tamlikBelgeTanimlari=TamlikJsonOku('tamlikBelgeTanimJson',[]);tamlikBelgeCevaplari=TamlikJsonOku('tamlikBelgeCevapJson',{});
+        if(tamlikBolum==='belge'){tamlikTanimlari=tamlikBelgeTanimlari;tamlikCevaplari=tamlikBelgeCevaplari;}
+        else{tamlikTanimlari=TamlikJsonOku('tamlikUygunlukTanimJson',[]);tamlikCevaplari=TamlikJsonOku('tamlikUygunlukCevapJson',{});}
+        TamlikTabloRender();TamlikOzetRender();
+    }
+    function TamlikTabloRender(){
+        const alan=document.getElementById('tamlikTabloAlani');if(!alan)return;
+        const belge=tamlikBolum==='belge',edit=tamlikDuzenlenebilir;
+        const satir=t=>{
+            const c=tamlikCevaplari[t.id]||{},pasif=t.aktif===false?' <span class="badge badge-secondary" title="Bu satır tanımlarda pasife alınmıştır; girilen cevap korunur.">Pasif</span>':'';
+            const soru=belge?`${htmlEncode(t.soru)}${pasif}`:`${htmlEncode(t.soru)}${pasif}<div class="small text-muted mt-1">${htmlEncode(t.kontrolAciklamasi||'')}</div>`;
+            const ek=belge?`<td>${t.kosullu?'Koşullu':'Zorunlu'}</td>`:`<td>${htmlEncode(t.kaynakBelge||'')}</td>`;
+            const cevap=edit?`<select class="form-control tamlik-cevap" data-id="${t.id}"><option value="">Seçiniz</option><option ${c.cevap==='Evet'?'selected':''}>Evet</option><option ${c.cevap==='Hayır'?'selected':''}>Hayır</option></select>`:htmlEncode(c.cevap||'-');
+            const aciklama=edit?`<textarea class="form-control tamlik-aciklama" data-id="${t.id}" rows="2" maxlength="2000">${htmlEncode(c.aciklama||'')}</textarea>`:`<div style="white-space:pre-wrap">${htmlEncode(c.aciklama||'')}</div>`;
+            return `<tr data-id="${t.id}"><td>${htmlEncode(t.siraNo)}</td><td>${soru}</td>${ek}<td>${cevap}</td><td class="tamlik-sonuc">${TamlikSonucRozeti(TamlikSatirSonucu(c,belge,t))}</td><td>${aciklama}</td></tr>`;
+        };
+        const baslik=belge?'<th>Tamlık kontrol sorusu</th><th style="width:110px">Zorunluluk</th>':'<th>Kontrol sorusu / uygulama esası</th><th style="width:180px">Kaynak belge / form</th>';
+        alan.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-sm" style="min-width:1100px"><thead><tr><th style="width:50px">No</th>${baslik}<th style="width:130px">Cevap</th><th style="width:170px">Sonuç</th><th style="width:26%">Açıklama</th></tr></thead><tbody>${tamlikTanimlari.length?tamlikTanimlari.map(satir).join(''):'<tr><td colspan="6" class="text-muted">Tanımlarda aktif kontrol satırı bulunmuyor.</td></tr>'}</tbody></table></div>`;
+        alan.querySelectorAll('.tamlik-cevap,.tamlik-aciklama').forEach(el=>el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>TamlikCevapDegisti(el)));
+    }
+    function TamlikCevapDegisti(el){
+        const id=el.dataset.id,c=tamlikCevaplari[id]||(tamlikCevaplari[id]={cevap:'',aciklama:''});
+        if(el.classList.contains('tamlik-cevap'))c.cevap=el.value;else c.aciklama=el.value;
+        dirty=true;
+        const hucre=el.closest('tr')?.querySelector('.tamlik-sonuc');if(hucre)hucre.innerHTML=TamlikSonucRozeti(TamlikSatirSonucu(c,tamlikBolum==='belge',tamlikTanimlari.find(t=>String(t.id)===String(id))));
+        TamlikOzetRender();
+    }
+    function TamlikOzetRender(){
+        const alan=document.getElementById('tamlikOzetAlani');if(!alan)return;
+        const belge=tamlikBolum==='belge';
+        const sonuclar=tamlikTanimlari.map(t=>TamlikSatirSonucu(tamlikCevaplari[t.id],belge,t));
+        const say=s=>sonuclar.filter(x=>x===s).length,toplam=sonuclar.length;
+        const kart=(baslik,deger)=>`<div class="summary-card"><span>${htmlEncode(baslik)}</span><strong>${deger}</strong></div>`;
+        const oran=x=>'%'+(toplam?Math.round(x/toplam*1000)/10:0).toLocaleString('tr-TR');
+        let html;
+        if(belge){
+            html=kart('Toplam kontrol satırı',toplam)+kart('Tam',say('TAM'))+kart('Eksik / açıklama bekleyen',say('EKSİK')+say('AÇIKLAMA BEKLİYOR'))+kart('Bekleyen kontrol',say('BEKLEMEDE'))
+                +kart('Belge tamlık sonucu',TamlikSonucRozeti(TamlikBelgeSonucu(sonuclar)))+kart('Tamlık tamamlama oranı',oran(say('TAM')));
+        }else{
+            const belgeSonuclari=tamlikBelgeTanimlari.map(t=>TamlikSatirSonucu(tamlikBelgeCevaplari[t.id],true,t));
+            html=kart('Toplam soru',toplam)+kart('Uygun',say('UYGUN'))+kart('Uygun değil / açıklama bekleyen',say('UYGUN DEĞİL')+say('AÇIKLAMA BEKLİYOR'))+kart('Bekleyen soru',say('BEKLEMEDE'))
+                +kart('Genel uygunluk sonucu',TamlikSonucRozeti(TamlikGenelSonuc(belgeSonuclari,sonuclar)))+kart('Soru tamamlama oranı',oran(say('UYGUN')+say('UYGUN DEĞİL')));
+        }
+        alan.innerHTML=`<div class="summary-card-grid mb-3">${html}</div>${belge?'':'<div class="small text-muted mb-3">Genel uygunluk sonucu, Belge / Form Ön Kontrol sayfasında kaydedilmiş sonuçları da kapsar.</div>'}`;
+    }
+    function TamlikKontrolKaydet(afterSuccess){
+        const cevaplar=tamlikTanimlari.map(t=>({tanimId:t.id,cevap:tamlikCevaplari[t.id]?.cevap||'',aciklama:tamlikCevaplari[t.id]?.aciklama||''}));
+        AjaxPost('/Denetleme/TamBasvuruKontrolKaydet',{basvuruId:BasvuruId(),belgeKontrolu:tamlikBolum==='belge',cevaplar},sonuc=>SonucGosterVeDirtyTemizle(sonuc,afterSuccess));
+    }
+
     let izlemeTanimlari=[],izlemeKayitlari=[];
     function IzlemeGostergeleriIlklendir(){try{izlemeTanimlari=JSON.parse(document.getElementById('izlemeTanimJson')?.textContent||'[]');izlemeKayitlari=JSON.parse(document.getElementById('izlemeKayitJson')?.textContent||'[]');}catch{izlemeTanimlari=[];izlemeKayitlari=[];}IzlemeGostergeleriRender();}
     function IzlemeGostergeleriRender(){const a=document.getElementById('izlemeGostergeleriAlani');if(!a)return;const edit=a.dataset.edit==='true';a.innerHTML=`<div class="table-responsive"><table class="table table-bordered table-hover table-sm" style="min-width:1300px"><thead><tr>${edit?'<th class="text-center" style="width:60px">İşlem</th>':''}<th>Gösterge</th><th>Başlangıç</th><th>Hedef</th><th>Birim</th><th>Kadın kırılımı</th><th>Genç kırılımı</th><th>Veri kaynağı / kanıt</th><th>Sıklık</th><th>Açıklama</th></tr></thead><tbody>${izlemeTanimlari.map((t,i)=>{const x=izlemeKayitlari.find(k=>k.gostergeKodu===t.kod)||{};return `<tr>${edit?`<td class="text-center"><button type="button" class="btn btn-sm btn-outline-primary" title="Düzenle" aria-label="${htmlEncode(t.ad)} göstergesini düzenle" onclick="IzlemeGostergesiModalAc(izlemeTanimlari[${i}].kod)"><i class="fas fa-pencil-alt"></i></button></td>`:''}<td>${htmlEncode(t.ad)}${t.aktif===false?' <span class="badge badge-secondary" title="Bu gösterge tanımlarda pasife alınmıştır; girilen değer korunur.">Pasif</span>':''}</td><td>${htmlEncode(x.baslangicDegeri||'')}</td><td>${htmlEncode(x.hedefDeger||'')}</td><td>${htmlEncode(t.birim)}</td><td>${htmlEncode(x.kadinKirilimi||'')}</td><td>${htmlEncode(x.gencKirilimi||'')}</td><td>${htmlEncode(t.veriKaynagi)}</td><td>${htmlEncode(t.siklik)}</td><td>${htmlEncode(x.aciklama||'')}</td></tr>`;}).join('')}</tbody></table></div>`;}
@@ -4802,6 +5002,7 @@
             if (panel?._denetimListesiKaydet && button) panel._denetimListesiKaydet(button, afterSuccess);
         }
         else if (active === bolumBasvuruBelgeOnKontrol || active === bolumBasvuruUygunlukKontrolu) TamlikKontrolKaydet(afterSuccess);
+        else if (active === bolumBasvuruPazarArastirmasi) PazarArastirmasiKaydet(afterSuccess);
         else if (active === bolumKarar) {
             const button = document.getElementById('basvuruKaydetBtn');
             if (button) DenetimKaydet(button, false, afterSuccess);

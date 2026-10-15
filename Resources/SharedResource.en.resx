@@ -2500,7 +2500,7 @@
     <value>Under Review</value>
   </data>
   <data name="enumBasvuruDurum_5" xml:space="preserve">
-    <value>Contract Review</value>
+    <value>Application Under Review</value>
   </data>
   <data name="enumBasvuruDurum_7" xml:space="preserve">
     <value>Application Not Selected</value>
