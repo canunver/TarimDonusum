@@ -8,8 +8,4 @@
  <script type="application/json" id="yatirimEkipmanJson">@Html.Raw(JsonSerializer.Serialize(Model.Basvuru.Makineler.Select(m => new { m.id,m.basvuruId,m.uygulamaAdresiId,m.uygulamaAdresiAciklama,m.degerZinciriAsamaTuru,m.degerZinciriAsamaTuruAdi,m.uygunHarcamaId,m.uygunHarcamaAdi,m.siraNo,m.ad,m.birim,m.miktar,m.aciklama,m.marka,m.model,m.kapasiteOzellikleri,m.yerlesimPlaniSiraNo,m.kullanimAmaci,m.durum,m.kapasiteSecimGerekcesi,m.teklifKontroluYapilsin,teknikOzellikler=m.teknikOzellikler,teklifler=m.teklifler })))</script>
  <div id="yatirimEkipmanListeAlani"></div>
 </section>
-@if(duzenlenebilir)
-{
 <partial name="_YatirimEkipmanModal" model="Model" />
-
-}

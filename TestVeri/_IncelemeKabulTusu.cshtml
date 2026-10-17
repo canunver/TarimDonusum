@@ -1,0 +1,9 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@* TEST: İncelemedeki ön başvurunun Tamlık-Uygunluk Kontrolü sayfasında görünen "Doldur ve Kabul Et" düğmesi. TestVeri klasörü ile birlikte silinebilir. *@
+@if (Model.DenetciGorunumu && Model.Basvuru.kayitTuru == TarimDonusum.Models.enumBasvuruKayitTuru.OnBasvuru && Model.Basvuru.durum == TarimDonusum.Models.enumBasvuruDurum.OnBasvuruIncelemeDurumu)
+{
+    <div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap" style="gap:12px">
+        <span><i class="fas fa-flask mr-1"></i><strong>Test:</strong> Sistem Kontrolü ve Tamlık-Uygunluk Kontrolü sayfalarını "Kabul" olacak şekilde doldurur, kararı "Kabul" olarak kaydeder ve incelemeyi sonuçlandırır.</span>
+        @await Html.PartialAsync("~/TestVeri/_TestVeriDugmesi.cshtml", ("Doldur ve Kabul Et", $"/TestVeri/OnBasvuruIncelemeKabul?basvuruId={Model.Basvuru.Id}", "Kontrol listeleri doldurulup ön başvuru kabul edilsin mi? Bu işlem tam başvuru kaydını oluşturur.", "yenile"))
+    </div>
+}

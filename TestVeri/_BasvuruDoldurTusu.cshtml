@@ -1,0 +1,9 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@* TEST: Düzenlenebilir başvurunun ilk sayfasında görünen "Başvuruyu Doldur" düğmesi. TestVeri klasörü ile birlikte silinebilir. *@
+@if (Model.Basvuru.Id > 0 && Model.Basvuru.kayitTuru == TarimDonusum.Models.enumBasvuruKayitTuru.Basvuru && Model.Basvuru.durum == TarimDonusum.Models.enumBasvuruDurum.BasvuruDurumu && !Model.SaltOkunur && !Model.DenetciGorunumu)
+{
+    <div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap" style="gap:12px">
+        <span><i class="fas fa-flask mr-1"></i><strong>Test:</strong> Ön başvurudan gelen bilgileri korur; yalnızca başvuruda girilen sayfaları (bilanço, teklifler, süreçler, metraj, belgeler, izleme göstergeleri, taahhüt vb.) rastgele verilerle doldurur ve kaydeder.</span>
+        @await Html.PartialAsync("~/TestVeri/_TestVeriDugmesi.cshtml", ("Başvuruyu Doldur", $"/TestVeri/BasvuruDoldur?basvuruId={Model.Basvuru.Id}", "Başvurunun kalan bölümleri rastgele verilerle doldurulup kaydedilsin mi?", "yenile"))
+    </div>
+}

@@ -656,9 +656,9 @@ namespace TarimDonusum.IsKurallari
                     {
                         // Sistem ve uzman kontrol listeleri ön başvuru uygunluk sorularıdır; başvuru kararında aranmaz.
                         if (!basvuruKaydi && !DenetimListesiTamamMi(kayitliDenetim.SistemDenetimAnketi, true))
-                            sonuc.HataEkle("Sonuçlandırmadan önce sistem kontrol listesi kaydedilmelidir.");
+                            sonuc.HataEkle("Sonuçlandırmadan önce Sistem Kontrolü sayfası kaydedilmelidir.");
                         if (!basvuruKaydi && !DenetimListesiTamamMi(kayitliDenetim.DenetimAnketi, false))
-                            sonuc.HataEkle("Sonuçlandırmadan önce uzman kontrol listesi kaydedilmelidir.");
+                            sonuc.HataEkle("Sonuçlandırmadan önce Tamlık-Uygunluk Kontrolü sayfası kaydedilmelidir.");
                         if (string.IsNullOrWhiteSpace(kayitliDenetim.DenetimGerekcesi) ||
                             !kayitliDenetim.DenetimSonucu.HasValue ||
                             kayitliDenetim.DenetimSonucu == enumOnBasvuruDenetimSonucu.Tanimsiz)

@@ -1,0 +1,9 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@* TEST: Yeni ön başvurunun ilk sayfasında görünen "Ön Başvuru Üret" düğmesi. TestVeri klasörü ile birlikte silinebilir. *@
+@if (Model.Basvuru.Id <= 0 && Model.Basvuru.kayitTuru == TarimDonusum.Models.enumBasvuruKayitTuru.OnBasvuru && !Model.SaltOkunur && !Model.DenetciGorunumu)
+{
+    <div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap" style="gap:12px">
+        <span><i class="fas fa-flask mr-1"></i><strong>Test:</strong> Tüm ön başvuru sayfalarını rastgele verilerle doldurur ve kaydeder. Sonra kayıt açılır; isterseniz değiştirip incelemeye gönderebilirsiniz.</span>
+        @await Html.PartialAsync("~/TestVeri/_TestVeriDugmesi.cshtml", ("Ön Başvuru Üret", "/TestVeri/OnBasvuruUret", "Rastgele verilerle yeni bir test ön başvurusu üretilsin mi?", "duzenle"))
+    </div>
+}

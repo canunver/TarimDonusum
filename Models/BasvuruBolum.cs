@@ -113,8 +113,8 @@ namespace TarimDonusum.Models
             // Tam başvuru uzman kontrolleri (Tanımlar > Belge / Form Envanteri, Tamlık ve Uygunluk Soruları)
             new(enumBasvuruBolum.BasvuruBelgeOnKontrol, 121, "Belge / Form Ön Kontrol", "Basvuru/_TamBasvuruBelgeKontrol", true),
             new(enumBasvuruBolum.BasvuruUygunlukKontrolu, 122, "Tamlık ve Uygunluk Soruları", "Basvuru/_TamBasvuruUygunlukKontrol", true),
-            // Ön başvuru: Tanımlar > Sıralama Puanı Kriterleri'ne göre başvuru verilerinden hesaplanan puan (Özet - Ön kontrol'den sonra).
-            new(enumBasvuruBolum.OnBasvuruSiralamaPuani, 121, "Sıralama Puanı", "Bolumler/_SiralamaPuani"),
+            // Ön başvuru: Tanımlar > Sıralama Puanı Kriterleri'ne göre başvuru verilerinden hesaplanan puan (Özet - Ön kontrol'den sonra); yalnızca uzman görür.
+            new(enumBasvuruBolum.OnBasvuruSiralamaPuani, 121, "Sıralama Puanı", "Bolumler/_SiralamaPuani", true),
             new(enumBasvuruBolum.OnBasvuruItiraz, 125, "İtiraz / İtiraz Geçmişi", "Bolumler/_OnBasvuruItiraz"),
             new(enumBasvuruBolum.SistemSonuclari, 130, "Basvuru.Step.SystemResults", "Bolumler/_SistemSonuclari", true),
             new(enumBasvuruBolum.UzmanSonuclari, 140, "Basvuru.Step.ExpertResults", "Bolumler/_UzmanSonuclari", true),

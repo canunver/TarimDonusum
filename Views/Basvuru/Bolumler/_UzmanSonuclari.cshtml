@@ -7,6 +7,7 @@
         <h2 class="mb-0">@L["Basvuru.Step.ExpertResults"]</h2>
         <a class="btn btn-outline-primary" asp-controller="Basvuru" asp-action="OnBasvuruUygunlukYazdir" asp-route-id="@b.Id"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
     </div>
+    <partial name="~/TestVeri/_IncelemeKabulTusu.cshtml" model="Model" />@* TEST: test verisi düğmesi; testler bitince bu satır ve TestVeri klasörü silinir. *@
     <div class="alert alert-info">@L["Basvuru.Review.ExpertResultsNote"]</div>
     <input type="hidden" class="denetim-listesi-json" value="@b.DenetimAnketi" />
     <div class="table-responsive"><table class="table table-bordered denetim-listesi-table" style="table-layout:fixed; min-width:980px;">

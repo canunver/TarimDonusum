@@ -1,0 +1,6 @@
+@model (string metin, string url, string onay, string yonlendir)
+@* TEST: Ortak test düğmesi; betiği tıklanınca /TestVeri/Betik adresinden yükler (sayfalar innerHTML ile geldiği için gömülü betik çalışmaz). *@
+<button type="button" class="btn btn-warning" data-url="@Model.url" data-onay="@Model.onay" data-yonlendir="@Model.yonlendir"
+        onclick="const b=this;(window.TestVeriCalistir?Promise.resolve():new Promise((ok,hata)=>{const s=document.createElement('script');s.src='/TestVeri/Betik';s.onload=ok;s.onerror=hata;document.head.appendChild(s);})).then(()=>TestVeriCalistir(b))">
+    <i class="fas fa-magic mr-1"></i>@Model.metin
+</button>
