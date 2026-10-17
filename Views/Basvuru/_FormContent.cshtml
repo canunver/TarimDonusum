@@ -621,7 +621,8 @@
     function GoruntuleDugmesi(cagri, ekSinif = '') {
         return `<button type="button" class="btn btn-sm btn-outline-secondary ${ekSinif}" title="Detayı görüntüle" aria-label="Detayı görüntüle" onclick="PencereGoruntule(()=>${cagri})"><i class="fas fa-eye"></i></button>`;
     }
-    $(document).on('show.bs.modal', '.modal', function () {
+    // jQuery sayfanın sonunda yüklendiği için olaylar DOMContentLoaded'da bağlanır.
+    document.addEventListener('DOMContentLoaded', () => $(document).on('show.bs.modal', '.modal', function () {
         if (!pencereGoruntulemeModu) return;
         pencereGoruntulemeModu = false;
         const $pencere = $(this).addClass('pencere-goruntuleme');
@@ -635,7 +636,7 @@
         const $pencere = $(this).removeClass('pencere-goruntuleme');
         $pencere.find('[data-goruntuleme-kilidi]').prop('disabled', false).removeAttr('data-goruntuleme-kilidi');
         $pencere.find('[data-goruntuleme-gizli]').removeClass('d-none').removeAttr('data-goruntuleme-gizli');
-    });
+    }));
     const ortaklikReadonly = @(ro ? "true" : "false");
     const uygulamaAdresiSiniri = @b.basvuruFirma.donem.uygulamaAdresiSinirliMi;
     const tekUygulamaAdresiId = @(b.YatirimAdresleri.Count == 1 ? b.YatirimAdresleri[0].id : 0);
