@@ -1,0 +1,47 @@
+@model TarimDonusum.ViewModels.Basvuru.BasvuruFormViewModel
+@using System.Globalization
+@using TarimDonusum.Models
+@{
+    // Puanlar Tanımlar > Sıralama Puanı Kriterleri'ne göre başvurunun kayıtlı verilerinden hesaplanır; sayfada girilecek alan yoktur.
+    var tr = new CultureInfo("tr-TR");
+    List<SiralamaPuaniSatiri> satirlar = SiralamaPuaniHesaplayici.Hesapla(Model.Basvuru);
+    decimal toplam = satirlar.Sum(x => x.puan);
+    string P(decimal x) => x.ToString("#,##0.##", tr);
+}
+<section class="basvuru-panel active" data-panel="@((int)enumBasvuruBolum.OnBasvuruSiralamaPuani)">
+    <div class="section-toolbar"><h2 class="mb-0">Sıralama Puanı</h2></div>
+    <div class="alert alert-info">Puanlar ön başvuruda kaydedilmiş bilgilerden otomatik hesaplanır. Her alt kriter için başvurunun sağladığı koşul ve puanı gösterilir; bilgileri ilgili sayfalarda güncellediğinizde puan da güncellenir.</div>
+    @if (satirlar.Count == 0)
+    {
+        <div class="alert alert-light border">Sıralama puanı kriteri tanımlanmamış.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered siralama-puani-tablosu">
+                <thead><tr><th style="width:22%">Konu</th><th style="width:26%">Alt Kriter</th><th>Eşik / Koşul</th><th style="width:100px" class="text-right">Puan</th></tr></thead>
+                <tbody>
+                    @foreach (var grup in satirlar.GroupBy(x => x.konuId))
+                    {
+                        bool ilk = true;
+                        int adet = grup.Count();
+                        foreach (SiralamaPuaniSatiri s in grup)
+                        {
+                            <tr>
+                                @if (ilk)
+                                {
+                                    <td rowspan="@adet"><strong>@s.konu</strong></td>
+                                    ilk = false;
+                                }
+                                <td>@s.altKriter</td>
+                                <td class="@(s.veriYok ? "text-muted font-italic" : s.kosulSaglandi ? "" : "text-muted")">@s.metin</td>
+                                <td class="text-right"><strong>@P(s.puan)</strong></td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                <tfoot><tr class="table-light"><th colspan="3" class="text-right">Toplam sıralama puanı</th><th class="text-right">@P(toplam)</th></tr></tfoot>
+            </table>
+        </div>
+    }
+</section>

@@ -160,6 +160,101 @@ namespace TarimDonusum.IsKurallari
             return sonuc;
         }
 
+        public async Task<Sonuc<List<SiralamaPuaniKonu>>> SiralamaPuaniListeleAsync(Kullanici? kullanici)
+        {
+            Sonuc<List<SiralamaPuaniKonu>> sonuc = new();
+            if (!SistemYoneticisiMi(kullanici, sonuc)) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                sonuc.nesne = await new TABSiralamaPuaniTanim(connection, _localizer).ListeleAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Sıralama puanı kriterleri okunamadı.");
+                sonuc.HataEkle("Sıralama puanı kriterleri okunamadı.");
+            }
+            return sonuc;
+        }
+
+        public Task<Sonuc<int>> SiralamaPuaniKonuKaydetAsync(SiralamaPuaniKonu k, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            k.ad = (k.ad ?? "").Trim();
+            if (k.siraNo <= 0) sonuc.HataEkle("Sıra numarası zorunludur.");
+            if (k.ad.Length == 0) sonuc.HataEkle("Konu adı zorunludur.");
+            if (k.ad.Length > 500) sonuc.HataEkle("Konu adı 500 karakteri aşamaz.");
+            if (k.azamiPuan < 0) sonuc.HataEkle("Azami puan negatif olamaz.");
+            return SiralamaPuaniYazAsync(sonuc, kullanici, "Konu kaydedildi.", t => t.KonuKaydetAsync(k));
+        }
+
+        public Task<Sonuc<int>> SiralamaPuaniAltKriterKaydetAsync(SiralamaPuaniAltKriter a, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            a.ad = (a.ad ?? "").Trim(); a.sonucMetni = (a.sonucMetni ?? "").Trim(); a.veriKaynagi = (a.veriKaynagi ?? "").Trim();
+            a.terimKodu = string.IsNullOrWhiteSpace(a.terimKodu) ? null : a.terimKodu.Trim();
+            if (a.konuId <= 0) sonuc.HataEkle("Konu seçilmelidir.");
+            if (a.siraNo <= 0) sonuc.HataEkle("Sıra numarası zorunludur.");
+            if (a.ad.Length == 0) sonuc.HataEkle("Alt kriter adı zorunludur.");
+            if (a.ad.Length > 500 || a.sonucMetni.Length > 500 || a.veriKaynagi.Length > 500) sonuc.HataEkle("Alt kriter alanları 500 karakteri aşamaz.");
+            if (a.terimKodu != null && SiralamaPuaniTerimleri.Bul(a.terimKodu) == null) sonuc.HataEkle("Terim geçersizdir.");
+            return SiralamaPuaniYazAsync(sonuc, kullanici, "Alt kriter kaydedildi.", t => t.AltKriterKaydetAsync(a));
+        }
+
+        public Task<Sonuc<int>> SiralamaPuaniKosulKaydetAsync(SiralamaPuaniKosul k, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            k.metin = (k.metin ?? "").Trim();
+            if (k.altKriterId <= 0) sonuc.HataEkle("Alt kriter seçilmelidir.");
+            if (k.siraNo <= 0) sonuc.HataEkle("Sıra numarası zorunludur.");
+            if (k.metin.Length == 0) sonuc.HataEkle("Eşik / koşul metni zorunludur.");
+            if (k.metin.Length > 1000) sonuc.HataEkle("Eşik / koşul metni 1000 karakteri aşamaz.");
+            if (k.kosulTuru == enumSiralamaKosulTuru.Esit)
+            {
+                if (!k.deger.HasValue) sonuc.HataEkle("Eşit koşulunda değer girilmelidir.");
+                k.altSinir = null; k.ustSinir = null;
+            }
+            else if (k.kosulTuru == enumSiralamaKosulTuru.Aralik)
+            {
+                if (!k.altSinir.HasValue && !k.ustSinir.HasValue) sonuc.HataEkle("Aralık koşulunda alt veya üst sınırdan en az biri girilmelidir.");
+                if (k.altSinir > k.ustSinir) sonuc.HataEkle("Alt sınır üst sınırdan büyük olamaz.");
+                k.deger = null;
+            }
+            else sonuc.HataEkle("Koşul türü geçersizdir.");
+            if (Math.Abs(k.puan) > 1000) sonuc.HataEkle("Puan geçersizdir.");
+            return SiralamaPuaniYazAsync(sonuc, kullanici, "Koşul kaydedildi.", t => t.KosulKaydetAsync(k));
+        }
+
+        public Task<Sonuc<int>> SiralamaPuaniSilAsync(string tablo, int id, Kullanici? kullanici)
+        {
+            Sonuc<int> sonuc = new();
+            if (tablo is not ("Konu" or "AltKriter" or "Kosul") || id <= 0) sonuc.HataEkle("Silinecek kayıt geçersizdir.");
+            return SiralamaPuaniYazAsync(sonuc, kullanici, "Kayıt silindi.", async t => await t.SilAsync(tablo, id) ? id : 0);
+        }
+
+        /// <summary>Sıralama puanı tanım yazma işlemlerinin ortak gövdesi: yetki, kayıt ve önbelleğin yenilenmesi.</summary>
+        private async Task<Sonuc<int>> SiralamaPuaniYazAsync(Sonuc<int> sonuc, Kullanici? kullanici, string mesaj, Func<TABSiralamaPuaniTanim, Task<int>> islem)
+        {
+            if (!SistemYoneticisiMi(kullanici, sonuc) || !sonuc.basarili) return sonuc;
+            try
+            {
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                TABSiralamaPuaniTanim tablo = new TABSiralamaPuaniTanim(connection, _localizer);
+                sonuc.nesne = await islem(tablo);
+                if (sonuc.nesne <= 0) { sonuc.HataEkle("Kayıt bulunamadı."); return sonuc; }
+                SiralamaPuaniTanimSaglayici.Guncelle(await tablo.ListeleAsync());
+                sonuc.mesaj = mesaj;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Sıralama puanı tanımı kaydedilemedi.");
+                sonuc.HataEkle("Sıralama puanı tanımı kaydedilemedi.");
+            }
+            return sonuc;
+        }
+
         public async Task<Sonuc<List<IzlemeGostergesiTanim>>> IzlemeGostergeleriListeleAsync(Kullanici? kullanici)
         {
             Sonuc<List<IzlemeGostergesiTanim>> sonuc = new();

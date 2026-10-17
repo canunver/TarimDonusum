@@ -2808,4 +2808,5 @@
   <data name="MenuBasvuru.tamBasvuruBelgeKontrolleri" xml:space="preserve"><value>Document / Form Inventory</value></data>
   <data name="MenuBasvuru.tamBasvuruUygunlukSorulari" xml:space="preserve"><value>Completeness and Eligibility Questions</value></data>
   <data name="MenuBasvuru.uygunHarcamaListesi" xml:space="preserve"><value>Eligible Expense List</value></data>
+  <data name="MenuBasvuru.siralamaPuaniKriterleri" xml:space="preserve"><value>Ranking Score Criteria</value></data>
 </root>

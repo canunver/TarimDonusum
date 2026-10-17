@@ -2860,4 +2860,5 @@ Alt projem için belirlenecek risk kategorisine bağlı olarak hazırlanması ge
   <data name="MenuBasvuru.tamBasvuruBelgeKontrolleri" xml:space="preserve"><value>Belge / Form Envanteri</value></data>
   <data name="MenuBasvuru.tamBasvuruUygunlukSorulari" xml:space="preserve"><value>Tamlık ve Uygunluk Soruları</value></data>
   <data name="MenuBasvuru.uygunHarcamaListesi" xml:space="preserve"><value>Uygun Harcama Listesi</value></data>
+  <data name="MenuBasvuru.siralamaPuaniKriterleri" xml:space="preserve"><value>Sıralama Puanı Kriterleri</value></data>
 </root>

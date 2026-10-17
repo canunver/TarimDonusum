@@ -1,0 +1,168 @@
+@using System.Text.Json
+@using TarimDonusum.Models
+@{
+    ViewData["Title"] = "Sıralama Puanı Kriterleri";
+    var terimler = SiralamaPuaniTerimleri.Tum.Select(t => new { t.kod, t.ad, tur = (int)t.tur, t.aciklama, secenekler = t.secenekler.Select(s => new { s.deger, s.ad }) });
+}
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div>
+            <h1>Sıralama Puanı Kriterleri</h1>
+            <p>Ön başvurunun Sıralama Puanı sayfasında kullanılan konu, alt kriter, eşik / koşul ve puanlar. Her alt kriter bir terime bağlanır; terimin değeri başvuru verilerinden hesaplanır ve sağlanan koşulun puanı verilir.</p>
+        </div>
+        <button class="btn btn-primary" onclick="konuAc(0)"><i class="fas fa-plus mr-1"></i>Yeni konu</button>
+    </div>
+    <div id="liste"></div>
+    <div id="toplam" class="basvuru-card mt-3"></div>
+</div>
+
+<div class="modal fade" id="konuModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 id="konuBaslik">Konu</h5><button class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body">
+        <input id="konuId" type="hidden">
+        <div class="form-grid">
+            <label>Sıra no<input id="konuSira" type="number" min="1"></label>
+            <label>Azami puan<input id="konuAzami" type="number" min="0" step="any"></label>
+            <label>Durum<select id="konuAktif"><option value="true">Aktif</option><option value="false">Pasif</option></select></label>
+        </div>
+        <label class="wide-label">Konu<input id="konuAd" maxlength="500"></label>
+        <small class="form-text text-muted">Azami puan yalnızca tanım kontrolü içindir; ön başvuru sayfasında gösterilmez.</small>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button><button class="btn btn-primary" onclick="konuKaydet()">Kaydet</button></div>
+</div></div></div>
+
+<div class="modal fade" id="altModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 id="altBaslik">Alt kriter</h5><button class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body">
+        <input id="altId" type="hidden"><input id="altKonuId" type="hidden">
+        <div class="form-grid">
+            <label>Sıra no<input id="altSira" type="number" min="1"></label>
+            <label>Durum<select id="altAktif"><option value="true">Aktif</option><option value="false">Pasif</option></select></label>
+        </div>
+        <label class="wide-label">Alt kriter<input id="altAd" maxlength="500"></label>
+        <label class="wide-label">Terim<select id="altTerim" onchange="terimAciklamasi()"></select><small id="altTerimAciklama" class="form-text text-muted"></small></label>
+        <label class="wide-label">Ön başvuruda gösterilecek metin<input id="altSonuc" maxlength="500"></label>
+        <small class="form-text text-muted">Metindeki <code>{deger}</code> başvurudaki terim değeriyle değiştirilir (ör. "90.000 Avro eşdeğeri RFF tutarı başına {deger} ilave kayıtlı çiftçi"). Boş bırakılırsa sağlanan koşulun metni gösterilir.</small>
+        <label class="wide-label">Veri kaynağı<input id="altKaynak" maxlength="500"></label>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button><button class="btn btn-primary" onclick="altKaydet()">Kaydet</button></div>
+</div></div></div>
+
+<div class="modal fade" id="kosulModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 id="kosulBaslik">Eşik / koşul</h5><button class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body">
+        <input id="kosulId" type="hidden"><input id="kosulAltId" type="hidden">
+        <div class="form-grid">
+            <label>Sıra no<input id="kosulSira" type="number" min="1"></label>
+            <label>Koşul türü<select id="kosulTur" onchange="kosulAlanlari()"><option value="1">Eşit (tam değer)</option><option value="2">Aralık</option></select></label>
+            <label>Puan<input id="kosulPuan" type="number" step="any"></label>
+        </div>
+        <label class="wide-label">Eşik / koşul metni<input id="kosulMetin" maxlength="1000"></label>
+        <div id="kosulEsitAlani" class="form-grid">
+            <label>Değer<span id="kosulDegerKutusu"></span></label>
+        </div>
+        <div id="kosulAralikAlani" class="form-grid">
+            <label>Alt sınır<input id="kosulAlt" type="number" step="any"></label>
+            <label class="d-flex align-items-center" style="gap:8px"><input id="kosulAltDahil" type="checkbox"> Alt sınır dahil (≥)</label>
+            <label>Üst sınır<input id="kosulUst" type="number" step="any"></label>
+            <label class="d-flex align-items-center" style="gap:8px"><input id="kosulUstDahil" type="checkbox"> Üst sınır dahil (≤)</label>
+        </div>
+        <small id="kosulAralikNotu" class="form-text text-muted">Sınırlardan biri boş bırakılabilir (ör. yalnız üst sınır 2 → "2'den az"; yalnız alt sınır 6 dahil → "6 veya daha fazla").</small>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline-secondary" data-dismiss="modal">Kapat</button><button class="btn btn-primary" onclick="kosulKaydet()">Kaydet</button></div>
+</div></div></div>
+
+<div class="modal fade" id="silModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5>Kaydı sil</h5><button class="close" data-dismiss="modal">&times;</button></div>
+    <div class="modal-body"><p id="silMetin" class="mb-0"></p></div>
+    <div class="modal-footer"><button class="btn btn-outline-secondary" data-dismiss="modal">Vazgeç</button><button id="silOnay" class="btn btn-danger">Sil</button></div>
+</div></div></div>
+
+@section Scripts {<script>
+const terimler = @Html.Raw(JsonSerializer.Serialize(terimler));
+let konular = [];
+const esc = x => $('<div>').text(x ?? '').html();
+const sayi = x => x == null ? '' : Number(x).toLocaleString('tr-TR', { maximumFractionDigits: 4 });
+const sonraki = liste => Math.max(0, ...liste.map(y => Number(y.siraNo) || 0)) + 1;
+function hata(s) { PopupMesajGoster(s?.hataStr || 'İşlem gerçekleştirilemedi.', false); }
+function terim(kod) { return terimler.find(t => t.kod === kod); }
+function degerAdi(t, d) { if (!t) return sayi(d); if (t.tur === 3 || t.tur === 4) return t.secenekler.find(s => Number(s.deger) === Number(d))?.ad ?? sayi(d); return (t.tur === 2 ? '%' : '') + sayi(d); }
+function kosulIfadesi(k, t) {
+    if (k.kosulTuru === 1) return '= ' + degerAdi(t, k.deger);
+    const y = t?.tur === 2 ? '%' : '', p = [];
+    if (k.altSinir != null) p.push((k.altDahil ? '≥ ' : '> ') + y + sayi(k.altSinir));
+    if (k.ustSinir != null) p.push((k.ustDahil ? '≤ ' : '< ') + y + sayi(k.ustSinir));
+    return p.join(' ve ');
+}
+function dugmeler(duzenle, sil) { return `<button class="btn btn-sm btn-outline-primary" title="Düzenle" onclick="${duzenle}"><i class="fas fa-pencil-alt"></i></button> <button class="btn btn-sm btn-outline-danger" title="Sil" onclick="${sil}"><i class="fas fa-trash-alt"></i></button>`; }
+function listele() {
+    AjaxGet('/SiralamaPuaniTanim/Listele', null, s => {
+        if (!s?.basarili) return hata(s);
+        konular = s.nesne || [];
+        $('#liste').html(konular.length ? konular.map(k => {
+            const altlar = [...(k.altKriterler || [])].sort((a, b) => a.siraNo - b.siraNo);
+            const satirlar = altlar.map(a => {
+                const t = terim(a.terimKodu), kosullar = [...(a.kosullar || [])].sort((x, y) => x.siraNo - y.siraNo);
+                const kosulHtml = kosullar.map(x => `<div class="d-flex align-items-start justify-content-between border-bottom py-1" style="gap:10px"><div style="flex:1;min-width:0">${esc(x.metin)}<br><small class="text-muted">${esc(kosulIfadesi(x, t))}</small></div><div class="text-nowrap"><strong class="mr-2">${sayi(x.puan)} puan</strong>${dugmeler(`kosulAc(${a.id},${x.id})`, `sil('Kosul',${x.id},'Bu koşul silinsin mi?')`)}</div></div>`).join('') || '<span class="text-muted">Koşul eklenmedi</span>';
+                return `<tr class="${a.aktif ? '' : 'text-muted'}"><td>${k.siraNo}.${a.siraNo}</td><td>${esc(a.ad)}${a.aktif ? '' : ' <span class="badge badge-secondary">Pasif</span>'}${a.sonucMetni ? `<br><small class="text-muted">Gösterim: ${esc(a.sonucMetni)}</small>` : ''}</td><td>${t ? esc(t.ad) : '<span class="text-warning">Terim yok (hesaplanmaz)</span>'}</td><td>${kosulHtml}<button class="btn btn-sm btn-outline-success mt-1" onclick="kosulAc(${a.id},0)"><i class="fas fa-plus mr-1"></i>Koşul ekle</button></td><td>${esc(a.veriKaynagi)}</td><td class="text-nowrap">${dugmeler(`altAc(${k.id},${a.id})`, `sil('AltKriter',${a.id},'Alt kriter ve koşulları silinsin mi?')`)}</td></tr>`;
+            }).join('');
+            return `<div class="basvuru-card mb-3 ${k.aktif ? '' : 'text-muted'}">
+                <div class="d-flex align-items-center justify-content-between mb-2" style="gap:12px"><h2 class="h5 mb-0">${k.siraNo}. ${esc(k.ad)} ${k.aktif ? '' : '<span class="badge badge-secondary">Pasif</span>'}</h2>
+                <div class="text-nowrap"><span class="mr-3">Azami puan: <strong>${k.azamiPuan == null ? '-' : sayi(k.azamiPuan)}</strong></span><button class="btn btn-sm btn-outline-success" onclick="altAc(${k.id},0)"><i class="fas fa-plus mr-1"></i>Alt kriter</button> ${dugmeler(`konuAc(${k.id})`, `sil('Konu',${k.id},'Konu, alt kriterleri ve koşulları silinsin mi?')`)}</div></div>
+                <div class="table-responsive"><table class="table table-bordered table-sm mb-0"><thead><tr><th style="width:55px">No</th><th style="width:24%">Alt kriter</th><th style="width:20%">Terim</th><th>Eşik / koşul ve puan</th><th style="width:15%">Veri kaynağı</th><th style="width:90px"></th></tr></thead>
+                <tbody>${satirlar || '<tr><td colspan="6" class="text-muted">Alt kriter eklenmedi.</td></tr>'}</tbody></table></div></div>`;
+        }).join('') : '<div class="basvuru-card text-muted">Henüz konu tanımlanmadı.</div>');
+        const toplam = konular.filter(k => k.aktif).reduce((t, k) => t + (Number(k.azamiPuan) || 0), 0);
+        $('#toplam').html(`<strong>Aktif konuların azami puan toplamı: ${sayi(toplam)}</strong>${toplam === 100 ? ' <span class="badge badge-success">100 puan tamam</span>' : ' <span class="badge badge-warning">100 değil</span>'}`);
+    });
+}
+function konuAc(id) {
+    const k = konular.find(x => x.id === id) || { id: 0, siraNo: sonraki(konular), ad: '', azamiPuan: null, aktif: true };
+    $('#konuBaslik').text(k.id ? 'Konuyu düzenle' : 'Yeni konu');
+    $('#konuId').val(k.id); $('#konuSira').val(k.siraNo); $('#konuAd').val(k.ad); $('#konuAzami').val(k.azamiPuan ?? ''); $('#konuAktif').val(String(k.aktif));
+    $('#konuModal').modal('show');
+}
+function konuKaydet() {
+    const m = { id: +$('#konuId').val(), siraNo: +$('#konuSira').val(), ad: $('#konuAd').val(), azamiPuan: $('#konuAzami').val() === '' ? null : +$('#konuAzami').val(), aktif: $('#konuAktif').val() === 'true' };
+    AjaxPost('/SiralamaPuaniTanim/KonuKaydet', m, s => { if (!s?.basarili) return hata(s); $('#konuModal').modal('hide'); PopupMesajGoster(s.mesaj, true); listele(); });
+}
+function altBul(id) { for (const k of konular) { const a = (k.altKriterler || []).find(x => x.id === id); if (a) return a; } return null; }
+function altAc(konuId, id) {
+    const k = konular.find(x => x.id === konuId), a = altBul(id) || { id: 0, konuId, siraNo: sonraki(k?.altKriterler || []), ad: '', terimKodu: '', sonucMetni: '', veriKaynagi: '', aktif: true };
+    $('#altBaslik').text((a.id ? 'Alt kriteri düzenle' : 'Yeni alt kriter') + ' — ' + (k ? `${k.siraNo}. ${k.ad}` : ''));
+    $('#altTerim').html('<option value="">Terim yok (uygulamadan hesaplanmaz)</option>' + terimler.map(t => `<option value="${t.kod}">${esc(t.ad)}</option>`).join(''));
+    $('#altId').val(a.id); $('#altKonuId').val(konuId); $('#altSira').val(a.siraNo); $('#altAd').val(a.ad); $('#altTerim').val(a.terimKodu || '');
+    $('#altSonuc').val(a.sonucMetni); $('#altKaynak').val(a.veriKaynagi); $('#altAktif').val(String(a.aktif)); terimAciklamasi();
+    $('#altModal').modal('show');
+}
+function terimAciklamasi() { $('#altTerimAciklama').text(terim($('#altTerim').val())?.aciklama || 'Terim seçilmezse bu kriter ön başvuruda "veri bulunmuyor" olarak 0 puanla gösterilir.'); }
+function altKaydet() {
+    const m = { id: +$('#altId').val(), konuId: +$('#altKonuId').val(), siraNo: +$('#altSira').val(), ad: $('#altAd').val(), terimKodu: $('#altTerim').val() || null, sonucMetni: $('#altSonuc').val(), veriKaynagi: $('#altKaynak').val(), aktif: $('#altAktif').val() === 'true' };
+    AjaxPost('/SiralamaPuaniTanim/AltKriterKaydet', m, s => { if (!s?.basarili) return hata(s); $('#altModal').modal('hide'); PopupMesajGoster(s.mesaj, true); listele(); });
+}
+let kosulTerimi = null;
+function kosulAc(altId, id) {
+    const a = altBul(altId); if (!a) return;
+    const k = (a.kosullar || []).find(x => x.id === id) || { id: 0, altKriterId: altId, siraNo: sonraki(a.kosullar || []), metin: '', kosulTuru: 2, deger: null, altSinir: null, altDahil: true, ustSinir: null, ustDahil: false, puan: 0 };
+    kosulTerimi = terim(a.terimKodu);
+    $('#kosulBaslik').text((k.id ? 'Koşulu düzenle' : 'Yeni koşul') + ' — ' + a.ad);
+    const secimli = kosulTerimi && (kosulTerimi.tur === 3 || kosulTerimi.tur === 4);
+    $('#kosulDegerKutusu').html(secimli ? `<select id="kosulDeger"><option value="">Seçiniz</option>${kosulTerimi.secenekler.map(s => `<option value="${s.deger}">${esc(s.ad)}</option>`).join('')}</select>` : '<input id="kosulDeger" type="number" step="any">');
+    $('#kosulTur option[value="2"]').prop('disabled', !!secimli);
+    $('#kosulId').val(k.id); $('#kosulAltId').val(altId); $('#kosulSira').val(k.siraNo); $('#kosulMetin').val(k.metin); $('#kosulTur').val(secimli ? '1' : String(k.kosulTuru));
+    $('#kosulDeger').val(k.deger ?? ''); $('#kosulAlt').val(k.altSinir ?? ''); $('#kosulAltDahil').prop('checked', !!k.altDahil); $('#kosulUst').val(k.ustSinir ?? ''); $('#kosulUstDahil').prop('checked', !!k.ustDahil); $('#kosulPuan').val(k.puan);
+    kosulAlanlari(); $('#kosulModal').modal('show');
+}
+function kosulAlanlari() { const esit = $('#kosulTur').val() === '1'; $('#kosulEsitAlani').toggle(esit); $('#kosulAralikAlani,#kosulAralikNotu').toggle(!esit); }
+function kosulKaydet() {
+    const bos = id => $(id).val() === '' ? null : +$(id).val();
+    const m = { id: +$('#kosulId').val(), altKriterId: +$('#kosulAltId').val(), siraNo: +$('#kosulSira').val(), metin: $('#kosulMetin').val(), kosulTuru: +$('#kosulTur').val(), deger: bos('#kosulDeger'), altSinir: bos('#kosulAlt'), altDahil: $('#kosulAltDahil').is(':checked'), ustSinir: bos('#kosulUst'), ustDahil: $('#kosulUstDahil').is(':checked'), puan: +$('#kosulPuan').val() || 0 };
+    AjaxPost('/SiralamaPuaniTanim/KosulKaydet', m, s => { if (!s?.basarili) return hata(s); $('#kosulModal').modal('hide'); PopupMesajGoster(s.mesaj, true); listele(); });
+}
+function sil(tablo, id, metin) {
+    $('#silMetin').text(metin);
+    $('#silOnay').off('click').on('click', () => AjaxPost('/SiralamaPuaniTanim/Sil', { tablo, id }, s => { $('#silModal').modal('hide'); if (!s?.basarili) return hata(s); PopupMesajGoster(s.mesaj, true); listele(); }));
+    $('#silModal').modal('show');
+}
+$(listele);
+</script>}

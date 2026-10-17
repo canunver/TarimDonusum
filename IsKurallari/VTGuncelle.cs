@@ -1614,6 +1614,42 @@ namespace TarimDonusum.IsKurallari
             // Uzmanın tam başvuru belge ön kontrolü ve uygunluk sorusu cevapları (tanım Id'sine göre JSON); revizyonda kopyalanır.
             new(136, @"IF COL_LENGTH(N'dbo.Basvuru',N'TamBasvuruBelgeKontrolJson') IS NULL ALTER TABLE dbo.Basvuru ADD TamBasvuruBelgeKontrolJson NVARCHAR(MAX) NULL;
                   IF COL_LENGTH(N'dbo.Basvuru',N'TamBasvuruUygunlukKontrolJson') IS NULL ALTER TABLE dbo.Basvuru ADD TamBasvuruUygunlukKontrolJson NVARCHAR(MAX) NULL;"),
+            // Tanımlar > Sıralama Puanı Kriterleri: konu → alt kriter (terime bağlı) → koşul (eşit / aralık) ve puan.
+            new(137, @"IF OBJECT_ID(N'dbo.SiralamaPuaniKonu',N'U') IS NULL
+                  CREATE TABLE dbo.SiralamaPuaniKonu(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SiralamaPuaniKonu PRIMARY KEY,
+                    SiraNo INT NOT NULL,
+                    Ad NVARCHAR(500) NOT NULL,
+                    AzamiPuan DECIMAL(9,2) NULL,
+                    Aktif BIT NOT NULL CONSTRAINT DF_SiralamaPuaniKonu_Aktif DEFAULT 1,
+                    GuncellemeTarihi DATETIME2 NULL);
+                  IF OBJECT_ID(N'dbo.SiralamaPuaniAltKriter',N'U') IS NULL
+                  CREATE TABLE dbo.SiralamaPuaniAltKriter(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SiralamaPuaniAltKriter PRIMARY KEY,
+                    KonuId INT NOT NULL CONSTRAINT FK_SiralamaPuaniAltKriter_Konu REFERENCES dbo.SiralamaPuaniKonu(Id) ON DELETE CASCADE,
+                    SiraNo INT NOT NULL,
+                    Ad NVARCHAR(500) NOT NULL,
+                    TerimKodu NVARCHAR(50) NULL,
+                    SonucMetni NVARCHAR(500) NOT NULL CONSTRAINT DF_SiralamaPuaniAltKriter_SonucMetni DEFAULT N'',
+                    VeriKaynagi NVARCHAR(500) NOT NULL CONSTRAINT DF_SiralamaPuaniAltKriter_VeriKaynagi DEFAULT N'',
+                    Aktif BIT NOT NULL CONSTRAINT DF_SiralamaPuaniAltKriter_Aktif DEFAULT 1,
+                    GuncellemeTarihi DATETIME2 NULL);
+                  IF OBJECT_ID(N'dbo.SiralamaPuaniKosul',N'U') IS NULL
+                  CREATE TABLE dbo.SiralamaPuaniKosul(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SiralamaPuaniKosul PRIMARY KEY,
+                    AltKriterId INT NOT NULL CONSTRAINT FK_SiralamaPuaniKosul_AltKriter REFERENCES dbo.SiralamaPuaniAltKriter(Id) ON DELETE CASCADE,
+                    SiraNo INT NOT NULL,
+                    Metin NVARCHAR(1000) NOT NULL,
+                    KosulTuru INT NOT NULL,
+                    Deger DECIMAL(18,4) NULL,
+                    AltSinir DECIMAL(18,4) NULL,
+                    AltDahil BIT NOT NULL CONSTRAINT DF_SiralamaPuaniKosul_AltDahil DEFAULT 1,
+                    UstSinir DECIMAL(18,4) NULL,
+                    UstDahil BIT NOT NULL CONSTRAINT DF_SiralamaPuaniKosul_UstDahil DEFAULT 0,
+                    Puan DECIMAL(9,2) NOT NULL);"),
+            // Sıralama puanı: Organize Tarım Bölgesi koşulu Excel'deki gibi 100 puan (toplam 100'ü aşabilir); ilk eklemede yanlışlıkla 10 girilmişti.
+            new(138, @"UPDATE k SET Puan=100 FROM dbo.SiralamaPuaniKosul k JOIN dbo.SiralamaPuaniAltKriter a ON a.Id=k.AltKriterId
+                  WHERE a.TerimKodu=N'ORGANIZE_ALAN' AND k.KosulTuru=1 AND k.Deger=1 AND k.Puan=10;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

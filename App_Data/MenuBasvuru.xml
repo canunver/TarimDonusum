@@ -26,5 +26,6 @@
     <Item type="Url" id="tamBasvuruBelgeKontrolleri" text="Belge / Form Envanteri" url="/TamBasvuruBelgeKontrol" icon="fas fa-tasks" roles="SistemYoneticisi" />
     <Item type="Url" id="tamBasvuruUygunlukSorulari" text="Tamlık ve Uygunluk Soruları" url="/TamBasvuruUygunlukSorusu" icon="fas fa-clipboard-list" roles="SistemYoneticisi" />
     <Item type="Url" id="uygunHarcamaListesi" text="Uygun Harcama Listesi" url="/UygunHarcamaTanim" icon="fas fa-list-alt" roles="SistemYoneticisi" />
+    <Item type="Url" id="siralamaPuaniKriterleri" text="Sıralama Puanı Kriterleri" url="/SiralamaPuaniTanim" icon="fas fa-sort-amount-down" roles="SistemYoneticisi" />
   </Item>
 </Menu>
