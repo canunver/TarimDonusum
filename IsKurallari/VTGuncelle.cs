@@ -1650,6 +1650,134 @@ namespace TarimDonusum.IsKurallari
             // Sıralama puanı: Organize Tarım Bölgesi koşulu Excel'deki gibi 100 puan (toplam 100'ü aşabilir); ilk eklemede yanlışlıkla 10 girilmişti.
             new(138, @"UPDATE k SET Puan=100 FROM dbo.SiralamaPuaniKosul k JOIN dbo.SiralamaPuaniAltKriter a ON a.Id=k.AltKriterId
                   WHERE a.TerimKodu=N'ORGANIZE_ALAN' AND k.KosulTuru=1 AND k.Deger=1 AND k.Puan=10;"),
+            // Yerinde Kontrol (DB 1201): başvuru başına bir veya daha fazla sözleşme öncesi yerinde kontrol ve bölüm tabloları.
+            new(139, @"IF OBJECT_ID(N'dbo.YerindeKontrol',N'U') IS NULL
+                  CREATE TABLE dbo.YerindeKontrol(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_YerindeKontrol PRIMARY KEY,
+                    BasvuruId INT NOT NULL CONSTRAINT FK_YerindeKontrol_Basvuru REFERENCES dbo.Basvuru(Id),
+                    SiraNo INT NOT NULL,
+                    SeriNo NVARCHAR(50) NOT NULL CONSTRAINT DF_YerindeKontrol_SeriNo DEFAULT N'',
+                    Durum INT NOT NULL CONSTRAINT DF_YerindeKontrol_Durum DEFAULT 1,
+                    BaslangicTarihi DATE NULL,
+                    BitisTarihi DATE NULL,
+                    HazirBulunanlarJson NVARCHAR(MAX) NULL,
+                    Uzman1KullaniciId INT NULL,
+                    Uzman1Adi NVARCHAR(200) NOT NULL CONSTRAINT DF_YerindeKontrol_Uzman1Adi DEFAULT N'',
+                    Uzman2Adi NVARCHAR(200) NOT NULL CONSTRAINT DF_YerindeKontrol_Uzman2Adi DEFAULT N'',
+                    BirimAmiriAdi NVARCHAR(200) NOT NULL CONSTRAINT DF_YerindeKontrol_BirimAmiriAdi DEFAULT N'',
+                    YapiYorumu NVARCHAR(4000) NOT NULL CONSTRAINT DF_YerindeKontrol_YapiYorumu DEFAULT N'',
+                    MakineYorumu NVARCHAR(4000) NOT NULL CONSTRAINT DF_YerindeKontrol_MakineYorumu DEFAULT N'',
+                    DigerBulgular NVARCHAR(MAX) NOT NULL CONSTRAINT DF_YerindeKontrol_DigerBulgular DEFAULT N'',
+                    CalismaKagidiSayisi INT NULL,
+                    CalismaDokumaniNotu NVARCHAR(4000) NOT NULL CONSTRAINT DF_YerindeKontrol_CalismaDokumaniNotu DEFAULT N'',
+                    BildirimYapildiMi BIT NULL,
+                    BildirimTarihi DATE NULL,
+                    OzetBulgularJson NVARCHAR(MAX) NULL,
+                    BasvuruSahibiKatiliyorMu BIT NULL,
+                    BasvuruSahibiYorumu NVARCHAR(4000) NOT NULL CONSTRAINT DF_YerindeKontrol_BasvuruSahibiYorumu DEFAULT N'',
+                    OlusturanKullaniciId INT NOT NULL,
+                    OlusturmaTarihi DATETIME2 NOT NULL CONSTRAINT DF_YerindeKontrol_OlusturmaTarihi DEFAULT SYSDATETIME(),
+                    GuncellemeTarihi DATETIME2 NULL,
+                    CONSTRAINT UX_YerindeKontrol_BasvuruSira UNIQUE(BasvuruId, SiraNo));
+                  IF OBJECT_ID(N'dbo.YerindeKontrolAdres',N'U') IS NULL
+                  CREATE TABLE dbo.YerindeKontrolAdres(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_YerindeKontrolAdres PRIMARY KEY,
+                    YerindeKontrolId INT NOT NULL CONSTRAINT FK_YerindeKontrolAdres_Kontrol REFERENCES dbo.YerindeKontrol(Id) ON DELETE CASCADE,
+                    UygulamaAdresiId INT NULL,
+                    SiraNo INT NOT NULL,
+                    AdresAyniMi BIT NULL,
+                    DegerZinciriAsamalari NVARCHAR(500) NOT NULL CONSTRAINT DF_YerindeKontrolAdres_Asamalar DEFAULT N'',
+                    KoordinatTuru INT NOT NULL CONSTRAINT DF_YerindeKontrolAdres_KoordinatTuru DEFAULT 1,
+                    DilimOrtaMeridyen INT NULL,
+                    OlculenEnDusukY DECIMAL(18,3) NULL, OlculenEnDusukX DECIMAL(18,3) NULL,
+                    OlculenEnYuksekY DECIMAL(18,3) NULL, OlculenEnYuksekX DECIMAL(18,3) NULL,
+                    Notlar NVARCHAR(4000) NOT NULL CONSTRAINT DF_YerindeKontrolAdres_Notlar DEFAULT N'');
+                  IF OBJECT_ID(N'dbo.YerindeKontrolYapi',N'U') IS NULL
+                  CREATE TABLE dbo.YerindeKontrolYapi(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_YerindeKontrolYapi PRIMARY KEY,
+                    YerindeKontrolId INT NOT NULL CONSTRAINT FK_YerindeKontrolYapi_Kontrol REFERENCES dbo.YerindeKontrol(Id) ON DELETE CASCADE,
+                    BinaId INT NULL,
+                    SiraNo INT NOT NULL,
+                    YapiAdi NVARCHAR(250) NOT NULL,
+                    MevcutDurum NVARCHAR(100) NOT NULL CONSTRAINT DF_YerindeKontrolYapi_MevcutDurum DEFAULT N'',
+                    KullanimAmaci NVARCHAR(1000) NOT NULL CONSTRAINT DF_YerindeKontrolYapi_KullanimAmaci DEFAULT N'',
+                    UygunHarcamaId INT NULL,
+                    UzunlukBulgu DECIMAL(18,2) NULL, GenislikBulgu DECIMAL(18,2) NULL,
+                    AlanBeyan DECIMAL(18,2) NULL, AlanBulgu DECIMAL(18,2) NULL,
+                    EkBulgular NVARCHAR(2000) NOT NULL CONSTRAINT DF_YerindeKontrolYapi_EkBulgular DEFAULT N'',
+                    FotografNo NVARCHAR(100) NOT NULL CONSTRAINT DF_YerindeKontrolYapi_FotografNo DEFAULT N'');
+                  IF OBJECT_ID(N'dbo.YerindeKontrolMakine',N'U') IS NULL
+                  CREATE TABLE dbo.YerindeKontrolMakine(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_YerindeKontrolMakine PRIMARY KEY,
+                    YerindeKontrolId INT NOT NULL CONSTRAINT FK_YerindeKontrolMakine_Kontrol REFERENCES dbo.YerindeKontrol(Id) ON DELETE CASCADE,
+                    MakineId INT NULL,
+                    SiraNo INT NOT NULL,
+                    MevcutDurum NVARCHAR(100) NOT NULL CONSTRAINT DF_YerindeKontrolMakine_MevcutDurum DEFAULT N'',
+                    RiskliMevcutVarlik BIT NOT NULL CONSTRAINT DF_YerindeKontrolMakine_Riskli DEFAULT 0,
+                    ProjedeKullanilacak BIT NOT NULL CONSTRAINT DF_YerindeKontrolMakine_Projede DEFAULT 0,
+                    MakineAdi NVARCHAR(250) NOT NULL,
+                    UygunHarcamaId INT NULL,
+                    MiktarBeyan DECIMAL(18,3) NULL, MiktarBulgu DECIMAL(18,3) NULL,
+                    MarkaModelBeyan NVARCHAR(300) NOT NULL CONSTRAINT DF_YerindeKontrolMakine_MarkaModelBeyan DEFAULT N'',
+                    MarkaModelBulgu NVARCHAR(300) NOT NULL CONSTRAINT DF_YerindeKontrolMakine_MarkaModelBulgu DEFAULT N'',
+                    SeriNoBeyan NVARCHAR(150) NOT NULL CONSTRAINT DF_YerindeKontrolMakine_SeriNoBeyan DEFAULT N'',
+                    SeriNoBulgu NVARCHAR(150) NOT NULL CONSTRAINT DF_YerindeKontrolMakine_SeriNoBulgu DEFAULT N'',
+                    KullanimAmaciBeyan NVARCHAR(2000) NOT NULL CONSTRAINT DF_YerindeKontrolMakine_KullanimBeyan DEFAULT N'',
+                    KullanimAmaciBulgu NVARCHAR(2000) NOT NULL CONSTRAINT DF_YerindeKontrolMakine_KullanimBulgu DEFAULT N'',
+                    TeknikOzelliklerBeyan NVARCHAR(2000) NOT NULL CONSTRAINT DF_YerindeKontrolMakine_TeknikBeyan DEFAULT N'',
+                    TeknikOzelliklerBulgu NVARCHAR(2000) NOT NULL CONSTRAINT DF_YerindeKontrolMakine_TeknikBulgu DEFAULT N'',
+                    FotografNo NVARCHAR(100) NOT NULL CONSTRAINT DF_YerindeKontrolMakine_FotografNo DEFAULT N'');
+                  IF OBJECT_ID(N'dbo.YerindeKontrolSoru',N'U') IS NULL
+                  CREATE TABLE dbo.YerindeKontrolSoru(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_YerindeKontrolSoru PRIMARY KEY,
+                    YerindeKontrolId INT NOT NULL CONSTRAINT FK_YerindeKontrolSoru_Kontrol REFERENCES dbo.YerindeKontrol(Id) ON DELETE CASCADE,
+                    SoruKodu NVARCHAR(20) NOT NULL,
+                    Cevap NVARCHAR(20) NOT NULL CONSTRAINT DF_YerindeKontrolSoru_Cevap DEFAULT N'',
+                    Bulgu NVARCHAR(4000) NOT NULL CONSTRAINT DF_YerindeKontrolSoru_Bulgu DEFAULT N'',
+                    FotografNo NVARCHAR(100) NOT NULL CONSTRAINT DF_YerindeKontrolSoru_FotografNo DEFAULT N'',
+                    DogruMu BIT NULL,
+                    Referans NVARCHAR(500) NOT NULL CONSTRAINT DF_YerindeKontrolSoru_Referans DEFAULT N'',
+                    Yorum NVARCHAR(4000) NOT NULL CONSTRAINT DF_YerindeKontrolSoru_Yorum DEFAULT N'',
+                    CONSTRAINT UX_YerindeKontrolSoru UNIQUE(YerindeKontrolId, SoruKodu));
+                  IF OBJECT_ID(N'dbo.YerindeKontrolBelge',N'U') IS NULL
+                  CREATE TABLE dbo.YerindeKontrolBelge(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_YerindeKontrolBelge PRIMARY KEY,
+                    YerindeKontrolId INT NOT NULL CONSTRAINT FK_YerindeKontrolBelge_Kontrol REFERENCES dbo.YerindeKontrol(Id) ON DELETE CASCADE,
+                    SiraNo INT NOT NULL,
+                    VerilisTarihi DATE NULL, GecerlilikTarihi DATE NULL,
+                    BelgeNo NVARCHAR(150) NOT NULL CONSTRAINT DF_YerindeKontrolBelge_BelgeNo DEFAULT N'',
+                    Konu NVARCHAR(1000) NOT NULL CONSTRAINT DF_YerindeKontrolBelge_Konu DEFAULT N'',
+                    DosyaId INT NULL,
+                    DosyaAdi NVARCHAR(500) NOT NULL CONSTRAINT DF_YerindeKontrolBelge_DosyaAdi DEFAULT N'');
+                  IF OBJECT_ID(N'dbo.YerindeKontrolFotograf',N'U') IS NULL
+                  CREATE TABLE dbo.YerindeKontrolFotograf(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_YerindeKontrolFotograf PRIMARY KEY,
+                    YerindeKontrolId INT NOT NULL CONSTRAINT FK_YerindeKontrolFotograf_Kontrol REFERENCES dbo.YerindeKontrol(Id) ON DELETE CASCADE,
+                    KayitNo NVARCHAR(50) NOT NULL,
+                    NeyeAit NVARCHAR(1000) NOT NULL CONSTRAINT DF_YerindeKontrolFotograf_NeyeAit DEFAULT N'',
+                    Notlar NVARCHAR(2000) NOT NULL CONSTRAINT DF_YerindeKontrolFotograf_Notlar DEFAULT N'',
+                    KoordinatY DECIMAL(18,3) NULL, KoordinatX DECIMAL(18,3) NULL,
+                    DosyaId INT NULL,
+                    DosyaAdi NVARCHAR(500) NOT NULL CONSTRAINT DF_YerindeKontrolFotograf_DosyaAdi DEFAULT N'');"),
+            // Yerinde Kontrol: yapı ve makine satırlarında uzmanın "beyan edilen bilgiler doğru mu?" cevabı (Hayır ise bulgular girilir).
+            new(140, @"IF COL_LENGTH(N'dbo.YerindeKontrolYapi',N'BilgilerDogruMu') IS NULL ALTER TABLE dbo.YerindeKontrolYapi ADD BilgilerDogruMu BIT NULL;
+                  IF COL_LENGTH(N'dbo.YerindeKontrolMakine',N'BilgilerDogruMu') IS NULL ALTER TABLE dbo.YerindeKontrolMakine ADD BilgilerDogruMu BIT NULL;"),
+            // Yerinde Kontrol Tablo 1: bir adresin birden fazla konumu (ada/parsel) olabilir; GPS doğrulaması konum başınadır.
+            new(141, @"IF OBJECT_ID(N'dbo.YerindeKontrolKonum',N'U') IS NULL
+                  CREATE TABLE dbo.YerindeKontrolKonum(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_YerindeKontrolKonum PRIMARY KEY,
+                    YerindeKontrolAdresId INT NOT NULL CONSTRAINT FK_YerindeKontrolKonum_Adres REFERENCES dbo.YerindeKontrolAdres(Id) ON DELETE CASCADE,
+                    AdresKonumId INT NULL,
+                    KonumDogruMu BIT NULL,
+                    KoordinatTuru INT NOT NULL CONSTRAINT DF_YerindeKontrolKonum_KoordinatTuru DEFAULT 1,
+                    DilimOrtaMeridyen INT NULL,
+                    OlculenEnDusukY DECIMAL(18,3) NULL, OlculenEnDusukX DECIMAL(18,3) NULL,
+                    OlculenEnYuksekY DECIMAL(18,3) NULL, OlculenEnYuksekX DECIMAL(18,3) NULL,
+                    Notlar NVARCHAR(4000) NOT NULL CONSTRAINT DF_YerindeKontrolKonum_Notlar DEFAULT N'');
+                  IF OBJECT_ID(N'dbo.DF_YerindeKontrolAdres_KoordinatTuru',N'D') IS NOT NULL ALTER TABLE dbo.YerindeKontrolAdres DROP CONSTRAINT DF_YerindeKontrolAdres_KoordinatTuru;
+                  IF COL_LENGTH(N'dbo.YerindeKontrolAdres',N'KoordinatTuru') IS NOT NULL ALTER TABLE dbo.YerindeKontrolAdres DROP COLUMN KoordinatTuru;
+                  IF COL_LENGTH(N'dbo.YerindeKontrolAdres',N'DilimOrtaMeridyen') IS NOT NULL ALTER TABLE dbo.YerindeKontrolAdres DROP COLUMN DilimOrtaMeridyen;
+                  IF COL_LENGTH(N'dbo.YerindeKontrolAdres',N'OlculenEnDusukY') IS NOT NULL ALTER TABLE dbo.YerindeKontrolAdres DROP COLUMN OlculenEnDusukY, OlculenEnDusukX, OlculenEnYuksekY, OlculenEnYuksekX;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

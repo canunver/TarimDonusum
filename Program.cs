@@ -40,6 +40,7 @@ builder.Services.AddHttpClient<TCKNServisi>();
 builder.Services.AddHttpClient<VKNServisi>();
 builder.Services.AddHttpClient<SMSServisi>();
 builder.Services.AddScoped<TanimIsKurallari>();
+builder.Services.AddScoped<YerindeKontrolIsKurallari>();
 builder.Services.AddScoped<CevreselSosyalAnketYonetimIsKurallari>();
 builder.Services.AddScoped<DosyaYonetimIsKurallari>();
 builder.Services.AddScoped<FirmaIsKurallari>();

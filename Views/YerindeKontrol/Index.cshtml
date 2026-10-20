@@ -1,0 +1,81 @@
+@model List<TarimDonusum.Models.YerindeKontrolListeSatiri>
+@using TarimDonusum.Models
+@{
+    ViewData["Title"] = "Yerinde Kontrol";
+}
+@Html.AntiForgeryToken()
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div>
+            <h1>Yerinde Kontrol</h1>
+            <p>İncelemedeki ve kabul edilmiş başvurular için sözleşme öncesi yerinde kontrol (DB 1201 kontrol listesi). Bir başvuru için birden fazla yerinde kontrol açılabilir.</p>
+        </div>
+    </div>
+    <div id="ajaxMesaj" class="alert alert-info alert-dismissible floating-message" style="display:@(TempData["Mesaj"] != null ? "block" : "none")">
+        <span id="ajaxMesajMetin">@TempData["Mesaj"]</span>
+        <button type="button" id="ajaxMesajKapat" class="close" aria-label="Kapat"><span aria-hidden="true">&times;</span></button>
+    </div>
+    <div class="table-responsive basvuru-card">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr><th>Başvuru No</th><th>Ticaret Unvanı</th><th>Vergi Kimlik No</th><th>İl</th><th>Yatırım Adı</th><th>Başvuru Durumu</th><th>Yerinde Kontroller</th><th></th></tr>
+            </thead>
+            <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="8" class="text-muted">Yerinde kontrol yapılabilecek (incelemedeki veya kabul edilmiş) başvuru bulunmuyor.</td></tr>
+                }
+                @foreach (YerindeKontrolListeSatiri satir in Model)
+                {
+                    Basvuru b = satir.basvuru;
+                    <tr>
+                        <td>@(string.IsNullOrWhiteSpace(b.basvuruFirma.basvuruNo) ? b.BasvuruAnaId.ToString() : b.basvuruFirma.basvuruNo)</td>
+                        <td>@b.basvuruFirma.firma.ticaretUnvani</td>
+                        <td>@b.basvuruFirma.firma.vergiKimlikNo</td>
+                        <td>@b.basvuruFirma.il.ad</td>
+                        <td>@(string.IsNullOrWhiteSpace(b.yatirim.yatirimAdi) ? "-" : b.yatirim.yatirimAdi)</td>
+                        <td><span class="badge bg-secondary">@(b.durum == enumBasvuruDurum.KabulEdildiDurumu ? "Başvuru Kabul" : "Başvuru İncelemede")</span></td>
+                        <td>
+                            @if (satir.kontroller.Count == 0)
+                            {
+                                <span class="text-muted">Henüz yok</span>
+                            }
+                            @foreach (YerindeKontrol k in satir.kontroller)
+                            {
+                                <div>
+                                    <a asp-action="Duzenle" asp-route-id="@k.id">@k.seriNo</a>
+                                    <span class="badge @(k.durum == enumYerindeKontrolDurum.Tamamlandi ? "badge-success" : "badge-warning")">@(k.durum == enumYerindeKontrolDurum.Tamamlandi ? "Tamamlandı" : "Taslak")</span>
+                                    @if (k.baslangicTarihi.HasValue)
+                                    {
+                                        <small class="text-muted">@k.baslangicTarihi.Value.ToString("dd.MM.yyyy")</small>
+                                    }
+                                </div>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="YerindeKontrolBaslat(@b.Id, this)"><i class="fas fa-plus mr-1"></i>Yerinde Kontrol Başlat</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(function () { if (typeof PopupMesajIlklendir === 'function') PopupMesajIlklendir(); });
+    function YerindeKontrolBaslat(basvuruId, button) {
+        if (!confirm('Bu başvuru için yeni bir yerinde kontrol başlatılsın mı? Adres, yapı ve makine satırları başvurudaki beyanlarla doldurulur.')) return;
+        button.disabled = true;
+        $.ajax({
+            url: '/YerindeKontrol/Baslat?basvuruId=' + basvuruId, type: 'POST',
+            headers: { 'RequestVerificationToken': $('[name="__RequestVerificationToken"]').val() }
+        }).done(sonuc => {
+            if (sonuc?.basarili && sonuc.nesne) { window.location.href = '/YerindeKontrol/Duzenle/' + sonuc.nesne; return; }
+            PopupMesajGoster(sonuc?.hataStr || 'Yerinde kontrol başlatılamadı.', false);
+            button.disabled = false;
+        }).fail(() => { PopupMesajGoster('Yerinde kontrol başlatılamadı.', false); button.disabled = false; });
+    }
+</script>
+}

@@ -2766,6 +2766,7 @@
   <data name="MenuBasvuru.basvurular" xml:space="preserve">
     <value>Applications</value>
   </data>
+  <data name="MenuBasvuru.yerindeKontrol" xml:space="preserve"><value>On-the-Spot Check</value></data>
   <data name="Basvuru.Summary.Error.LegalPartnerDocumentsRequired" xml:space="preserve">
     <value>Required legal-entity partner documents must be uploaded.</value>
   </data>

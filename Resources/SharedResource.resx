@@ -2818,6 +2818,7 @@ Alt projem için belirlenecek risk kategorisine bağlı olarak hazırlanması ge
   <data name="MenuBasvuru.basvurular" xml:space="preserve">
     <value>Başvurular</value>
   </data>
+  <data name="MenuBasvuru.yerindeKontrol" xml:space="preserve"><value>Yerinde Kontrol</value></data>
   <data name="Basvuru.Summary.Error.LegalPartnerDocumentsRequired" xml:space="preserve">
     <value>Tüzel kişi ortak zorunlu belgeleri yüklenmelidir.</value>
   </data>

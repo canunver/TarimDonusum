@@ -1,0 +1,330 @@
+@model TarimDonusum.Models.YerindeKontrolFormModel
+@using System.Text.Json
+@using TarimDonusum.Models
+@{
+    YerindeKontrol k = Model.kontrol;
+    Basvuru b = Model.basvuru;
+    bool ro = !Model.duzenlenebilir;
+    ViewData["Title"] = $"Yerinde Kontrol {k.seriNo}";
+    YerindeKontrolBolumu aktif = YerindeKontrolBolumleri.Tum.First(x => x.Kod == Model.bolum);
+    string degerZinciri = b.yatirim.degerZinciriAsamalari.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.dz.ad))?.dz.ad ?? "-";
+    BasvuruAdliSicilKisi? yetkili = b.AdliSicilKisileri.FirstOrDefault();
+    string Sayi(decimal? x) => x.HasValue ? x.Value.ToString("#,##0.###", new System.Globalization.CultureInfo("tr-TR")) : "";
+    string Tarih(DateTime? x) => x?.ToString("yyyy-MM-dd") ?? "";
+    string Ham(decimal? x) => x?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
+}
+@functions {
+    /// <summary>Doğrulama sorusu: Evet seçilirse düzeltme alanı kapanır, Hayır seçilirse doğru bilgilerin girileceği alan açılır.</summary>
+    private Microsoft.AspNetCore.Html.IHtmlContent DogruMuSorusu(string soru, string ad, bool? deger)
+    {
+        string ro = Model.duzenlenebilir ? "" : " disabled";
+        string Secenek(string value, string metin, bool secili) =>
+            $"<label class=\"mb-0 mr-3\"><input type=\"radio\" class=\"yk-dogru\" name=\"{ad}\" value=\"{value}\"{(secili ? " checked" : "")}{ro} onchange=\"DuzeltmeAlaniGuncelle(this)\" /> {metin}</label>";
+        return new Microsoft.AspNetCore.Html.HtmlString($"<div class=\"yk-dogru-soru\"><strong class=\"d-block mb-1\">{System.Net.WebUtility.HtmlEncode(soru)}</strong>{Secenek("true", "Evet", deger == true)}{Secenek("false", "Hayır", deger == false)}</div>");
+    }
+}
+@Html.AntiForgeryToken()
+<div class="basvuru-page">
+    <div class="basvuru-titlebar">
+        <div>
+            <h1>Yerinde Kontrol <small class="text-muted">@k.seriNo</small></h1>
+            <p>@b.basvuruFirma.firma.ticaretUnvani · @(b.yatirim.yatirimAdi) · İl kodu @b.basvuruFirma.il.kod.ToString("00") · @degerZinciri</p>
+        </div>
+        <div class="d-flex align-items-center" style="gap:8px">
+            <span class="badge @(k.durum == enumYerindeKontrolDurum.Tamamlandi ? "badge-success" : "badge-warning")">@(k.durum == enumYerindeKontrolDurum.Tamamlandi ? "Tamamlandı" : "Taslak")</span>
+            <a class="btn btn-outline-secondary" asp-action="Index"><i class="fas fa-arrow-left mr-1"></i>Listeye dön</a>
+        </div>
+    </div>
+    <div id="ajaxMesaj" class="alert alert-info alert-dismissible floating-message" style="display:@(TempData["Mesaj"] != null ? "block" : "none")"><span id="ajaxMesajMetin">@TempData["Mesaj"]</span>
+        <button type="button" id="ajaxMesajKapat" class="close" aria-label="Kapat"><span aria-hidden="true">&times;</span></button></div>
+
+    <div class="basvuru-stepbar">
+        <nav class="basvuru-steps" aria-label="Yerinde kontrol bölümleri">
+            @for (int index = 0; index < YerindeKontrolBolumleri.Tum.Count; index++)
+            {
+                YerindeKontrolBolumu bolum = YerindeKontrolBolumleri.Tum[index];
+                bool secili = bolum.Kod == aktif.Kod;
+                <button type="button"
+                        class="basvuru-step @(secili ? "active" : "")"
+                        data-bolum="@bolum.Kod"
+                        aria-current="@(secili ? "step" : null)"
+                        title="@bolum.Aciklama"
+                        onclick="BolumeGit(@index)">
+                    <span class="basvuru-step-number">@(index + 1)</span>
+                    <span class="basvuru-step-title">@bolum.Baslik</span>
+                </button>
+            }
+        </nav>
+        <div class="basvuru-step-actions">
+            <button type="button" class="btn btn-outline-secondary nav-prev" onclick="BolumeGit(aktifBolumIndex - 1)">Önceki</button>
+            <button type="button" class="btn btn-primary" onclick="BolumuKaydet()" disabled="@ro">Kaydet</button>
+            <button type="button" class="btn btn-outline-primary nav-next" onclick="BolumeGit(aktifBolumIndex + 1)">Sonraki</button>
+        </div>
+    </div>
+    <div class="basvuru-shell">
+        <main class="basvuru-panels">
+            <section class="basvuru-panel active" data-bolum="@aktif.Kod">
+                <div class="section-toolbar">
+                    <h2 class="mb-0">@aktif.Baslik</h2>
+                    <a class="btn btn-outline-primary" asp-action="Yazdir" asp-route-id="@k.id" asp-route-bolum="@aktif.Kod" title="Bu bölümü DB 1201 formatında Excel olarak indir"><i class="fas fa-file-excel mr-1"></i>Yazdır</a>
+                </div>
+                <p class="section-description">@aktif.Aciklama</p>
+                @switch (aktif.Kod)
+                {
+                    case "GB":
+                        <h3 class="h6 mt-3">Bölüm I: Genel Bölüm (başvurudan gelir)</h3>
+                        <div class="form-grid">
+                            <label>Değer zinciri<input readonly value="@degerZinciri" /></label>
+                            <label>Yatırımın adı<input readonly value="@b.yatirim.yatirimAdi" /></label>
+                            <label>Şirket adı<input readonly value="@b.basvuruFirma.firma.ticaretUnvani" /></label>
+                            <label>Vergi kimlik no<input readonly value="@b.basvuruFirma.firma.vergiKimlikNo" /></label>
+                            <label>Yetkili kişinin adı soyadı<input readonly value="@(yetkili != null ? $"{yetkili.ad} {yetkili.soyad}" : b.irtibat.kisi)" /></label>
+                            <label>Yetkili kişinin TC kimlik no<input readonly value="@(yetkili?.tckn)" /></label>
+                            <label>Başvuru sahibinin telefon numarası<input readonly value="@b.irtibat.telefon" /></label>
+                        </div>
+                        <label class="wide-label">Başvuru sahibinin iletişim adresi<textarea readonly>@b.irtibat.adres</textarea></label>
+                        <label class="wide-label">Yatırımın uygulama adresi<textarea readonly>@string.Join(Environment.NewLine, b.YatirimAdresleri.OrderBy(x => x.siraNo).Select(x => $"{x.siraNo}. {x.ilAdi} / {x.ilceAdi} - {x.tamAdres}"))</textarea></label>
+
+                        <h3 class="h6 mt-4">Yerinde kontrol bilgileri</h3>
+                        <div class="form-grid">
+                            <label>Yerinde kontrol başlangıç tarihi<input id="ykBaslangic" type="date" value="@Tarih(k.baslangicTarihi)" disabled="@ro" /></label>
+                            <label>Yerinde kontrol bitiş tarihi<input id="ykBitis" type="date" value="@Tarih(k.bitisTarihi)" disabled="@ro" /></label>
+                            <label>Yerinde kontrol uzmanı (1)<input id="ykUzman1" maxlength="200" value="@k.uzman1Adi" disabled="@ro" /></label>
+                            <label>Yerinde kontrol uzmanı (2)<input id="ykUzman2" maxlength="200" value="@k.uzman2Adi" disabled="@ro" /></label>
+                            <label>Birim amiri<input id="ykBirimAmiri" maxlength="200" value="@k.birimAmiriAdi" disabled="@ro" /></label>
+                        </div>
+                        <h3 class="h6 mt-4">Yerinde kontrol sırasında hazır bulunan kişiler</h3>
+                        <div class="table-responsive"><table class="table table-bordered table-sm"><thead><tr><th>Adı soyadı</th><th style="width:220px">Telefon numarası</th>@if (!ro) { <th style="width:60px"></th> }</tr></thead>
+                            <tbody id="ykHazirBulunanlar"></tbody></table></div>
+                        @if (!ro)
+                        {
+                            <button type="button" class="btn btn-outline-success" onclick="HazirBulunanEkle()"><i class="fas fa-plus mr-1"></i>Kişi ekle</button>
+                        }
+                        break;
+
+                    case "1":
+                        <div class="alert alert-light border">*Yatırım adresi adres sisteminde kayıtlıysa GPS koordinatlarıyla doğrulanmasına gerek yoktur. Adres sayısı kadar satır açılır; adresin her konumu (ada/parsel) ayrıca doğrulanır.</div>
+                        @if (k.adresler.Count == 0) { <div class="alert alert-light border">Başvuruda yatırım adresi yok.</div> }
+                        @foreach (YerindeKontrolAdres a in k.adresler)
+                        {
+                            BasvuruUygulamaAdresi? adres = b.YatirimAdresleri.FirstOrDefault(x => x.id == a.uygulamaAdresiId);
+                            List<BasvuruUygulamaAdresiKonum> basvuruKonumlari = adres?.konumlar ?? new List<BasvuruUygulamaAdresiKonum>();
+                            // Başvuruda konumu olmayan adres için tek, konumsuz satır gösterilir.
+                            List<BasvuruUygulamaAdresiKonum?> gosterilecek = basvuruKonumlari.Count > 0 ? basvuruKonumlari.Cast<BasvuruUygulamaAdresiKonum?>().ToList() : new List<BasvuruUygulamaAdresiKonum?> { null };
+                            <div class="border rounded p-3 mb-3 yk-satir" data-id="@a.id">
+                                <h3 class="h6">@a.siraNo. adres – @(adres == null ? "Başvuruda bulunmayan adres" : $"{adres.ilAdi} / {adres.ilceAdi} - {adres.tamAdres}")</h3>
+                                <p class="mb-2"><strong>Adresteki değer zinciri aşaması:</strong> @(string.IsNullOrWhiteSpace(a.degerZinciriAsamalari) ? "-" : a.degerZinciriAsamalari)</p>
+                                @DogruMuSorusu("Verilen adres bilgileri doğru mu? (Başvuru formundaki uygulama adresi ile yatırımın gerçekleştirileceği adres aynı mı?)", $"dogru_{a.id}", a.adresAyniMi)
+                                <div class="yk-duzeltme mt-2" style="display:@(a.adresAyniMi == false ? "block" : "none")">
+                                    <label class="wide-label">Gözlemlenen adres / notlar <span class="required-mark">*</span><textarea data-alan="adresNotlar" maxlength="4000" disabled="@ro">@a.notlar</textarea></label>
+                                </div>
+
+                                @for (int no = 0; no < gosterilecek.Count; no++)
+                                {
+                                    BasvuruUygulamaAdresiKonum? bk = gosterilecek[no];
+                                    YerindeKontrolKonum kk = a.konumlar.FirstOrDefault(x => x.adresKonumId == bk?.id) ?? new YerindeKontrolKonum { adresKonumId = bk?.id, koordinatTuru = bk?.koordinatTuru ?? enumKoordinatTuru.ITRF96 };
+                                    string konumAdi = bk == null ? "Konum (başvuruda koordinat girilmemiş)" : $"{no + 1}. konum – {bk.mahalle} {bk.ada}/{bk.parsel}";
+                                    <div class="border rounded p-3 mt-3 bg-light yk-konum" data-konum-id="@(bk?.id)">
+                                        <h4 class="h6 mb-2">@konumAdi <small class="text-muted">(@(bk?.koordinatTuru == enumKoordinatTuru.ED50 ? "ED50" : "ITRF 96"))</small></h4>
+                                        @if (bk != null)
+                                        {
+                                            <div class="table-responsive"><table class="table table-bordered table-sm mb-2 bg-white"><thead><tr><th>Beyan edilen GPS koordinatları</th><th>Enlem</th><th>Boylam</th></tr></thead><tbody>
+                                                <tr><th>En düşük değerler</th><td>@Sayi(bk.minEnlem)</td><td>@Sayi(bk.minBoylam)</td></tr>
+                                                <tr><th>En yüksek değerler</th><td>@Sayi(bk.maxEnlem)</td><td>@Sayi(bk.maxBoylam)</td></tr>
+                                            </tbody></table></div>
+                                        }
+                                        @DogruMuSorusu("Konum (GPS) bilgileri doğru mu?", $"konum_{a.id}_{no}", kk.konumDogruMu)
+                                        <div class="yk-duzeltme mt-2" style="display:@(kk.konumDogruMu == false ? "block" : "none")">
+                                            <div class="alert alert-warning py-2 mb-2">Bu konumda ölçülen GPS koordinatlarını giriniz.</div>
+                                            <div class="form-grid">
+                                                <label>Koordinat türü<select data-alan="koordinatTuru" disabled="@ro"><option value="1" selected="@(kk.koordinatTuru == enumKoordinatTuru.ITRF96)">ITRF 96</option><option value="2" selected="@(kk.koordinatTuru == enumKoordinatTuru.ED50)">ED50</option></select></label>
+                                                <label>Kullanılan dilim orta meridyeni<select data-alan="dilimOrtaMeridyen" disabled="@ro"><option value="">Seçiniz</option>@foreach (int dom in new[] { 27, 30, 33, 36, 39, 42, 45 }) { <option value="@dom" selected="@(kk.dilimOrtaMeridyen == dom)">@dom</option> }</select></label>
+                                            </div>
+                                            <div class="table-responsive"><table class="table table-bordered table-sm mb-2 bg-white"><thead><tr><th>Ölçülen GPS koordinatları</th><th>Y (m)</th><th>X (m)</th></tr></thead><tbody>
+                                                <tr><th>En düşük değerler</th><td><input data-alan="olculenEnDusukY" type="number" step="0.001" min="0" value="@Ham(kk.olculenEnDusukY)" disabled="@ro" /></td><td><input data-alan="olculenEnDusukX" type="number" step="0.001" min="0" value="@Ham(kk.olculenEnDusukX)" disabled="@ro" /></td></tr>
+                                                <tr><th>En yüksek değerler</th><td><input data-alan="olculenEnYuksekY" type="number" step="0.001" min="0" value="@Ham(kk.olculenEnYuksekY)" disabled="@ro" /></td><td><input data-alan="olculenEnYuksekX" type="number" step="0.001" min="0" value="@Ham(kk.olculenEnYuksekX)" disabled="@ro" /></td></tr>
+                                            </tbody></table></div>
+                                            <label class="wide-label">Konum notları<textarea data-alan="notlar" maxlength="4000" disabled="@ro">@kk.notlar</textarea></label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        break;
+
+                    case "1.1":
+                        @if (k.yapilar.Count == 0) { <div class="alert alert-light border">Başvuruda bina/yapı kaydı yok.</div> }
+                        @foreach (YerindeKontrolYapi y in k.yapilar)
+                        {
+                            <div class="border rounded p-3 mb-3 yk-satir" data-id="@y.id">
+                                <h3 class="h6">@y.siraNo. @y.yapiAdi</h3>
+                                <div class="table-responsive"><table class="table table-bordered table-sm mb-2"><thead><tr><th>Mevcut durum</th><th>Kullanım amacı</th><th>UHL alt kodu</th><th>Alan beyanı (m²)</th></tr></thead><tbody>
+                                    <tr><td>@y.mevcutDurum</td><td>@y.kullanimAmaci</td><td>@UygunHarcamaTanimSaglayici.Etiket(y.uygunHarcamaId)</td><td class="text-right">@Sayi(y.alanBeyan)</td></tr>
+                                </tbody></table></div>
+                                <div class="d-flex flex-wrap align-items-end" style="gap:16px">
+                                    @DogruMuSorusu("Beyan edilen yapı bilgileri doğru mu?", $"dogru_{y.id}", y.bilgilerDogruMu)
+                                    <label class="mb-0">Fotoğraf no<input data-alan="fotografNo" maxlength="100" value="@y.fotografNo" disabled="@ro" /></label>
+                                </div>
+                                <div class="yk-duzeltme mt-2" style="display:@(y.bilgilerDogruMu == false ? "block" : "none")">
+                                    <div class="alert alert-warning py-2 mb-2">Yerinde kontrol bulgularını (ölçülen doğru değerleri) giriniz.</div>
+                                    <div class="form-grid">
+                                        <label>Uzunluk (m)<input data-alan="uzunlukBulgu" type="number" step="0.01" min="0" value="@Ham(y.uzunlukBulgu)" disabled="@ro" /></label>
+                                        <label>Genişlik (m)<input data-alan="genislikBulgu" type="number" step="0.01" min="0" value="@Ham(y.genislikBulgu)" disabled="@ro" /></label>
+                                        <label>Alan (m²)<input data-alan="alanBulgu" type="number" step="0.01" min="0" value="@Ham(y.alanBulgu)" disabled="@ro" /></label>
+                                    </div>
+                                    <label class="wide-label">Yerinde kontrol ek bulguları<textarea data-alan="ekBulgular" maxlength="2000" disabled="@ro">@y.ekBulgular</textarea></label>
+                                </div>
+                            </div>
+                        }
+                        <label class="wide-label">Yorumlar<textarea id="ykYorum" maxlength="4000" disabled="@ro">@k.yapiYorumu</textarea></label>
+                        break;
+
+                    case "1.2":
+                        @if (k.makineler.Count == 0) { <div class="alert alert-light border">Başvuruda makine/ekipman kaydı yok.</div> }
+                        @foreach (YerindeKontrolMakine m in k.makineler)
+                        {
+                            <div class="border rounded p-3 mb-3 yk-satir" data-id="@m.id">
+                                <h3 class="h6">@m.siraNo. @m.makineAdi <small class="text-muted">(@m.mevcutDurum · projede kullanılacak: @(m.projedeKullanilacak ? "Evet" : "Hayır") · @UygunHarcamaTanimSaglayici.Etiket(m.uygunHarcamaId))</small></h3>
+                                <div class="table-responsive"><table class="table table-bordered table-sm mb-2"><thead><tr><th style="width:110px">Miktar</th><th>Marka / model</th><th>Kullanım amacı (işlevi)</th><th>Teknik özellikler</th></tr></thead><tbody>
+                                    <tr><td class="text-right">@Sayi(m.miktarBeyan)</td><td>@m.markaModelBeyan</td><td>@m.kullanimAmaciBeyan</td><td>@m.teknikOzelliklerBeyan</td></tr>
+                                </tbody></table></div>
+                                <div class="d-flex flex-wrap align-items-end" style="gap:16px">
+                                    @DogruMuSorusu("Beyan edilen makine-ekipman bilgileri doğru mu?", $"dogru_{m.id}", m.bilgilerDogruMu)
+                                    <label class="mb-0 d-flex align-items-center" style="gap:6px"><input data-alan="riskliMevcutVarlik" type="checkbox" checked="@m.riskliMevcutVarlik" disabled="@ro" /> Riskli mevcut varlık</label>
+                                    <label class="mb-0">Fotoğraf no<input data-alan="fotografNo" maxlength="100" value="@m.fotografNo" disabled="@ro" /></label>
+                                </div>
+                                <div class="yk-duzeltme mt-2" style="display:@(m.bilgilerDogruMu == false ? "block" : "none")">
+                                    <div class="alert alert-warning py-2 mb-2">Yerinde kontrol bulgularını (yerinde tespit edilen doğru bilgileri) giriniz.</div>
+                                    <div class="form-grid">
+                                        <label>Miktar<input data-alan="miktarBulgu" type="number" step="0.001" min="0" value="@Ham(m.miktarBulgu)" disabled="@ro" /></label>
+                                        <label>Marka / model<input data-alan="markaModelBulgu" maxlength="300" value="@m.markaModelBulgu" disabled="@ro" /></label>
+                                        <label>Seri numarası<input data-alan="seriNoBulgu" maxlength="150" value="@m.seriNoBulgu" disabled="@ro" /></label>
+                                    </div>
+                                    <label class="wide-label">Kullanım amacı (işlevi)<textarea data-alan="kullanimAmaciBulgu" maxlength="2000" disabled="@ro">@m.kullanimAmaciBulgu</textarea></label>
+                                    <label class="wide-label">Teknik özellikler<textarea data-alan="teknikOzelliklerBulgu" maxlength="2000" disabled="@ro">@m.teknikOzelliklerBulgu</textarea></label>
+                                </div>
+                            </div>
+                        }
+                        <label class="wide-label">Yorumlar<textarea id="ykYorum" maxlength="4000" disabled="@ro">@k.makineYorumu</textarea></label>
+                        break;
+
+                    case "2":
+                        @foreach (YerindeKontrolSoruTanimi soru in YerindeKontrolTanimlari.Sorular)
+                        {
+                            YerindeKontrolSoru s = k.sorular.FirstOrDefault(x => x.soruKodu == soru.Kod) ?? new YerindeKontrolSoru { soruKodu = soru.Kod, referans = soru.Referans };
+                            <div class="border rounded p-3 mb-3 yk-satir" data-kod="@soru.Kod">
+                                <h3 class="h6">@soru.Kod @soru.Soru</h3>
+                                <div class="d-flex flex-wrap align-items-center mb-2" style="gap:16px">
+                                    <span><strong>Cevap:</strong></span>
+                                    <label class="mb-0"><input type="radio" name="cevap_@soru.Kod.Replace(".", "_")" value="Evet" checked="@(s.cevap == "Evet")" disabled="@ro" /> Evet</label>
+                                    <label class="mb-0"><input type="radio" name="cevap_@soru.Kod.Replace(".", "_")" value="Hayır" checked="@(s.cevap == "Hayır")" disabled="@ro" /> Hayır</label>
+                                </div>
+                                <p class="mb-1"><strong>Kontrol metodolojisi:</strong> @soru.KontrolMetodolojisi</p>
+                                <div class="small mb-2" style="white-space:pre-line">@soru.Aciklama</div>
+                                @DogruMuSorusu("Başvurudaki beyan yerinde kontrolde doğrulandı mı? (Doğru / Yanlış)", $"dogru_{soru.Kod.Replace(".", "_")}", s.dogruMu)
+                                <div class="form-grid mt-2">
+                                    <label>Fotoğraf no<input data-alan="fotografNo" maxlength="100" value="@s.fotografNo" disabled="@ro" /></label>
+                                    <label>Referans<input data-alan="referans" maxlength="500" value="@(string.IsNullOrWhiteSpace(s.referans) ? soru.Referans : s.referans)" disabled="@ro" /></label>
+                                </div>
+                                <label class="wide-label">Yerinde kontrol bulguları <span class="required-mark yk-duzeltme" style="display:@(s.dogruMu == false ? "inline" : "none")">* (beyan yanlışsa zorunlu)</span><textarea data-alan="bulgu" maxlength="4000" disabled="@ro">@s.bulgu</textarea></label>
+                                <label class="wide-label">Yorumlar<textarea data-alan="yorum" maxlength="4000" disabled="@ro">@s.yorum</textarea></label>
+                            </div>
+                        }
+                        break;
+
+                    case "7":
+                        <div class="alert alert-light border">@YerindeKontrolTanimlari.OzetUyarisi</div>
+                        <p><strong>Yerinde kontrol bildirimi:</strong> @YerindeKontrolTanimlari.BildirimMetni</p>
+                        <p class="small text-muted">* @YerindeKontrolTanimlari.ItirazNotu</p>
+                        <p class="text-muted">Bulgular (1-7), başvuru sahibinin görüşü (katılıyorum / katılmıyorum) ve yorumu girişi bu bölüme eklenecek.</p>
+                        break;
+
+                    default:
+                        <p class="text-muted">Bu bölümün girişi sonraki adımda eklenecek.</p>
+                        break;
+                }
+            </section>
+            <div class="basvuru-footer">
+                <button type="button" class="btn btn-outline-secondary footer-prev" onclick="BolumeGit(aktifBolumIndex - 1)">Geri</button>
+                <div class="footer-actions-right">
+                    <button type="button" class="btn btn-primary footer-primary" onclick="BolumuKaydet(() => BolumeGit(aktifBolumIndex + 1))">@(ro ? "Devam Et" : "Kaydet ve Devam Et")</button>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(function () { if (typeof PopupMesajIlklendir === 'function') PopupMesajIlklendir(); HazirBulunanlariCiz(); });
+    const ykSaltOkunur = @(ro ? "true" : "false");
+    const bolumKodlari = @Html.Raw(JsonSerializer.Serialize(YerindeKontrolBolumleri.Tum.Select(x => x.Kod)));
+    const aktifBolumIndex = bolumKodlari.indexOf(@Html.Raw(JsonSerializer.Serialize(aktif.Kod)));
+    $(function () {
+        $('.nav-prev, .footer-prev').prop('disabled', aktifBolumIndex <= 0);
+        $('.nav-next').prop('disabled', aktifBolumIndex >= bolumKodlari.length - 1);
+        if (aktifBolumIndex >= bolumKodlari.length - 1) $('.footer-primary').text(ykSaltOkunur ? 'Son bölüm' : 'Kaydet').prop('disabled', ykSaltOkunur);
+    });
+    function BolumeGit(index) {
+        if (index < 0 || index >= bolumKodlari.length) return;
+        window.location.href = '/YerindeKontrol/Duzenle/@k.id?bolum=' + encodeURIComponent(bolumKodlari[index]);
+    }
+    // Bölümün kayıt işlemi; girişi henüz olmayan bölümlerde doğrudan devam edilir.
+    function BolumuKaydet(sonra) {
+        if (!ykSaltOkunur && bolumKodlari[aktifBolumIndex] === 'GB') { GenelBilgilerKaydet(sonra); return; }
+        if (!ykSaltOkunur && ['1', '1.1', '1.2', '2'].includes(bolumKodlari[aktifBolumIndex])) { DogrulamaKaydet(sonra); return; }
+        if (sonra) sonra(); else if (!ykSaltOkunur) PopupMesajGoster('Bu bölümde kaydedilecek alan bulunmuyor.', true);
+    }
+    let hazirBulunanlar = @Html.Raw(JsonSerializer.Serialize(k.hazirBulunanlar));
+    const html = x => $('<div>').text(x ?? '').html();
+    function HazirBulunanlariCiz() {
+        const govde = document.getElementById('ykHazirBulunanlar');
+        if (!govde) return;
+        if (!hazirBulunanlar.length) { govde.innerHTML = `<tr><td colspan="${ykSaltOkunur ? 2 : 3}" class="text-muted">Henüz kişi eklenmedi.</td></tr>`; return; }
+        govde.innerHTML = hazirBulunanlar.map((x, i) => `<tr><td><input class="form-control form-control-sm" maxlength="200" value="${html(x.adSoyad)}" ${ykSaltOkunur ? 'disabled' : ''} oninput="hazirBulunanlar[${i}].adSoyad=this.value"></td>
+            <td><input class="form-control form-control-sm" maxlength="30" value="${html(x.telefon)}" ${ykSaltOkunur ? 'disabled' : ''} oninput="hazirBulunanlar[${i}].telefon=this.value"></td>
+            ${ykSaltOkunur ? '' : `<td><button type="button" class="btn btn-sm btn-outline-danger" title="Sil" onclick="hazirBulunanlar.splice(${i},1);HazirBulunanlariCiz()"><i class="fas fa-trash-alt"></i></button></td>`}</tr>`).join('');
+    }
+    // "Doğru mu?" sorusunda Hayır seçilince doğru bilgilerin girileceği alan açılır.
+    const kendi = (kart, secici) => $(kart).find(secici).filter((_, el) => $(el).closest('.yk-konum, .yk-satir')[0] === kart);
+    function DuzeltmeAlaniGuncelle(secim) {
+        const hayir = secim.value === 'false', kart = $(secim).closest('.yk-konum, .yk-satir')[0];
+        kendi(kart, '.yk-duzeltme').each(function () { this.style.display = hayir ? (this.tagName === 'SPAN' ? 'inline' : 'block') : 'none'; });
+    }
+    const alanMetin = (kart, ad) => (kendi(kart, `[data-alan="${ad}"]`).val() || '').trim();
+    const alanSayi = (kart, ad) => { const v = kendi(kart, `[data-alan="${ad}"]`).val(); return v === undefined || v === '' ? null : Number(v); };
+    const dogruMu = kart => { const v = kendi(kart, '.yk-dogru:checked').val(); return v === undefined ? null : v === 'true'; };
+    function DogrulamaKaydet(sonra) {
+        const bolum = bolumKodlari[aktifBolumIndex], satirlar = $('.yk-satir').toArray();
+        const model = { id: @k.id, bolum, yorum: $('#ykYorum').val() || '' };
+        if (bolum === '1') model.adresler = satirlar.map(s => ({ id: Number(s.dataset.id), adresAyniMi: dogruMu(s), notlar: alanMetin(s, 'adresNotlar'),
+            konumlar: $(s).find('.yk-konum').toArray().map(kk => ({ adresKonumId: kk.dataset.konumId ? Number(kk.dataset.konumId) : null, konumDogruMu: dogruMu(kk),
+                koordinatTuru: alanSayi(kk, 'koordinatTuru') || 1, dilimOrtaMeridyen: alanSayi(kk, 'dilimOrtaMeridyen'), notlar: alanMetin(kk, 'notlar'),
+                olculenEnDusukY: alanSayi(kk, 'olculenEnDusukY'), olculenEnDusukX: alanSayi(kk, 'olculenEnDusukX'), olculenEnYuksekY: alanSayi(kk, 'olculenEnYuksekY'), olculenEnYuksekX: alanSayi(kk, 'olculenEnYuksekX') })) }));
+        if (bolum === '1.1') model.yapilar = satirlar.map(s => ({ id: Number(s.dataset.id), bilgilerDogruMu: dogruMu(s), fotografNo: alanMetin(s, 'fotografNo'),
+            uzunlukBulgu: alanSayi(s, 'uzunlukBulgu'), genislikBulgu: alanSayi(s, 'genislikBulgu'), alanBulgu: alanSayi(s, 'alanBulgu'), ekBulgular: alanMetin(s, 'ekBulgular') }));
+        if (bolum === '1.2') model.makineler = satirlar.map(s => ({ id: Number(s.dataset.id), bilgilerDogruMu: dogruMu(s), fotografNo: alanMetin(s, 'fotografNo'),
+            riskliMevcutVarlik: $(s).find('[data-alan="riskliMevcutVarlik"]').is(':checked'), miktarBulgu: alanSayi(s, 'miktarBulgu'),
+            markaModelBulgu: alanMetin(s, 'markaModelBulgu'), seriNoBulgu: alanMetin(s, 'seriNoBulgu'), kullanimAmaciBulgu: alanMetin(s, 'kullanimAmaciBulgu'), teknikOzelliklerBulgu: alanMetin(s, 'teknikOzelliklerBulgu') }));
+        if (bolum === '2') model.sorular = satirlar.map(s => ({ soruKodu: s.dataset.kod, cevap: $(s).find('input[name^="cevap_"]:checked').val() || '', dogruMu: dogruMu(s),
+            fotografNo: alanMetin(s, 'fotografNo'), referans: alanMetin(s, 'referans'), bulgu: alanMetin(s, 'bulgu'), yorum: alanMetin(s, 'yorum') }));
+        AjaxPost('/YerindeKontrol/BolumKaydet', model, sonuc => {
+            PopupMesajGoster(sonuc?.basarili ? sonuc.mesaj : (sonuc?.hataStr || 'Kaydedilemedi.'), !!sonuc?.basarili);
+            if (sonuc?.basarili && sonra) setTimeout(sonra, 600);
+        });
+    }
+    function HazirBulunanEkle() { hazirBulunanlar.push({ adSoyad: '', telefon: '' }); HazirBulunanlariCiz(); }
+    function GenelBilgilerKaydet(sonra) {
+        const model = {
+            id: @k.id,
+            baslangicTarihi: $('#ykBaslangic').val() || null, bitisTarihi: $('#ykBitis').val() || null,
+            uzman1Adi: $('#ykUzman1').val(), uzman2Adi: $('#ykUzman2').val(), birimAmiriAdi: $('#ykBirimAmiri').val(),
+            hazirBulunanlar: hazirBulunanlar
+        };
+        AjaxPost('/YerindeKontrol/GenelBilgilerKaydet', model, sonuc => {
+            PopupMesajGoster(sonuc?.basarili ? sonuc.mesaj : (sonuc?.hataStr || 'Kaydedilemedi.'), !!sonuc?.basarili);
+            if (sonuc?.basarili && sonra) setTimeout(sonra, 600);
+        });
+    }
+</script>
+}
