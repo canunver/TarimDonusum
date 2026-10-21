@@ -65,8 +65,8 @@
 @section Scripts {
 <script>
     $(function () { if (typeof PopupMesajIlklendir === 'function') PopupMesajIlklendir(); });
-    function YerindeKontrolBaslat(basvuruId, button) {
-        if (!confirm('Bu başvuru için yeni bir yerinde kontrol başlatılsın mı? Adres, yapı ve makine satırları başvurudaki beyanlarla doldurulur.')) return;
+    async function YerindeKontrolBaslat(basvuruId, button) {
+        if (!await OnayIste('Bu başvuru için yeni bir yerinde kontrol başlatılsın mı? Adres, yapı ve makine satırları başvurudaki beyanlarla doldurulur.')) return;
         button.disabled = true;
         $.ajax({
             url: '/YerindeKontrol/Baslat?basvuruId=' + basvuruId, type: 'POST',

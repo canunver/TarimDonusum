@@ -55,14 +55,16 @@ public class TABYerindeKontrol : TABTablo
             SELECT Id,UygulamaAdresiId,SiraNo,AdresAyniMi,DegerZinciriAsamalari,Notlar FROM dbo.YerindeKontrolAdres WHERE YerindeKontrolId=@Id ORDER BY SiraNo,Id;
             SELECT Id,BinaId,SiraNo,YapiAdi,MevcutDurum,KullanimAmaci,UygunHarcamaId,UzunlukBulgu,GenislikBulgu,AlanBeyan,AlanBulgu,EkBulgular,FotografNo,BilgilerDogruMu
                 FROM dbo.YerindeKontrolYapi WHERE YerindeKontrolId=@Id ORDER BY SiraNo,Id;
-            SELECT Id,MakineId,SiraNo,MevcutDurum,RiskliMevcutVarlik,ProjedeKullanilacak,MakineAdi,UygunHarcamaId,MiktarBeyan,MiktarBulgu,MarkaModelBeyan,MarkaModelBulgu,
-                    SeriNoBeyan,SeriNoBulgu,KullanimAmaciBeyan,KullanimAmaciBulgu,TeknikOzelliklerBeyan,TeknikOzelliklerBulgu,FotografNo,BilgilerDogruMu
+            SELECT Id,MakineId,SiraNo,MevcutDurum,RiskliMevcutVarlik,ProjedeKullanilacak,MakineAdi,UygunHarcamaId,MiktarBeyan,MarkaModelBeyan,
+                    SeriNoBeyan,KullanimAmaciBeyan,TeknikOzelliklerBeyan,FotografNo,BilgilerDogruMu
                 FROM dbo.YerindeKontrolMakine WHERE YerindeKontrolId=@Id ORDER BY SiraNo,Id;
             SELECT Id,SoruKodu,Cevap,Bulgu,FotografNo,DogruMu,Referans,Yorum FROM dbo.YerindeKontrolSoru WHERE YerindeKontrolId=@Id ORDER BY SoruKodu;
             SELECT Id,SiraNo,VerilisTarihi,GecerlilikTarihi,BelgeNo,Konu,DosyaId,DosyaAdi FROM dbo.YerindeKontrolBelge WHERE YerindeKontrolId=@Id ORDER BY SiraNo,Id;
-            SELECT Id,KayitNo,NeyeAit,Notlar,KoordinatY,KoordinatX,DosyaId,DosyaAdi FROM dbo.YerindeKontrolFotograf WHERE YerindeKontrolId=@Id ORDER BY Id;
+            SELECT Id,KayitNo,NeyeAit,Notlar,DosyaId,DosyaAdi FROM dbo.YerindeKontrolFotograf WHERE YerindeKontrolId=@Id ORDER BY Id;
             SELECT k.Id,k.YerindeKontrolAdresId,k.AdresKonumId,k.KonumDogruMu,k.KoordinatTuru,k.DilimOrtaMeridyen,k.OlculenEnDusukY,k.OlculenEnDusukX,k.OlculenEnYuksekY,k.OlculenEnYuksekX,k.Notlar
-                FROM dbo.YerindeKontrolKonum k INNER JOIN dbo.YerindeKontrolAdres a ON a.Id=k.YerindeKontrolAdresId WHERE a.YerindeKontrolId=@Id ORDER BY k.Id;";
+                FROM dbo.YerindeKontrolKonum k INNER JOIN dbo.YerindeKontrolAdres a ON a.Id=k.YerindeKontrolAdresId WHERE a.YerindeKontrolId=@Id ORDER BY k.Id;
+            SELECT f.Id,f.YerindeKontrolMakineId,f.AlanKodu,f.AlanAdi,f.BeyanDeger,f.Karar,f.YeniDeger,f.Aciklama
+                FROM dbo.YerindeKontrolMakineAlan f INNER JOIN dbo.YerindeKontrolMakine m ON m.Id=f.YerindeKontrolMakineId WHERE m.YerindeKontrolId=@Id ORDER BY f.Id;";
         await using SqlCommand c = KomutOlustur(sql);
         c.Parameters.AddWithValue("@Id", id);
         await using SqlDataReader r = await c.ExecuteReaderAsync();
@@ -89,9 +91,8 @@ public class TABYerindeKontrol : TABTablo
             {
                 id = r.GetInt32(0), yerindeKontrolId = id, makineId = r.IsDBNull(1) ? null : r.GetInt32(1), siraNo = r.GetInt32(2), mevcutDurum = Metin(r, 3),
                 riskliMevcutVarlik = r.GetBoolean(4), projedeKullanilacak = r.GetBoolean(5), makineAdi = Metin(r, 6), uygunHarcamaId = r.IsDBNull(7) ? null : r.GetInt32(7),
-                miktarBeyan = Ondalik(r, 8), miktarBulgu = Ondalik(r, 9), markaModelBeyan = Metin(r, 10), markaModelBulgu = Metin(r, 11), seriNoBeyan = Metin(r, 12),
-                seriNoBulgu = Metin(r, 13), kullanimAmaciBeyan = Metin(r, 14), kullanimAmaciBulgu = Metin(r, 15), teknikOzelliklerBeyan = Metin(r, 16),
-                teknikOzelliklerBulgu = Metin(r, 17), fotografNo = Metin(r, 18), bilgilerDogruMu = Mantiksal(r, 19)
+                miktarBeyan = Ondalik(r, 8), markaModelBeyan = Metin(r, 9), seriNoBeyan = Metin(r, 10), kullanimAmaciBeyan = Metin(r, 11),
+                teknikOzelliklerBeyan = Metin(r, 12), fotografNo = Metin(r, 13), bilgilerDogruMu = Mantiksal(r, 14)
             });
         await r.NextResultAsync();
         while (await r.ReadAsync())
@@ -111,8 +112,8 @@ public class TABYerindeKontrol : TABTablo
         while (await r.ReadAsync())
             k.fotograflar.Add(new()
             {
-                id = r.GetInt32(0), yerindeKontrolId = id, kayitNo = Metin(r, 1), neyeAit = Metin(r, 2), notlar = Metin(r, 3), koordinatY = Ondalik(r, 4),
-                koordinatX = Ondalik(r, 5), dosyaId = r.IsDBNull(6) ? null : r.GetInt32(6), dosyaAdi = Metin(r, 7)
+                id = r.GetInt32(0), yerindeKontrolId = id, kayitNo = Metin(r, 1), neyeAit = Metin(r, 2), notlar = Metin(r, 3),
+                dosyaId = r.IsDBNull(4) ? null : r.GetInt32(4), dosyaAdi = Metin(r, 5)
             });
         await r.NextResultAsync();
         while (await r.ReadAsync())
@@ -124,6 +125,16 @@ public class TABYerindeKontrol : TABTablo
                 olculenEnDusukY = Ondalik(r, 6), olculenEnDusukX = Ondalik(r, 7), olculenEnYuksekY = Ondalik(r, 8), olculenEnYuksekX = Ondalik(r, 9), notlar = Metin(r, 10)
             };
             k.adresler.FirstOrDefault(x => x.id == konum.yerindeKontrolAdresId)?.konumlar.Add(konum);
+        }
+        await r.NextResultAsync();
+        while (await r.ReadAsync())
+        {
+            YerindeKontrolMakineAlan alan = new()
+            {
+                id = r.GetInt32(0), yerindeKontrolMakineId = r.GetInt32(1), alanKodu = Metin(r, 2), alanAdi = Metin(r, 3), beyanDeger = Metin(r, 4),
+                karar = (enumYerindeKontrolAlanKarar)r.GetByte(5), yeniDeger = Metin(r, 6), aciklama = Metin(r, 7)
+            };
+            k.makineler.FirstOrDefault(x => x.id == alan.yerindeKontrolMakineId)?.alanlar.Add(alan);
         }
         return k;
     }
@@ -255,15 +266,25 @@ public class TABYerindeKontrol : TABTablo
     {
         foreach (YerindeKontrolMakine m in makineler)
         {
-            await using SqlCommand c = KomutOlustur($@"UPDATE dbo.YerindeKontrolMakine SET BilgilerDogruMu=@DogruMu, RiskliMevcutVarlik=@Riskli, MiktarBulgu=@Miktar,
-                    MarkaModelBulgu=@MarkaModel, SeriNoBulgu=@SeriNo, KullanimAmaciBulgu=@KullanimAmaci, TeknikOzelliklerBulgu=@Teknik, FotografNo=@Foto
-                WHERE Id=@Id AND YerindeKontrolId=@KontrolId AND {TaslakKosulu};");
+            await using SqlCommand c = KomutOlustur($@"UPDATE dbo.YerindeKontrolMakine SET BilgilerDogruMu=@DogruMu, RiskliMevcutVarlik=@Riskli, FotografNo=@Foto
+                WHERE Id=@Id AND YerindeKontrolId=@KontrolId AND {TaslakKosulu};
+                IF @@ROWCOUNT = 1 DELETE FROM dbo.YerindeKontrolMakineAlan WHERE YerindeKontrolMakineId=@Id;
+                SELECT CONVERT(BIT, CASE WHEN EXISTS(SELECT 1 FROM dbo.YerindeKontrolMakine WHERE Id=@Id AND YerindeKontrolId=@KontrolId) AND {TaslakKosulu} THEN 1 ELSE 0 END);");
             c.Parameters.AddWithValue("@Id", m.id); c.Parameters.AddWithValue("@KontrolId", kontrolId);
             c.Parameters.AddWithValue("@DogruMu", Db(m.bilgilerDogruMu)); c.Parameters.AddWithValue("@Riskli", m.riskliMevcutVarlik);
-            c.Parameters.AddWithValue("@Miktar", Db(m.miktarBulgu)); c.Parameters.AddWithValue("@MarkaModel", Kisalt(m.markaModelBulgu, 300));
-            c.Parameters.AddWithValue("@SeriNo", Kisalt(m.seriNoBulgu, 150)); c.Parameters.AddWithValue("@KullanimAmaci", Kisalt(m.kullanimAmaciBulgu, 2000));
-            c.Parameters.AddWithValue("@Teknik", Kisalt(m.teknikOzelliklerBulgu, 2000)); c.Parameters.AddWithValue("@Foto", Kisalt(m.fotografNo, 100));
-            await c.ExecuteNonQueryAsync();
+            c.Parameters.AddWithValue("@Foto", Kisalt(m.fotografNo, 100));
+            if (!Convert.ToBoolean(await c.ExecuteScalarAsync())) continue;
+
+            // Alan kararları her kayıtta yeniden yazılır (yalnızca "Hayır" cevabında gelir).
+            foreach (YerindeKontrolMakineAlan a in m.alanlar)
+            {
+                await using SqlCommand ac = KomutOlustur(@"INSERT dbo.YerindeKontrolMakineAlan(YerindeKontrolMakineId,AlanKodu,AlanAdi,BeyanDeger,Karar,YeniDeger,Aciklama)
+                    VALUES(@MakineId,@Kod,@Ad,@Beyan,@Karar,@Yeni,@Aciklama);");
+                ac.Parameters.AddWithValue("@MakineId", m.id); ac.Parameters.AddWithValue("@Kod", Kisalt(a.alanKodu, 50)); ac.Parameters.AddWithValue("@Ad", Kisalt(a.alanAdi, 300));
+                ac.Parameters.AddWithValue("@Beyan", Kisalt(a.beyanDeger, 2000)); ac.Parameters.AddWithValue("@Karar", (byte)a.karar);
+                ac.Parameters.AddWithValue("@Yeni", Kisalt(a.yeniDeger, 2000)); ac.Parameters.AddWithValue("@Aciklama", Kisalt(a.aciklama, 2000));
+                await ac.ExecuteNonQueryAsync();
+            }
         }
         await YorumGuncelleAsync(kontrolId, "MakineYorumu", yorum);
     }
@@ -280,6 +301,114 @@ public class TABYerindeKontrol : TABTablo
             c.Parameters.AddWithValue("@Referans", Kisalt(s.referans, 500)); c.Parameters.AddWithValue("@Yorum", Kisalt(s.yorum, 4000));
             await c.ExecuteNonQueryAsync();
         }
+        await using SqlCommand g = KomutOlustur($"UPDATE dbo.YerindeKontrol SET GuncellemeTarihi=SYSDATETIME() WHERE Id=@KontrolId AND {TaslakKosulu};");
+        g.Parameters.AddWithValue("@KontrolId", kontrolId);
+        await g.ExecuteNonQueryAsync();
+    }
+
+    // ---- Metin bölümleri (3 diğer bulgular, 6 çalışma dokümanı)
+    public async Task DigerBulgularGuncelleAsync(int kontrolId, string metin)
+    {
+        await using SqlCommand c = KomutOlustur($"UPDATE dbo.YerindeKontrol SET DigerBulgular=@Metin, GuncellemeTarihi=SYSDATETIME() WHERE Id=@KontrolId AND {TaslakKosulu};");
+        c.Parameters.AddWithValue("@KontrolId", kontrolId); c.Parameters.AddWithValue("@Metin", metin ?? "");
+        await c.ExecuteNonQueryAsync();
+    }
+
+    public async Task CalismaDokumaniGuncelleAsync(int kontrolId, int? sayi, string metin)
+    {
+        await using SqlCommand c = KomutOlustur($@"UPDATE dbo.YerindeKontrol SET CalismaKagidiSayisi=@Sayi, CalismaDokumaniNotu=@Metin, GuncellemeTarihi=SYSDATETIME()
+            WHERE Id=@KontrolId AND {TaslakKosulu};");
+        c.Parameters.AddWithValue("@KontrolId", kontrolId); c.Parameters.AddWithValue("@Sayi", Db(sayi)); c.Parameters.AddWithValue("@Metin", Kisalt(metin, 4000));
+        await c.ExecuteNonQueryAsync();
+    }
+
+    // ---- Dosyalı bölümler (4 ek dokümanlar, 5 fotoğraf / video): satır önce eklenir, dosya kaydedilince dosya bilgisi yazılır.
+    /// <summary>Yeni ek doküman satırı; sıra no kontrol içindeki en büyük sıra + 1. Kontrol taslak değilse 0 döner.</summary>
+    public async Task<int> BelgeEkleAsync(int kontrolId)
+    {
+        await using SqlCommand c = KomutOlustur($@"IF {TaslakKosulu}
+            BEGIN
+                DECLARE @Sira INT = ISNULL((SELECT MAX(SiraNo) FROM dbo.YerindeKontrolBelge WITH (UPDLOCK, HOLDLOCK) WHERE YerindeKontrolId=@KontrolId), 0) + 1;
+                INSERT dbo.YerindeKontrolBelge(YerindeKontrolId,SiraNo) VALUES(@KontrolId,@Sira);
+                SELECT CONVERT(INT, SCOPE_IDENTITY());
+            END
+            ELSE SELECT 0;");
+        c.Parameters.AddWithValue("@KontrolId", kontrolId);
+        return Convert.ToInt32(await c.ExecuteScalarAsync());
+    }
+
+    /// <summary>Yeni fotoğraf / video satırı; kayıt no kullanılmayan ilk sayı olarak verilir. Kontrol taslak değilse 0 döner.</summary>
+    public async Task<int> FotografEkleAsync(int kontrolId)
+    {
+        await using SqlCommand c = KomutOlustur($@"IF {TaslakKosulu}
+            BEGIN
+                DECLARE @No INT = (SELECT COUNT(*) FROM dbo.YerindeKontrolFotograf WITH (UPDLOCK, HOLDLOCK) WHERE YerindeKontrolId=@KontrolId) + 1;
+                WHILE EXISTS(SELECT 1 FROM dbo.YerindeKontrolFotograf WHERE YerindeKontrolId=@KontrolId AND KayitNo=CONVERT(NVARCHAR(50), @No)) SET @No += 1;
+                INSERT dbo.YerindeKontrolFotograf(YerindeKontrolId,KayitNo) VALUES(@KontrolId, CONVERT(NVARCHAR(50), @No));
+                SELECT CONVERT(INT, SCOPE_IDENTITY());
+            END
+            ELSE SELECT 0;");
+        c.Parameters.AddWithValue("@KontrolId", kontrolId);
+        return Convert.ToInt32(await c.ExecuteScalarAsync());
+    }
+
+    private static string DosyaTablosu(string tur) => tur == YerindeKontrolDosyaTurleri.Belge ? "dbo.YerindeKontrolBelge" : "dbo.YerindeKontrolFotograf";
+
+    public async Task DosyaBilgisiYazAsync(string tur, int kontrolId, int satirId, int dosyaId, string dosyaAdi)
+    {
+        await using SqlCommand c = KomutOlustur($"UPDATE {DosyaTablosu(tur)} SET DosyaId=@DosyaId, DosyaAdi=@DosyaAdi WHERE Id=@Id AND YerindeKontrolId=@KontrolId;");
+        c.Parameters.AddWithValue("@Id", satirId); c.Parameters.AddWithValue("@KontrolId", kontrolId);
+        c.Parameters.AddWithValue("@DosyaId", dosyaId); c.Parameters.AddWithValue("@DosyaAdi", Kisalt(dosyaAdi, 500));
+        await c.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>Dosyalı satırı siler; yalnızca taslak kontrolde çalışır, silinen satır sayısını döner.</summary>
+    public async Task<int> DosyaliSatirSilAsync(string tur, int kontrolId, int satirId)
+    {
+        await using SqlCommand c = KomutOlustur($"DELETE FROM {DosyaTablosu(tur)} WHERE Id=@Id AND YerindeKontrolId=@KontrolId AND {TaslakKosulu};");
+        c.Parameters.AddWithValue("@Id", satirId); c.Parameters.AddWithValue("@KontrolId", kontrolId);
+        int silinen = await c.ExecuteNonQueryAsync();
+        if (silinen == 1 && tur == YerindeKontrolDosyaTurleri.Belge)
+        {
+            // Excel'deki "No" sütunu boşluksuz kalsın diye kalan dokümanlar yeniden numaralandırılır.
+            await using SqlCommand s = KomutOlustur(@"WITH n AS (SELECT SiraNo, ROW_NUMBER() OVER (ORDER BY SiraNo, Id) AS Yeni FROM dbo.YerindeKontrolBelge WHERE YerindeKontrolId=@KontrolId)
+                UPDATE n SET SiraNo = Yeni WHERE SiraNo <> Yeni;");
+            s.Parameters.AddWithValue("@KontrolId", kontrolId);
+            await s.ExecuteNonQueryAsync();
+        }
+        return silinen;
+    }
+
+    public async Task BelgelerGuncelleAsync(int kontrolId, IEnumerable<YerindeKontrolBelge> belgeler)
+    {
+        foreach (YerindeKontrolBelge b in belgeler)
+        {
+            await using SqlCommand c = KomutOlustur($@"UPDATE dbo.YerindeKontrolBelge SET VerilisTarihi=@Verilis, GecerlilikTarihi=@Gecerlilik, BelgeNo=@BelgeNo, Konu=@Konu
+                WHERE Id=@Id AND YerindeKontrolId=@KontrolId AND {TaslakKosulu};");
+            c.Parameters.AddWithValue("@Id", b.id); c.Parameters.AddWithValue("@KontrolId", kontrolId);
+            c.Parameters.AddWithValue("@Verilis", Db(b.verilisTarihi?.Date)); c.Parameters.AddWithValue("@Gecerlilik", Db(b.gecerlilikTarihi?.Date));
+            c.Parameters.AddWithValue("@BelgeNo", Kisalt(b.belgeNo, 150)); c.Parameters.AddWithValue("@Konu", Kisalt(b.konu, 1000));
+            await c.ExecuteNonQueryAsync();
+        }
+        await GuncellemeTarihiYazAsync(kontrolId);
+    }
+
+    public async Task FotograflarGuncelleAsync(int kontrolId, IEnumerable<YerindeKontrolFotograf> fotograflar)
+    {
+        foreach (YerindeKontrolFotograf f in fotograflar)
+        {
+            await using SqlCommand c = KomutOlustur($@"UPDATE dbo.YerindeKontrolFotograf SET KayitNo=@KayitNo, NeyeAit=@NeyeAit, Notlar=@Notlar
+                WHERE Id=@Id AND YerindeKontrolId=@KontrolId AND {TaslakKosulu};");
+            c.Parameters.AddWithValue("@Id", f.id); c.Parameters.AddWithValue("@KontrolId", kontrolId);
+            c.Parameters.AddWithValue("@KayitNo", Kisalt(f.kayitNo, 50)); c.Parameters.AddWithValue("@NeyeAit", Kisalt(f.neyeAit, 1000));
+            c.Parameters.AddWithValue("@Notlar", Kisalt(f.notlar, 2000));
+            await c.ExecuteNonQueryAsync();
+        }
+        await GuncellemeTarihiYazAsync(kontrolId);
+    }
+
+    private async Task GuncellemeTarihiYazAsync(int kontrolId)
+    {
         await using SqlCommand g = KomutOlustur($"UPDATE dbo.YerindeKontrol SET GuncellemeTarihi=SYSDATETIME() WHERE Id=@KontrolId AND {TaslakKosulu};");
         g.Parameters.AddWithValue("@KontrolId", kontrolId);
         await g.ExecuteNonQueryAsync();

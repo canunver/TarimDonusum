@@ -32,7 +32,6 @@
         </div>
         <div class="d-flex align-items-center" style="gap:8px">
             <span class="badge @(k.durum == enumYerindeKontrolDurum.Tamamlandi ? "badge-success" : "badge-warning")">@(k.durum == enumYerindeKontrolDurum.Tamamlandi ? "Tamamlandı" : "Taslak")</span>
-            <a class="btn btn-outline-secondary" asp-action="Index"><i class="fas fa-arrow-left mr-1"></i>Listeye dön</a>
         </div>
     </div>
     <div id="ajaxMesaj" class="alert alert-info alert-dismissible floating-message" style="display:@(TempData["Mesaj"] != null ? "block" : "none")"><span id="ajaxMesajMetin">@TempData["Mesaj"]</span>
@@ -94,7 +93,7 @@
                             <label>Birim amiri<input id="ykBirimAmiri" maxlength="200" value="@k.birimAmiriAdi" disabled="@ro" /></label>
                         </div>
                         <h3 class="h6 mt-4">Yerinde kontrol sırasında hazır bulunan kişiler</h3>
-                        <div class="table-responsive"><table class="table table-bordered table-sm"><thead><tr><th>Adı soyadı</th><th style="width:220px">Telefon numarası</th>@if (!ro) { <th style="width:60px"></th> }</tr></thead>
+                        <div class="table-responsive"><table class="table table-bordered table-sm"><thead><tr><th>Adı soyadı</th><th style="width:220px">Telefon numarası</th>@if (!ro) { <th style="width:80px">İşlemler</th> }</tr></thead>
                             <tbody id="ykHazirBulunanlar"></tbody></table></div>
                         @if (!ro)
                         {
@@ -183,26 +182,48 @@
                         @if (k.makineler.Count == 0) { <div class="alert alert-light border">Başvuruda makine/ekipman kaydı yok.</div> }
                         @foreach (YerindeKontrolMakine m in k.makineler)
                         {
+                            BasvuruMakine? bm = m.makineId.HasValue ? b.Makineler.FirstOrDefault(x => x.id == m.makineId) : null;
+                            List<YerindeKontrolMakineAlanTanimi> alanTanimlari = YerindeKontrolMakineAlanlari.Olustur(m, bm);
+                            bool hayir = m.bilgilerDogruMu == false;
+                            bool makineKaldirilmali = hayir && m.alanlar.Any(x => x.alanKodu == YerindeKontrolMakineAlanlari.Makine && x.karar == enumYerindeKontrolAlanKarar.Kaldirilmali);
+                            string hucre = hayir ? "table-cell" : "none";
                             <div class="border rounded p-3 mb-3 yk-satir" data-id="@m.id">
                                 <h3 class="h6">@m.siraNo. @m.makineAdi <small class="text-muted">(@m.mevcutDurum · projede kullanılacak: @(m.projedeKullanilacak ? "Evet" : "Hayır") · @UygunHarcamaTanimSaglayici.Etiket(m.uygunHarcamaId))</small></h3>
-                                <div class="table-responsive"><table class="table table-bordered table-sm mb-2"><thead><tr><th style="width:110px">Miktar</th><th>Marka / model</th><th>Kullanım amacı (işlevi)</th><th>Teknik özellikler</th></tr></thead><tbody>
-                                    <tr><td class="text-right">@Sayi(m.miktarBeyan)</td><td>@m.markaModelBeyan</td><td>@m.kullanimAmaciBeyan</td><td>@m.teknikOzelliklerBeyan</td></tr>
-                                </tbody></table></div>
-                                <div class="d-flex flex-wrap align-items-end" style="gap:16px">
+                                <div class="d-flex flex-wrap align-items-end mb-2" style="gap:16px">
                                     @DogruMuSorusu("Beyan edilen makine-ekipman bilgileri doğru mu?", $"dogru_{m.id}", m.bilgilerDogruMu)
                                     <label class="mb-0 d-flex align-items-center" style="gap:6px"><input data-alan="riskliMevcutVarlik" type="checkbox" checked="@m.riskliMevcutVarlik" disabled="@ro" /> Riskli mevcut varlık</label>
                                     <label class="mb-0">Fotoğraf no<input data-alan="fotografNo" maxlength="100" value="@m.fotografNo" disabled="@ro" /></label>
                                 </div>
-                                <div class="yk-duzeltme mt-2" style="display:@(m.bilgilerDogruMu == false ? "block" : "none")">
-                                    <div class="alert alert-warning py-2 mb-2">Yerinde kontrol bulgularını (yerinde tespit edilen doğru bilgileri) giriniz.</div>
-                                    <div class="form-grid">
-                                        <label>Miktar<input data-alan="miktarBulgu" type="number" step="0.001" min="0" value="@Ham(m.miktarBulgu)" disabled="@ro" /></label>
-                                        <label>Marka / model<input data-alan="markaModelBulgu" maxlength="300" value="@m.markaModelBulgu" disabled="@ro" /></label>
-                                        <label>Seri numarası<input data-alan="seriNoBulgu" maxlength="150" value="@m.seriNoBulgu" disabled="@ro" /></label>
-                                    </div>
-                                    <label class="wide-label">Kullanım amacı (işlevi)<textarea data-alan="kullanimAmaciBulgu" maxlength="2000" disabled="@ro">@m.kullanimAmaciBulgu</textarea></label>
-                                    <label class="wide-label">Teknik özellikler<textarea data-alan="teknikOzelliklerBulgu" maxlength="2000" disabled="@ro">@m.teknikOzelliklerBulgu</textarea></label>
-                                </div>
+                                <div class="yk-duzeltme alert alert-warning py-2 mb-2" style="display:@(hayir ? "block" : "none")">Her alan için kararı seçiniz. <strong>Değiştirilmeli:</strong> yerinde tespit edilen doğru bilgiyi ve açıklamayı girin. <strong>Kaldırılmalı:</strong> açıklama girin. Makinenin kendisi kaldırılmalıysa diğer alanlar sorulmaz.</div>
+                                <div class="table-responsive"><table class="table table-bordered table-sm mb-0 bg-white" style="min-width:900px"><thead><tr>
+                                    <th style="width:200px">Alan</th><th>Beyan (başvuru)</th>
+                                    <th class="yk-duzeltme" style="width:170px;display:@hucre">Yerinde kontrol kararı</th>
+                                    <th class="yk-duzeltme" style="width:320px;display:@hucre">Doğru bilgi / açıklama</th>
+                                </tr></thead><tbody>
+                                    @for (int n = 0; n < alanTanimlari.Count; n++)
+                                    {
+                                        YerindeKontrolMakineAlanTanimi t = alanTanimlari[n];
+                                        YerindeKontrolMakineAlan? a = m.alanlar.FirstOrDefault(x => x.alanKodu == t.Kod);
+                                        enumYerindeKontrolAlanKarar karar = a?.karar ?? enumYerindeKontrolAlanKarar.Dogru;
+                                        bool makineSatiri = t.Kod == YerindeKontrolMakineAlanlari.Makine;
+                                        <tr class="yk-alan" data-kod="@t.Kod" style="display:@(makineKaldirilmali && !makineSatiri ? "none" : "")">
+                                            <th class="font-weight-normal">@(makineSatiri ? "Makine / ekipmanın kendisi" : t.Ad)</th>
+                                            <td style="white-space:pre-line">@(string.IsNullOrWhiteSpace(t.Beyan) ? "-" : t.Beyan)</td>
+                                            <td class="yk-duzeltme" style="display:@hucre">
+                                                @foreach (enumYerindeKontrolAlanKarar secenek in Enum.GetValues<enumYerindeKontrolAlanKarar>())
+                                                {
+                                                    <label class="d-block mb-1 text-nowrap"><input type="radio" class="yk-karar" name="@($"karar_{m.id}_{n}")" value="@((int)secenek)" checked="@(karar == secenek)" disabled="@ro" onchange="KararGuncelle(this)" /> @YerindeKontrolMakineAlanlari.KararAdi(secenek)</label>
+                                                }
+                                            </td>
+                                            <td class="yk-duzeltme" style="display:@hucre">
+                                                <input data-alan="yeniDeger" class="form-control form-control-sm mb-1" maxlength="2000" inputmode="@(t.Sayisal ? "decimal" : null)" placeholder="@(makineSatiri ? "Yeni makine / ekipman adı" : $"Yeni {t.Ad.ToLower(new System.Globalization.CultureInfo("tr-TR"))}")"
+                                                       value="@a?.yeniDeger" disabled="@ro" style="display:@(karar == enumYerindeKontrolAlanKarar.Degistirilmeli ? "block" : "none")" />
+                                                <textarea data-alan="aciklama" class="form-control form-control-sm" rows="2" maxlength="2000" placeholder="Açıklama" disabled="@ro"
+                                                          style="display:@(karar == enumYerindeKontrolAlanKarar.Dogru ? "none" : "block")">@a?.aciklama</textarea>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody></table></div>
                             </div>
                         }
                         <label class="wide-label">Yorumlar<textarea id="ykYorum" maxlength="4000" disabled="@ro">@k.makineYorumu</textarea></label>
@@ -232,6 +253,51 @@
                         }
                         break;
 
+                    case "3":
+                        <label class="wide-label">Diğer bulgular (eğer var ise)
+                            <textarea id="ykMetin" rows="18" maxlength="20000" disabled="@ro" placeholder="Yerinde kontrolde tespit edilen diğer bulguları yazınız.">@k.digerBulgular</textarea></label>
+                        <p class="small text-muted mb-0">İmza bölümündeki uzman ve birim amiri adları Genel Bölüm'den alınır.</p>
+                        break;
+
+                    case "4":
+                        @if (!ro)
+                        {
+                            <div class="d-flex flex-wrap align-items-center mb-3" style="gap:12px">
+                                <label class="btn btn-success mb-0"><i class="fas fa-upload mr-1"></i>Dosya Yükle
+                                    <input type="file" accept=".pdf,application/pdf" multiple hidden onchange="DosyalariYukle(this, 'Belge')" /></label>
+                                <span class="small text-muted">Yalnızca PDF, dosya başına en fazla 50 MB. Birden fazla dosya seçilebilir.</span>
+                                <span id="ykYuklemeDurum" class="small"></span>
+                            </div>
+                        }
+                        <div class="table-responsive"><table class="table table-bordered table-sm" style="min-width:980px"><thead><tr>
+                            <th style="width:50px">No</th><th>Dosya</th><th style="width:150px">Veriliş tarihi</th><th style="width:150px">Geçerlilik tarihi</th><th style="width:170px">Belge numarası</th><th>Belgenin konusu</th><th style="width:130px">İşlemler</th>
+                        </tr></thead><tbody id="ykBelgeler"></tbody></table></div>
+                        break;
+
+                    case "5":
+                        @if (!ro)
+                        {
+                            <div class="d-flex flex-wrap align-items-center mb-3" style="gap:12px">
+                                <label class="btn btn-success mb-0"><i class="fas fa-upload mr-1"></i>Dosya Yükle
+                                    <input type="file" accept=".jpg,.jpeg,.png,.mp4,.mov,.webm,.avi,image/jpeg,image/png,video/*" multiple hidden onchange="DosyalariYukle(this, 'Fotograf')" /></label>
+                                <span class="small text-muted">Fotoğraf: JPEG, PNG (en fazla 20 MB) · Video: MP4, MOV, WEBM, AVI (en fazla 200 MB). Birden fazla dosya seçilebilir.</span>
+                                <span id="ykYuklemeDurum" class="small"></span>
+                            </div>
+                        }
+                        <div class="table-responsive"><table class="table table-bordered table-sm" style="min-width:820px"><thead><tr>
+                            <th style="width:100px">Kayıt no</th><th style="width:180px">Dosya</th><th>Fotoğrafın / video kaydının neye ait olduğu</th><th>Varsa tanıtıcı ilave bilgi ve notlar</th><th style="width:130px">İşlemler</th>
+                        </tr></thead><tbody id="ykFotograflar"></tbody></table></div>
+                        <p class="small text-muted">* Kayıt no, diğer bölümlerdeki "Fotoğraf no" alanlarında kullanılır.</p>
+                        break;
+
+                    case "6":
+                        <div class="form-grid">
+                            <label>Çalışma kağıdı sayısı<input id="ykCalismaKagidiSayisi" type="number" min="0" max="1000" step="1" value="@k.calismaKagidiSayisi" disabled="@ro" /></label>
+                        </div>
+                        <label class="wide-label">Çalışma dokümanı
+                            <textarea id="ykMetin" rows="18" maxlength="4000" disabled="@ro">@k.calismaDokumaniNotu</textarea></label>
+                        break;
+
                     case "7":
                         <div class="alert alert-light border">@YerindeKontrolTanimlari.OzetUyarisi</div>
                         <p><strong>Yerinde kontrol bildirimi:</strong> @YerindeKontrolTanimlari.BildirimMetni</p>
@@ -256,7 +322,7 @@
 
 @section Scripts {
 <script>
-    $(function () { if (typeof PopupMesajIlklendir === 'function') PopupMesajIlklendir(); HazirBulunanlariCiz(); });
+    $(function () { if (typeof PopupMesajIlklendir === 'function') PopupMesajIlklendir(); HazirBulunanlariCiz(); BelgeleriCiz(); FotograflariCiz(); });
     const ykSaltOkunur = @(ro ? "true" : "false");
     const bolumKodlari = @Html.Raw(JsonSerializer.Serialize(YerindeKontrolBolumleri.Tum.Select(x => x.Kod)));
     const aktifBolumIndex = bolumKodlari.indexOf(@Html.Raw(JsonSerializer.Serialize(aktif.Kod)));
@@ -272,7 +338,7 @@
     // Bölümün kayıt işlemi; girişi henüz olmayan bölümlerde doğrudan devam edilir.
     function BolumuKaydet(sonra) {
         if (!ykSaltOkunur && bolumKodlari[aktifBolumIndex] === 'GB') { GenelBilgilerKaydet(sonra); return; }
-        if (!ykSaltOkunur && ['1', '1.1', '1.2', '2'].includes(bolumKodlari[aktifBolumIndex])) { DogrulamaKaydet(sonra); return; }
+        if (!ykSaltOkunur && ['1', '1.1', '1.2', '2', '3', '4', '5', '6'].includes(bolumKodlari[aktifBolumIndex])) { DogrulamaKaydet(sonra); return; }
         if (sonra) sonra(); else if (!ykSaltOkunur) PopupMesajGoster('Bu bölümde kaydedilecek alan bulunmuyor.', true);
     }
     let hazirBulunanlar = @Html.Raw(JsonSerializer.Serialize(k.hazirBulunanlar));
@@ -289,7 +355,22 @@
     const kendi = (kart, secici) => $(kart).find(secici).filter((_, el) => $(el).closest('.yk-konum, .yk-satir')[0] === kart);
     function DuzeltmeAlaniGuncelle(secim) {
         const hayir = secim.value === 'false', kart = $(secim).closest('.yk-konum, .yk-satir')[0];
-        kendi(kart, '.yk-duzeltme').each(function () { this.style.display = hayir ? (this.tagName === 'SPAN' ? 'inline' : 'block') : 'none'; });
+        const gorunum = el => el.tagName === 'SPAN' ? 'inline' : (el.tagName === 'TD' || el.tagName === 'TH' ? 'table-cell' : 'block');
+        kendi(kart, '.yk-duzeltme').each(function () { this.style.display = hayir ? gorunum(this) : 'none'; });
+        MakineSatirlariGuncelle(kart);
+    }
+    // Tablo 2.2 alan kararı: Değiştirilmeli → yeni değer + açıklama, Kaldırılmalı → yalnızca açıklama.
+    function KararGuncelle(secim) {
+        const tr = secim.closest('tr'), karar = Number(secim.value);
+        tr.querySelector('[data-alan="yeniDeger"]').style.display = karar === 2 ? 'block' : 'none';
+        tr.querySelector('[data-alan="aciklama"]').style.display = karar === 1 ? 'none' : 'block';
+        if (tr.dataset.kod === 'Makine') MakineSatirlariGuncelle(tr.closest('.yk-satir'));
+    }
+    // Makinenin kendisi kaldırılmalıysa diğer alan satırları gizlenir.
+    function MakineSatirlariGuncelle(kart) {
+        if (!kart || !kart.querySelector('tr.yk-alan')) return;
+        const kaldir = dogruMu(kart) === false && kart.querySelector('tr[data-kod="Makine"] .yk-karar:checked')?.value === '3';
+        kart.querySelectorAll('tr.yk-alan:not([data-kod="Makine"])').forEach(tr => tr.style.display = kaldir ? 'none' : '');
     }
     const alanMetin = (kart, ad) => (kendi(kart, `[data-alan="${ad}"]`).val() || '').trim();
     const alanSayi = (kart, ad) => { const v = kendi(kart, `[data-alan="${ad}"]`).val(); return v === undefined || v === '' ? null : Number(v); };
@@ -304,16 +385,117 @@
         if (bolum === '1.1') model.yapilar = satirlar.map(s => ({ id: Number(s.dataset.id), bilgilerDogruMu: dogruMu(s), fotografNo: alanMetin(s, 'fotografNo'),
             uzunlukBulgu: alanSayi(s, 'uzunlukBulgu'), genislikBulgu: alanSayi(s, 'genislikBulgu'), alanBulgu: alanSayi(s, 'alanBulgu'), ekBulgular: alanMetin(s, 'ekBulgular') }));
         if (bolum === '1.2') model.makineler = satirlar.map(s => ({ id: Number(s.dataset.id), bilgilerDogruMu: dogruMu(s), fotografNo: alanMetin(s, 'fotografNo'),
-            riskliMevcutVarlik: $(s).find('[data-alan="riskliMevcutVarlik"]').is(':checked'), miktarBulgu: alanSayi(s, 'miktarBulgu'),
-            markaModelBulgu: alanMetin(s, 'markaModelBulgu'), seriNoBulgu: alanMetin(s, 'seriNoBulgu'), kullanimAmaciBulgu: alanMetin(s, 'kullanimAmaciBulgu'), teknikOzelliklerBulgu: alanMetin(s, 'teknikOzelliklerBulgu') }));
+            riskliMevcutVarlik: $(s).find('[data-alan="riskliMevcutVarlik"]').is(':checked'),
+            alanlar: dogruMu(s) !== false ? [] : [...s.querySelectorAll('tr.yk-alan')].map(tr => ({ alanKodu: tr.dataset.kod,
+                karar: Number(tr.querySelector('.yk-karar:checked')?.value || 1),
+                yeniDeger: tr.querySelector('[data-alan="yeniDeger"]').value.trim(), aciklama: tr.querySelector('[data-alan="aciklama"]').value.trim() })) }));
         if (bolum === '2') model.sorular = satirlar.map(s => ({ soruKodu: s.dataset.kod, cevap: $(s).find('input[name^="cevap_"]:checked').val() || '', dogruMu: dogruMu(s),
             fotografNo: alanMetin(s, 'fotografNo'), referans: alanMetin(s, 'referans'), bulgu: alanMetin(s, 'bulgu'), yorum: alanMetin(s, 'yorum') }));
+        if (bolum === '3' || bolum === '6') model.yorum = $('#ykMetin').val() || '';
+        if (bolum === '6') { const sayi = $('#ykCalismaKagidiSayisi').val(); model.calismaKagidiSayisi = sayi === '' ? null : Number(sayi); }
+        if (bolum === '4') model.belgeler = belgeler.map(x => ({ id: x.id, verilisTarihi: x.verilisTarihi || null, gecerlilikTarihi: x.gecerlilikTarihi || null, belgeNo: x.belgeNo, konu: x.konu }));
+        if (bolum === '5') model.fotograflar = fotograflar.map(x => ({ id: x.id, kayitNo: x.kayitNo, neyeAit: x.neyeAit, notlar: x.notlar }));
         AjaxPost('/YerindeKontrol/BolumKaydet', model, sonuc => {
             PopupMesajGoster(sonuc?.basarili ? sonuc.mesaj : (sonuc?.hataStr || 'Kaydedilemedi.'), !!sonuc?.basarili);
             if (sonuc?.basarili && sonra) setTimeout(sonra, 600);
         });
     }
     function HazirBulunanEkle() { hazirBulunanlar.push({ adSoyad: '', telefon: '' }); HazirBulunanlariCiz(); }
+
+    // ---- Kısım 4 (ek dokümanlar) ve Kısım 5 (fotoğraf / video): satırlar dizide tutulur, alanlar Kaydet ile yazılır.
+    const tarihStr = x => x ? String(x).substring(0, 10) : '';
+    let belgeler = @Html.Raw(JsonSerializer.Serialize(k.belgeler.OrderBy(x => x.siraNo)));
+    let fotograflar = @Html.Raw(JsonSerializer.Serialize(k.fotograflar));
+    belgeler.forEach(x => { x.verilisTarihi = tarihStr(x.verilisTarihi); x.gecerlilikTarihi = tarihStr(x.gecerlilikTarihi); });
+    const dosyaUrl = (tur, x, indir) => `/YerindeKontrol/Dosya/@k.id?tur=${tur}&satirId=${x.id}${indir ? '&indir=true' : ''}`;
+    const videoMu = ad => /\.(mp4|mov|webm|avi)$/i.test(ad || '');
+    const dis = ykSaltOkunur ? 'disabled' : '';
+    const dosyaBaglantisi = (tur, x) => `<a href="${dosyaUrl(tur, x)}" target="_blank" rel="noopener" title="Görüntüle">${html(x.dosyaAdi)}</a>`;
+    // "İşlemler" sütunu: görüntüle, indir, sil (salt okunurda sil yok).
+    const islemler = (tur, x, i) => `<td class="text-center text-nowrap">
+        <a href="${dosyaUrl(tur, x)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Görüntüle"><i class="fas fa-eye"></i></a>
+        <a href="${dosyaUrl(tur, x, true)}" class="btn btn-sm btn-outline-secondary" title="İndir"><i class="fas fa-download"></i></a>
+        ${ykSaltOkunur ? '' : `<button type="button" class="btn btn-sm btn-outline-danger" title="Dosyayı sil" onclick="DosyaSil('${tur}', ${i})"><i class="fas fa-trash-alt"></i></button>`}</td>`;
+
+    function BelgeleriCiz() {
+        const govde = document.getElementById('ykBelgeler');
+        if (!govde) return;
+        if (!belgeler.length) { govde.innerHTML = `<tr><td colspan="7" class="text-muted">Henüz doküman yüklenmedi.</td></tr>`; return; }
+        govde.innerHTML = belgeler.map((x, i) => `<tr>
+            <td class="text-center">${x.siraNo}</td>
+            <td class="text-break"><i class="fas fa-file-pdf text-danger mr-1"></i>${dosyaBaglantisi('Belge', x)}</td>
+            <td><input type="date" class="form-control form-control-sm" value="${x.verilisTarihi}" ${dis} onchange="belgeler[${i}].verilisTarihi=this.value"></td>
+            <td><input type="date" class="form-control form-control-sm" value="${x.gecerlilikTarihi}" ${dis} onchange="belgeler[${i}].gecerlilikTarihi=this.value"></td>
+            <td><input class="form-control form-control-sm" maxlength="150" value="${html(x.belgeNo)}" ${dis} oninput="belgeler[${i}].belgeNo=this.value"></td>
+            <td><textarea class="form-control form-control-sm" rows="2" maxlength="1000" ${dis} oninput="belgeler[${i}].konu=this.value">${html(x.konu)}</textarea></td>
+            ${islemler('Belge', x, i)}</tr>`).join('');
+    }
+
+    function FotograflariCiz() {
+        const govde = document.getElementById('ykFotograflar');
+        if (!govde) return;
+        if (!fotograflar.length) { govde.innerHTML = `<tr><td colspan="5" class="text-muted">Henüz fotoğraf veya video yüklenmedi.</td></tr>`; return; }
+        govde.innerHTML = fotograflar.map((x, i) => {
+            const onizleme = videoMu(x.dosyaAdi)
+                ? `<video src="${dosyaUrl('Fotograf', x)}" preload="metadata" controls style="width:140px;max-height:100px;background:#000"></video>`
+                : `<a href="${dosyaUrl('Fotograf', x)}" target="_blank" rel="noopener"><img src="${dosyaUrl('Fotograf', x)}" loading="lazy" alt="" style="width:140px;max-height:100px;object-fit:cover" class="rounded border"></a>`;
+            return `<tr>
+            <td><input class="form-control form-control-sm" maxlength="50" value="${html(x.kayitNo)}" ${dis} oninput="fotograflar[${i}].kayitNo=this.value"></td>
+            <td>${onizleme}<div class="small text-break mt-1">${dosyaBaglantisi('Fotograf', x)}</div></td>
+            <td><textarea class="form-control form-control-sm" rows="3" maxlength="1000" ${dis} oninput="fotograflar[${i}].neyeAit=this.value">${html(x.neyeAit)}</textarea></td>
+            <td><textarea class="form-control form-control-sm" rows="3" maxlength="2000" ${dis} oninput="fotograflar[${i}].notlar=this.value">${html(x.notlar)}</textarea></td>
+            ${islemler('Fotograf', x, i)}</tr>`;
+        }).join('');
+    }
+
+    // Seçilen dosyalar sırayla tek tek yüklenir; yüklenen her dosya tabloya yeni satır olarak eklenir (girilmiş alanlar korunur).
+    async function DosyalariYukle(input, tur) {
+        const dosyalar = Array.from(input.files || []);
+        input.value = '';
+        if (!dosyalar.length) return;
+        const durum = document.getElementById('ykYuklemeDurum');
+        input.disabled = true;
+        let basarili = 0;
+        for (let n = 0; n < dosyalar.length; n++) {
+            const sonuc = await DosyaGonder(tur, dosyalar[n], yuzde => { if (durum) durum.textContent = `Yükleniyor (${n + 1}/${dosyalar.length}): ${dosyalar[n].name} %${yuzde}`; });
+            if (sonuc?.basarili && sonuc.nesne) {
+                basarili++;
+                if (tur === 'Belge') { sonuc.nesne.verilisTarihi = tarihStr(sonuc.nesne.verilisTarihi); sonuc.nesne.gecerlilikTarihi = tarihStr(sonuc.nesne.gecerlilikTarihi); belgeler.push(sonuc.nesne); BelgeleriCiz(); }
+                else { fotograflar.push(sonuc.nesne); FotograflariCiz(); }
+            } else PopupMesajGoster(sonuc?.hataStr || `${dosyalar[n].name} yüklenemedi.`, false);
+        }
+        input.disabled = false;
+        if (durum) durum.textContent = '';
+        if (basarili) PopupMesajGoster(`${basarili} dosya yüklendi. Dosya bilgilerini girip Kaydet'e basınız.`, true);
+    }
+
+    function DosyaGonder(tur, dosya, ilerleme) {
+        return new Promise(resolve => {
+            const form = new FormData();
+            form.append('id', '@k.id'); form.append('tur', tur); form.append('dosya', dosya);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/YerindeKontrol/DosyaYukle');
+            xhr.setRequestHeader('RequestVerificationToken', $('[name="__RequestVerificationToken"]').val());
+            xhr.upload.onprogress = e => { if (e.lengthComputable) ilerleme(Math.round(e.loaded * 100 / e.total)); };
+            xhr.onload = () => {
+                try { resolve(JSON.parse(xhr.responseText)); }
+                catch { resolve({ basarili: false, hataStr: xhr.status === 413 ? `${dosya.name}: Dosya çok büyük.` : `${dosya.name} yüklenemedi.` }); }
+            };
+            xhr.onerror = () => resolve({ basarili: false, hataStr: `${dosya.name} yüklenemedi (bağlantı hatası).` });
+            xhr.send(form);
+        });
+    }
+
+    async function DosyaSil(tur, i) {
+        const liste = tur === 'Belge' ? belgeler : fotograflar, x = liste[i];
+        if (!x || !await OnayIste(`"${x.dosyaAdi}" dosyası silinecek. Devam edilsin mi?`)) return;
+        AjaxPost('/YerindeKontrol/DosyaSil', { id: @k.id, tur, satirId: x.id }, sonuc => {
+            PopupMesajGoster(sonuc?.basarili ? sonuc.mesaj : (sonuc?.hataStr || 'Dosya silinemedi.'), !!sonuc?.basarili);
+            if (!sonuc?.basarili) return;
+            liste.splice(i, 1);
+            if (tur === 'Belge') { belgeler.forEach((b, n) => b.siraNo = n + 1); BelgeleriCiz(); } else FotograflariCiz();
+        });
+    }
     function GenelBilgilerKaydet(sonra) {
         const model = {
             id: @k.id,

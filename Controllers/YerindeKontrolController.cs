@@ -88,4 +88,52 @@ public class YerindeKontrolController : BMYController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> GenelBilgilerKaydet([FromBody] YerindeKontrol model) =>
         Json(await _yerindeKontrol.GenelBilgilerKaydetAsync(model, await OturumKullanicisiOkuAsync(_basvuru)));
+
+    // Videolar için istek sınırı en büyük video boyutunun biraz üstündedir; tür bazındaki sınırlar iş kuralında kontrol edilir.
+    private const long YuklemeSiniri = YerindeKontrolIsKurallari.VideoEnBuyuk + 10L * 1024 * 1024;
+
+    /// <summary>Kısım 4 (tur=Belge, PDF) veya Kısım 5 (tur=Fotograf, fotoğraf / video) için tek dosya yükler.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(YuklemeSiniri)]
+    [RequestFormLimits(MultipartBodyLengthLimit = YuklemeSiniri)]
+    public async Task<IActionResult> DosyaYukle(int id, string tur, IFormFile? dosya)
+    {
+        byte[] icerik = [];
+        if (dosya != null && dosya.Length > 0 && dosya.Length <= YuklemeSiniri)
+        {
+            await using MemoryStream stream = new();
+            await dosya.CopyToAsync(stream);
+            icerik = stream.ToArray();
+        }
+        else if (dosya != null && dosya.Length > YuklemeSiniri)
+        {
+            Sonuc<object> buyuk = new();
+            buyuk.HataEkle($"{dosya.FileName}: Dosya çok büyük.");
+            return Json(buyuk);
+        }
+        return Json(await _yerindeKontrol.DosyaYukleAsync(id, tur, dosya?.FileName ?? "", icerik, await OturumKullanicisiOkuAsync(_basvuru)));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DosyaSil([FromBody] YerindeKontrolDosyaSil model) =>
+        Json(await _yerindeKontrol.DosyaSilAsync(model, await OturumKullanicisiOkuAsync(_basvuru)));
+
+    /// <summary>Dosyayı tarayıcıda açar (PDF, fotoğraf, video); indir=true ise indirir. Video için parça parça okuma (ileri sarma) desteklenir.</summary>
+    [HttpGet]
+    public async Task<IActionResult> Dosya(int id, string tur, int satirId, bool indir = false)
+    {
+        Kullanici? kullanici = await OturumKullanicisiOkuAsync(_basvuru);
+        if (!YerindeKontrolIsKurallari.UzmanMi(kullanici)) return Forbid();
+        Sonuc<Dosya> sonuc = await _yerindeKontrol.DosyaGetirAsync(id, tur, satirId, kullanici);
+        if (!sonuc.basarili || sonuc.nesne == null) return NotFound(sonuc.hataStr);
+
+        string dosyaAdi = string.IsNullOrWhiteSpace(sonuc.nesne.DosyaAdi) ? $"dosya-{satirId}" : sonuc.nesne.DosyaAdi;
+        Microsoft.Net.Http.Headers.ContentDispositionHeaderValue disposition = new(indir ? "attachment" : "inline");
+        disposition.SetHttpFileName(dosyaAdi); // Türkçe karakterli adlar için filename* (UTF-8) de yazılır.
+        Response.Headers.ContentDisposition = disposition.ToString();
+        Response.Headers.XContentTypeOptions = "nosniff";
+        return File(sonuc.nesne.Icerik, YerindeKontrolDosyaTurleri.IcerikTuru(dosyaAdi), enableRangeProcessing: true);
+    }
 }

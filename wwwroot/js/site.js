@@ -95,6 +95,47 @@ function PopupMesajIlklendir() {
     }
 }
 
+// Tarayıcının confirm() penceresi yerine uygulama içi onay penceresi. Onaylanırsa true döner:
+//   if (!await OnayIste('Kayıt silinsin mi?')) return;
+// Silme mesajlarında onay düğmesi kırmızı "Sil" olur. Açık bir pencerenin üstünde de doğru katmanda açılır.
+window.OnayIste = function (mesaj, baslik, onayMetni, tehlikeli) {
+    return new Promise(function (resolve) {
+        if (typeof $ !== 'function' || typeof $.fn.modal !== 'function') { resolve(window.confirm(mesaj || '')); return; }
+        var silme = /\bsil|silin|silme/i.test(mesaj || '');
+        if (tehlikeli === undefined) tehlikeli = silme;
+        var $modal = $('#ortakOnayPenceresi');
+        if (!$modal.length) {
+            $modal = $('<div class="modal fade" id="ortakOnayPenceresi" tabindex="-1" role="dialog" aria-labelledby="ortakOnayBaslik" aria-hidden="true">' +
+                '<div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">' +
+                '<div class="modal-header"><h5 class="modal-title" id="ortakOnayBaslik"></h5>' +
+                '<button type="button" class="close" data-dismiss="modal" aria-label="Kapat"><span aria-hidden="true">&times;</span></button></div>' +
+                '<div class="modal-body" id="ortakOnayMetin" style="white-space:pre-line"></div>' +
+                '<div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Vazgeç</button>' +
+                '<button type="button" class="btn" id="ortakOnayEvet"></button></div></div></div></div>');
+            $('body').append($modal);
+        }
+        $modal.find('#ortakOnayBaslik').text(baslik || 'Onay');
+        $modal.find('#ortakOnayMetin').text(mesaj || '');
+        var $evet = $modal.find('#ortakOnayEvet')
+            .text(onayMetni || (silme ? 'Sil' : 'Onayla'))
+            .removeClass('btn-success btn-danger').addClass(tehlikeli ? 'btn-danger' : 'btn-success');
+        var onaylandi = false;
+        $evet.off('click.onay').on('click.onay', function () { onaylandi = true; $modal.modal('hide'); });
+        // Başka bir pencere açıksa onay penceresi ve karartması onun üstünde görünür.
+        var acik = $('.modal.show').not($modal).length;
+        $modal.off('shown.bs.modal.onay').on('shown.bs.modal.onay', function () {
+            if (acik) { $modal.css('z-index', 1050 + acik * 20); $('.modal-backdrop').last().css('z-index', 1040 + acik * 20); }
+            $evet.trigger('focus');
+        });
+        $modal.off('hidden.bs.modal.onay').one('hidden.bs.modal.onay', function () {
+            $modal.css('z-index', '');
+            if ($('.modal.show').length) $('body').addClass('modal-open'); // alttaki pencere kaydırılabilir kalsın
+            resolve(onaylandi);
+        });
+        $modal.modal({ backdrop: 'static', show: true });
+    });
+};
+
 window.AjaxPost = function (url, data, success) {
     // Sayfadaki anti-forgery token'ı alan fonksiyonunu çağırıyoruz
     // (Eğer fonksiyon adı farklıysa projenizdekine göre güncelleyin, örn: antiForgeryToken())
@@ -154,7 +195,7 @@ function AjaxGet(url, data, success) {
 
             console.error(xhr);
 
-            alert("İşlem sırasında bir hata oluştu.");
+            PopupMesajGoster("İşlem sırasında bir hata oluştu.", false);
 
         });
 }

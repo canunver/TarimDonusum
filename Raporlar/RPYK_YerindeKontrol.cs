@@ -38,7 +38,7 @@ public sealed class RPYK_YerindeKontrol(string uygulamaRootPath)
                 case "GB": GenelBolum(model); break;
                 case "1": Adresler(model); break;
                 case "1.1": Yapilar(model.kontrol); break;
-                case "1.2": Makineler(model.kontrol); break;
+                case "1.2": Makineler(model); break;
                 case "2": Sorular(model.kontrol); break;
                 case "3": DigerBulgular(model.kontrol); break;
                 case "4": Belgeler(model.kontrol); break;
@@ -219,14 +219,36 @@ public sealed class RPYK_YerindeKontrol(string uygulamaRootPath)
         Yaz("A17", "YORUMLAR: " + k.yapiYorumu, ek);
     }
 
-    private void Makineler(YerindeKontrol k)
+    private void Makineler(YerindeKontrolFormModel model)
     {
         // Tablo 2.2: 10.-14. satırlar (5 satır); her alan için beyan ve yerinde kontrol bulgusu.
+        YerindeKontrol k = model.kontrol;
         List<YerindeKontrolMakine> liste = k.makineler.OrderBy(x => x.siraNo).ToList();
         int ek = SatirAyir(9, 5, liste.Count, 37);
+        List<string> aciklamalar = [];
         for (int i = 0; i < liste.Count; i++)
         {
             YerindeKontrolMakine m = liste[i];
+            BasvuruMakine? bm = m.makineId.HasValue ? model.basvuru.Makineler.FirstOrDefault(x => x.id == m.makineId) : null;
+            List<YerindeKontrolMakineAlanTanimi> tanimlar = YerindeKontrolMakineAlanlari.Olustur(m, bm);
+            bool hayir = m.bilgilerDogruMu == false;
+            YerindeKontrolMakineAlan? Karar(string kod) => hayir ? m.alanlar.FirstOrDefault(x => x.alanKodu == kod) : null;
+            bool makineKaldirilmali = Karar(YerindeKontrolMakineAlanlari.Makine)?.karar == enumYerindeKontrolAlanKarar.Kaldirilmali;
+            // Bulgu: doğru alanda beyan, değiştirilmelide yeni değer, kaldırılmalıda "Kaldırılmalı".
+            string Bulgu(string kod)
+            {
+                if (makineKaldirilmali) return "Makine kaldırılmalı";
+                string beyan = tanimlar.FirstOrDefault(x => x.Kod == kod)?.Beyan ?? "";
+                YerindeKontrolMakineAlan? a = Karar(kod);
+                return a?.karar switch
+                {
+                    enumYerindeKontrolAlanKarar.Degistirilmeli => a.yeniDeger,
+                    enumYerindeKontrolAlanKarar.Kaldirilmali => "Kaldırılmalı",
+                    _ => beyan
+                };
+            }
+            bool Var(string kod) => tanimlar.Any(x => x.Kod == kod);
+
             bool mevcut = string.Equals(m.mevcutDurum, "Mevcut", StringComparison.OrdinalIgnoreCase);
             Yaz("A10", mevcut ? m.makineAdi : "", i);
             Isaret("B10", m.riskliMevcutVarlik, i);
@@ -234,16 +256,35 @@ public sealed class RPYK_YerindeKontrol(string uygulamaRootPath)
             Yaz("D10", mevcut ? "" : m.makineAdi, i);
             Yaz("E10", UygunHarcamaTanimSaglayici.Etiket(m.uygunHarcamaId), i);
             Yaz("F10", m.riskliMevcutVarlik ? m.teknikOzelliklerBeyan : "", i);
-            // Uzman bilgileri doğru bulduysa bulgu sütunlarında beyan edilen değer gösterilir.
-            bool dogru = m.bilgilerDogruMu == true;
-            Yaz("G10", m.miktarBeyan, i); Yaz("J10", dogru ? m.miktarBeyan : m.miktarBulgu, i);
-            Yaz("M10", m.markaModelBeyan, i); Yaz("P10", dogru ? m.markaModelBeyan : m.markaModelBulgu, i);
-            Yaz("S10", m.seriNoBeyan, i); Yaz("V10", dogru ? m.seriNoBeyan : m.seriNoBulgu, i);
-            Yaz("Y10", m.kullanimAmaciBeyan, i); Yaz("AB10", dogru ? m.kullanimAmaciBeyan : m.kullanimAmaciBulgu, i);
-            Yaz("AE10", m.teknikOzelliklerBeyan, i); Yaz("AH10", dogru ? m.teknikOzelliklerBeyan : m.teknikOzelliklerBulgu, i);
+            Yaz("G10", m.miktarBeyan, i);
+            // Miktar sayı olarak yazılır; kaldırılmalıda metin.
+            YerindeKontrolMakineAlan? miktar = Karar(YerindeKontrolMakineAlanlari.Miktar);
+            if (makineKaldirilmali || miktar?.karar == enumYerindeKontrolAlanKarar.Kaldirilmali) Yaz("J10", Bulgu(YerindeKontrolMakineAlanlari.Miktar), i);
+            else if (miktar?.karar == enumYerindeKontrolAlanKarar.Degistirilmeli
+                     && decimal.TryParse(miktar.yeniDeger.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal yeniMiktar)) Yaz("J10", yeniMiktar, i);
+            else Yaz("J10", m.miktarBeyan, i);
+            Yaz("M10", m.markaModelBeyan, i);
+            Yaz("P10", Var("MarkaModel") ? Bulgu("MarkaModel") : makineKaldirilmali ? Bulgu("Marka")
+                : string.Join(" / ", new[] { Bulgu("Marka"), Bulgu("Model") }.Where(x => !string.IsNullOrWhiteSpace(x))), i);
+            Yaz("S10", m.seriNoBeyan, i); Yaz("V10", Bulgu("SeriNo"), i);
+            Yaz("Y10", m.kullanimAmaciBeyan, i); Yaz("AB10", Bulgu("KullanimAmaci"), i);
+            Yaz("AE10", m.teknikOzelliklerBeyan, i);
+            // Teknik özellikler: kapasite ve her özellik kendi sonucuyla yazılır; hiçbirine karar verilmediyse beyan aynen yazılır.
+            List<YerindeKontrolMakineAlanTanimi> teknik = tanimlar.Where(x => x.Kod is "Kapasite" or "TeknikOzellikler" || x.Kod.StartsWith(YerindeKontrolMakineAlanlari.TeknikOnEki)).ToList();
+            bool teknikKarar = makineKaldirilmali || teknik.Any(x => Karar(x.Kod) != null);
+            Yaz("AH10", !teknikKarar ? m.teknikOzelliklerBeyan : makineKaldirilmali ? Bulgu("Kapasite")
+                : string.Join("; ", teknik.Select(x => (x.Kod is "Kapasite" or "TeknikOzellikler" ? "" : x.Ad.Replace("Teknik özellik: ", "") + ": ") + Bulgu(x.Kod))
+                    .Where(x => !string.IsNullOrWhiteSpace(x))), i);
             Yaz("AK10", m.fotografNo, i);
+
+            foreach (YerindeKontrolMakineAlan a in hayir ? m.alanlar.Where(x => x.karar != enumYerindeKontrolAlanKarar.Dogru) : [])
+                aciklamalar.Add($"{m.siraNo}. {m.makineAdi} – {a.alanAdi}: {YerindeKontrolMakineAlanlari.KararAdi(a.karar)}"
+                    + (a.karar == enumYerindeKontrolAlanKarar.Degistirilmeli ? $" ({a.beyanDeger} → {a.yeniDeger})" : "")
+                    + (string.IsNullOrWhiteSpace(a.aciklama) ? "" : $". {a.aciklama}"));
         }
-        Yaz("A15", "YORUMLAR: " + k.makineYorumu, ek);
+        string yorum = string.Join("\n", new[] { k.makineYorumu }.Concat(aciklamalar).Where(x => !string.IsNullOrWhiteSpace(x)));
+        Yaz("A15", "YORUMLAR: " + yorum, ek);
+        _t.HucreMetniKaydir(14 + ek, 0, true);
     }
 
     private void Sorular(YerindeKontrol k)
@@ -290,14 +331,13 @@ public sealed class RPYK_YerindeKontrol(string uygulamaRootPath)
 
     private void Fotograflar(YerindeKontrol k)
     {
-        // Kısım 5: 8.-21. satırlar (14 satır); koordinat varsa notlara eklenir.
+        // Kısım 5: 8.-21. satırlar (14 satır).
         List<YerindeKontrolFotograf> liste = k.fotograflar.ToList();
         SatirAyir(7, 14, liste.Count, 22);
         for (int i = 0; i < liste.Count; i++)
         {
             YerindeKontrolFotograf f = liste[i];
-            string koordinat = f.koordinatY.HasValue || f.koordinatX.HasValue ? $" (Y: {f.koordinatY?.ToString(Tr)}, X: {f.koordinatX?.ToString(Tr)})" : "";
-            Yaz("A8", f.kayitNo, i); Yaz("E8", f.neyeAit, i); Yaz("K8", f.notlar + koordinat, i);
+            Yaz("A8", f.kayitNo, i); Yaz("E8", f.neyeAit, i); Yaz("K8", f.notlar, i);
         }
     }
 

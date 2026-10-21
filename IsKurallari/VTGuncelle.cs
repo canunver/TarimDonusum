@@ -1778,6 +1778,27 @@ namespace TarimDonusum.IsKurallari
                   IF COL_LENGTH(N'dbo.YerindeKontrolAdres',N'KoordinatTuru') IS NOT NULL ALTER TABLE dbo.YerindeKontrolAdres DROP COLUMN KoordinatTuru;
                   IF COL_LENGTH(N'dbo.YerindeKontrolAdres',N'DilimOrtaMeridyen') IS NOT NULL ALTER TABLE dbo.YerindeKontrolAdres DROP COLUMN DilimOrtaMeridyen;
                   IF COL_LENGTH(N'dbo.YerindeKontrolAdres',N'OlculenEnDusukY') IS NOT NULL ALTER TABLE dbo.YerindeKontrolAdres DROP COLUMN OlculenEnDusukY, OlculenEnDusukX, OlculenEnYuksekY, OlculenEnYuksekX;"),
+            // Yerinde Kontrol Kısım 5: Excel tablosunda GPS sütunu olmadığı için fotoğraf / video koordinatları kaldırıldı.
+            new(142, @"IF COL_LENGTH(N'dbo.YerindeKontrolFotograf',N'KoordinatY') IS NOT NULL ALTER TABLE dbo.YerindeKontrolFotograf DROP COLUMN KoordinatY, KoordinatX;"),
+            // Yerinde Kontrol Tablo 2.2: makinenin her alanı (marka, model, teknik özellik...) için ayrı karar (doğru / değiştirilmeli / kaldırılmalı);
+            // tek kutulu bulgu sütunları kaldırıldı.
+            new(143, @"IF OBJECT_ID(N'dbo.YerindeKontrolMakineAlan',N'U') IS NULL
+                  CREATE TABLE dbo.YerindeKontrolMakineAlan(
+                    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_YerindeKontrolMakineAlan PRIMARY KEY,
+                    YerindeKontrolMakineId INT NOT NULL CONSTRAINT FK_YerindeKontrolMakineAlan_Makine REFERENCES dbo.YerindeKontrolMakine(Id) ON DELETE CASCADE,
+                    AlanKodu NVARCHAR(50) NOT NULL,
+                    AlanAdi NVARCHAR(300) NOT NULL CONSTRAINT DF_YerindeKontrolMakineAlan_AlanAdi DEFAULT N'',
+                    BeyanDeger NVARCHAR(2000) NOT NULL CONSTRAINT DF_YerindeKontrolMakineAlan_Beyan DEFAULT N'',
+                    Karar TINYINT NOT NULL,
+                    YeniDeger NVARCHAR(2000) NOT NULL CONSTRAINT DF_YerindeKontrolMakineAlan_YeniDeger DEFAULT N'',
+                    Aciklama NVARCHAR(2000) NOT NULL CONSTRAINT DF_YerindeKontrolMakineAlan_Aciklama DEFAULT N'',
+                    CONSTRAINT UQ_YerindeKontrolMakineAlan UNIQUE (YerindeKontrolMakineId, AlanKodu));
+                  IF OBJECT_ID(N'dbo.DF_YerindeKontrolMakine_MarkaModelBulgu',N'D') IS NOT NULL ALTER TABLE dbo.YerindeKontrolMakine DROP CONSTRAINT DF_YerindeKontrolMakine_MarkaModelBulgu;
+                  IF OBJECT_ID(N'dbo.DF_YerindeKontrolMakine_SeriNoBulgu',N'D') IS NOT NULL ALTER TABLE dbo.YerindeKontrolMakine DROP CONSTRAINT DF_YerindeKontrolMakine_SeriNoBulgu;
+                  IF OBJECT_ID(N'dbo.DF_YerindeKontrolMakine_KullanimBulgu',N'D') IS NOT NULL ALTER TABLE dbo.YerindeKontrolMakine DROP CONSTRAINT DF_YerindeKontrolMakine_KullanimBulgu;
+                  IF OBJECT_ID(N'dbo.DF_YerindeKontrolMakine_TeknikBulgu',N'D') IS NOT NULL ALTER TABLE dbo.YerindeKontrolMakine DROP CONSTRAINT DF_YerindeKontrolMakine_TeknikBulgu;
+                  IF COL_LENGTH(N'dbo.YerindeKontrolMakine',N'MiktarBulgu') IS NOT NULL
+                    ALTER TABLE dbo.YerindeKontrolMakine DROP COLUMN MiktarBulgu, MarkaModelBulgu, SeriNoBulgu, KullanimAmaciBulgu, TeknikOzelliklerBulgu;"),
         ];
 
         public static async Task GuncelleAsync(IConfiguration configuration, ILogger logger)

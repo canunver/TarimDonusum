@@ -136,23 +136,93 @@ namespace TarimDonusum.Models
         public int? makineId { get; set; }
         public int siraNo { get; set; }
         public string mevcutDurum { get; set; } = "";
-        /// <summary>Uzmanın "beyan edilen bilgiler doğru mu?" cevabı; Hayır ise bulgu alanları girilir.</summary>
+        /// <summary>Uzmanın "beyan edilen bilgiler doğru mu?" cevabı; Hayır ise her alan için karar (doğru / değiştirilmeli / kaldırılmalı) verilir.</summary>
         public bool? bilgilerDogruMu { get; set; }
         public bool riskliMevcutVarlik { get; set; }
         public bool projedeKullanilacak { get; set; }
         public string makineAdi { get; set; } = "";
         public int? uygunHarcamaId { get; set; }
+        // Kontrol başlatıldığındaki beyanlar (başvurudaki makine silinirse bunlar kullanılır).
         public decimal? miktarBeyan { get; set; }
-        public decimal? miktarBulgu { get; set; }
         public string markaModelBeyan { get; set; } = "";
-        public string markaModelBulgu { get; set; } = "";
         public string seriNoBeyan { get; set; } = "";
-        public string seriNoBulgu { get; set; } = "";
         public string kullanimAmaciBeyan { get; set; } = "";
-        public string kullanimAmaciBulgu { get; set; } = "";
         public string teknikOzelliklerBeyan { get; set; } = "";
-        public string teknikOzelliklerBulgu { get; set; } = "";
         public string fotografNo { get; set; } = "";
+        /// <summary>"Bilgiler doğru mu?" Hayır ise alan bazındaki kararlar.</summary>
+        public List<YerindeKontrolMakineAlan> alanlar { get; set; } = new();
+    }
+
+    public enum enumYerindeKontrolAlanKarar
+    {
+        Dogru = 1,
+        Degistirilmeli = 2,
+        Kaldirilmali = 3
+    }
+
+    /// <summary>Makinenin bir alanı (makinenin kendisi, marka, miktar, teknik özellik...) için uzman kararı.</summary>
+    public class YerindeKontrolMakineAlan
+    {
+        public int id { get; set; }
+        public int yerindeKontrolMakineId { get; set; }
+        /// <summary>Makine, Miktar, Marka, Model, SeriNo, KullanimAmaci, Kapasite veya Teknik:{özellik id}.</summary>
+        public string alanKodu { get; set; } = "";
+        public string alanAdi { get; set; } = "";
+        public string beyanDeger { get; set; } = "";
+        public enumYerindeKontrolAlanKarar karar { get; set; } = enumYerindeKontrolAlanKarar.Dogru;
+        /// <summary>Değiştirilmeli: yerinde tespit edilen doğru değer.</summary>
+        public string yeniDeger { get; set; } = "";
+        public string aciklama { get; set; } = "";
+    }
+
+    /// <summary>Bir makinenin doğrulanacak alanı: kod, ekranda görünen ad ve başvurudaki beyan.</summary>
+    public sealed record YerindeKontrolMakineAlanTanimi(string Kod, string Ad, string Beyan, bool Sayisal = false);
+
+    public static class YerindeKontrolMakineAlanlari
+    {
+        public const string Makine = "Makine";
+        public const string Miktar = "Miktar";
+        public const string TeknikOnEki = "Teknik:";
+
+        public static string KararAdi(enumYerindeKontrolAlanKarar karar) => karar switch
+        {
+            enumYerindeKontrolAlanKarar.Degistirilmeli => "Değiştirilmeli",
+            enumYerindeKontrolAlanKarar.Kaldirilmali => "Kaldırılmalı",
+            _ => "Bilgiler doğru"
+        };
+
+        /// <summary>
+        /// Makinenin doğrulanacak alanları: makinenin kendisi, miktar, marka, model, seri no, kullanım amacı, kapasite ve
+        /// başvurudaki her teknik özellik. Başvurudaki makine bulunamazsa kontrol başlatılırken alınan beyanlar kullanılır.
+        /// </summary>
+        public static List<YerindeKontrolMakineAlanTanimi> Olustur(YerindeKontrolMakine km, BasvuruMakine? bm)
+        {
+            string Sayi(decimal? x) => x?.ToString("#,##0.###", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) ?? "";
+            if (bm == null)
+                return
+                [
+                    new(Makine, "Makine / ekipman", km.makineAdi),
+                    new(Miktar, "Miktar", Sayi(km.miktarBeyan), true),
+                    new("MarkaModel", "Marka / model", km.markaModelBeyan),
+                    new("SeriNo", "Seri numarası", km.seriNoBeyan),
+                    new("KullanimAmaci", "Kullanım amacı (işlevi)", km.kullanimAmaciBeyan),
+                    new("TeknikOzellikler", "Teknik özellikler", km.teknikOzelliklerBeyan)
+                ];
+
+            List<YerindeKontrolMakineAlanTanimi> liste =
+            [
+                new(Makine, "Makine / ekipman", bm.ad),
+                new(Miktar, "Miktar", $"{Sayi(bm.miktar)} {bm.birim}".Trim(), true),
+                new("Marka", "Marka", bm.marka),
+                new("Model", "Model", bm.model),
+                new("SeriNo", "Seri numarası", km.seriNoBeyan),
+                new("KullanimAmaci", "Kullanım amacı (işlevi)", bm.kullanimAmaci),
+                new("Kapasite", "Kapasite özellikleri", bm.kapasiteOzellikleri)
+            ];
+            foreach (BasvuruMakineOzellik o in bm.teknikOzellikler.OrderBy(x => x.siraNo))
+                liste.Add(new($"{TeknikOnEki}{o.id}", $"Teknik özellik: {o.baslik}", o.aciklamaAsgariGereklilik));
+            return liste;
+        }
     }
 
     /// <summary>Sayfa 2 - Kısım 2: Yatırımın gerçekleştirilmesi soruları (3.1 yapım, 3.2 ekipman) ve kontrol tablosu bulguları.</summary>
@@ -194,9 +264,6 @@ namespace TarimDonusum.Models
         public string kayitNo { get; set; } = "";
         public string neyeAit { get; set; } = "";
         public string notlar { get; set; } = "";
-        /// <summary>Bina/yapı olmayan alanlarda çekim noktasının GPS koordinatları.</summary>
-        public decimal? koordinatY { get; set; }
-        public decimal? koordinatX { get; set; }
         public int? dosyaId { get; set; }
         public string dosyaAdi { get; set; } = "";
     }
@@ -269,7 +336,44 @@ namespace TarimDonusum.Models
         public List<YerindeKontrolYapi> yapilar { get; set; } = new();
         public List<YerindeKontrolMakine> makineler { get; set; } = new();
         public List<YerindeKontrolSoru> sorular { get; set; } = new();
+        public List<YerindeKontrolBelge> belgeler { get; set; } = new();
+        public List<YerindeKontrolFotograf> fotograflar { get; set; } = new();
+        /// <summary>1.1 / 1.2 yorumları; 3 (diğer bulgular) ve 6 (çalışma dokümanı) bölümlerinde metin kutusunun içeriği.</summary>
         public string yorum { get; set; } = "";
+        public int? calismaKagidiSayisi { get; set; }
+    }
+
+    /// <summary>Kısım 4 (ek dokümanlar, PDF) ve Kısım 5 (fotoğraf / video) dosya türleri.</summary>
+    public static class YerindeKontrolDosyaTurleri
+    {
+        public const string Belge = "Belge";
+        public const string Fotograf = "Fotograf";
+
+        public static readonly string[] BelgeUzantilari = [".pdf"];
+        public static readonly string[] ResimUzantilari = [".jpg", ".jpeg", ".png"];
+        public static readonly string[] VideoUzantilari = [".mp4", ".mov", ".webm", ".avi"];
+
+        public static string Uzanti(string? dosyaAdi) => System.IO.Path.GetExtension(dosyaAdi ?? "").ToLowerInvariant();
+        public static bool VideoMu(string? dosyaAdi) => VideoUzantilari.Contains(Uzanti(dosyaAdi));
+
+        public static string IcerikTuru(string? dosyaAdi) => Uzanti(dosyaAdi) switch
+        {
+            ".pdf" => "application/pdf",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".mp4" => "video/mp4",
+            ".mov" => "video/quicktime",
+            ".webm" => "video/webm",
+            ".avi" => "video/x-msvideo",
+            _ => "application/octet-stream"
+        };
+    }
+
+    public class YerindeKontrolDosyaSil
+    {
+        public int id { get; set; }
+        public string tur { get; set; } = "";
+        public int satirId { get; set; }
     }
 
     /// <summary>Yerinde kontrol formu: kontrol kaydı ve beyan bilgilerinin geldiği başvuru.</summary>
